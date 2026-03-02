@@ -32,6 +32,9 @@
                     <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
                         🌙
                     </button>
+                    <button class="theme-toggle" id="settingsToggle" aria-label="Settings">
+                        ⚙️
+                    </button>
                 </div>
             </div>
         </div>
@@ -119,13 +122,39 @@
                 </div>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-secondary" id="modalShare">📤 Share</button>
                 <button class="btn btn-secondary" id="modalBookmark">📌 Bookmark</button>
                 <button class="btn btn-primary" id="modalComplete">✓ Mark Complete</button>
             </div>
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">⚙️ Settings</h2>
+                <button class="modal-close" onclick="document.getElementById('settingsModal').classList.remove('active')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>Data Management</h3>
+                    <button class="btn btn-secondary" onclick="exportProgress()">📥 Export Progress</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📤 Import Progress</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importProgress(event)">
+                    <button class="btn btn-secondary" onclick="showStatistics()">📊 View Statistics</button>
+                    <button class="btn btn-secondary" style="background: #ffebee; color: #c62828;" onclick="resetProgress()">🗑️ Reset Progress</button>
+                </div>
+                <div class="settings-section">
+                    <h3>Notifications</h3>
+                    <button class="btn btn-secondary" onclick="requestNotificationPermission()">🔔 Enable Notifications</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
+    <script src="js/features.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

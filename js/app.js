@@ -66,6 +66,15 @@ function setupEventListeners() {
     // Theme Toggle
     themeToggle.addEventListener('click', toggleTheme);
     
+    // Settings Toggle
+    const settingsToggle = document.getElementById('settingsToggle');
+    if (settingsToggle) {
+        settingsToggle.addEventListener('click', () => {
+            document.getElementById('settingsModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+    
     // Modal Close
     modalClose.addEventListener('click', closeModal);
     devotionModal.addEventListener('click', (e) => {
@@ -78,13 +87,29 @@ function setupEventListeners() {
     modalBookmark.addEventListener('click', toggleBookmark);
     modalComplete.addEventListener('click', toggleComplete);
     
+    // Share Button
+    const modalShare = document.getElementById('modalShare');
+    if (modalShare) {
+        modalShare.addEventListener('click', () => {
+            if (currentDay) {
+                shareDevotion(currentDay);
+            }
+        });
+    }
+    
     // Save Notes on Input
     modalNotesText.addEventListener('input', saveNotes);
     
     // Keyboard Navigation
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && devotionModal.classList.contains('active')) {
-            closeModal();
+        if (e.key === 'Escape') {
+            if (devotionModal.classList.contains('active')) {
+                closeModal();
+            }
+            if (document.getElementById('settingsModal').classList.contains('active')) {
+                document.getElementById('settingsModal').classList.remove('active');
+                document.body.style.overflow = '';
+            }
         }
     });
 }
