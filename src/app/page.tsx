@@ -175,12 +175,17 @@ export default function DevotionalApp() {
       </div>
 
       <header className="mb-8 relative z-10 flex items-center justify-between">
-        <div>
-          <h2 className="text-sm font-medium opacity-70 flex items-center gap-2 uppercase tracking-[0.2em] mb-1">
-            {currentWeek?.icon && <currentWeek.icon className="w-4 h-4 text-[var(--primary)]" />}
-            Week {devotion?.week}: {devotion?.week_theme}
-          </h2>
-          <h1 className="text-3xl font-bold font-serif">{format(currentDate, "EEEE, MMMM d")}</h1>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 relative flex-shrink-0">
+            <img src="/church-logo.png" alt="JKC Logo" className="w-full h-full object-contain" />
+          </div>
+          <div>
+            <h2 className="text-sm font-medium opacity-70 flex items-center gap-2 uppercase tracking-[0.2em] mb-1">
+              {currentWeek?.icon && <currentWeek.icon className="w-4 h-4 text-[var(--primary)]" />}
+              Week {devotion?.week}: {devotion?.week_theme}
+            </h2>
+            <h1 className="text-3xl font-bold font-serif">{format(currentDate, "EEEE, MMMM d")}</h1>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button
@@ -392,7 +397,8 @@ export default function DevotionalApp() {
       {/* Settings / Auth Dialog */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
         <DialogContent className="rounded-[2.5rem] border-0 glass max-w-md p-8">
-          <DialogHeader>
+          <DialogHeader className="flex flex-col items-center">
+            <img src="/church-logo.png" alt="JKC Logo" className="w-16 h-16 object-contain mb-4" />
             <DialogTitle className="text-2xl font-serif text-center">{user ? "My Account" : "Join the Journey"}</DialogTitle>
           </DialogHeader>
 
