@@ -84,6 +84,39 @@ export const SoapJournal = {
         if (error) throw error;
     },
 
+    // Calculate stats: completion total and current streak
+    async getStats(): Promise<{ completed: number; total: number; streak: number }> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { completed: 0, total: 90, streak: 0 };
+
+        const { data, error } = await supabase
+            .from('soap_entries')
+            .select('day_number')
+            .order('day_number', { ascending: false });
+
+        if (error || !data) return { completed: 0, total: 90, streak: 0 };
+
+        const completed = data.length;
+        let streak = 0;
+
+        if (data.length > 0) {
+            const dayNumbers = data.map(d => d.day_number);
+            let current = dayNumbers[0];
+            streak = 1;
+
+            for (let i = 1; i < dayNumbers.length; i++) {
+                if (dayNumbers[i] === current - 1) {
+                    streak++;
+                    current = dayNumbers[i];
+                } else {
+                    break;
+                }
+            }
+        }
+
+        return { completed, total: 90, streak };
+    },
+
     getDefaultEntry(dayNumber: number): SoapEntry {
         return {
             day_number: dayNumber,

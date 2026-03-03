@@ -10,6 +10,7 @@ import {
   Leaf,
   Cross,
   Calendar,
+  Sparkles,
   ChevronLeft,
   ChevronRight,
   Bookmark,
@@ -76,18 +77,14 @@ export default function DevotionalApp() {
   const [name, setName] = useState("");
   const [stats, setStats] = useState({ completed: 0, total: 31, streak: 0 });
 
+  const loadStats = async () => {
+    if (user) {
+      const s = await SoapJournal.getStats();
+      setStats(s);
+    }
+  };
+
   useEffect(() => {
-    const loadStats = async () => {
-      if (user) {
-        const entries = await SoapJournal.getAllEntries();
-        // Simple streak: number of entries
-        setStats({
-          completed: entries.length,
-          total: 31,
-          streak: entries.length > 0 ? Math.min(entries.length, 7) : 0 // Placeholder streak
-        });
-      }
-    };
     loadStats();
   }, [user]);
 
@@ -144,7 +141,9 @@ export default function DevotionalApp() {
     if (devotion && user) {
       try {
         await SoapJournal.saveEntry(devotion.id, soapEntry);
-        toast.success("SOAP Journal Saved to Cloud");
+        toast.success("SOAP Journal Save - Cloud Synced");
+        // Update stats immediately
+        loadStats();
       } catch (err: any) {
         toast.error("Failed to save: " + err.message);
       }
@@ -308,6 +307,34 @@ export default function DevotionalApp() {
               </Badge>
             </div>
           </div>
+
+          {/* AI Guide / Reminder */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gradient-to-br from-[var(--primary)]/10 to-transparent border border-[var(--primary)]/20 rounded-3xl p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
+              <Sparkles className="w-16 h-16 text-[var(--primary)]" />
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-[var(--primary)] text-white flex items-center justify-center flex-shrink-0 shadow-lg">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-bold text-sm uppercase tracking-wider text-[var(--primary)]">Transformation Guide</h4>
+                <p className="text-sm opacity-80 leading-relaxed">
+                  {stats.streak === 0 ? (
+                    "Welcome back! Take 5 minutes today to focus on God. Morning or lunch breaks are great times to center your soul."
+                  ) : stats.streak < 3 ? (
+                    `Great job on your ${stats.streak} day streak! Keep the momentum going. Why not set a 10-minute quiet time before you start your day?`
+                  ) : (
+                    `Your ${stats.streak} day streak is inspiring! Your growth in ${currentWeek?.name} theme is visible. Stay consistent today.`
+                  )}
+                </p>
+              </div>
+            </div>
+          </motion.div>
 
           <Card className="rounded-[2.5rem] overflow-hidden border-0 shadow-2xl glass relative">
             <div className="absolute top-0 right-0 p-8 pointer-events-none opacity-5">
