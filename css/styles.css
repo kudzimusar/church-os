@@ -129,16 +129,59 @@ body {
 }
 
 .church-logo img {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   border-radius: var(--radius-md);
   background: white;
-  padding: var(--spacing-xs);
+  padding: 2px;
+  object-fit: contain;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.church-logo img:hover {
+  transform: scale(1.05);
 }
 
 .church-name {
   font-size: var(--font-size-xl);
   font-weight: 700;
+}
+
+/* Logo in Footer */
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.footer-logo img {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-md);
+  background: white;
+  padding: 4px;
+  object-fit: contain;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Logo in Modal */
+.modal-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.modal-logo img {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-md);
+  background: white;
+  padding: 2px;
+  object-fit: contain;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .header-actions {
@@ -417,6 +460,12 @@ body {
   z-index: 10;
 }
 
+.modal-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
 .modal-title {
   font-size: var(--font-size-xl);
   font-weight: 700;
@@ -597,6 +646,29 @@ body {
     text-align: center;
   }
   
+  .church-logo {
+    justify-content: center;
+  }
+  
+  .church-logo img {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .church-name {
+    font-size: var(--font-size-lg);
+  }
+  
+  .footer-logo img {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .modal-logo img {
+    width: 45px;
+    height: 45px;
+  }
+  
   .hero h1 {
     font-size: var(--font-size-2xl);
   }
@@ -624,6 +696,25 @@ body {
     padding: 0 var(--spacing-sm);
   }
   
+  .church-logo img {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .church-name {
+    font-size: var(--font-size-base);
+  }
+  
+  .footer-logo img {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .modal-logo img {
+    width: 40px;
+    height: 40px;
+  }
+  
   .hero {
     padding: var(--spacing-lg) 0;
   }
@@ -645,6 +736,50 @@ body {
 .loading {
   display: flex;
   justify-content: center;
+  align-items: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+}
+
+/* Large Tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .church-logo img {
+    width: 55px;
+    height: 55px;
+  }
+  
+  .footer-logo img {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .modal-logo img {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1025px) {
+  .church-logo img {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .church-name {
+    font-size: var(--font-size-xl);
+  }
+  
+  .footer-logo img {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .modal-logo img {
+    width: 50px;
+    height: 50px;
+  }
+}
   align-items: center;
   min-height: 200px;
 }
@@ -695,292 +830,3 @@ body {
 .mb-2 { margin-bottom: var(--spacing-sm); }
 .mb-3 { margin-bottom: var(--spacing-md); }
 .mb-4 { margin-bottom: var(--spacing-lg); }
-
-/* Settings Modal */
-.settings-section {
-  margin-bottom: var(--spacing-lg);
-  padding-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.settings-section:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-
-.settings-section h3 {
-  font-size: var(--font-size-lg);
-  font-weight: 600;
-  margin-bottom: var(--spacing-md);
-  color: var(--text-primary);
-}
-
-.settings-section .btn {
-  display: block;
-  width: 100%;
-  margin-bottom: var(--spacing-sm);
-  text-align: left;
-}
-
-/* Statistics Grid */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-md);
-}
-
-.stat-card {
-  background: var(--background-light);
-  padding: var(--spacing-md);
-  border-radius: var(--radius-md);
-  text-align: center;
-  transition: transform var(--transition-base);
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.stat-card .stat-value {
-  font-size: var(--font-size-2xl);
-  font-weight: 700;
-  color: var(--primary-color);
-  margin-bottom: var(--spacing-xs);
-}
-
-.stat-card .stat-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-/* Journal Tabs */
-.journal-tabs {
-  display: flex;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
-  border-bottom: 2px solid var(--border-color);
-}
-
-.journal-tab {
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  font-size: var(--font-size-base);
-  font-weight: 600;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  margin-bottom: -2px;
-}
-
-.journal-tab:hover {
-  color: var(--primary-color);
-}
-
-.journal-tab.active {
-  color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
-}
-
-.journal-tab-content {
-  display: none;
-}
-
-.journal-tab-content.active {
-  display: block;
-}
-
-/* SOAP Journal */
-.soap-journal {
-  background: var(--background-light);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-}
-
-.soap-section {
-  margin-bottom: var(--spacing-lg);
-}
-
-.soap-section:last-child {
-  margin-bottom: 0;
-}
-
-.soap-header {
-  margin-bottom: var(--spacing-sm);
-}
-
-.soap-header h3 {
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  color: var(--primary-color);
-  margin-bottom: var(--spacing-xs);
-}
-
-.soap-prompt {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
-.soap-textarea {
-  width: 100%;
-  min-height: 120px;
-  padding: var(--spacing-sm);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  font-family: var(--font-family);
-  font-size: var(--font-size-base);
-  resize: vertical;
-  background: var(--background-white);
-  color: var(--text-primary);
-  transition: border-color var(--transition-fast);
-}
-
-.soap-textarea:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(0,188,212,0.1);
-}
-
-.soap-textarea::placeholder {
-  color: var(--text-light);
-}
-
-.soap-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-md);
-  flex-wrap: wrap;
-}
-
-.btn-link {
-  background: none;
-  border: none;
-  color: var(--primary-color);
-  cursor: pointer;
-  font-size: var(--font-size-sm);
-  padding: var(--spacing-xs);
-  text-decoration: underline;
-  transition: color var(--transition-fast);
-}
-
-.btn-link:hover {
-  color: var(--secondary-color);
-}
-
-/* Auth Forms */
-.auth-form {
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.form-group {
-  margin-bottom: var(--spacing-md);
-}
-
-.form-group label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: var(--spacing-xs);
-  color: var(--text-primary);
-}
-
-.form-group input {
-  width: 100%;
-  padding: var(--spacing-sm);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-base);
-  background: var(--background-white);
-  color: var(--text-primary);
-  transition: border-color var(--transition-fast);
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(0,188,212,0.1);
-}
-
-.auth-switch {
-  text-align: center;
-  margin-top: var(--spacing-md);
-  color: var(--text-secondary);
-}
-
-.auth-switch a {
-  color: var(--primary-color);
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.auth-switch a:hover {
-  text-decoration: underline;
-}
-
-#loggedInAccount,
-#loggedOutAccount {
-  display: none;
-}
-
-#loggedInAccount.active,
-#loggedOutAccount.active {
-  display: block;
-}
-
-/* Print Styles */
-@media print {
-  body {
-    background: white;
-  }
-  
-  .header,
-  .footer,
-  .progress-section,
-  .modal-footer,
-  .journal-tabs {
-    display: none;
-  }
-  
-  .soap-print-page {
-    padding: 2rem;
-    font-size: 12pt;
-  }
-  
-  .soap-print-header {
-    text-align: center;
-    margin-bottom: 2rem;
-    border-bottom: 2px solid black;
-    padding-bottom: 1rem;
-  }
-  
-  .soap-print-section {
-    margin: 1.5rem 0;
-  }
-  
-  .soap-print-section h3 {
-    margin-bottom: 0.5rem;
-  }
-  
-  .soap-lines {
-    min-height: 150px;
-    border: 1px solid #ccc;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .soap-scripture-text {
-    font-style: italic;
-    margin: 1rem 0;
-  }
-  
-  .soap-note {
-    font-size: 10pt;
-    color: #666;
-    font-style: italic;
-  }
-}

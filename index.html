@@ -32,9 +32,6 @@
                     <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
                         🌙
                     </button>
-                    <button class="theme-toggle" id="settingsToggle" aria-label="Settings">
-                        ⚙️
-                    </button>
                 </div>
             </div>
         </div>
@@ -88,7 +85,13 @@
         <div class="container">
             <div class="footer-content">
                 <div class="church-info">
-                    <h3>Japan Kingdom Church</h3>
+                    <div class="footer-logo">
+                        <img src="assets/church-logo.png" alt="Japan Kingdom Church Logo">
+                        <div>
+                            <h3>Japan Kingdom Church</h3>
+                            <p style="font-size: 0.875rem; opacity: 0.9; margin-top: 0.25rem;">\u30b8\u30e3\u30d1\u30f3\u30fb\u30ad\u30f3\u30b0\u30c0\u30e0\u30fb\u30c1\u30e3\u30fc\u30c1</p>
+                        </div>
+                    </div>
                     <p>〒196-0015 東京都昭島市昭和町2-1-6 TE昭島ビル3F</p>
                     <p>電話: 042-519-4940</p>
                     <p>Email: jkc.contact@gmail.com</p>
@@ -109,194 +112,29 @@
     <div class="modal" id="devotionModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">Day Devotion</h2>
+                <div class="modal-logo">
+                    <img src="assets/church-logo.png" alt="Japan Kingdom Church Logo">
+                    <h2 class="modal-title" id="modalTitle">Day Devotion</h2>
+                </div>
                 <button class="modal-close" id="modalClose" aria-label="Close modal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="modal-date" id="modalDate"></div>
                 <div class="modal-declaration" id="modalDeclaration"></div>
-                
-                <!-- Journal Tabs -->
-                <div class="journal-tabs">
-                    <button class="journal-tab active" data-tab="basic">Basic Notes</button>
-                    <button class="journal-tab" data-tab="soap">SOAP Journal</button>
-                </div>
-                
-                <!-- Basic Notes Tab -->
-                <div class="journal-tab-content active" id="basicTab">
-                    <div class="modal-scripture" id="modalScripture">
-                        <button class="btn-link" id="fetchScripture" style="display: none;">📖 Read Full Scripture</button>
-                    </div>
-                    <div class="modal-notes">
-                        <label for="modalNotesText">Your Reflections:</label>
-                        <textarea id="modalNotesText" placeholder="Write your thoughts and reflections here..."></textarea>
-                    </div>
-                </div>
-                
-                <!-- SOAP Journal Tab -->
-                <div class="journal-tab-content" id="soapTab">
-                    <div class="soap-journal">
-                        <div class="soap-section">
-                            <div class="soap-header">
-                                <h3>S - Scripture</h3>
-                                <p class="soap-prompt">What scripture speaks to you today?</p>
-                            </div>
-                            <textarea id="soapScripture" class="soap-textarea" placeholder="Write the scripture here..."></textarea>
-                            <button class="btn-link" id="copyScriptureFromRef">📋 Copy from Reference</button>
-                        </div>
-                        
-                        <div class="soap-section">
-                            <div class="soap-header">
-                                <h3>O - Observation</h3>
-                                <p class="soap-prompt">What do you notice in this passage?</p>
-                            </div>
-                            <textarea id="soapObservation" class="soap-textarea" placeholder="Write your observations about the scripture..."></textarea>
-                        </div>
-                        
-                        <div class="soap-section">
-                            <div class="soap-header">
-                                <h3>A - Application</h3>
-                                <p class="soap-prompt">How will you apply this to your life?</p>
-                            </div>
-                            <textarea id="soapApplication" class="soap-textarea" placeholder="How will you apply this scripture to your life today..."></textarea>
-                        </div>
-                        
-                        <div class="soap-section">
-                            <div class="soap-header">
-                                <h3>P - Prayer</h3>
-                                <p class="soap-prompt">What is your prayer response?</p>
-                            </div>
-                            <textarea id="soapPrayer" class="soap-textarea" placeholder="Write your prayer..."></textarea>
-                        </div>
-                        
-                        <div class="soap-actions">
-                            <button class="btn btn-secondary" id="printSOAP">🖨️ Print Journal</button>
-                            <button class="btn btn-secondary" id="exportSOAP">📥 Export Entry</button>
-                        </div>
-                    </div>
+                <div class="modal-scripture" id="modalScripture"></div>
+                <div class="modal-notes">
+                    <label for="modalNotesText">Your Reflections:</label>
+                    <textarea id="modalNotesText" placeholder="Write your thoughts and reflections here..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="modalShare">📤 Share</button>
                 <button class="btn btn-secondary" id="modalBookmark">📌 Bookmark</button>
                 <button class="btn btn-primary" id="modalComplete">✓ Mark Complete</button>
             </div>
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div class="modal" id="settingsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">⚙️ Settings</h2>
-                <button class="modal-close" onclick="document.getElementById('settingsModal').classList.remove('active')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <!-- Account Section -->
-                <div class="settings-section" id="accountSection">
-                    <h3>Account</h3>
-                    <div id="loggedInAccount">
-                        <p>Welcome, <strong id="userName"></strong>!</p>
-                        <button class="btn btn-secondary" onclick="showProfileModal()">👤 Update Profile</button>
-                        <button class="btn btn-secondary" onclick="logout()">🚪 Logout</button>
-                    </div>
-                    <div id="loggedOutAccount">
-                        <button class="btn btn-primary" onclick="showAuthModal('login')">🔐 Login</button>
-                        <button class="btn btn-secondary" onclick="showAuthModal('register')">📝 Create Account</button>
-                    </div>
-                </div>
-                
-                <div class="settings-section">
-                    <h3>Data Management</h3>
-                    <button class="btn btn-secondary" onclick="exportProgress()">📥 Export Progress</button>
-                    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📤 Import Progress</button>
-                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importProgress(event)">
-                    <button class="btn btn-secondary" onclick="showStatistics()">📊 View Statistics</button>
-                    <button class="btn btn-secondary" onclick="exportSOAPJournal()">📥 Export SOAP Journal</button>
-                    <button class="btn btn-secondary" style="background: #ffebee; color: #c62828;" onclick="resetProgress()">🗑️ Reset Progress</button>
-                </div>
-                <div class="settings-section">
-                    <h3>Notifications</h3>
-                    <button class="btn btn-secondary" onclick="requestNotificationPermission()">🔔 Enable Notifications</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Auth Modal -->
-    <div class="modal" id="authModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="authTitle">Account</h2>
-                <button class="modal-close" onclick="document.getElementById('authModal').classList.remove('active')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <!-- Login Form -->
-                <div id="loginForm" class="auth-form">
-                    <div class="form-group">
-                        <label for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="loginPassword">Password</label>
-                        <input type="password" id="loginPassword" required>
-                    </div>
-                    <button class="btn btn-primary" onclick="handleLogin()">Login</button>
-                    <p class="auth-switch">
-                        Don't have an account? <a href="#" onclick="showAuthModal('register')">Create one</a>
-                    </p>
-                </div>
-                
-                <!-- Register Form -->
-                <div id="registerForm" class="auth-form" style="display: none;">
-                    <div class="form-group">
-                        <label for="registerName">Name</label>
-                        <input type="text" id="registerName" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="registerEmail">Email</label>
-                        <input type="email" id="registerEmail" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="registerPassword">Password (min 6 characters)</label>
-                        <input type="password" id="registerPassword" required>
-                    </div>
-                    <button class="btn btn-primary" onclick="handleRegister()">Create Account</button>
-                    <p class="auth-switch">
-                        Already have an account? <a href="#" onclick="showAuthModal('login')">Login</a>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Profile Modal -->
-    <div class="modal" id="profileModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Update Profile</h2>
-                <button class="modal-close" onclick="document.getElementById('profileModal').classList.remove('active')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="profileName">Name</label>
-                    <input type="text" id="profileName">
-                </div>
-                <div class="form-group">
-                    <label for="profilePassword">New Password (leave blank to keep current)</label>
-                    <input type="password" id="profilePassword">
-                </div>
-                <button class="btn btn-primary" onclick="handleUpdateProfile()">Update Profile</button>
-                <button class="btn btn-secondary" style="background: #ffebee; color: #c62828; margin-top: 1rem;" onclick="handleDeleteAccount()">Delete Account</button>
-            </div>
-        </div>
-    </div>
-
     <!-- JavaScript -->
-    <script src="js/bible-api.js"></script>
-    <script src="js/soap-journal.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/features.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
