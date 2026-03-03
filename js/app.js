@@ -1,8 +1,11 @@
-// Japan Kingdom Church Devotion App - Main JavaScript
+// JKC Devotion App - Enhanced with SOAP Journaling and Account Management
 
 // App State
 let devotionData = null;
 let currentDay = null;
+let currentTab = 'basic';
+
+// User Progress
 let userProgress = {
     completedDays: [],
     bookmarkedDays: [],
@@ -27,9 +30,16 @@ const modalNotesText = document.getElementById('modalNotesText');
 const modalBookmark = document.getElementById('modalBookmark');
 const modalComplete = document.getElementById('modalComplete');
 
+// SOAP Elements
+const soapScripture = document.getElementById('soapScripture');
+const soapObservation = document.getElementById('soapObservation');
+const soapApplication = document.getElementById('soapApplication');
+const soapPrayer = document.getElementById('soapPrayer');
+
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
     loadUserProgress();
+    updateAccountUI();
     loadDevotionData();
     setupEventListeners();
     applyTheme();
@@ -48,7 +58,7 @@ async function loadDevotionData() {
     }
 }
 
-// Load User Progress from Local Storage
+// Load User Progress
 function loadUserProgress() {
     const saved = localStorage.getItem('jkcDevotionProgress');
     if (saved) {
@@ -56,9 +66,26 @@ function loadUserProgress() {
     }
 }
 
-// Save User Progress to Local Storage
+// Save User Progress
 function saveUserProgress() {
     localStorage.setItem('jkcDevotionProgress', JSON.stringify(userProgress));
+}
+
+// Update Account UI
+function updateAccountUI() {
+    const loggedInAccount = document.getElementById('loggedInAccount');
+    const loggedOutAccount = document.getElementById('loggedOutAccount');
+    const userName = document.getElementById('userName');
+    
+    if (AUTH.isLoggedIn()) {
+        const user = AUTH.getCurrentUser();
+        loggedInAccount.classList.add('active');
+        loggedOutAccount.classList.remove('active');
+        userName.textContent = user.name;
+    } else {
+        loggedInAccount.classList.remove('active');
+        loggedOutAccount.classList.add('active');
+    }
 }
 
 // Setup Event Listeners
@@ -97,21 +124,57 @@ function setupEventListeners() {
         });
     }
     
+    // Journal Tabs
+    document.querySelectorAll('.journal-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            const tabName = e.target.dataset.tab;
+            switchJournalTab(tabName);
+        });
+    });
+    
+    // SOAP Actions
+    document.getElementById('fetchScripture')?.addEventListener('click', fetchFullScripture);
+    document.getElementById('copyScriptureFromRef')?.addEventListener('click', copyScriptureReference);
+    document.getElementById('printSOAP')?.addEventListener('click', printSOAPJournal);
+    document.getElementById('exportSOAP')?.addEventListener('click', exportSOAPEntry);
+    
     // Save Notes on Input
     modalNotesText.addEventListener('input', saveNotes);
+    soapScripture.addEventListener('input', saveSOAPEntry);
+    soapObservation.addEventListener('input', saveSOAPEntry);
+    soapApplication.addEventListener('input', saveSOAPEntry);
+    soapPrayer.addEventListener('input', saveSOAPEntry);
     
     // Keyboard Navigation
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            if (devotionModal.classList.contains('active')) {
-                closeModal();
-            }
-            if (document.getElementById('settingsModal').classList.contains('active')) {
-                document.getElementById('settingsModal').classList.remove('active');
-                document.body.style.overflow = '';
-            }
+            closeAllModals();
         }
     });
+}
+
+// Switch Journal Tab
+function switchJournalTab(tabName) {
+    currentTab = tabName;
+    
+    // Update tab buttons
+    document.querySelectorAll('.journal-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.dataset.tab === tabName) {
+            tab.classList.add('active');
+        }
+    });
+    
+    // Update tab content
+    document.querySelectorAll('.journal-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    if (tabName === 'basic') {
+        document.getElementById('basicTab').classList.add('active');
+    } else {
+        document.getElementById('soapTab').classList.add('active');
+    }
 }
 
 // Render Weeks
@@ -174,6 +237,12 @@ function createDayCard(day, weekColor) {
         card.classList.add('bookmarked');
     }
     
+    // Check if SOAP entry exists
+    const soapEntry = SOAP_JOURNAL.getEntry(day.day);
+    if (soapEntry.observation || soapEntry.application || soapEntry.prayer) {
+        card.classList.add('has-soap');
+    }
+    
     card.innerHTML = `
         <div class="day-date">${day.date}</div>
         <div class="day-declaration">${day.declaration}</div>
@@ -200,12 +269,31 @@ function createDayCard(day, weekColor) {
 // Open Devotion Modal
 function openDevotionModal(day) {
     currentDay = day;
+    currentTab = 'basic';
     
     modalTitle.textContent = `Day ${day.day} Devotion`;
     modalDate.textContent = day.date;
     modalDeclaration.textContent = day.declaration;
-    modalScripture.textContent = day.scripture;
+    modalScripture.innerHTML = `<strong>${day.scripture}</strong>`;
+    
+    // Show fetch scripture button
+    const fetchButton = document.getElementById('fetchScripture');
+    if (fetchButton) {
+        fetchButton.style.display = 'inline-block';
+    }
+    
+    // Load basic notes
     modalNotesText.value = userProgress.notes[day.day] || '';
+    
+    // Load SOAP entry
+    const soapEntry = SOAP_JOURNAL.getEntry(day.day);
+    soapScripture.value = soapEntry.scripture || '';
+    soapObservation.value = soapEntry.observation || '';
+    soapApplication.value = soapEntry.application || '';
+    soapPrayer.value = soapEntry.prayer || '';
+    
+    // Reset to basic tab
+    switchJournalTab('basic');
     
     // Update bookmark button
     updateBookmarkButton();
@@ -224,22 +312,175 @@ function closeModal() {
     currentDay = null;
 }
 
+// Close All Modals
+function closeAllModals() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.remove('active');
+    });
+    document.body.style.overflow = '';
+}
+
+// Fetch Full Scripture
+async function fetchFullScripture() {
+    if (!currentDay) return;
+    
+    const button = document.getElementById('fetchScripture');
+    button.textContent = '⏳ Loading...';
+    button.disabled = true;
+    
+    try {
+        const scriptureData = await BIBLE_API.getDailyScripture(currentDay);
+        if (scriptureData) {
+            modalScripture.innerHTML = `
+                <strong>${scriptureData.reference}</strong><br>
+                <div style="margin-top: 0.5rem; line-height: 1.8;">${scriptureData.text}</div>
+            `;
+        } else {
+            alert('Failed to fetch scripture. Please try again.');
+        }
+    } catch (error) {
+        alert('Error fetching scripture. Please check your internet connection.');
+    }
+    
+    button.textContent = '📖 Read Full Scripture';
+    button.disabled = false;
+}
+
+// Copy Scripture Reference
+function copyScriptureReference() {
+    if (!currentDay) return;
+    
+    soapScripture.value = currentDay.scripture;
+    saveSOAPEntry();
+}
+
+// Save Notes
+function saveNotes() {
+    if (!currentDay) return;
+    
+    userProgress.notes[currentDay.day] = modalNotesText.value;
+    saveUserProgress();
+}
+
+// Save SOAP Entry
+function saveSOAPEntry() {
+    if (!currentDay) return;
+    
+    SOAP_JOURNAL.saveEntry(currentDay.day, {
+        scripture: soapScripture.value,
+        observation: soapObservation.value,
+        application: soapApplication.value,
+        prayer: soapPrayer.value
+    });
+    
+    renderWeeks();
+}
+
+// Print SOAP Journal
+function printSOAPEntry() {
+    if (!currentDay) return;
+    
+    const printContent = SOAP_JOURNAL.generatePrintablePage(currentDay.day, currentDay);
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>JKC Journal - Day ${currentDay.day}</title>
+            <style>
+                body {
+                    font-family: Georgia, serif;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    line-height: 1.6;
+                }
+                .soap-print-header {
+                    text-align: center;
+                    margin-bottom: 2rem;
+                    border-bottom: 2px solid #333;
+                    padding-bottom: 1rem;
+                }
+                .soap-theme {
+                    font-style: italic;
+                    color: #666;
+                }
+                .soap-print-section {
+                    margin: 1.5rem 0;
+                }
+                h3 {
+                    color: #00bcd4;
+                }
+                .soap-lines {
+                    min-height: 150px;
+                    border: 1px solid #ccc;
+                    padding: 0.5rem;
+                    margin-bottom: 0.5rem;
+                    background: #f9f9f9;
+                }
+                .soap-note {
+                    font-size: 11pt;
+                    color: #666;
+                    font-style: italic;
+                }
+                .soap-scripture-text {
+                    font-style: italic;
+                    margin: 1rem 0;
+                }
+                @media print {
+                    body { font-size: 12pt; }
+                }
+            </style>
+        </head>
+        <body>
+            ${printContent}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// Export SOAP Entry
+function exportSOAPEntry() {
+    if (!currentDay) return;
+    
+    const soapEntry = SOAP_JOURNAL.getEntry(currentDay.day);
+    let exportText = `JKC Devotion SOAP Journal - Day ${currentDay.day}\n`;
+    exportText += `===================================\n\n`;
+    exportText += `Date: ${currentDay.date}\n`;
+    exportText += `Theme: ${currentDay.declaration}\n\n`;
+    exportText += `Scripture Reference: ${currentDay.scripture}\n\n`;
+    
+    if (soapEntry.scripture) {
+        exportText += `S - Scripture:\n${soapEntry.scripture}\n\n`;
+    }
+    if (soapEntry.observation) {
+        exportText += `O - Observation:\n${soapEntry.observation}\n\n`;
+    }
+    if (soapEntry.application) {
+        exportText += `A - Application:\n${soapEntry.application}\n\n`;
+    }
+    if (soapEntry.prayer) {
+        exportText += `P - Prayer:\n${soapEntry.prayer}\n\n`;
+    }
+    
+    const blob = new Blob([exportText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `jkc-soap-day-${currentDay.day}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
 // Toggle Bookmark
 function toggleBookmark() {
     if (!currentDay) return;
     
-    const dayNum = currentDay.day;
-    const index = userProgress.bookmarkedDays.indexOf(dayNum);
-    
-    if (index > -1) {
-        userProgress.bookmarkedDays.splice(index, 1);
-    } else {
-        userProgress.bookmarkedDays.push(dayNum);
-    }
-    
-    saveUserProgress();
+    toggleDayBookmark(currentDay.day);
     updateBookmarkButton();
-    renderWeeks();
 }
 
 // Toggle Complete
@@ -250,7 +491,7 @@ function toggleComplete() {
     updateCompleteButton();
 }
 
-// Toggle Day Complete (from card)
+// Toggle Day Complete
 function toggleDayComplete(dayNum) {
     const index = userProgress.completedDays.indexOf(dayNum);
     
@@ -265,7 +506,7 @@ function toggleDayComplete(dayNum) {
     renderWeeks();
 }
 
-// Toggle Day Bookmark (from card)
+// Toggle Day Bookmark
 function toggleDayBookmark(dayNum) {
     const index = userProgress.bookmarkedDays.indexOf(dayNum);
     
@@ -277,14 +518,6 @@ function toggleDayBookmark(dayNum) {
     
     saveUserProgress();
     renderWeeks();
-}
-
-// Save Notes
-function saveNotes() {
-    if (!currentDay) return;
-    
-    userProgress.notes[currentDay.day] = modalNotesText.value;
-    saveUserProgress();
 }
 
 // Update Bookmark Button
@@ -315,7 +548,6 @@ function updateProgress() {
     completedDaysEl.textContent = completed;
     totalDaysEl.textContent = total;
     
-    // Calculate streak
     const streak = calculateStreak();
     streakDaysEl.textContent = streak;
 }
@@ -356,6 +588,112 @@ function applyTheme() {
     }
 }
 
+// Auth Functions
+function showAuthModal(mode) {
+    document.getElementById('authModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
+    document.getElementById('loginForm').style.display = mode === 'login' ? 'block' : 'none';
+    document.getElementById('registerForm').style.display = mode === 'register' ? 'block' : 'none';
+    document.getElementById('authTitle').textContent = mode === 'login' ? 'Login' : 'Create Account';
+}
+
+function showProfileModal() {
+    const user = AUTH.getCurrentUser();
+    if (user) {
+        document.getElementById('profileName').value = user.name;
+        document.getElementById('profileModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function handleLogin() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    try {
+        const result = AUTH.login(email, password);
+        if (result.success) {
+            closeAllModals();
+            updateAccountUI();
+            alert(`Welcome back, ${result.user.name}!`);
+        }
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function handleRegister() {
+    const name = document.getElementById('registerName').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    
+    try {
+        const result = AUTH.createAccount(email, password, name);
+        if (result.success) {
+            closeAllModals();
+            updateAccountUI();
+            alert(`Welcome to JKC Devotion, ${result.user.name}!`);
+        }
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function handleUpdateProfile() {
+    const name = document.getElementById('profileName').value;
+    const password = document.getElementById('profilePassword').value;
+    
+    try {
+        const updates = { name };
+        if (password) {
+            updates.password = password;
+        }
+        
+        AUTH.updateProfile(updates);
+        closeAllModals();
+        updateAccountUI();
+        alert('Profile updated successfully!');
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function handleDeleteAccount() {
+    if (confirm('Are you sure you want to delete your account? This cannot be undone and all your data will be lost.')) {
+        try {
+            AUTH.deleteAccount();
+            closeAllModals();
+            updateAccountUI();
+            alert('Account deleted successfully.');
+            renderWeeks();
+            updateProgress();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+}
+
+function logout() {
+    AUTH.logout();
+    closeAllModals();
+    updateAccountUI();
+    alert('You have been logged out.');
+}
+
+// Export SOAP Journal
+function exportSOAPJournal() {
+    const exportText = SOAP_JOURNAL.exportEntries();
+    
+    const blob = new Blob([exportText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `jkc-soap-journal-${new Date().toISOString().split('T')[0]}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
 // Show Error
 function showError(message) {
     const errorDiv = document.createElement('div');
@@ -372,7 +710,25 @@ function showError(message) {
     weeksContainer.appendChild(errorDiv);
 }
 
-// Register Service Worker for PWA
+// Make functions globally available
+window.switchJournalTab = switchJournalTab;
+window.fetchFullScripture = fetchFullScripture;
+window.copyScriptureReference = copyScriptureReference;
+window.printSOAPEntry = printSOAPEntry;
+window.exportSOAPEntry = exportSOAPEntry;
+window.showAuthModal = showAuthModal;
+window.showProfileModal = showProfileModal;
+window.handleLogin = handleLogin;
+window.handleRegister = handleRegister;
+window.handleUpdateProfile = handleUpdateProfile;
+window.handleDeleteAccount = handleDeleteAccount;
+window.logout = logout;
+window.exportSOAPJournal = exportSOAPJournal;
+window.toggleDayComplete = toggleDayComplete;
+window.toggleDayBookmark = toggleDayBookmark;
+window.closeAllModals = closeAllModals;
+
+// Register Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
@@ -384,26 +740,3 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
-
-// Handle PWA Install Prompt
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    
-    // Show install button if desired
-    const installBtn = document.createElement('button');
-    installBtn.textContent = 'Install App';
-    installBtn.className = 'btn btn-primary';
-    installBtn.style.cssText = 'margin: 1rem auto; display: block;';
-    installBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            deferredPrompt = null;
-            installBtn.remove();
-        }
-    });
-    
-    document.querySelector('.header-actions').appendChild(installBtn);
-});
