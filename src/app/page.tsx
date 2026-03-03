@@ -477,6 +477,7 @@ export default function DevotionalApp() {
           <DialogHeader className="flex flex-col items-center">
             <img src={`${BP}/church-logo.png`} alt="JKC Logo" className="w-16 h-16 object-contain mb-4" />
             <DialogTitle className="text-2xl font-serif text-center">{user ? "My Account" : "Join the Journey"}</DialogTitle>
+            {!user && <p className="text-sm text-center opacity-70">Sign in to sync your journals across devices.</p>}
           </DialogHeader>
 
           {!user ? (
@@ -503,51 +504,55 @@ export default function DevotionalApp() {
                   <TabsTrigger value="register" className="rounded-full">Register</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="login" className="space-y-4 mt-6">
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    className="w-full h-12 rounded-2xl bg-black/5 dark:bg-white/5 border-0 px-4 focus:ring-2 ring-[var(--primary)]/20"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                  />
-                  <input
-                    type="password"
-                    placeholder="Password"
-                    className="w-full h-12 rounded-2xl bg-black/5 dark:bg-white/5 border-0 px-4 focus:ring-2 ring-[var(--primary)]/20"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                  />
-                  <Button className="w-full h-12 rounded-full bg-[var(--primary)] font-bold text-white shadow-lg" onClick={handleLogin}>
-                    SIGN IN
-                  </Button>
+                <TabsContent value="login">
+                  <form className="space-y-4 mt-6" onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
+                    <input
+                      type="email"
+                      placeholder="Email Address"
+                      className="w-full h-12 rounded-2xl bg-black/5 dark:bg-white/5 border-0 px-4 focus:ring-2 ring-[var(--primary)]/20"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                    />
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      className="w-full h-12 rounded-2xl bg-black/5 dark:bg-white/5 border-0 px-4 focus:ring-2 ring-[var(--primary)]/20"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                    />
+                    <Button type="submit" className="w-full h-12 rounded-full bg-[var(--primary)] font-bold text-white shadow-lg">
+                      SIGN IN
+                    </Button>
+                  </form>
                 </TabsContent>
 
-                <TabsContent value="register" className="space-y-4 mt-6">
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    className="w-full h-12 rounded-2xl bg-black/5 dark:bg-white/5 border-0 px-4 focus:ring-2 ring-[var(--primary)]/20"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                  />
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    className="w-full h-12 rounded-2xl bg-black/5 dark:bg-white/5 border-0 px-4 focus:ring-2 ring-[var(--primary)]/20"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                  />
-                  <input
-                    type="password"
-                    placeholder="Password (min 6 chars)"
-                    className="w-full h-12 rounded-2xl bg-black/5 dark:bg-white/5 border-0 px-4 focus:ring-2 ring-[var(--primary)]/20"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                  />
-                  <Button className="w-full h-12 rounded-full bg-[var(--primary)] font-bold text-white shadow-lg" onClick={handleRegister}>
-                    CREATE ACCOUNT
-                  </Button>
+                <TabsContent value="register">
+                  <form className="space-y-4 mt-6" onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
+                    <input
+                      type="text"
+                      placeholder="Full Name"
+                      className="w-full h-12 rounded-2xl bg-black/5 dark:bg-white/5 border-0 px-4 focus:ring-2 ring-[var(--primary)]/20"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email Address"
+                      className="w-full h-12 rounded-2xl bg-black/5 dark:bg-white/5 border-0 px-4 focus:ring-2 ring-[var(--primary)]/20"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                    />
+                    <input
+                      type="password"
+                      placeholder="Password (min 6 chars)"
+                      className="w-full h-12 rounded-2xl bg-black/5 dark:bg-white/5 border-0 px-4 focus:ring-2 ring-[var(--primary)]/20"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                    />
+                    <Button type="submit" className="w-full h-12 rounded-full bg-[var(--primary)] font-bold text-white shadow-lg">
+                      CREATE ACCOUNT
+                    </Button>
+                  </form>
                 </TabsContent>
               </Tabs>
             </div>
