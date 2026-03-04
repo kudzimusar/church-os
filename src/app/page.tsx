@@ -295,7 +295,7 @@ export default function DevotionalApp() {
       <FloatingHearts />
 
       {/* Sticky Top Nav */}
-      <nav className="sticky top-0 z-[100] w-full bg-[var(--background)]/80 backdrop-blur-xl border-b border-white/10 shadow-sm">
+      <nav className="sticky top-0 z-[100] w-full bg-[var(--background)]/80 backdrop-blur-xl border-b border-foreground/10 shadow-sm">
         <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 md:w-10 md:h-10 relative">
@@ -369,7 +369,7 @@ export default function DevotionalApp() {
 
             {/* Pulse / Stats Section */}
             <section>
-              <div className="glass-card rounded-[3rem] p-8 md:p-10 border border-white/20 shadow-2xl bg-white/5 backdrop-blur-2xl">
+              <div className="glass-card rounded-[3rem] p-8 md:p-10 border border-foreground/20 shadow-2xl bg-foreground/5 backdrop-blur-2xl">
                 <div className="flex flex-col md:flex-row items-center gap-10">
                   {/* Progress Circle */}
                   <div className="relative w-32 h-32 flex-shrink-0">
@@ -399,7 +399,7 @@ export default function DevotionalApp() {
                       <div className="text-2xl md:text-3xl font-black text-[var(--primary)]">{stats.completed}</div>
                       <div className="text-[9px] font-black uppercase tracking-widest opacity-40">Completed</div>
                     </div>
-                    <div className="space-y-1 border-x border-white/10">
+                    <div className="space-y-1 border-x border-foreground/10">
                       <div className="text-2xl md:text-3xl font-black text-[var(--primary)]">90</div>
                       <div className="text-[9px] font-black uppercase tracking-widest opacity-40">Total Journey</div>
                     </div>
@@ -442,7 +442,7 @@ export default function DevotionalApp() {
               </div>
 
               {/* Devotion Content Card */}
-              <Card className="glass border-white/20 rounded-[3rem] overflow-hidden shadow-2xl bg-white/5 backdrop-blur-xl group">
+              <Card className="glass border-foreground/20 rounded-[3rem] overflow-hidden shadow-2xl bg-foreground/5 backdrop-blur-xl group">
                 <CardContent className="p-8 md:p-12 space-y-12">
                   {/* Title Section */}
                   <div className="space-y-4">
@@ -461,7 +461,7 @@ export default function DevotionalApp() {
 
                   {/* Scripture Section */}
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                    <div className="flex items-center justify-between border-b border-foreground/10 pb-4">
                       <div className="flex items-center gap-3">
                         <BookOpen className="w-5 h-5 text-[var(--primary)]" />
                         <span className="font-black text-sm tracking-widest uppercase">{devotion?.scripture}</span>
@@ -471,7 +471,7 @@ export default function DevotionalApp() {
                           <Sparkles className="w-3.5 h-3.5" />
                           AI CHAT
                         </Button>
-                        <Button variant="ghost" size="sm" className="rounded-full h-8 text-[10px] font-black gap-2 px-4 glass hover:bg-white/10" onClick={() => setLang(l => (l === "EN" ? "JP" : (l === "JP" ? "BOTH" : "EN")))}>
+                        <Button variant="ghost" size="sm" className="rounded-full h-8 text-[10px] font-black gap-2 px-4 glass hover:bg-foreground/10" onClick={() => setLang(l => (l === "EN" ? "JP" : (l === "JP" ? "BOTH" : "EN")))}>
                           <Globe className="w-3.5 h-3.5" />
                           {lang === "EN" ? "NASB" : lang === "JP" ? "口語訳" : "Bilingual"}
                         </Button>
@@ -481,8 +481,8 @@ export default function DevotionalApp() {
                     <div className="prose dark:prose-invert max-w-none">
                       {loading ? (
                         <div className="space-y-3 py-4">
-                          <div className="h-5 bg-white/10 rounded-full w-full animate-pulse" />
-                          <div className="h-5 bg-white/10 rounded-full w-[80%] animate-pulse" />
+                          <div className="h-5 bg-foreground/10 rounded-full w-full animate-pulse" />
+                          <div className="h-5 bg-foreground/10 rounded-full w-[80%] animate-pulse" />
                         </div>
                       ) : (
                         <div className="text-xl md:text-2xl font-serif leading-relaxed text-foreground/80 font-medium">
@@ -531,7 +531,7 @@ export default function DevotionalApp() {
                       <TabsContent value="reflection">
                         <Textarea
                           placeholder="Speak, Lord, for your servant is listening..."
-                          className="min-h-[200px] rounded-[2rem] bg-black/10 dark:bg-white/5 border-white/5 p-8 text-lg md:text-xl font-serif resize-none focus:ring-2 ring-[var(--primary)]/30 transition-all"
+                          className="min-h-[200px] rounded-[2rem] bg-black/10 dark:bg-foreground/5 border-white/5 p-8 text-lg md:text-xl font-serif resize-none focus:ring-2 ring-[var(--primary)]/30 transition-all"
                           value={note}
                           onChange={e => setNote(e.target.value)}
                         />
@@ -543,7 +543,7 @@ export default function DevotionalApp() {
                             <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-6">{field}</label>
                             <Textarea
                               placeholder={`My ${field.toLowerCase()}...`}
-                              className="min-h-[120px] rounded-[1.5rem] bg-black/10 dark:bg-white/5 border-white/5 p-6 text-base font-serif resize-none"
+                              className="min-h-[120px] rounded-[1.5rem] bg-black/10 dark:bg-foreground/5 border-white/5 p-6 text-base font-serif resize-none"
                               value={(soapEntry as any)[field.toLowerCase()]}
                               onChange={e => setSoapEntry({ ...soapEntry, [field.toLowerCase()]: e.target.value })}
                             />
@@ -563,11 +563,83 @@ export default function DevotionalApp() {
             </motion.div>
           </div> {/* End Main Left Column */}
 
-          {/* Desktop Split Pane Pane containing Profile/Settings */}
-          {user && showSettings && (
-            <div className="hidden lg:block lg:col-span-5 relative mt-16 animate-in fade-in slide-in-from-right-8 duration-500">
-              <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-4 custom-scrollbar rounded-3xl pb-32">
-                <ProfileView />
+          {/* Profile / Settings View (Inline representation instead of Sheet) */}
+          {showSettings && (
+            <div className={`relative animate-in fade-in slide-in-from-bottom-8 duration-500 w-full ${user ? 'lg:col-span-5 lg:mt-16' : 'max-w-md mx-auto mt-8'}`}>
+              <div className="bg-background/80 backdrop-blur-3xl rounded-[3.5rem] border border-foreground/10 overflow-hidden shadow-2xl p-6 lg:p-0">
+                <div className="p-4 flex flex-col items-center gap-4 relative shrink-0">
+                  <img src={`${BP}/church-logo.png`} alt="JKC" className="w-16 h-16 object-contain" />
+                  <h3 className="text-3xl font-serif text-center">{user ? "Connection Card" : "Join the Journey"}</h3>
+                  {!user && <p className="text-sm opacity-50 text-center">Your private journal, synced anywhere.</p>}
+                  <button onClick={() => setShowSettings(false)} className="absolute top-6 right-6 opacity-40 hover:opacity-100 transition-opacity lg:hidden">
+                    <Trash2 className="w-6 h-6 rotate-45" />
+                  </button>
+                </div>
+
+                <div className="p-2 md:p-6">
+                  {!user ? (
+                    <div className="space-y-6">
+                      <Tabs value={authMode} onValueChange={(v: any) => setAuthMode(v)}>
+                        <TabsList className="grid w-full grid-cols-2 rounded-full h-14 mb-10 bg-foreground/5 border border-foreground/10 p-1">
+                          <TabsTrigger value="login" className="rounded-full font-bold">LOGIN</TabsTrigger>
+                          <TabsTrigger value="register" className="rounded-full font-bold">NEW ACCOUNT</TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="login" className="space-y-4">
+                          <Input placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-6 text-lg" />
+                          <Input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-6 text-lg" />
+                          <Button onClick={handleLogin} className="w-full h-14 rounded-full bg-primary font-black text-lg py-6 shadow-xl shadow-primary/20" disabled={loading}>CONTINUE</Button>
+                          <div className="relative py-4 text-center">
+                            <span className="text-[10px] font-black opacity-30 uppercase tracking-widest px-4 border-t border-foreground/10 pt-4 block w-full mt-2">or secure sign in</span>
+                          </div>
+                          <Button onClick={handleGoogleLogin} variant="outline" className="w-full h-14 rounded-full border-2 font-black gap-3 py-6 glass border-foreground/10 bg-background/50 hover:bg-foreground/5">
+                            <img src="https://www.google.com/favicon.ico" className="w-5 h-5" /> Google Account
+                          </Button>
+                        </TabsContent>
+
+                        <TabsContent value="register" className="space-y-4">
+                          <Input placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-6" />
+                          <Input placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-6" />
+                          <Input placeholder="Set Password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-6" />
+                          <Button onClick={handleRegister} className="w-full h-14 rounded-full bg-primary font-black text-lg shadow-xl shadow-primary/20" disabled={loading}>CREATE ACCOUNT</Button>
+                        </TabsContent>
+                      </Tabs>
+                    </div>
+                  ) : (
+                    <div className="space-y-8 pb-8">
+                      <div className="lg:max-h-[calc(100vh-16rem)] lg:overflow-y-auto custom-scrollbar lg:pr-4">
+                        <ProfileView />
+                      </div>
+
+                      <div className="pt-8 border-t border-foreground/10 flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center font-black text-white text-2xl shadow-lg shadow-primary/20">{user.name[0]}</div>
+                          <div>
+                            <h5 className="font-black text-xl leading-none">{user.name}</h5>
+                            <p className="text-xs opacity-40 font-bold uppercase tracking-wider mt-1">{userRole || 'Member'}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                          {userRole && userRole !== 'member' && (
+                            <Button variant="outline" className="rounded-full h-12 px-6 font-black text-xs uppercase tracking-widest border-2 border-foreground/20 hover:bg-foreground/5 flex-1" onClick={() => window.location.href = `${BP}/shepherd/dashboard`}>
+                              Panel
+                            </Button>
+                          )}
+                          <Button variant="ghost" className="rounded-full h-12 px-6 font-black text-xs uppercase tracking-widest text-red-500 hover:bg-red-500/10 flex-1 glass" onClick={async () => {
+                            await Auth.logout();
+                            setUser(null);
+                            setShowSettings(false);
+                            toast.info("Logged out safely");
+                          }}>Sign Out</Button>
+                        </div>
+                      </div>
+
+                      <Button onClick={() => setShowSettings(false)} className="w-full rounded-full h-14 lg:hidden border-2 border-foreground/10 bg-foreground/5 text-foreground hover:bg-foreground/10 font-black">
+                        CLOSE CONNECTION CARD
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -576,8 +648,8 @@ export default function DevotionalApp() {
       </div>
 
       {/* Persistent Bottom Controls */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 glass p-3 rounded-full border border-white/20 shadow-2xl bg-white/10 backdrop-blur-3xl lg:bottom-12">
-        <Button variant="ghost" size="icon" className="rounded-full h-12 w-12 hover:bg-white/10" onClick={() => setCurrentDate(d => {
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 glass p-3 rounded-full border border-foreground/20 shadow-2xl bg-foreground/10 backdrop-blur-3xl lg:bottom-12">
+        <Button variant="ghost" size="icon" className="rounded-full h-12 w-12 hover:bg-foreground/10" onClick={() => setCurrentDate(d => {
           const next = new Date(d);
           next.setDate(next.getDate() - 1);
           return next;
@@ -597,7 +669,7 @@ export default function DevotionalApp() {
           </PopoverContent>
         </Popover>
 
-        <Button variant="ghost" size="icon" className="rounded-full h-12 w-12 hover:bg-white/10" onClick={() => setCurrentDate(d => {
+        <Button variant="ghost" size="icon" className="rounded-full h-12 w-12 hover:bg-foreground/10" onClick={() => setCurrentDate(d => {
           const next = new Date(d);
           next.setDate(next.getDate() + 1);
           return next;
@@ -605,82 +677,6 @@ export default function DevotionalApp() {
           <ChevronRight className="w-7 h-7" />
         </Button>
       </div>
-
-      {/* Account / Settings Sheet (Mobile & Non-Split views) */}
-      <Sheet open={showSettings} onOpenChange={setShowSettings}>
-        <SheetContent side="bottom" className={`rounded-t-[2.5rem] border-0 glass overflow-hidden p-0 max-h-[92vh] flex flex-col ${user ? 'lg:hidden' : 'lg:max-w-md lg:mx-auto lg:rounded-[3.5rem] lg:mb-[5vh] lg:max-h-[85vh] lg:top-auto lg:bottom-0'} `}>
-          <div className="h-full flex flex-col bg-background/50">
-            <div className="p-8 pb-4 flex flex-col items-center gap-4 relative shrink-0">
-              <div className="w-12 h-1.5 bg-white/20 rounded-full mb-2 lg:hidden" />
-              <img src={`${BP}/church-logo.png`} alt="JKC" className="w-16 h-16 object-contain" />
-              <SheetTitle className="text-3xl font-serif text-center">{user ? "Connection Card" : "Join the Journey"}</SheetTitle>
-              {!user && <p className="text-sm opacity-50 text-center">Your private journal, synced anywhere.</p>}
-              <button onClick={() => setShowSettings(false)} className="absolute top-6 right-8 opacity-40 hover:opacity-100 transition-opacity lg:hidden">
-                <Trash2 className="w-6 h-6 rotate-45" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 pt-0 min-h-0">
-              {!user ? (
-                <div className="space-y-6">
-                  <Tabs value={authMode} onValueChange={(v: any) => setAuthMode(v)}>
-                    <TabsList className="grid w-full grid-cols-2 rounded-full h-14 mb-10 bg-black/10 dark:bg-white/5 border border-white/10 p-1">
-                      <TabsTrigger value="login" className="rounded-full font-bold">LOGIN</TabsTrigger>
-                      <TabsTrigger value="register" className="rounded-full font-bold">NEW ACCOUNT</TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="login" className="space-y-4">
-                      <Input placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="h-14 rounded-2xl bg-black/5 dark:bg-white/5 border border-white/10 px-6 text-lg" />
-                      <Input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-14 rounded-2xl bg-black/5 dark:bg-white/5 border border-white/10 px-6 text-lg" />
-                      <Button onClick={handleLogin} className="w-full h-14 rounded-full bg-primary font-black text-lg py-6 shadow-xl shadow-primary/20" disabled={loading}>CONTINUE</Button>
-                      <div className="relative py-4 text-center">
-                        <span className="text-[10px] font-black opacity-30 uppercase tracking-widest px-4 bg-transparent border-t border-white/10 pt-4 block w-full mt-2">or secure sign in</span>
-                      </div>
-                      <Button onClick={handleGoogleLogin} variant="outline" className="w-full h-14 rounded-full border-2 font-black gap-3 py-6 glass">
-                        <img src="https://www.google.com/favicon.ico" className="w-5 h-5" /> Google Account
-                      </Button>
-                    </TabsContent>
-
-                    <TabsContent value="register" className="space-y-4">
-                      <Input placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="h-14 rounded-2xl bg-black/5 dark:bg-white/5 border border-white/10 px-6" />
-                      <Input placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="h-14 rounded-2xl bg-black/5 dark:bg-white/5 border border-white/10 px-6" />
-                      <Input placeholder="Set Password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-14 rounded-2xl bg-black/5 dark:bg-white/5 border border-white/10 px-6" />
-                      <Button onClick={handleRegister} className="w-full h-14 rounded-full bg-primary font-black text-lg shadow-xl shadow-primary/20" disabled={loading}>CREATE ACCOUNT</Button>
-                    </TabsContent>
-                  </Tabs>
-                </div>
-              ) : (
-                <div className="space-y-12 pb-12">
-                  <ProfileView />
-
-                  <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center font-black text-white text-2xl shadow-lg shadow-primary/20">{user.name[0]}</div>
-                      <div>
-                        <h5 className="font-black text-xl leading-none">{user.name}</h5>
-                        <p className="text-xs opacity-40 font-bold uppercase tracking-wider mt-1">{userRole || 'Member'}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-4 w-full md:w-auto">
-                      {userRole && userRole !== 'member' && (
-                        <Button variant="outline" className="rounded-full h-12 px-6 font-black text-xs uppercase tracking-widest border-2 flex-1 md:flex-auto" onClick={() => window.location.href = `${BP}/shepherd/dashboard`}>
-                          Panel
-                        </Button>
-                      )}
-                      <Button variant="ghost" className="rounded-full h-12 px-6 font-black text-xs uppercase tracking-widest text-red-500 hover:bg-red-500/10 flex-1 md:flex-auto glass" onClick={async () => {
-                        await Auth.logout();
-                        setUser(null);
-                        setShowSettings(false);
-                        toast.info("Logged out safely");
-                      }}>Sign Out</Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
 
       {/* Ask Bible Chat Sheet */}
       <Sheet open={askChatOpen} onOpenChange={(open) => { setAskChatOpen(open); if (!open) { setChatResponse(""); setChatQuestion(""); } }}>
@@ -697,7 +693,7 @@ export default function DevotionalApp() {
           <div className="flex-1 overflow-y-auto space-y-6">
             <Textarea
               placeholder="E.g., What is the cultural context of this verse? How does this apply to modern times?"
-              className="w-full min-h-[120px] bg-black/5 dark:bg-white/5 border-[var(--primary)]/20 rounded-[1.5rem] p-6 text-lg focus:ring-2 ring-[var(--primary)]/50 resize-none text-foreground/90"
+              className="w-full min-h-[120px] bg-black/5 dark:bg-foreground/5 border-[var(--primary)]/20 rounded-[1.5rem] p-6 text-lg focus:ring-2 ring-[var(--primary)]/50 resize-none text-foreground/90"
               value={chatQuestion}
               onChange={e => setChatQuestion(e.target.value)}
             />
@@ -716,7 +712,7 @@ export default function DevotionalApp() {
       </Sheet>
 
       {/* Comprehensive Church Footer */}
-      <footer className="w-full bg-black/20 dark:bg-white/5 border-t border-white/10 pt-16 pb-32 mt-20 relative z-10 backdrop-blur-xl">
+      <footer className="w-full bg-black/20 dark:bg-foreground/5 border-t border-foreground/10 pt-16 pb-32 mt-20 relative z-10 backdrop-blur-xl">
         <div className="max-w-screen-xl mx-auto px-6 grid md:grid-cols-3 gap-12">
           <div className="space-y-4">
             <div className="w-12 h-12 relative opacity-80">
@@ -744,7 +740,7 @@ export default function DevotionalApp() {
             </div>
           </div>
         </div>
-        <div className="max-w-screen-xl mx-auto px-6 mt-16 pt-8 border-t border-white/10 text-center opacity-40 text-xs font-bold uppercase tracking-widest">
+        <div className="max-w-screen-xl mx-auto px-6 mt-16 pt-8 border-t border-foreground/10 text-center opacity-40 text-xs font-bold uppercase tracking-widest">
           © {new Date().getFullYear()} Japan Kingdom Church. All rights reserved.
         </div>
       </footer>

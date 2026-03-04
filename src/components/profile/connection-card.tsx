@@ -246,8 +246,8 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
         <main className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
             <div className="flex flex-col md:flex-row gap-6 items-start">
                 {/* Main Info Card */}
-                <Card className="glass border-white/20 flex-1 w-full bg-white/5 backdrop-blur-3xl rounded-[2.5rem] overflow-hidden">
-                    <CardHeader className="bg-primary/10 border-b border-white/10 pb-10">
+                <Card className="glass border-foreground/10 flex-1 w-full bg-background/50 rounded-[2.5rem] shadow-xl backdrop-blur-3xl rounded-[2.5rem] overflow-hidden">
+                    <CardHeader className="bg-primary/10 border-b border-foreground/10 pb-10">
                         <div className="flex items-center gap-6">
                             <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-black shadow-lg">
                                 {profile.name[0]}
@@ -257,7 +257,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                 <CardDescription className="font-medium opacity-60">Member since 2026 • {profile.country_of_origin || 'International'}</CardDescription>
                                 <div className="flex gap-2 mt-3">
                                     <Badge className="bg-primary/20 text-primary border-primary/20">Active Member</Badge>
-                                    <Badge variant="outline" className="border-white/20">{profile.preferred_language === 'JP' ? '日本語' : 'English'}</Badge>
+                                    <Badge variant="outline" className="border-foreground/20">{profile.preferred_language === 'JP' ? '日本語' : 'English'}</Badge>
                                 </div>
                             </div>
                         </div>
@@ -265,7 +265,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
 
                     <CardContent className="p-8">
                         <Tabs defaultValue="identity" className="w-full">
-                            <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 rounded-[2rem] bg-black/10 dark:bg-white/5 border border-white/5 p-1 mb-8 gap-1 h-auto min-h-[56px]">
+                            <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 rounded-[2rem] bg-foreground/5 bg-foreground/5 border border-foreground/5 p-1 mb-8 gap-1 h-auto min-h-[56px]">
                                 <TabsTrigger value="identity" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold">Identity</TabsTrigger>
                                 <TabsTrigger value="family" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold">Family</TabsTrigger>
                                 <TabsTrigger value="spiritual" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold">Journey</TabsTrigger>
@@ -282,7 +282,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         <Input
                                             value={profile.name}
                                             onChange={e => setProfile({ ...profile, name: e.target.value })}
-                                            className="glass border-white/10 rounded-2xl h-12"
+                                            className="glass border-foreground/10 rounded-2xl h-12"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -290,7 +290,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         <Input
                                             value={profile.phone_number || ''}
                                             onChange={e => setProfile({ ...profile, phone_number: e.target.value })}
-                                            className="glass border-white/10 rounded-2xl h-12"
+                                            className="glass border-foreground/10 rounded-2xl h-12"
                                             placeholder="+81 000-0000-0000"
                                         />
                                     </div>
@@ -300,7 +300,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                             type="date"
                                             value={profile.birthdate || ''}
                                             onChange={e => setProfile({ ...profile, birthdate: e.target.value })}
-                                            className="glass border-white/10 rounded-2xl h-12 text-white/60"
+                                            className="glass border-foreground/10 rounded-2xl h-12 text-foreground/60"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -309,7 +309,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                             type="date"
                                             value={profile.wedding_anniversary || ''}
                                             onChange={e => setProfile({ ...profile, wedding_anniversary: e.target.value })}
-                                            className="glass border-white/10 rounded-2xl h-12 text-white/60"
+                                            className="glass border-foreground/10 rounded-2xl h-12 text-foreground/60"
                                         />
                                     </div>
                                     <div className="space-y-2 md:col-span-2">
@@ -317,7 +317,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         <Input
                                             value={profile.physical_address || ''}
                                             onChange={e => setProfile({ ...profile, physical_address: e.target.value })}
-                                            className="glass border-white/10 rounded-2xl h-12"
+                                            className="glass border-foreground/10 rounded-2xl h-12"
                                             placeholder="1-2-3 Minato-ku, Tokyo, Japan"
                                         />
                                     </div>
@@ -326,7 +326,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         <Input
                                             value={profile.country_of_origin || ''}
                                             onChange={e => setProfile({ ...profile, country_of_origin: e.target.value })}
-                                            className="glass border-white/10 rounded-2xl h-12"
+                                            className="glass border-foreground/10 rounded-2xl h-12"
                                             placeholder="e.g. Zimbabwe, USA, Japan"
                                         />
                                     </div>
@@ -335,7 +335,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         <select
                                             value={profile.preferred_language}
                                             onChange={e => setProfile({ ...profile, preferred_language: e.target.value as 'EN' | 'JP' })}
-                                            className="w-full h-12 rounded-2xl bg-white/5 border border-white/10 px-4 focus:ring-2 ring-primary/20 outline-none"
+                                            className="w-full h-12 rounded-2xl bg-foreground/5 border border-foreground/10 px-4 focus:ring-2 ring-primary/20 outline-none"
                                         >
                                             <option value="EN">English</option>
                                             <option value="JP">Japanese</option>
@@ -360,8 +360,8 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                 </div>
 
                                 <div className="flex gap-2">
-                                    <Input placeholder="Name..." value={newHouseholdName} onChange={e => setNewHouseholdName(e.target.value)} className="glass border-white/10 rounded-2xl h-12" />
-                                    <select value={newHouseholdRel} onChange={e => setNewHouseholdRel(e.target.value)} className="w-32 h-12 rounded-2xl bg-white/5 border border-white/10 px-4 focus:ring-2 ring-[var(--primary)]/20 outline-none">
+                                    <Input placeholder="Name..." value={newHouseholdName} onChange={e => setNewHouseholdName(e.target.value)} className="glass border-foreground/10 rounded-2xl h-12" />
+                                    <select value={newHouseholdRel} onChange={e => setNewHouseholdRel(e.target.value)} className="w-32 h-12 rounded-2xl bg-foreground/5 border border-foreground/10 px-4 focus:ring-2 ring-[var(--primary)]/20 outline-none">
                                         <option value="Spouse">Spouse</option>
                                         <option value="Child">Child</option>
                                         <option value="Parent">Parent</option>
@@ -373,14 +373,14 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                 </div>
 
                                 {household.length === 0 ? (
-                                    <div className="py-12 border-2 border-dashed border-white/10 rounded-3xl flex flex-col items-center justify-center opacity-40 text-center">
+                                    <div className="py-12 border-2 border-dashed border-foreground/10 rounded-3xl flex flex-col items-center justify-center opacity-40 text-center">
                                         <Users className="w-12 h-12 mb-3" />
                                         <p className="max-w-[200px] text-xs font-bold">No household members linked yet. Start building your family unit.</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-3 pt-4">
                                         {household.map((h, i) => (
-                                            <div key={i} className="glass border-white/10 rounded-2xl p-4 flex items-center justify-between">
+                                            <div key={i} className="glass border-foreground/10 rounded-2xl p-4 flex items-center justify-between">
                                                 <div>
                                                     <p className="font-bold">{h.name}</p>
                                                     <p className="text-[10px] opacity-40 uppercase tracking-widest">{h.relationship}</p>
@@ -394,17 +394,17 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                             {/* SPIRITUAL TAB */}
                             <TabsContent value="spiritual" className="space-y-6">
                                 <div className="grid md:grid-cols-3 gap-6">
-                                    <Card className="glass border-white/10 bg-black/20 rounded-3xl p-6 flex flex-col items-center text-center">
+                                    <Card className="glass border-foreground/10 bg-foreground/5 rounded-3xl p-6 flex flex-col items-center text-center">
                                         <Trophy className="w-8 h-8 text-amber-500 mb-2" />
                                         <div className="text-3xl font-black">{stats.streak}</div>
                                         <div className="text-[10px] font-bold uppercase opacity-40">Day Streak</div>
                                     </Card>
-                                    <Card className="glass border-white/10 bg-black/20 rounded-3xl p-6 flex flex-col items-center text-center">
+                                    <Card className="glass border-foreground/10 bg-foreground/5 rounded-3xl p-6 flex flex-col items-center text-center">
                                         <Heart className="w-8 h-8 text-red-500 mb-2" />
                                         <div className="text-3xl font-black">{stats.completed}</div>
                                         <div className="text-[10px] font-bold uppercase opacity-40">Devotions Finished</div>
                                     </Card>
-                                    <Card className="glass border-white/10 bg-black/20 rounded-3xl p-6 flex flex-col items-center text-center">
+                                    <Card className="glass border-foreground/10 bg-foreground/5 rounded-3xl p-6 flex flex-col items-center text-center">
                                         <CheckCircle2 className="w-8 h-8 text-green-500 mb-2" />
                                         <div className="text-3xl font-black">74%</div>
                                         <div className="text-[10px] font-bold uppercase opacity-40">Target Complete</div>
@@ -414,7 +414,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                 <div className="space-y-4 pt-4">
                                     <h4 className="text-sm font-bold uppercase tracking-widest opacity-40">Spiritual Milestones</h4>
                                     <div className="space-y-3">
-                                        <div className="glass border-white/10 rounded-2xl p-4 flex items-center justify-between">
+                                        <div className="glass border-foreground/10 rounded-2xl p-4 flex items-center justify-between">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
                                                     <Milestone className="w-5 h-5" />
@@ -426,7 +426,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                             </div>
                                             <p className="text-xs font-mono opacity-60">2026-03-01</p>
                                         </div>
-                                        <Button variant="outline" className="w-full border-dashed border-white/10 rounded-2xl h-12 font-bold opacity-40 hover:opacity-100 transition-all">
+                                        <Button variant="outline" className="w-full border-dashed border-foreground/10 rounded-2xl h-12 font-bold opacity-40 hover:opacity-100 transition-all">
                                             <Plus className="w-4 h-4 mr-2" /> RECORD NEW MILESTONE
                                         </Button>
                                     </div>
@@ -439,14 +439,14 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                     <div className="space-y-4">
                                         <h4 className="text-sm font-bold uppercase tracking-widest opacity-40">Service & Volunteering</h4>
                                         <div className="flex gap-2 mb-4">
-                                            <Input placeholder="Role (e.g. Greeter)" value={newMinistry} onChange={e => setNewMinistry(e.target.value)} className="glass border-white/10 rounded-2xl h-10" />
+                                            <Input placeholder="Role (e.g. Greeter)" value={newMinistry} onChange={e => setNewMinistry(e.target.value)} className="glass border-foreground/10 rounded-2xl h-10" />
                                             <Button onClick={handleAddMinistry} size="sm" className="rounded-2xl bg-[var(--primary)] font-bold px-4 text-white"><Plus className="w-4 h-4" /></Button>
                                         </div>
                                         <div className="space-y-3">
                                             {ministryRoles.map(m => (
-                                                <div key={m.id} className={`glass border-white/10 rounded-2xl p-4 flex items-center justify-between ${m.status !== 'ACTIVE' ? 'opacity-50' : ''}`}>
+                                                <div key={m.id} className={`glass border-foreground/10 rounded-2xl p-4 flex items-center justify-between ${m.status !== 'ACTIVE' ? 'opacity-50' : ''}`}>
                                                     <p className="font-bold">{m.status === 'ACTIVE' ? <span className="text-[var(--primary)]">{m.role}</span> : m.role}</p>
-                                                    <Badge variant={m.status === 'ACTIVE' ? 'default' : 'outline'} className={m.status === 'ACTIVE' ? 'bg-green-500/20 text-green-500 border-0' : 'border-white/20'}>{m.status}</Badge>
+                                                    <Badge variant={m.status === 'ACTIVE' ? 'default' : 'outline'} className={m.status === 'ACTIVE' ? 'bg-green-500/20 text-green-500 border-0' : 'border-foreground/20'}>{m.status}</Badge>
                                                 </div>
                                             ))}
                                         </div>
@@ -454,10 +454,10 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
 
                                     <div className="space-y-4">
                                         <h4 className="text-sm font-bold uppercase tracking-widest opacity-40">Attendance Pulse</h4>
-                                        <div className="glass border-white/10 rounded-3xl p-6">
+                                        <div className="glass border-foreground/10 rounded-3xl p-6">
                                             <div className="flex justify-between items-end gap-1 h-20 mb-4">
                                                 {[80, 100, 60, 40, 90, 100, 100].map((h, i) => (
-                                                    <div key={i} className={`flex-1 rounded-t-sm transition-all ${h > 80 ? 'bg-primary' : 'bg-white/10'}`} style={{ height: `${h}%` }} />
+                                                    <div key={i} className={`flex-1 rounded-t-sm transition-all ${h > 80 ? 'bg-primary' : 'bg-foreground/10'}`} style={{ height: `${h}%` }} />
                                                 ))}
                                             </div>
                                             <p className="text-xs text-center opacity-50 font-medium">Last 7 Sunday Services</p>
@@ -480,19 +480,19 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
 
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        <Card className="glass border-white/10 bg-white/5 rounded-2xl p-4">
+                                        <Card className="glass border-foreground/10 bg-foreground/5 rounded-2xl p-4">
                                             <div className="text-[10px] font-black uppercase opacity-40">Total Tithing 2026</div>
                                             <div className="text-xl font-black">¥450,000</div>
                                         </Card>
-                                        <Card className="glass border-white/10 bg-white/5 rounded-2xl p-4">
+                                        <Card className="glass border-foreground/10 bg-foreground/5 rounded-2xl p-4">
                                             <div className="text-[10px] font-black uppercase opacity-40">Building Fund</div>
                                             <div className="text-xl font-black">¥10,000</div>
                                         </Card>
                                     </div>
 
-                                    <div className="glass border-white/10 rounded-3xl overflow-hidden">
+                                    <div className="glass border-foreground/10 rounded-3xl overflow-hidden">
                                         <table className="w-full text-left text-xs">
-                                            <thead className="bg-white/5 font-black uppercase tracking-widest opacity-40">
+                                            <thead className="bg-foreground/5 font-black uppercase tracking-widest opacity-40">
                                                 <tr>
                                                     <th className="p-4">Date</th>
                                                     <th className="p-4">Fund</th>
@@ -535,14 +535,14 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                     <div className="space-y-3 pt-4">
                                         <h4 className="text-xs font-black uppercase tracking-widest opacity-40">Active Prayer Requests</h4>
                                         <div className="flex gap-2 mb-4">
-                                            <Input placeholder="My prayer is..." value={newPrayer} onChange={e => setNewPrayer(e.target.value)} className="glass border-white/10 rounded-2xl h-12" />
+                                            <Input placeholder="My prayer is..." value={newPrayer} onChange={e => setNewPrayer(e.target.value)} className="glass border-foreground/10 rounded-2xl h-12" />
                                             <Button onClick={handleAddPrayer} className="rounded-2xl bg-[var(--primary)] h-12 px-6 font-bold shadow-lg shadow-primary/20 shrink-0 text-white">
                                                 ADD
                                             </Button>
                                         </div>
                                         {prayers.length === 0 && <p className="text-xs opacity-50 text-center py-4">No active requests.</p>}
                                         {prayers.map(p => (
-                                            <div key={p.id} className="glass border-white/10 rounded-2xl p-4 flex items-center justify-between">
+                                            <div key={p.id} className="glass border-foreground/10 rounded-2xl p-4 flex items-center justify-between">
                                                 <div>
                                                     <p className={`font-bold text-sm ${p.status === 'ANSWERED' ? 'line-through opacity-50' : ''}`}>{p.text}</p>
                                                     <div className="flex gap-2 mt-1">
@@ -557,7 +557,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                     </div>
 
                                     {isAdmin && (
-                                        <div className="space-y-4 pt-6 border-t border-white/10">
+                                        <div className="space-y-4 pt-6 border-t border-foreground/10">
                                             <h4 className="text-sm font-black uppercase text-amber-500 flex items-center gap-2">
                                                 <Shield className="w-4 h-4" /> Admin Only: Pastoral Notes
                                             </h4>
@@ -566,7 +566,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                             </p>
                                             <div className="space-y-3">
                                                 <textarea
-                                                    className="w-full h-40 glass bg-white/5 border border-amber-500/20 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none placeholder:text-white/20"
+                                                    className="w-full h-40 glass bg-foreground/5 border border-amber-500/20 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none placeholder:text-foreground/20"
                                                     placeholder="Enter counseling notes or follow-up insights..."
                                                     value={pastoralNotes}
                                                     onChange={(e) => setPastoralNotes(e.target.value)}
@@ -604,20 +604,20 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                         </p>
                     </Card>
 
-                    <Card className="glass border-white/10 bg-black/20 rounded-[2rem] p-6">
-                        <div className="flex items-center gap-3 mb-4 text-white/40">
+                    <Card className="glass border-foreground/10 bg-foreground/5 rounded-[2rem] p-6">
+                        <div className="flex items-center gap-3 mb-4 text-foreground/70">
                             <Users className="w-6 h-6" />
                             <h4 className="font-black text-sm uppercase tracking-wider">Church Family</h4>
                         </div>
                         <div className="space-y-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-white/10" />
+                                <div className="w-8 h-8 rounded-full bg-foreground/10" />
                                 <div className="flex-1">
-                                    <div className="h-2 w-24 bg-white/20 rounded mb-1" />
-                                    <div className="h-2 w-16 bg-white/10 rounded" />
+                                    <div className="h-2 w-24 bg-foreground/20 rounded mb-1" />
+                                    <div className="h-2 w-16 bg-foreground/10 rounded" />
                                 </div>
                             </div>
-                            <Button variant="outline" className="w-full rounded-2xl h-10 text-xs font-bold border-white/10">SHARE APP WITH FAMILY</Button>
+                            <Button variant="outline" className="w-full rounded-2xl h-10 text-xs font-bold border-foreground/10">SHARE APP WITH FAMILY</Button>
                         </div>
                     </Card>
                 </div>
