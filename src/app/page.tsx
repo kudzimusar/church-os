@@ -81,7 +81,7 @@ export default function DevotionalApp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [stats, setStats] = useState<{ completed: number; total: number; streak: number; lastCompletedJST: string | null }>({ completed: 0, total: 31, streak: 0, lastCompletedJST: null });
+  const [stats, setStats] = useState<{ completed: number; total: number; streak: number; lastCompletedJST: string | null; completedDays: number[] }>({ completed: 0, total: 31, streak: 0, lastCompletedJST: null, completedDays: [] });
 
   const loadStats = async () => {
     if (user) {
@@ -360,7 +360,7 @@ export default function DevotionalApp() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {stats.lastCompletedJST === new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date(currentDate)) && (
+                {(stats.completedDays.includes(devotion?.id || 0) || stats.lastCompletedJST === new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date(currentDate))) && (
                   <Badge className="bg-green-500/20 text-green-700 dark:text-green-400 font-bold border-0 hidden sm:inline-flex">
                     ✓ COMPLETED
                   </Badge>

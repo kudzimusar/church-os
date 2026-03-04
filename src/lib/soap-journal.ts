@@ -85,18 +85,19 @@ export const SoapJournal = {
     },
 
     // Calculate stats: completion total and current streak
-    async getStats(): Promise<{ completed: number; total: number; streak: number; lastCompletedJST: string | null }> {
+    async getStats(): Promise<{ completed: number; total: number; streak: number; lastCompletedJST: string | null; completedDays: number[] }> {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return { completed: 0, total: 90, streak: 0, lastCompletedJST: null };
+        if (!user) return { completed: 0, total: 90, streak: 0, lastCompletedJST: null, completedDays: [] };
 
         const { data, error } = await supabase
             .from('soap_entries')
             .select('day_number, updated_at')
             .order('day_number', { ascending: false });
 
-        if (error || !data) return { completed: 0, total: 90, streak: 0, lastCompletedJST: null };
+        if (error || !data) return { completed: 0, total: 90, streak: 0, lastCompletedJST: null, completedDays: [] };
 
         const completed = data.length;
+        const completedDays = data.map(d => d.day_number);
         let streak = 0;
         let lastCompletedJST = null;
 
@@ -113,21 +114,20 @@ export const SoapJournal = {
                 }
             }
 
-            const dayNumbers = data.map(d => d.day_number);
-            let current = dayNumbers[0];
+            let current = completedDays[0];
             streak = 1;
 
-            for (let i = 1; i < dayNumbers.length; i++) {
-                if (dayNumbers[i] === current - 1) {
+            for (let i = 1; i < completedDays.length; i++) {
+                if (completedDays[i] === current - 1) {
                     streak++;
-                    current = dayNumbers[i];
+                    current = completedDays[i];
                 } else {
                     break;
                 }
             }
         }
 
-        return { completed, total: 90, streak, lastCompletedJST };
+        return { completed, total: 90, streak, lastCompletedJST, completedDays };
     },
 
     getDefaultEntry(dayNumber: number): SoapEntry {

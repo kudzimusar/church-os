@@ -9,6 +9,15 @@ CREATE TABLE IF NOT EXISTS organizations (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 1.1 Profiles Table (User metadata)
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT,
+  avatar_url TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- 2. API Keys Table
 CREATE TABLE IF NOT EXISTS api_keys (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -43,10 +52,26 @@ CREATE TABLE IF NOT EXISTS devotions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 4. SOAP Journal Entries Table
+CREATE TABLE IF NOT EXISTS soap_entries (
+  id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  day_number INT NOT NULL,
+  scripture TEXT,
+  observation TEXT,
+  application TEXT,
+  prayer TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, day_number)
+);
+
 -- Enable RLS
 ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
 ALTER TABLE devotions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE soap_entries ENABLE ROW LEVEL SECURITY;
 
 -- 4. RLS Policies
 
@@ -73,3 +98,11 @@ CREATE POLICY "Members can access own org_members" ON org_members
 -- API Keys: Only internal server/admin can manage
 CREATE POLICY "Internal service manages keys" ON api_keys
   FOR ALL USING (auth.uid() IS NOT NULL);
+
+-- Profiles: Users can manage own profile
+CREATE POLICY "Users can manage own profile" ON profiles
+  FOR ALL USING (auth.uid() = id);
+
+-- SOAP Entries: Users can manage own entries
+CREATE POLICY "Users can manage own soap entries" ON soap_entries
+  FOR ALL USING (auth.uid() = user_id);

@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import localDevotions from '@/data/devotions.json';
 
 export type Devotion = {
     id: number;
@@ -12,22 +13,23 @@ export type Devotion = {
 };
 
 export async function getDevotionForDate(dateStr: string): Promise<Devotion | null> {
-    const { data, error } = await supabase
-        .from('devotions')
-        .select('*')
-        .eq('date', dateStr)
-        .single();
+    try {
+        const { data, error } = await supabase
+            .from('devotions')
+            .select('*')
+            .eq('date', dateStr)
+            .single();
 
-    if (error) {
-        if (error.code === 'PGRST116') {
-            // No rows found
-            return null;
+        if (!error && data) {
+            return data;
         }
-        console.error("Error fetching devotion from Supabase:", error);
-        throw error;
+    } catch (e) {
+        console.warn("Supabase fetch failed, falling back to local data:", e);
     }
 
-    return data;
+    // Fallback to local JSON
+    const local = (localDevotions as Devotion[]).find(d => d.date === dateStr);
+    return local || null;
 }
 
 export async function getAllDevotions(): Promise<Devotion[]> {
