@@ -225,7 +225,7 @@ export default function DevotionalApp() {
   const activeVerses = lang === "JP" ? jpVerses : verses; // Base loop is driven by EN or JP. Both overrides rendering inside.
 
   return (
-    <main className="max-w-2xl mx-auto px-4 py-8 relative overflow-hidden">
+    <main className="max-w-2xl mx-auto px-4 py-8 relative">
       {/* Background Glows */}
       <div className="fixed inset-0 pointer-events-none opacity-30">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[var(--primary)] blur-[100px] rounded-full" />
@@ -284,10 +284,10 @@ export default function DevotionalApp() {
             </div>
           </div>
         </header>
-      </div >
+      </div>
 
       {/* Hero Section */}
-      < section className="relative z-10 text-center py-12 space-y-4" >
+      <section className="relative z-10 text-center py-12 space-y-4">
         <motion.h1
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
