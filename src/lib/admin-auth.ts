@@ -5,6 +5,7 @@
  * for the /shepherd/* dashboard routes.
  */
 import { supabase } from './supabase';
+import { basePath as BP } from './utils';
 
 export const ADMIN_ROLES = ['super_admin', 'owner', 'shepherd', 'admin', 'ministry_lead'] as const;
 export type AdminRole = typeof ADMIN_ROLES[number];
@@ -110,7 +111,6 @@ export const AdminAuth = {
             sessionStorage.removeItem(CACHE_KEY);
         }
         await supabase.auth.signOut();
-        const BP = process.env.NEXT_PUBLIC_BASE_PATH || '/jkc-devotion-app';
         window.location.href = `${BP}/shepherd/login`;
     },
 

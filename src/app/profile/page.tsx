@@ -78,7 +78,9 @@ export default function ProfileHub() {
     const [stats, setStats] = useState({ completed: 0, streak: 0 });
 
     // Forms
-    const idForm = useForm<IdentityForm>({ resolver: zodResolver(identitySchema) });
+    const idForm = useForm<IdentityForm>({
+        resolver: zodResolver(identitySchema) as any
+    });
     const [isSaving, setIsSaving] = useState(false);
 
     // Dynamic state
