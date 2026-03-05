@@ -28,7 +28,7 @@ export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate
 
             const contextPayload = {
                 stats: stats ? { currentStreak: stats.streak, completedToday: isCompletedToday } : null,
-                devotion: devotion ? { weekTheme: `Week ${devotion.week}: ${devotion.week_theme}`, dailyFocus: devotion.declaration, scripture: devotion.scripture, theme: devotion.theme } : null,
+                devotion: devotion ? { weekTheme: `Week ${devotion.week}: ${devotion.week_theme}`, dailyFocus: devotion.declaration, scripture: devotion.scripture, text: devotion.fullScriptureText || devotion.scripture, theme: devotion.theme } : null,
                 currentDate: currentDate?.toISOString()
             };
 
@@ -94,8 +94,8 @@ export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate
                                 className={`flex ${chat.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
                                 <div className={`max-w-[85%] rounded-3xl p-4 text-sm leading-relaxed ${chat.role === 'user'
-                                        ? 'bg-primary text-white rounded-br-sm shadow-xl shadow-primary/20'
-                                        : 'glass bg-foreground/5 border border-foreground/10 rounded-bl-sm prose prose-sm dark:prose-invert font-serif whitespace-pre-wrap'
+                                    ? 'bg-primary text-white rounded-br-sm shadow-xl shadow-primary/20'
+                                    : 'glass bg-foreground/5 border border-foreground/10 rounded-bl-sm prose prose-sm dark:prose-invert font-serif whitespace-pre-wrap'
                                     }`}>
                                     {chat.content}
                                 </div>

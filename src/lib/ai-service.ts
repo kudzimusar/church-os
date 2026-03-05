@@ -65,14 +65,14 @@ export const AIService = {
                             const dateObj = contextPayload.currentDate ? new Date(contextPayload.currentDate) : new Date();
                             const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-                            let response = `Hello ${userName}! It's ${dateStr}, and we are in **${d.weekTheme}**.\n\nToday's daily focus is: *'${d.dailyFocus}'*\n\nYour scripture is **${d.scripture}**.\n\n`;
+                            let response = `Hello ${userName}! It's ${dateStr}, and we are in **${d.weekTheme}**.\nToday's daily focus is: *'${d.dailyFocus}'*\nYour scripture is **${d.scripture}**: *'${d.text.trim()}'*\n\n`;
 
                             if (s?.currentStreak > 0) {
                                 response += `You're on a great ${s.currentStreak}-day streak! `;
                             }
 
                             if (!s?.completedToday) {
-                                response += `I see you haven't saved your reflection on ${d.scripture} yet. Would you like to discuss what it means to you today before you complete your SOAP journal?`;
+                                response += `Once you've meditated on this, don't forget to mark your SOAP journal as 'Complete' to keep your momentum going. How does this verse speak to your heart today?`;
                             } else {
                                 response += `Great job completing your devotion today! How did ${d.scripture} speak to your heart?`;
                             }
