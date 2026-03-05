@@ -22,12 +22,21 @@ const STATUS_CONFIG = {
 
 export default function CareAndPrayerPage() {
     const [prayers, setPrayers] = useState<Prayer[]>([]);
+    const [alerts, setAlerts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<string>('all');
 
     useEffect(() => {
-        supabaseAdmin.from('prayer_requests').select('*').order('created_at', { ascending: false })
-            .then(({ data }) => { setPrayers(data || []); setLoading(false); });
+        const load = async () => {
+            const [prayersRes, alertsRes] = await Promise.all([
+                supabaseAdmin.from('prayer_requests').select('*').order('created_at', { ascending: false }),
+                supabaseAdmin.from('member_alerts').select('*, member:profiles(name)').eq('is_resolved', false).order('created_at', { ascending: false })
+            ]);
+            setPrayers(prayersRes.data || []);
+            setAlerts(alertsRes.data || []);
+            setLoading(false);
+        };
+        load();
     }, []);
 
     const active = prayers.filter(p => p.status === 'active' || p.status === 'in_prayer');
@@ -51,17 +60,17 @@ export default function CareAndPrayerPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-3 mb-6">
+            <div className="grid grid-cols-5 gap-3 mb-6">
                 {[
                     { label: 'Active Prayers', val: active.length, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-                    { label: 'Crisis Requests', val: crisis.length, color: 'text-red-400', bg: 'bg-red-500/10' },
+                    { label: 'Care Alerts', val: alerts.length, color: 'text-red-400', bg: 'bg-red-500/10' },
+                    { label: 'Crisis Requests', val: crisis.length, color: 'text-rose-400', bg: 'bg-rose-500/10' },
                     { label: 'Answered', val: answered.length, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                    { label: 'Total Requests', val: prayers.length, color: 'text-violet-400', bg: 'bg-violet-500/10' },
+                    { label: 'Total Volume', val: prayers.length + alerts.length, color: 'text-violet-400', bg: 'bg-violet-500/10' },
                 ].map(s => (
                     <div key={s.label} className="bg-[#111827] border border-white/5 rounded-2xl p-4">
-                        <p className="text-2xl font-black text-white">{s.val}</p>
+                        <p className={`text-2xl font-black ${s.color}`}>{loading ? '—' : s.val}</p>
                         <p className="text-[9px] font-black text-white/30 uppercase tracking-wide mt-1">{s.label}</p>
-                        <div className={`mt-2 h-1 rounded-full ${s.bg}`} />
                     </div>
                 ))}
             </div>
@@ -77,51 +86,90 @@ export default function CareAndPrayerPage() {
                 ))}
             </div>
 
-            {/* Prayer Cards */}
+            {/* Content Grid */}
             {loading ? (
-                <div className="text-center py-16 text-white/30 text-xs">Loading prayer requests...</div>
+                <div className="text-center py-16 text-white/30 text-xs uppercase tracking-widest font-black">Loading Care Intelligence...</div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                    {filtered.map((p, i) => {
-                        const urg = URGENCY_CONFIG[p.urgency as keyof typeof URGENCY_CONFIG] || URGENCY_CONFIG.normal;
-                        const stat = STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.active;
-                        const StatIcon = stat.icon;
-                        return (
-                            <motion.div
-                                key={p.id}
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.04 }}
-                                className={`p-4 rounded-2xl border ${urg.bg}`}
-                            >
-                                <div className="flex items-start justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase ${urg.badge}`}>
-                                            {p.urgency}
-                                        </span>
-                                        <span className="text-[8px] font-black px-1.5 py-0.5 rounded-md bg-white/10 text-white/40 uppercase">
-                                            {p.category}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Prayer Board */}
+                    <div className="lg:col-span-2 space-y-4">
+                        <h2 className="text-xs font-black text-white/40 uppercase tracking-widest pl-2">Live Prayer Board</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {filtered.map((p, i) => {
+                                const urg = URGENCY_CONFIG[p.urgency as keyof typeof URGENCY_CONFIG] || URGENCY_CONFIG.normal;
+                                const stat = STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.active;
+                                const StatIcon = stat.icon;
+                                return (
+                                    <motion.div
+                                        key={p.id}
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.04 }}
+                                        className={`p-4 rounded-2xl border ${urg.bg}`}
+                                    >
+                                        <div className="flex items-start justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase ${urg.badge}`}>
+                                                    {p.urgency}
+                                                </span>
+                                            </div>
+                                            <StatIcon className={`w-3.5 h-3.5 ${stat.color}`} />
+                                        </div>
+                                        <p className="text-xs text-white/70 leading-relaxed mb-3">
+                                            {p.is_anonymous ? '🔒 ' : ''}{p.request_text}
+                                        </p>
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[9px] text-white/25">{new Date(p.created_at).toLocaleDateString()}</p>
+                                            {p.status !== 'answered' && (
+                                                <button onClick={() => markAnswered(p.id)} className="text-[9px] font-black text-emerald-400 flex items-center gap-1">
+                                                    <CheckCircle2 className="w-3 h-3" /> Answered
+                                                </button>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Care Alerts Sidebar */}
+                    <div className="space-y-4">
+                        <h2 className="text-xs font-black text-red-400 uppercase tracking-widest pl-2 flex items-center gap-2">
+                            <AlertTriangle className="w-3 h-3" /> Disengagement Risk
+                        </h2>
+                        <div className="space-y-3">
+                            {alerts.length > 0 ? alerts.map((a, i) => (
+                                <motion.div
+                                    key={a.id}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: i * 0.1 }}
+                                    className="p-4 bg-red-500/5 border border-red-500/10 rounded-2xl group hover:bg-red-500/10 transition-colors"
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <p className="text-xs font-black text-white">{a.member?.name}</p>
+                                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase ${a.severity === 'critical' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                                            {a.severity}
                                         </span>
                                     </div>
-                                    <StatIcon className={`w-3.5 h-3.5 ${stat.color}`} />
-                                </div>
-                                <p className="text-xs text-white/70 leading-relaxed mb-3">
-                                    {p.is_anonymous ? '🔒 ' : ''}{p.request_text}
-                                </p>
-                                <div className="flex items-center justify-between">
-                                    <p className="text-[9px] text-white/25">{new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                                    {p.status !== 'answered' && (
-                                        <button
-                                            onClick={() => markAnswered(p.id)}
-                                            className="text-[9px] font-black text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
-                                        >
-                                            <CheckCircle2 className="w-3 h-3" /> Mark Answered
+                                    <p className="text-[10px] text-white/40 mb-3">{a.alert_type}</p>
+                                    <div className="flex gap-2">
+                                        <button className="flex-1 py-2 bg-white/5 rounded-xl text-[9px] font-black text-white/60 hover:bg-white/10 transition-all uppercase tracking-widest">
+                                            View Profile
                                         </button>
-                                    )}
+                                        <button className="px-4 py-2 bg-red-500/20 rounded-xl text-[9px] font-black text-red-400 hover:bg-red-500/30 transition-all uppercase tracking-widest">
+                                            Contact
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )) : (
+                                <div className="text-center py-12 border-2 border-dashed border-white/5 rounded-3xl">
+                                    <CheckCircle2 className="w-8 h-8 text-white/5 mx-auto mb-2" />
+                                    <p className="text-[9px] text-white/20 font-black uppercase tracking-widest">No Alerts Found</p>
                                 </div>
-                            </motion.div>
-                        );
-                    })}
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

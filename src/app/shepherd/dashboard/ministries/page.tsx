@@ -20,11 +20,20 @@ const TOOLTIP_STYLE = {
 
 export default function MinistriesPage() {
     const [members, setMembers] = useState<any[]>([]);
+    const [candidates, setCandidates] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        supabaseAdmin.from('member_roles').select('*').eq('active_status', true)
-            .then(({ data }) => { setMembers(data || []); setLoading(false); });
+        const load = async () => {
+            const [rolesRes, skillsRes] = await Promise.all([
+                supabaseAdmin.from('member_roles').select('*').eq('active_status', true),
+                supabaseAdmin.from('member_skills').select('*, profiles(name, profile_image_url)')
+            ]);
+            setMembers(rolesRes.data || []);
+            setCandidates(skillsRes.data || []);
+            setLoading(false);
+        };
+        load();
     }, []);
 
     // Group by ministry
@@ -108,7 +117,67 @@ export default function MinistriesPage() {
                         No ministry members found. Seed data from the admin console.
                     </div>
                 )}
+                {/* Candidates Search & Match (NEW) */}
+                <div className="mt-8 border-t border-white/5 pt-8">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-black text-violet-400">Candidate Matching</h3>
+                            <p className="text-[10px] text-white/30 uppercase tracking-widest mt-1">Intelligent placement based on member skills</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <Badge className="bg-emerald-500/10 text-emerald-400 border-0 text-[10px] font-black">AI OPTIMIZED</Badge>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {['Youth Ministry', 'Worship', 'Media', 'Counseling'].map(min => {
+                            const minCandidates = candidates.filter(c => {
+                                const skill = c.skill_name.toLowerCase();
+                                if (min === 'Worship' && (skill.includes('music') || skill.includes('sing') || skill.includes('choir'))) return true;
+                                if (min === 'Youth Ministry' && (skill.includes('teach') || skill.includes('youth'))) return true;
+                                if (min === 'Media' && (skill.includes('tech') || skill.includes('video') || skill.includes('edit'))) return true;
+                                if (min === 'Counseling' && skill.includes('counsel')) return true;
+                                return false;
+                            });
+
+                            return (
+                                <div key={min} className="bg-[#111827] border border-white/5 rounded-3xl p-6 h-full flex flex-col">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <p className="text-xs font-black text-white/60 uppercase">{min}</p>
+                                        <span className="text-[10px] text-white/30 font-bold">{minCandidates.length} matches</span>
+                                    </div>
+                                    <div className="space-y-3 flex-1">
+                                        {minCandidates.length > 0 ? minCandidates.slice(0, 3).map(c => (
+                                            <div key={c.id} className="flex items-center justify-between bg-white/3 p-3 rounded-2xl border border-white/5">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center text-[10px] font-black text-violet-400">
+                                                        {c.profiles?.name?.[0] || '?'}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-bold text-white">{c.profiles?.name}</p>
+                                                        <p className="text-[9px] text-white/30 truncate max-w-[100px]">{c.skill_name} · {c.skill_level}</p>
+                                                    </div>
+                                                </div>
+                                                <button className="p-2 bg-violet-500/10 text-violet-400 rounded-xl hover:bg-violet-500/20 transition-colors">
+                                                    <Users className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        )) : (
+                                            <div className="h-20 flex items-center justify-center border-2 border-dashed border-white/5 rounded-2xl text-[10px] text-white/20 font-bold uppercase">
+                                                No Candidates
+                                            </div>
+                                        )}
+                                    </div>
+                                    {minCandidates.length > 3 && (
+                                        <button className="mt-4 text-[9px] font-black text-violet-400 uppercase tracking-widest hover:text-white transition-colors">
+                                            + {minCandidates.length - 3} more candidates
+                                        </button>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
-        </div>
-    );
+            );
 }
