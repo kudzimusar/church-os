@@ -8,7 +8,7 @@ import { AIService } from "@/lib/ai-service";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function GlobalAIAssistant({ user, userRole }: { user: any; userRole: string | null }) {
+export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate }: { user: any; userRole: string | null; stats?: any; devotion?: any; currentDate?: Date }) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
@@ -24,7 +24,15 @@ export function GlobalAIAssistant({ user, userRole }: { user: any; userRole: str
         setLoading(true);
 
         try {
-            const response = await AIService.chatWithGlobalAssistant(userRole || 'member', user?.name || 'Guest', query);
+            const isCompletedToday = devotion && stats?.completedDays?.includes(devotion.id);
+
+            const contextPayload = {
+                stats: stats ? { currentStreak: stats.streak, completedToday: isCompletedToday } : null,
+                devotion: devotion ? { weekTheme: `Week ${devotion.week}: ${devotion.week_theme}`, dailyFocus: devotion.declaration, scripture: devotion.scripture, theme: devotion.theme } : null,
+                currentDate: currentDate?.toISOString()
+            };
+
+            const response = await AIService.chatWithGlobalAssistant(userRole || 'member', user?.name || 'Guest', query, contextPayload);
             setChatHistory([...newChat, { role: 'ai', content: response }]);
         } catch (e) {
             setChatHistory([...newChat, { role: 'ai', content: "I'm sorry, I'm having trouble connecting right now." }]);
@@ -76,20 +84,19 @@ export function GlobalAIAssistant({ user, userRole }: { user: any; userRole: str
                             <p className="text-sm font-medium">Hello {user?.name || 'Friend'}. I am here to guide your daily devotion, answer context about scriptures, and encourage your personal growth.</p>
                         </div>
                     )}
-                    
+
                     <AnimatePresence>
                         {chatHistory.map((chat, idx) => (
-                            <motion.div 
-                                key={idx} 
-                                initial={{ opacity: 0, scale: 0.95, y: 10 }} 
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 className={`flex ${chat.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
-                                <div className={`max-w-[85%] rounded-3xl p-4 text-sm leading-relaxed ${
-                                    chat.role === 'user' 
-                                    ? 'bg-primary text-white rounded-br-sm shadow-xl shadow-primary/20' 
-                                    : 'glass bg-foreground/5 border border-foreground/10 rounded-bl-sm prose prose-sm dark:prose-invert font-serif whitespace-pre-wrap'
-                                }`}>
+                                <div className={`max-w-[85%] rounded-3xl p-4 text-sm leading-relaxed ${chat.role === 'user'
+                                        ? 'bg-primary text-white rounded-br-sm shadow-xl shadow-primary/20'
+                                        : 'glass bg-foreground/5 border border-foreground/10 rounded-bl-sm prose prose-sm dark:prose-invert font-serif whitespace-pre-wrap'
+                                    }`}>
                                     {chat.content}
                                 </div>
                             </motion.div>
@@ -108,18 +115,18 @@ export function GlobalAIAssistant({ user, userRole }: { user: any; userRole: str
 
                 <div className="pt-4 border-t border-foreground/10 pb-4 shrink-0">
                     <div className="relative flex items-center">
-                        <Textarea 
-                            placeholder="Ask the Spirit..." 
+                        <Textarea
+                            placeholder="Ask the Spirit..."
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                             className="w-full min-h-[52px] max-h-[120px] rounded-3xl bg-foreground/5 border-foreground/10 pr-14 py-4 text-sm resize-none focus:ring-1 focus:ring-primary/50 custom-scrollbar"
                             rows={1}
                         />
-                        <Button 
-                            disabled={!query.trim() || loading} 
+                        <Button
+                            disabled={!query.trim() || loading}
                             onClick={handleSend}
-                            size="icon" 
+                            size="icon"
                             className="absolute right-2 bottom-2 w-10 h-10 rounded-full bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
                         >
                             <Send className="w-4 h-4 ml-0.5" />

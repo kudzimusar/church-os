@@ -37,7 +37,7 @@ export const AIService = {
         });
     },
 
-    chatWithGlobalAssistant: async (userRole: string, userName: string, query: string) => {
+    chatWithGlobalAssistant: async (userRole: string, userName: string, query: string, contextPayload?: any) => {
         // [FUTURE AI INTEGRATION NOTE]
         // When real Gemini API is integrated, if userRole === 'admin', query the `member_analytics`, 
         // `soap_entries`, and `prayer_requests` tables first. Serialize that data into a hidden 
@@ -58,9 +58,59 @@ export const AIService = {
                         resolve(`Hello ${userName}. As an Admin Assistant, I am constantly monitoring church health.\n\nRegarding: "${query}"\nNo severe discrepancies found right now. What specific data slice (growth, programs, user roles, due dates) would you like me to aggregate for you?`);
                     }
                 } else {
+                    if (lowerQuery.includes("today") || lowerQuery.includes("verse") || lowerQuery.includes("theme")) {
+                        if (contextPayload?.devotion) {
+                            const d = contextPayload.devotion;
+                            const s = contextPayload.stats;
+                            const dateObj = contextPayload.currentDate ? new Date(contextPayload.currentDate) : new Date();
+                            const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+                            let response = `Hello ${userName}! It's ${dateStr}, and we are in **${d.weekTheme}**.\n\nToday's daily focus is: *'${d.dailyFocus}'*\n\nYour scripture is **${d.scripture}**.\n\n`;
+
+                            if (s?.currentStreak > 0) {
+                                response += `You're on a great ${s.currentStreak}-day streak! `;
+                            }
+
+                            if (!s?.completedToday) {
+                                response += `I see you haven't saved your reflection on ${d.scripture} yet. Would you like to discuss what it means to you today before you complete your SOAP journal?`;
+                            } else {
+                                response += `Great job completing your devotion today! How did ${d.scripture} speak to your heart?`;
+                            }
+
+                            resolve(response);
+                            return;
+                        }
+                    }
                     resolve(`Hello ${userName}. I am your Spiritual Assistant.\n\nRegarding: "${query}"\n\nThe Word tells us to continually seek wisdom. If you have questions about specific verses, want to know how to connect with the church, or need me to check your recent devotion streak, just ask! Keep building healthy habits!`);
                 }
             }, 1500);
+        });
+    },
+
+    generateNewsletterDraft: async (topics: string[], activePrayersCount: number, recentMilestonesCount: number) => {
+        // [FUTURE AI INTEGRATION NOTE]
+        // This simulates passing themes, prayer volumes, and milestones into an LLM
+        // to automatically draft the Pastor's weekly email.
+        return new Promise<string>((resolve) => {
+            setTimeout(() => {
+                const topicString = topics.length > 0 ? topics.slice(0, 3).join(", ") : "Faith and Growth";
+
+                const draft = `Subject: Embodying ${topicString} - A Weekly Word from Your Pastor
+
+Dear Church Family,
+
+As I've been reflecting on our journey this week, I am profoundly moved by the ways God is working among us. The themes of ${topicString} have been echoing throughout our devotions and community prayers.
+
+We are currently lifting up ${activePrayersCount} active prayer requests as a family. Knowing that we bear one another's burdens is the true mark of the Kingdom. Let's continue to intercede for healing and breakthrough. 
+We also celebrate ${recentMilestonesCount} new spiritual milestones—testaments to God's continuous grace. 
+
+As we gather this Sunday, keep your hearts open to how we can live out these Kingdom realities in our workplaces, homes, and city. God is not done writing our story.
+
+In His Grace,
+Pastor [Name]`;
+
+                resolve(draft);
+            }, 2000);
         });
     }
 };

@@ -16,10 +16,11 @@ import {
     Clock,
     User,
     ChevronRight,
-    Milestone,
     CreditCard,
     Plus,
-    X
+    X,
+    Sparkles,
+    Send
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { ProfileView } from "@/components/profile/connection-card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { AIService } from "@/lib/ai-service";
 
 interface ShepherdStats {
     totalMembers: number;
@@ -80,6 +82,10 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
     const [worshipTeamCount, setWorshipTeamCount] = useState<number>(0);
     const [totalGiving, setTotalGiving] = useState<number>(0);
     const [loading, setLoading] = useState(true);
+
+    // AI Newsletter States
+    const [newsletterDraft, setNewsletterDraft] = useState<string>("");
+    const [isGenerating, setIsGenerating] = useState(false);
 
     useEffect(() => {
         loadDashboardData();
@@ -187,6 +193,20 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             console.error("Dashboard data load error", e);
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function handleGenerateNewsletter() {
+        try {
+            setIsGenerating(true);
+            const draft = await AIService.generateNewsletterDraft(anonymizedTopics, prayerRequests.length, 5); // 5 is mock milestone count
+            setNewsletterDraft(draft);
+            toast.success("AI draft generated successfully!");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to generate draft.");
+        } finally {
+            setIsGenerating(false);
         }
     }
 
@@ -486,6 +506,58 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                 </div>
                             </CardContent>
                         </Card>
+
+                        {/* AI Newsletter Automations */}
+                        <div className="md:col-span-2">
+                            <Card className="glass border-[var(--primary)]/20 bg-primary/5 rounded-[2rem]">
+                                <CardHeader className="pb-4">
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <CardTitle className="flex items-center gap-2 text-primary font-black">
+                                                <Sparkles className="h-5 w-5 text-primary" />
+                                                AI Communications Assistant
+                                            </CardTitle>
+                                            <CardDescription>
+                                                Automatically draft pastoral newsletters based on this week's congregational topic trends and prayer requests.
+                                            </CardDescription>
+                                        </div>
+                                        <Button
+                                            onClick={handleGenerateNewsletter}
+                                            disabled={isGenerating}
+                                            className="bg-primary rounded-full font-black text-white px-6 shadow-lg shadow-primary/20 gap-2"
+                                        >
+                                            {isGenerating ? <Clock className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                                            {newsletterDraft ? "REGENERATE DRAFT" : "GENERATE WEEKLY DRAFT"}
+                                        </Button>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    {newsletterDraft ? (
+                                        <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
+                                            <textarea
+                                                value={newsletterDraft}
+                                                onChange={e => setNewsletterDraft(e.target.value)}
+                                                className="w-full h-80 glass bg-black/20 border border-[var(--primary)]/20 rounded-3xl p-6 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50 font-medium leading-relaxed"
+                                            />
+                                            <div className="flex justify-end gap-3">
+                                                <Button variant="outline" className="rounded-full border-white/10 font-bold text-xs h-10 px-8">SAVE AS TEMPLATE</Button>
+                                                <Button className="rounded-full bg-white text-black hover:bg-white/90 font-black text-xs h-10 px-8 gap-2">
+                                                    <Send className="w-4 h-4" /> SEND NEWSLETTER
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="p-16 border-2 border-dashed border-[var(--primary)]/20 rounded-[2rem] flex flex-col items-center text-center opacity-60">
+                                            <Sparkles className="w-12 h-12 mb-4 text-primary opacity-50" />
+                                            <h4 className="font-bold text-lg mb-2">Ready to Draft</h4>
+                                            <p className="max-w-md text-sm mb-6">
+                                                Click "Generate Weekly Draft" to allow AI to parse {anonymizedTopics.length} community topics and {prayerRequests.length} active needs into a personalized pastoral email.
+                                            </p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 </TabsContent>
             </Tabs>
