@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Settings, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { basePath as BP } from "@/lib/utils";
 
 interface TopNavProps {
@@ -37,11 +38,9 @@ export function TopNav({ user, onLoginClick }: TopNavProps) {
                         </button>
                     )}
                     <div className="flex gap-1">
-                        <Button asChild variant="ghost" size="icon" className="glass rounded-full h-9 w-9 md:h-11 md:w-11 relative">
-                            <Link href="/">
-                                <Bell className="w-4 h-4 md:w-5 md:h-5 text-[var(--primary)]" />
-                                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-                            </Link>
+                        <Button variant="ghost" size="icon" className="glass rounded-full h-9 w-9 md:h-11 md:w-11 relative" onClick={() => toast.info("There are no new notifications at this time.")}>
+                            <Bell className="w-4 h-4 md:w-5 md:h-5 text-[var(--primary)]" />
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
                         </Button>
                         <Button asChild variant="ghost" size="icon" className="glass rounded-full h-9 w-9 md:h-11 md:w-11">
                             <Link href="/settings">

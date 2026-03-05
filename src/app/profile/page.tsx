@@ -174,7 +174,7 @@ export default function ProfileHub() {
                     </div>
                     <nav className="flex-1 px-4 space-y-2">
                         <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 font-semibold text-sm transition-all">
-                            <LayoutDashboard className="w-4 h-4" /> Dashboard
+                            <LayoutDashboard className="w-4 h-4" /> Home
                         </Link>
                         <div className="pt-4 pb-2 px-4 text-xs font-black uppercase tracking-widest text-[var(--primary)] opacity-70">
                             Connection Card
@@ -262,7 +262,10 @@ export default function ProfileHub() {
                                 <div className="p-6 md:p-10 lg:p-12">
                                     <div className="pb-8 border-b border-foreground/10 mb-8">
                                         <h3 className="text-2xl font-black capitalize flex items-center gap-3">
-                                            {SIDEBAR_NAV.find(n => n.id === activeTab)?.icon({ className: "w-6 h-6 text-[var(--primary)]" })}
+                                            {(() => {
+                                                const Icon = SIDEBAR_NAV.find(n => n.id === activeTab)?.icon;
+                                                return Icon ? <Icon className="w-6 h-6 text-[var(--primary)]" /> : null;
+                                            })()}
                                             {activeTab} Settings
                                         </h3>
                                         <p className="text-sm text-foreground/50 font-medium mt-2">Manage your connection card {activeTab} records here.</p>

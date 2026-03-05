@@ -60,7 +60,7 @@ export default function SettingsHub() {
                 <aside className="w-64 bg-transparent flex-col hidden md:flex shrink-0 pt-8 pr-8">
                     <nav className="flex-1 space-y-1">
                         <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 font-semibold text-sm transition-all">
-                            <LayoutDashboard className="w-4 h-4" /> Dashboard
+                            <LayoutDashboard className="w-4 h-4" /> Home
                         </Link>
                         <Link href="/profile" className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 font-semibold text-sm transition-all mb-4">
                             <UserIcon className="w-4 h-4" /> Profile Hub
@@ -74,8 +74,8 @@ export default function SettingsHub() {
                                 key={nav.id}
                                 onClick={() => setActiveTab(nav.id)}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${activeTab === nav.id
-                                        ? 'bg-[var(--primary)]/10 text-[var(--primary)] shadow-sm'
-                                        : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
+                                    ? 'bg-[var(--primary)]/10 text-[var(--primary)] shadow-sm'
+                                    : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
                                     }`}
                             >
                                 <nav.icon className="w-4 h-4" /> {nav.label}
@@ -100,8 +100,8 @@ export default function SettingsHub() {
                                     key={nav.id}
                                     onClick={() => setActiveTab(nav.id)}
                                     className={`whitespace-nowrap px-6 py-4 font-bold text-sm border-b-2 transition-all ${activeTab === nav.id
-                                            ? 'border-[var(--primary)] text-[var(--primary)]'
-                                            : 'border-transparent text-foreground/50 hover:text-foreground'
+                                        ? 'border-[var(--primary)] text-[var(--primary)]'
+                                        : 'border-transparent text-foreground/50 hover:text-foreground'
                                         }`}
                                 >
                                     {nav.label}
@@ -120,7 +120,18 @@ export default function SettingsHub() {
                                             {['light', 'dark', 'system'].map(t => (
                                                 <button
                                                     key={t}
-                                                    onClick={() => { setTheme(t); toast.success(`Theme set to ${t}`); }}
+                                                    onClick={() => {
+                                                        setTheme(t);
+                                                        const root = document.documentElement;
+                                                        root.classList.remove("light", "dark");
+                                                        if (t === "system") {
+                                                            const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+                                                            root.classList.add(systemTheme);
+                                                        } else {
+                                                            root.classList.add(t);
+                                                        }
+                                                        toast.success(`Theme set to ${t}`);
+                                                    }}
                                                     className={`px-6 py-4 rounded-xl border-2 font-bold capitalize transition-all ${theme === t ? 'border-[var(--primary)] bg-[var(--primary)]/5 text-[var(--primary)]' : 'border-foreground/10 hover:border-foreground/20'}`}
                                                 >
                                                     {t}
@@ -179,7 +190,18 @@ export default function SettingsHub() {
                                     </div>
                                     <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
                                         <h4 className="font-black text-lg">Data & Cookies</h4>
-                                        <p className="text-sm text-foreground/50 mt-1">We respect your privacy. All analytical data is anonymized. Contact the administration for data wipe requests.</p>
+                                        <p className="text-sm text-foreground/70 mt-1 leading-relaxed">
+                                            We respect your privacy. All analytical data is fully anonymized before being recorded,
+                                            ensuring that your journaling responses and personal spiritual progress remain strictly confidential between you and the pastoral team.
+                                        </p>
+                                        <ul className="text-xs text-foreground/50 list-disc pl-4 space-y-2 mt-4 font-medium">
+                                            <li>Cookies are only used for maintaining authentication state via Supabase. We do not run any ad-tracking cookies.</li>
+                                            <li>Your "Observation" and "Prayer" journal entries are encrypted at rest using AES-256 and subject to strict Row Level Security (RLS) policies.</li>
+                                            <li>Only designated site administrators holding explicit Pastoral clearance can access aggregate church-wide member analytics.</li>
+                                        </ul>
+                                        <p className="text-xs text-[var(--primary)] mt-4 font-bold border-t border-foreground/10 pt-4">
+                                            Contact your administration representative via your connection card if you wish to request a full GDPR-compliance data wipe spanning all your history.
+                                        </p>
                                     </div>
                                 </div>
                             )}
