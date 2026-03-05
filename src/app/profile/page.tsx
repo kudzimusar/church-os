@@ -7,8 +7,9 @@ import { supabase, ExtendedProfileService, AnalyticsService } from "@/lib/supaba
 import { SoapJournal } from "@/lib/soap-journal";
 import {
     User as UserIcon, Users, Heart, Trophy, Shield,
-    CreditCard, MessageCircle, AlertCircle, Plus, Save, Clock,
-    Camera, MapPin, Globe, Milestone, Copy, LayoutDashboard, Settings, CheckCircle2, LogOut
+    MessageCircle, AlertCircle, Plus, Save, Clock,
+    Camera, MapPin, Globe, Milestone, Copy, LayoutDashboard, Settings, CheckCircle2, LogOut,
+    Briefcase, Music, CalendarCheck, Coins
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,12 +22,20 @@ import { basePath as BP } from "@/lib/utils";
 
 const identitySchema = z.object({
     name: z.string().min(2, "Name is required"),
+    gender: z.string().optional(),
     phone_number: z.string().optional(),
     birthdate: z.string().optional(),
+    marital_status: z.string().optional(),
     wedding_anniversary: z.string().optional(),
     physical_address: z.string().optional(),
+    city: z.string().optional(),
+    ward: z.string().optional(),
+    postal_code: z.string().optional(),
     country_of_origin: z.string().optional(),
     preferred_language: z.string().optional(),
+    years_in_japan: z.string().transform((v) => parseInt(v)).optional().or(z.number().optional()),
+    occupation: z.string().optional(),
+    education_level: z.string().optional()
 });
 
 type IdentityForm = z.infer<typeof identitySchema>;
@@ -37,6 +46,28 @@ const SIDEBAR_NAV = [
     { id: 'journey', label: 'Journey', icon: Milestone },
     { id: 'service', label: 'Service', icon: Heart },
     { id: 'care', label: 'Care', icon: MessageCircle },
+    { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
+    { id: 'skills', label: 'Skills & Talents', icon: Briefcase },
+    { id: 'community', label: 'Community', icon: Globe },
+    { id: 'giving', label: 'Giving', icon: Coins }
+];
+
+const MINISTRY_OPTIONS = [
+    "Worship Ministry", "Choir", "Media / Production", "Ushers", "Hospitality",
+    "Children's Ministry", "Youth Ministry", "Young Adults", "Intercessory Prayer Team",
+    "Evangelism Team", "Discipleship Team", "Marriage Ministry", "Men's Ministry",
+    "Women's Ministry", "Counseling Ministry", "Protocol / Security", "Missions Team",
+    "Administration", "Finance Team", "Technical Team", "Translation Team", "Community Outreach"
+];
+
+const PRAYER_CATEGORIES = [
+    "Health", "Marriage", "Family", "Financial", "Career", "Immigration",
+    "Education", "Spiritual Warfare", "Emotional Distress", "Salvation", "Other"
+];
+
+const SKILL_OPTIONS = [
+    "Music", "Teaching", "Media", "Finance", "Administration", "Counseling",
+    "Technology", "Hospitality", "Event Planning", "Language Translation", "Design", "Leadership"
 ];
 
 export default function ProfileHub() {
@@ -50,17 +81,27 @@ export default function ProfileHub() {
     const idForm = useForm<IdentityForm>({ resolver: zodResolver(identitySchema) });
     const [isSaving, setIsSaving] = useState(false);
 
-    // Other Tabs state
+    // Dynamic state
     const [household, setHousehold] = useState<any[]>([]);
     const [newHouseholdName, setNewHouseholdName] = useState("");
     const [newHouseholdRel, setNewHouseholdRel] = useState("Spouse");
 
+    const [milestones, setMilestones] = useState<any>({});
+
     const [prayers, setPrayers] = useState<any[]>([]);
-    const [newPrayer, setNewPrayer] = useState("");
+    const [newPrayerText, setNewPrayerText] = useState("");
+    const [newPrayerCategory, setNewPrayerCategory] = useState("Health");
+    const [newPrayerUrgency, setNewPrayerUrgency] = useState("normal");
+    const [pastoralContact, setPastoralContact] = useState(false);
 
     const [ministryRoles, setMinistryRoles] = useState<any[]>([]);
-    const [newMinistry, setNewMinistry] = useState("");
-    const [stewardship, setStewardship] = useState<any[]>([]);
+    const [newMinistry, setNewMinistry] = useState(MINISTRY_OPTIONS[0]);
+    const [newMinistryRoleTitle, setNewMinistryRoleTitle] = useState("");
+
+    const [skills, setSkills] = useState<any[]>([]);
+    const [newSkill, setNewSkill] = useState(SKILL_OPTIONS[0]);
+
+    const [givingData, setGivingData] = useState({ tithe_status: false, preferred_giving_method: 'Cash' });
 
     useEffect(() => {
         const init = async () => {
@@ -70,34 +111,64 @@ export default function ProfileHub() {
                 return;
             }
             setUser(currentUser);
-            await loadProfileData(currentUser.id);
+            await loadData(currentUser.id);
             setLoading(false);
         };
         init();
     }, []);
 
-    async function loadProfileData(userId: string) {
+    async function loadData(userId: string) {
         try {
-            const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-            if (data) {
-                setProfile(data);
+            // Profile
+            const { data: pData } = await supabase.from('profiles').select('*').eq('id', userId).single();
+            if (pData) {
+                setProfile(pData);
                 idForm.reset({
-                    name: data.name,
-                    phone_number: data.phone_number || '',
-                    birthdate: data.birthdate || '',
-                    wedding_anniversary: data.wedding_anniversary || '',
-                    physical_address: data.physical_address || '',
-                    country_of_origin: data.country_of_origin || '',
-                    preferred_language: data.preferred_language || '',
+                    name: pData.name,
+                    gender: pData.gender || '',
+                    phone_number: pData.phone_number || '',
+                    birthdate: pData.birthdate || '',
+                    marital_status: pData.marital_status || '',
+                    wedding_anniversary: pData.wedding_anniversary || '',
+                    physical_address: pData.physical_address || '',
+                    city: pData.city || '',
+                    ward: pData.ward || '',
+                    postal_code: pData.postal_code || '',
+                    country_of_origin: pData.country_of_origin || '',
+                    preferred_language: pData.preferred_language || '',
+                    years_in_japan: pData.years_in_japan,
+                    occupation: pData.occupation || '',
+                    education_level: pData.education_level || ''
+                });
+                setGivingData({
+                    tithe_status: pData.tithe_status || false,
+                    preferred_giving_method: pData.preferred_giving_method || 'Cash'
                 });
             }
 
+            // Stats
             const journalStats = await SoapJournal.getStats();
             setStats(journalStats);
 
+            // Household
             setHousehold(await ExtendedProfileService.getLocal(`hh_${userId}`, []));
-            setPrayers(await ExtendedProfileService.getLocal(`pr_${userId}`, []));
-            setMinistryRoles(await ExtendedProfileService.getLocal(`mr_${userId}`, []));
+
+            // Milestones
+            const { data: mData } = await supabase.from('member_milestones').select('*').eq('user_id', userId).single();
+            if (mData) setMilestones(mData);
+
+            // Ministries
+            const { data: roleData } = await supabase.from('member_roles').select('*').eq('user_id', userId);
+            if (roleData) setMinistryRoles(roleData);
+
+            // Prayers
+            const { data: prayerData } = await supabase.from('prayer_requests').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+            if (prayerData) setPrayers(prayerData);
+
+            // Skills
+            const { data: skillData } = await supabase.from('member_skills').select('*').eq('user_id', userId);
+            if (skillData) setSkills(skillData);
+
         } catch (e) {
             console.error(e);
             toast.error("Failed to load profile data");
@@ -108,9 +179,19 @@ export default function ProfileHub() {
         if (!user) return;
         setIsSaving(true);
         try {
-            const { error } = await supabase.from('profiles').update(data).eq('id', user.id);
+            // Predict household type based on existing local household data
+            // (If we had a remote households table, we'd query there)
+            let household_type = 'Single';
+            if (household.some(h => h.relationship === 'Spouse')) household_type = 'Couple';
+            if (household.some(h => h.relationship === 'Child')) household_type = 'Family with Children';
+
+            const { error } = await supabase.from('profiles').update({
+                ...data,
+                household_type
+            }).eq('id', user.id);
+
             if (error) throw error;
-            toast.success("Profile Successfully Saved!");
+            toast.success("Identity updated successfully!");
         } catch (e) {
             toast.error("Failed to update profile");
         } finally {
@@ -124,36 +205,109 @@ export default function ProfileHub() {
         setHousehold(nh);
         await ExtendedProfileService.saveLocal(`hh_${user.id}`, nh);
         AnalyticsService.logEvent(user.id, 'household_updated', { household: nh });
+
+        // Also update identity household_type abstractly
+        let household_type = 'Single';
+        if (nh.some(h => h.relationship === 'Spouse')) household_type = 'Couple';
+        if (nh.some(h => h.relationship === 'Child')) household_type = 'Family with Children';
+        await supabase.from('profiles').update({ household_type }).eq('id', user.id);
+
         setNewHouseholdName("");
         toast.success("Household updated!");
     };
 
-    const handleAddPrayer = async () => {
-        if (!newPrayer || !user) return;
-        const np = [...prayers, { id: Date.now(), text: newPrayer, status: 'PENDING' }];
-        setPrayers(np);
-        await ExtendedProfileService.saveLocal(`pr_${user.id}`, np);
-        AnalyticsService.logEvent(user.id, 'prayer_request_added', { request: newPrayer });
-        setNewPrayer("");
-        toast.success("Prayer request saved!");
+    const saveMilestones = async () => {
+        if (!user) return;
+        try {
+            const { error } = await supabase.from('member_milestones').upsert({
+                user_id: user.id,
+                ...milestones,
+                updated_at: new Date().toISOString()
+            });
+            if (error) throw error;
+            toast.success("Journey milestones saved!");
+        } catch (e) {
+            toast.error("Failed saving milestones");
+        }
     };
 
-    const togglePrayer = async (id: number) => {
+    const handleAddPrayer = async () => {
+        if (!newPrayerText || !user) return;
+        try {
+            const newRecord = {
+                user_id: user.id,
+                request_text: newPrayerText,
+                category: newPrayerCategory,
+                urgency: newPrayerUrgency,
+                requires_pastoral_contact: pastoralContact,
+                status: 'Pending'
+            };
+            const { data, error } = await supabase.from('prayer_requests').insert([newRecord]).select().single();
+            if (error) throw error;
+
+            setPrayers([data, ...prayers]);
+            setNewPrayerText("");
+            setPastoralContact(false);
+            toast.success("Prayer request submitted to leadership.");
+        } catch (e) {
+            toast.error("Failed submitting prayer");
+        }
+    };
+
+    const togglePrayer = async (id: string, currentStatus: string) => {
         if (!user) return;
-        const np = prayers.map(p => p.id === id ? { ...p, status: p.status === 'PENDING' ? 'ANSWERED' : 'PENDING' } : p);
-        setPrayers(np);
-        await ExtendedProfileService.saveLocal(`pr_${user.id}`, np);
-        toast.success("Status updated");
+        const newStatus = currentStatus === 'Pending' ? 'Answered' : 'Pending';
+        try {
+            await supabase.from('prayer_requests').update({ status: newStatus }).eq('id', id);
+            setPrayers(prayers.map(p => p.id === id ? { ...p, status: newStatus } : p));
+            toast.success("Prayer status updated");
+        } catch (e) {
+            toast.error("Failed to update");
+        }
     };
 
     const handleAddMinistry = async () => {
         if (!newMinistry || !user) return;
-        const nm = [...ministryRoles, { id: Date.now(), role: newMinistry, status: 'ACTIVE' }];
-        setMinistryRoles(nm);
-        await ExtendedProfileService.saveLocal(`mr_${user.id}`, nm);
-        setNewMinistry("");
-        toast.success("Service role added!");
+        try {
+            const rec = {
+                user_id: user.id,
+                ministry_name: newMinistry,
+                role_title: newMinistryRoleTitle,
+                active_status: true,
+                start_date: new Date().toISOString().split('T')[0]
+            };
+            const { data, error } = await supabase.from('member_roles').insert([rec]).select().single();
+            if (error) throw error;
+
+            setMinistryRoles([...ministryRoles, data]);
+            setNewMinistryRoleTitle("");
+            toast.success("Ministry role linked!");
+        } catch (e) {
+            toast.error("Error linking role");
+        }
     };
+
+    const handleAddSkill = async () => {
+        if (!user) return;
+        try {
+            const { data, error } = await supabase.from('member_skills').insert([{ user_id: user.id, skill_name: newSkill }]).select().single();
+            if (error) throw error;
+            setSkills([...skills, data]);
+            toast.success("Skill added!");
+        } catch (e) {
+            toast.error("Error adding skill (might already exist)");
+        }
+    }
+
+    const saveGiving = async () => {
+        if (!user) return;
+        try {
+            await supabase.from('profiles').update(givingData).eq('id', user.id);
+            toast.success("Giving preferences saved");
+        } catch (e) {
+            toast.error("Error saving preferences");
+        }
+    }
 
     if (loading) {
         return <div className="min-h-screen bg-[var(--background)] flex items-center justify-center"><Clock className="w-8 h-8 animate-spin opacity-20" /></div>;
@@ -172,16 +326,14 @@ export default function ProfileHub() {
         <div className="min-h-screen bg-[#f8fafc] dark:bg-black overflow-x-hidden pb-20">
             <TopNav user={user} />
 
-            {/* Global Sidebar layout matched across app - optional if the user wanted left-most sidebar, but we stick to their requested "left sidebar" for Connection Card */}
-
             <div className="flex h-[calc(100vh-65px)]">
 
-                {/* GLOBAL LEFT SIDEBAR (App-wide Navigation) */}
+                {/* GLOBAL LEFT SIDEBAR */}
                 <aside className="w-64 bg-white dark:bg-[#0a0a0a] border-r border-foreground/10 flex-col hidden md:flex shrink-0">
                     <div className="p-8">
                         <img src={`${BP}/church-logo.png`} alt="JKC" className="w-12 h-12 object-contain" />
                     </div>
-                    <nav className="flex-1 px-4 space-y-2">
+                    <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
                         <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 font-semibold text-sm transition-all">
                             <LayoutDashboard className="w-4 h-4" /> Home
                         </Link>
@@ -197,7 +349,7 @@ export default function ProfileHub() {
                                     : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
                                     }`}
                             >
-                                <nav.icon className="w-4 h-4" /> {nav.label}
+                                <nav.icon className="w-4 h-4 shrink-0" /> {nav.label}
                             </button>
                         ))}
                         <div className="pt-8 w-full border-t border-foreground/5 mt-4">
@@ -213,7 +365,6 @@ export default function ProfileHub() {
 
                 {/* MAIN CONTENT AREA */}
                 <main className="flex-1 overflow-y-auto relative">
-                    {/* Cover Header */}
                     <div className="h-64 md:h-80 bg-[var(--primary)] relative">
                         <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
                         <Button className="absolute top-6 right-6 bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-md rounded-xl font-bold">
@@ -229,9 +380,6 @@ export default function ProfileHub() {
                                 <div className="bg-white dark:bg-[#111] rounded-[2rem] shadow-xl border border-foreground/10 overflow-hidden relative p-8 flex flex-col items-center">
                                     <div className="w-32 h-32 rounded-full border-4 border-white dark:border-[#111] bg-[var(--primary)] text-white text-5xl font-black flex items-center justify-center relative shadow-xl z-10 mb-6">
                                         {profile?.name?.[0] || user?.name?.[0]}
-                                        <button className="absolute bottom-0 right-0 w-10 h-10 bg-white border border-foreground/10 text-[var(--primary)] rounded-full flex items-center justify-center shadow-lg hover:bg-foreground/5 transition-all">
-                                            <Camera className="w-4 h-4" />
-                                        </button>
                                     </div>
                                     <h2 className="text-2xl font-black text-center">{profile?.name || user?.name}</h2>
                                     <p className="text-sm text-foreground/50 font-semibold mb-8 text-center">{profile?.country_of_origin || 'Local Assembly'}</p>
@@ -246,21 +394,14 @@ export default function ProfileHub() {
                                             <span className="text-amber-500 font-black">{stats.streak}</span>
                                         </div>
                                     </div>
-
-                                    <Button variant="outline" className="w-full py-6 rounded-xl font-bold border-foreground/10 mb-4 hover:bg-foreground/5 text-foreground/80">
-                                        View Public Profile
+                                    <Button variant="outline" className="w-full py-6 rounded-xl font-bold border-foreground/10 hover:bg-foreground/5 text-foreground/80 cursor-default">
+                                        Active Member
                                     </Button>
-                                    <div className="flex items-center gap-2 w-full p-3 rounded-xl bg-foreground/5 border border-foreground/10 text-xs text-foreground/50 cursor-pointer hover:bg-foreground/10 transition-all">
-                                        <div className="truncate flex-1">https://jkc.app/p/{user?.id?.substring(0, 8)}</div>
-                                        <Copy className="w-4 h-4 shrink-0" />
-                                    </div>
                                 </div>
                             </div>
 
                             {/* RIGHT TABBED CONTENT */}
                             <div className="flex-1 bg-white dark:bg-[#111] rounded-[2rem] shadow-xl border border-foreground/10 overflow-hidden">
-
-                                {/* Mobile Tab Scroller (since sidebar is hidden on mobile) */}
                                 <div className="flex md:hidden overflow-x-auto border-b border-foreground/10 custom-scrollbar">
                                     {SIDEBAR_NAV.map(nav => (
                                         <button
@@ -283,9 +424,9 @@ export default function ProfileHub() {
                                                 const Icon = SIDEBAR_NAV.find(n => n.id === activeTab)?.icon;
                                                 return Icon ? <Icon className="w-6 h-6 text-[var(--primary)]" /> : null;
                                             })()}
-                                            {activeTab} Settings
+                                            {SIDEBAR_NAV.find(n => n.id === activeTab)?.label}
                                         </h3>
-                                        <p className="text-sm text-foreground/50 font-medium mt-2">Manage your connection card {activeTab} records here.</p>
+                                        <p className="text-sm text-foreground/50 font-medium mt-2">Manage your structured data for Church analytics.</p>
                                     </div>
 
                                     {/* IDENTITY TAB */}
@@ -293,61 +434,86 @@ export default function ProfileHub() {
                                         <form onSubmit={idForm.handleSubmit(onIdentitySubmit)} className="space-y-8 animate-in fade-in duration-300">
                                             <div className="grid md:grid-cols-2 gap-6 md:gap-8">
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">First & Last Name</label>
-                                                    <Input {...idForm.register("name")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4 text-base focus-visible:ring-[var(--primary)]" />
-                                                    {idForm.formState.errors.name && <span className="text-xs text-red-500 px-2">{idForm.formState.errors.name.message}</span>}
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Full Name</label>
+                                                    <Input {...idForm.register("name")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Gender</label>
+                                                    <select {...idForm.register("gender")} className="w-full h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-4 text-sm font-semibold outline-none focus:ring-[var(--primary)]">
+                                                        <option value="">Select...</option>
+                                                        <option value="Male">Male</option>
+                                                        <option value="Female">Female</option>
+                                                    </select>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Phone Number</label>
-                                                    <Input {...idForm.register("phone_number")} placeholder="+81 000-0000" className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4 text-base focus-visible:ring-[var(--primary)]" />
+                                                    <Input {...idForm.register("phone_number")} placeholder="+81..." className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Birthdate</label>
-                                                    <Input type="date" {...idForm.register("birthdate")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4 text-base focus-visible:ring-[var(--primary)]" />
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Date of Birth</label>
+                                                    <Input type="date" {...idForm.register("birthdate")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Marital Status</label>
+                                                    <select {...idForm.register("marital_status")} className="w-full h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-4 text-sm font-semibold outline-none focus:ring-[var(--primary)]">
+                                                        <option value="">Select...</option>
+                                                        <option value="Single">Single</option>
+                                                        <option value="Married">Married</option>
+                                                        <option value="Widowed">Widowed</option>
+                                                        <option value="Divorced">Divorced</option>
+                                                    </select>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Country of Origin</label>
-                                                    <Input {...idForm.register("country_of_origin")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4 text-base focus-visible:ring-[var(--primary)]" />
+                                                    <Input {...idForm.register("country_of_origin")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Preferred Language</label>
+                                                    <select {...idForm.register("preferred_language")} className="w-full h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-4 text-sm font-semibold outline-none focus:ring-[var(--primary)]">
+                                                        <option value="EN">English</option>
+                                                        <option value="JP">Japanese</option>
+                                                        <option value="BOTH">Bilingual</option>
+                                                    </select>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Years in Japan</label>
+                                                    <Input type="number" {...idForm.register("years_in_japan")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Occupation</label>
+                                                    <Input {...idForm.register("occupation")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Education Level</label>
+                                                    <Input {...idForm.register("education_level")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="space-y-2 md:col-span-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Physical Address</label>
-                                                    <Input {...idForm.register("physical_address")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4 text-base focus-visible:ring-[var(--primary)]" />
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Home Address / Ward</label>
+                                                    <Input {...idForm.register("physical_address")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
                                                 </div>
                                             </div>
-                                            <div className="pt-6 border-t border-foreground/10">
-                                                <Button type="submit" disabled={isSaving} className="w-full md:w-auto px-12 h-14 rounded-xl bg-[var(--primary)] text-white font-black text-sm shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">
-                                                    {isSaving ? "UPDATING..." : "UPDATE PROFILE"}
-                                                </Button>
-                                            </div>
+                                            <Button type="submit" disabled={isSaving} className="w-full md:w-auto px-12 h-14 rounded-xl bg-[var(--primary)] text-white font-black">
+                                                {isSaving ? "UPDATING..." : "UPDATE IDENTITY"}
+                                            </Button>
                                         </form>
                                     )}
 
                                     {/* FAMILY TAB */}
                                     {activeTab === 'family' && (
                                         <div className="space-y-8 animate-in fade-in duration-300">
-                                            <div className="grid md:grid-cols-2 gap-6 md:gap-8 hover:bg-foreground/[0.02]">
-                                                <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Wedding Anniversary</label>
-                                                    <div className="flex gap-2">
-                                                        <Input type="date" value={profile?.wedding_anniversary || ''} onChange={(e) => setProfile({ ...profile, wedding_anniversary: e.target.value })} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
-                                                        <Button onClick={() => onIdentitySubmit({ ...profile, wedding_anniversary: profile.wedding_anniversary } as IdentityForm)} className="h-14 px-6 rounded-2xl bg-foreground/10 text-foreground">Save</Button>
-                                                    </div>
-                                                </div>
-                                            </div>
-
                                             <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
-                                                <h4 className="font-black text-lg pb-4 border-b border-foreground/10">Linked Household Members</h4>
-
+                                                <h4 className="font-black text-lg pb-4 border-b border-foreground/10">Household Linkages</h4>
                                                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
                                                     <Input placeholder="Member Name" value={newHouseholdName} onChange={e => setNewHouseholdName(e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4 flex-1" />
-                                                    <select value={newHouseholdRel} onChange={e => setNewHouseholdRel(e.target.value)} className="h-14 rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none w-full sm:w-48 focus:ring-[var(--primary)]">
+                                                    <select value={newHouseholdRel} onChange={e => setNewHouseholdRel(e.target.value)} className="h-14 rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none w-full sm:w-48">
                                                         <option>Spouse</option>
                                                         <option>Child</option>
                                                         <option>Parent</option>
+                                                        <option>Sibling</option>
+                                                        <option>Dependent</option>
                                                     </select>
                                                     <Button onClick={handleAddHousehold} className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black shadow-lg">Link</Button>
                                                 </div>
-
                                                 <div className="grid gap-3">
                                                     {household.map(h => (
                                                         <div key={h.id} className="flex items-center justify-between p-4 bg-background border border-foreground/10 rounded-2xl">
@@ -355,9 +521,7 @@ export default function ProfileHub() {
                                                                 <span className="font-bold">{h.name}</span>
                                                                 <span className="text-xs text-[var(--primary)] font-bold uppercase tracking-widest">{h.relationship}</span>
                                                             </div>
-                                                            <div className="w-8 h-8 rounded-full bg-foreground/5 flex items-center justify-center">
-                                                                <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                                            </div>
+                                                            <CheckCircle2 className="w-5 h-5 text-green-500" />
                                                         </div>
                                                     ))}
                                                 </div>
@@ -368,16 +532,25 @@ export default function ProfileHub() {
                                     {/* JOURNEY TAB */}
                                     {activeTab === 'journey' && (
                                         <div className="space-y-8 animate-in fade-in duration-300">
-                                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                <div className="bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20 rounded-[2rem] p-6">
-                                                    <Trophy className="w-8 h-8 text-amber-500 mb-4" />
-                                                    <h4 className="text-3xl font-black">{stats.completed} <span className="text-base text-foreground/50 tracking-normal font-semibold">days</span></h4>
-                                                    <p className="text-xs text-foreground/50 font-bold uppercase tracking-widest mt-2">Transformation Recorded</p>
+                                            <div className="grid md:grid-cols-2 gap-6 bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8">
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">First Visit Date</label>
+                                                    <Input type="date" value={milestones.first_visit_date || ''} onChange={e => setMilestones({ ...milestones, first_visit_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
-                                                <div className="bg-gradient-to-br from-emerald-500/10 to-transparent border border-emerald-500/20 rounded-[2rem] p-6">
-                                                    <Milestone className="w-8 h-8 text-emerald-500 mb-4" />
-                                                    <h4 className="text-3xl font-black text-emerald-500">Active</h4>
-                                                    <p className="text-xs text-foreground/50 font-bold uppercase tracking-widest mt-2">Baptism Status</p>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Salvation Decision Date</label>
+                                                    <Input type="date" value={milestones.salvation_date || ''} onChange={e => setMilestones({ ...milestones, salvation_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Baptism Date</label>
+                                                    <Input type="date" value={milestones.baptism_date || ''} onChange={e => setMilestones({ ...milestones, baptism_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Membership Date</label>
+                                                    <Input type="date" value={milestones.membership_date || ''} onChange={e => setMilestones({ ...milestones, membership_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                </div>
+                                                <div className="col-span-full pt-4">
+                                                    <Button onClick={saveMilestones} className="px-8 h-12 rounded-xl bg-emerald-500 text-white font-black shadow-lg">Save Milestones</Button>
                                                 </div>
                                             </div>
                                         </div>
@@ -387,19 +560,21 @@ export default function ProfileHub() {
                                     {activeTab === 'service' && (
                                         <div className="space-y-8 animate-in fade-in duration-300">
                                             <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
-                                                <h4 className="font-black text-lg pb-4 border-b border-foreground/10">Ministry Involvement</h4>
-                                                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                                                    <Input placeholder="e.g. Media Team, Choir..." value={newMinistry} onChange={e => setNewMinistry(e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4 flex-1" />
-                                                    <Button onClick={handleAddMinistry} className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black shadow-lg">Link Role</Button>
+                                                <div className="flex flex-col sm:flex-row gap-4">
+                                                    <select value={newMinistry} onChange={e => setNewMinistry(e.target.value)} className="h-14 rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none w-full flex-1">
+                                                        {MINISTRY_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                                                    </select>
+                                                    <Input placeholder="Role Title (e.g. Lead, Usher)" value={newMinistryRoleTitle} onChange={e => setNewMinistryRoleTitle(e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4 w-full sm:w-1/3" />
+                                                    <Button onClick={handleAddMinistry} className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black">Add</Button>
                                                 </div>
                                                 <div className="grid gap-3">
                                                     {ministryRoles.map(m => (
-                                                        <div key={m.id} className="flex items-center justify-between p-4 bg-background border border-foreground/10 rounded-2xl">
-                                                            <div className="flex items-center gap-3">
-                                                                <Heart className="w-5 h-5 text-[var(--primary)]" />
-                                                                <span className="font-bold">{m.role}</span>
+                                                        <div key={m.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-background border border-foreground/10 rounded-2xl gap-4">
+                                                            <div>
+                                                                <h5 className="font-bold">{m.ministry_name}</h5>
+                                                                <p className="text-xs text-foreground/60">{m.role_title || 'Member'}</p>
                                                             </div>
-                                                            <div className="text-xs font-bold tracking-widest uppercase text-[var(--primary)] bg-[var(--primary)]/10 px-3 py-1 rounded-full">{m.status}</div>
+                                                            <div className="text-xs font-bold tracking-widest uppercase text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full text-center">ACTIVE</div>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -410,38 +585,100 @@ export default function ProfileHub() {
                                     {/* CARE TAB */}
                                     {activeTab === 'care' && (
                                         <div className="space-y-8 animate-in fade-in duration-300">
-                                            <div className="bg-red-500/5 border border-red-500/20 rounded-3xl p-6 flex gap-4 text-red-600">
-                                                <Shield className="w-6 h-6 shrink-0" />
-                                                <div>
-                                                    <h4 className="font-black mb-1">Confidential Zone</h4>
-                                                    <p className="text-sm opacity-80 font-medium">Your prayer requests and pastoral care logs are strictly monitored by JKC leadership only.</p>
-                                                </div>
-                                            </div>
-
                                             <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
-                                                <h4 className="font-black text-lg pb-4 border-b border-foreground/10">Prayer Requests</h4>
-                                                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                                                    <Input placeholder="My prayer is..." value={newPrayer} onChange={e => setNewPrayer(e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4 flex-1" />
-                                                    <Button onClick={handleAddPrayer} className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black shadow-lg">Submit</Button>
+                                                <div className="flex flex-col gap-4">
+                                                    <Input placeholder="My prayer is..." value={newPrayerText} onChange={e => setNewPrayerText(e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                    <div className="flex flex-col sm:flex-row gap-4">
+                                                        <select value={newPrayerCategory} onChange={e => setNewPrayerCategory(e.target.value)} className="h-14 rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none flex-1">
+                                                            {PRAYER_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                                                        </select>
+                                                        <select value={newPrayerUrgency} onChange={e => setNewPrayerUrgency(e.target.value)} className="h-14 rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none w-full sm:w-48">
+                                                            <option value="normal">Normal</option>
+                                                            <option value="urgent">Urgent</option>
+                                                            <option value="crisis">Crisis</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-red-500/10 text-red-600 p-4 rounded-xl border border-red-500/20">
+                                                        <input type="checkbox" id="pastor_req" checked={pastoralContact} onChange={e => setPastoralContact(e.target.checked)} className="w-5 h-5 rounded" />
+                                                        <label htmlFor="pastor_req" className="font-bold text-sm cursor-pointer">I require a Pastor or Leader to contact me directly.</label>
+                                                    </div>
+                                                    <Button onClick={handleAddPrayer} className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black">Submit Prayer Request</Button>
                                                 </div>
-                                                <div className="space-y-3">
+                                                <div className="space-y-3 mt-8">
                                                     {prayers.map(p => (
-                                                        <div key={p.id} className="flex items-center justify-between p-4 bg-background border border-foreground/10 rounded-2xl">
-                                                            <div>
-                                                                <p className={`font-bold text-sm ${p.status === 'ANSWERED' ? 'line-through opacity-50' : ''}`}>{p.text}</p>
+                                                        <div key={p.id} className="flex flex-col p-4 bg-background border border-foreground/10 rounded-2xl space-y-3">
+                                                            <div className="flex justify-between items-start gap-4">
+                                                                <p className={`font-bold text-sm ${p.status === 'Answered' ? 'line-through opacity-50' : ''}`}>{p.request_text}</p>
+                                                                <span className="text-xs shrink-0 bg-foreground/5 px-2 py-1 rounded-md font-semibold text-foreground/60">{p.category}</span>
                                                             </div>
-                                                            <Button onClick={() => togglePrayer(p.id)} variant="ghost" size="sm" className="text-[10px] font-bold h-8">
-                                                                {p.status === 'PENDING' ? 'MARK ANSWERED' : 'MARK PENDING'}
-                                                            </Button>
+                                                            <div className="flex justify-end">
+                                                                <Button onClick={() => togglePrayer(p.id, p.status)} variant="outline" size="sm" className="text-xs font-bold h-8">
+                                                                    {p.status === 'Pending' ? 'MARK ANSWERED' : 'MARK PENDING'}
+                                                                </Button>
+                                                            </div>
                                                         </div>
                                                     ))}
                                                 </div>
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* SKILLS TAB */}
+                                    {activeTab === 'skills' && (
+                                        <div className="space-y-8 animate-in fade-in duration-300">
+                                            <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
+                                                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                                                    <select value={newSkill} onChange={e => setNewSkill(e.target.value)} className="h-14 rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none flex-1">
+                                                        {SKILL_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                                                    </select>
+                                                    <Button onClick={handleAddSkill} className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black shadow-lg">Add Talent</Button>
+                                                </div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {skills.map(s => (
+                                                        <span key={s.id} className="px-4 py-2 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] font-bold text-sm border border-[var(--primary)]/20">
+                                                            {s.skill_name}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* GIVING TAB */}
+                                    {activeTab === 'giving' && (
+                                        <div className="space-y-8 animate-in fade-in duration-300">
+                                            <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
+                                                <div className="flex flex-col gap-6">
+                                                    <div className="flex items-center justify-between p-4 bg-background border border-foreground/10 rounded-2xl">
+                                                        <div>
+                                                            <h5 className="font-bold">I am a Tithing Member</h5>
+                                                            <p className="text-xs text-foreground/60">Help leadership project church budgets</p>
+                                                        </div>
+                                                        <input type="checkbox" checked={givingData.tithe_status} onChange={e => setGivingData({ ...givingData, tithe_status: e.target.checked })} className="w-6 h-6 rounded" />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Preferred Giving Method</label>
+                                                        <select value={givingData.preferred_giving_method} onChange={e => setGivingData({ ...givingData, preferred_giving_method: e.target.value })} className="w-full h-14 rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none">
+                                                            <option>Cash (Envelope)</option>
+                                                            <option>Bank Transfer (Furikomi)</option>
+                                                            <option>Credit Card (Online)</option>
+                                                        </select>
+                                                    </div>
+                                                    <Button onClick={saveGiving} className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black w-full sm:w-auto self-start">Save Preferences</Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ATTENDANCE / COMMUNITY */}
+                                    {(activeTab === 'attendance' || activeTab === 'community') && (
+                                        <div className="p-12 text-center text-foreground/50 font-bold border-2 border-dashed border-foreground/10 rounded-3xl mt-4">
+                                            Module being prepped for next release. Check back soon.
+                                        </div>
+                                    )}
+
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </main>
