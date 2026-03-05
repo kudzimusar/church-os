@@ -51,7 +51,8 @@ import { Auth } from "@/lib/auth";
 import { AIService } from "@/lib/ai-service";
 import type { User as AuthUser } from "@/lib/auth";
 import { SoapJournal, SoapEntry, SOAP_EXPLANATION } from "@/lib/soap-journal";
-import { ProfileView } from "@/components/profile/connection-card";
+import { basePath as BP } from "@/lib/utils";
+import { TopNav } from "@/components/layout/TopNav";
 
 const FloatingHearts = () => {
   const [hearts, setHearts] = useState<{ id: number; left: number; delay: number; duration: number; size: number }[]>([]);
@@ -83,8 +84,6 @@ const WEEK_THEMES = [
   { week: 4, name: "Obedience", icon: UserRound, desc: "Love in Action" },
   { week: 5, name: "Holy Week", icon: Cross, desc: "Passion and Transformation" },
 ];
-
-const BP = "/jkc-devotion-app";
 
 export default function DevotionalApp() {
   const getJstToday = () => {
@@ -163,6 +162,7 @@ export default function DevotionalApp() {
         const currentUser = await Auth.getCurrentUser();
         setUser(currentUser);
         if (currentUser) {
+          setShowSettings(false);
           const { data: profile } = await supabase.from('profiles').select('share_progress_with_leaders').eq('id', currentUser.id).single();
           if (profile) setShareProgress(profile.share_progress_with_leaders);
           const { data: member } = await supabase.from('org_members').select('role').eq('user_id', currentUser.id).single();
@@ -294,30 +294,7 @@ export default function DevotionalApp() {
 
       <FloatingHearts />
 
-      {/* Sticky Top Nav */}
-      <nav className="sticky top-0 z-[100] w-full bg-[var(--background)]/80 backdrop-blur-xl border-b border-foreground/10 shadow-sm">
-        <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 md:w-10 md:h-10 relative">
-              <img src={`${BP}/church-logo.png`} alt="JKC Logo" className="w-full h-full object-contain" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] md:text-xs font-black uppercase tracking-widest opacity-80 leading-none">Japan Kingdom Church</span>
-              <span className="text-xs md:text-sm font-bold text-[var(--primary)] tracking-widest mt-0.5">ジャパン・キングダム・チャーチ</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 md:gap-4">
-            <div className="hidden sm:flex flex-col items-end mr-1">
-              <span className="text-[9px] font-bold uppercase tracking-widest opacity-30">Church Member</span>
-              <span className="text-xs font-black truncate max-w-[120px] text-[var(--primary)]">{user ? user.name : "Guest Access"}</span>
-            </div>
-            <Button variant="ghost" size="icon" className="glass rounded-full h-9 w-9 md:h-11 md:w-11" onClick={() => setShowSettings(true)}>
-              <Settings className="w-4 h-4 md:w-5 md:h-5 text-[var(--primary)]" />
-            </Button>
-          </div>
-        </div>
-      </nav>
+      <TopNav user={user} onLoginClick={() => setShowSettings(true)} />
 
       {/* Email Verification Alert */}
       <AnimatePresence>
@@ -605,40 +582,7 @@ export default function DevotionalApp() {
                         </TabsContent>
                       </Tabs>
                     </div>
-                  ) : (
-                    <div className="space-y-8 pb-8">
-                      <div className="lg:max-h-[calc(100vh-16rem)] lg:overflow-y-auto custom-scrollbar lg:pr-4">
-                        <ProfileView />
-                      </div>
-
-                      <div className="pt-8 border-t border-foreground/10 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center font-black text-white text-2xl shadow-lg shadow-primary/20">{user.name[0]}</div>
-                          <div>
-                            <h5 className="font-black text-xl leading-none">{user.name}</h5>
-                            <p className="text-xs opacity-40 font-bold uppercase tracking-wider mt-1">{userRole || 'Member'}</p>
-                          </div>
-                        </div>
-                        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                          {userRole && userRole !== 'member' && (
-                            <Button variant="outline" className="rounded-full h-12 px-6 font-black text-xs uppercase tracking-widest border-2 border-foreground/20 hover:bg-foreground/5 flex-1" onClick={() => window.location.href = `${BP}/shepherd/dashboard`}>
-                              Panel
-                            </Button>
-                          )}
-                          <Button variant="ghost" className="rounded-full h-12 px-6 font-black text-xs uppercase tracking-widest text-red-500 hover:bg-red-500/10 flex-1 glass" onClick={async () => {
-                            await Auth.logout();
-                            setUser(null);
-                            setShowSettings(false);
-                            toast.info("Logged out safely");
-                          }}>Sign Out</Button>
-                        </div>
-                      </div>
-
-                      <Button onClick={() => setShowSettings(false)} className="w-full rounded-full h-14 lg:hidden border-2 border-foreground/10 bg-foreground/5 text-foreground hover:bg-foreground/10 font-black">
-                        CLOSE CONNECTION CARD
-                      </Button>
-                    </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>

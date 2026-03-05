@@ -264,18 +264,13 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                     </CardHeader>
 
                     <CardContent className="p-8">
-                        <Tabs defaultValue="identity" className="w-full">
-                            <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 rounded-[2rem] bg-foreground/5 bg-foreground/5 border border-foreground/5 p-1 mb-8 gap-1 h-auto min-h-[56px]">
-                                <TabsTrigger value="identity" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold">Identity</TabsTrigger>
-                                <TabsTrigger value="family" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold">Family</TabsTrigger>
-                                <TabsTrigger value="spiritual" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold">Journey</TabsTrigger>
-                                <TabsTrigger value="church" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold">Service</TabsTrigger>
-                                <TabsTrigger value="giving" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold md:hidden lg:inline-flex">Giving</TabsTrigger>
-                                <TabsTrigger value="pastoral" className="rounded-full data-[state=active]:bg-primary text-[10px] md:text-sm font-bold">Care</TabsTrigger>
-                            </TabsList>
-
-                            {/* IDENTITY TAB */}
-                            <TabsContent value="identity" className="space-y-6">
+                        <div className="w-full space-y-16">
+                            {/* IDENTITY SECTION */}
+                            <div className="space-y-6">
+                                <h3 className="text-xl font-bold border-b border-foreground/10 pb-4 flex items-center gap-2">
+                                    <UserIcon className="w-5 h-5 text-[var(--primary)]" />
+                                    Identity Details
+                                </h3>
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Full Name</label>
@@ -348,11 +343,11 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         SAVE CONNECTION CARD
                                     </Button>
                                 </div>
-                            </TabsContent>
+                            </div>
 
-                            {/* FAMILY TAB */}
-                            <TabsContent value="family" className="space-y-6">
-                                <div className="flex items-center justify-between">
+                            {/* FAMILY SECTION */}
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between border-b border-foreground/10 pb-4">
                                     <h3 className="text-xl font-bold flex items-center gap-2">
                                         <Users className="w-5 h-5 text-[var(--primary)]" />
                                         Household Management
@@ -389,10 +384,14 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         ))}
                                     </div>
                                 )}
-                            </TabsContent>
+                            </div>
 
-                            {/* SPIRITUAL TAB */}
-                            <TabsContent value="spiritual" className="space-y-6">
+                            {/* SPIRITUAL SECTION */}
+                            <div className="space-y-6">
+                                <h3 className="text-xl font-bold border-b border-foreground/10 pb-4 flex items-center gap-2">
+                                    <Milestone className="w-5 h-5 text-[var(--primary)]" />
+                                    Spiritual Journey
+                                </h3>
                                 <div className="grid md:grid-cols-3 gap-6">
                                     <Card className="glass border-foreground/10 bg-foreground/5 rounded-3xl p-6 flex flex-col items-center text-center">
                                         <Trophy className="w-8 h-8 text-amber-500 mb-2" />
@@ -431,10 +430,14 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         </Button>
                                     </div>
                                 </div>
-                            </TabsContent>
+                            </div>
 
-                            {/* CHURCH TAB */}
-                            <TabsContent value="church" className="space-y-6">
+                            {/* CHURCH SECTION */}
+                            <div className="space-y-6">
+                                <h3 className="text-xl font-bold border-b border-foreground/10 pb-4 flex items-center gap-2">
+                                    <Heart className="w-5 h-5 text-[var(--primary)]" />
+                                    Service & Ministry
+                                </h3>
                                 <div className="grid md:grid-cols-2 gap-8">
                                     <div className="space-y-4">
                                         <h4 className="text-sm font-bold uppercase tracking-widest opacity-40">Service & Volunteering</h4>
@@ -464,11 +467,11 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         </div>
                                     </div>
                                 </div>
-                            </TabsContent>
+                            </div>
 
-                            {/* GIVING TAB */}
-                            <TabsContent value="giving" className="space-y-6">
-                                <div className="flex items-center justify-between mb-2">
+                            {/* GIVING SECTION */}
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between border-b border-foreground/10 pb-4 mb-2">
                                     <h3 className="text-xl font-bold flex items-center gap-2">
                                         <CreditCard className="w-5 h-5 text-[var(--primary)]" />
                                         Stewardship Log
@@ -511,12 +514,12 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         </table>
                                     </div>
                                 </div>
-                            </TabsContent>
+                            </div>
 
-                            {/* CARE TAB */}
-                            <TabsContent value="pastoral" className="space-y-6">
+                            {/* CARE SECTION */}
+                            <div className="space-y-6">
                                 <div className="space-y-4">
-                                    <h3 className="text-xl font-bold flex items-center gap-2">
+                                    <h3 className="text-xl font-bold border-b border-foreground/10 pb-4 flex items-center gap-2">
                                         <MessageCircle className="w-5 h-5 text-red-500" />
                                         Pastoral Care Hub
                                     </h3>
@@ -585,9 +588,9 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         </div>
                                     )}
                                 </div>
-                            </TabsContent>
+                            </div>
 
-                        </Tabs>
+                        </div>
                     </CardContent>
                 </Card>
 
