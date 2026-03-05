@@ -45,6 +45,7 @@ interface DashboardData {
     wordCloud: string[];
     attendanceTrend: { week: string; count: number }[];
     skillsData: { name: string; count: number }[];
+    geoClusters: { name: string; count: number }[];
 }
 
 interface AtRiskMember {
@@ -134,6 +135,10 @@ const MOCK_DATA: DashboardData = {
         { name: 'Teaching', count: 32 }, { name: 'Music', count: 21 },
         { name: 'Technology', count: 14 }, { name: 'Counseling', count: 7 },
         { name: 'Administration', count: 12 }, { name: 'Media', count: 9 },
+    ],
+    geoClusters: [
+        { name: 'Nerima', count: 34 }, { name: 'Adachi', count: 21 },
+        { name: 'Hachioji', count: 15 }, { name: 'Setagaya', count: 12 },
     ]
 };
 
@@ -310,6 +315,17 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 10);
 
+            // Geo Clustering
+            const geoMap: Record<string, number> = {};
+            profiles.forEach(p => {
+                const loc = p.ward || p.city || 'Unknown';
+                if (loc !== 'Unknown') geoMap[loc] = (geoMap[loc] || 0) + 1;
+            });
+            const geoClusters = Object.entries(geoMap)
+                .map(([name, count]) => ({ name, count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 4);
+
             setData(prev => ({
                 ...prev,
                 totalMembers: profiles.length,
@@ -327,7 +343,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 ministryData: ministryData.length > 0 ? ministryData : prev.ministryData,
                 evangelismFunnel: pipelineFunnel.some(f => f.value > 0) ? pipelineFunnel : prev.evangelismFunnel,
                 attendanceTrend: attendanceTrend,
-                skillsData: skillsData.length > 0 ? skillsData : prev.skillsData
+                skillsData: skillsData.length > 0 ? skillsData : prev.skillsData,
+                geoClusters: geoClusters.length > 0 ? geoClusters : prev.geoClusters
             }));
 
         } catch (e) {
@@ -745,12 +762,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     <div className="relative z-10">
                         <SectionHeader title="Geographic Member Clusters" subtitle="Spatial density of congregation — mapping fellowship group opportunities" />
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-                            {[
-                                { name: 'Nerima-ku', count: 34, trend: '+3', color: 'text-emerald-400' },
-                                { name: 'Adachi-ku', count: 21, trend: '+1', color: 'text-violet-400' },
-                                { name: 'Hachioji', count: 15, trend: '0', color: 'text-white/40' },
-                                { name: 'Setagaya', count: 12, trend: '+2', color: 'text-blue-400' },
-                            ].map((loc) => (
+                            {data.geoClusters.map((loc) => (
                                 <motion.div
                                     whileHover={{ y: -5 }}
                                     key={loc.name}
@@ -759,7 +771,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                     <p className="text-[10px] text-white/40 font-black uppercase mb-1 tracking-widest">{loc.name}</p>
                                     <div className="flex items-center justify-between">
                                         <span className="text-2xl font-black text-white">{loc.count}</span>
-                                        <Badge className={`bg-${loc.color.split('-')[1]}-500/20 ${loc.color} border-0 text-[10px]`}>{loc.trend}</Badge>
+                                        <Badge className="bg-violet-500/20 text-violet-400 border-0 text-[10px]">ACTIVE</Badge>
                                     </div>
                                 </motion.div>
                             ))}
