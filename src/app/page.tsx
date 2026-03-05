@@ -294,7 +294,7 @@ export default function DevotionalApp() {
 
       <FloatingHearts />
 
-      <TopNav user={user} onLoginClick={() => setShowSettings(true)} />
+      <TopNav user={user} userRole={userRole} onLoginClick={() => setShowSettings(true)} />
 
       {/* Email Verification Alert */}
       <AnimatePresence>

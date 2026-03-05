@@ -5,13 +5,15 @@ import { Settings, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { basePath as BP } from "@/lib/utils";
+import { GlobalAIAssistant } from "./GlobalAIAssistant";
 
 interface TopNavProps {
     user: any;
+    userRole?: string | null;
     onLoginClick?: () => void;
 }
 
-export function TopNav({ user, onLoginClick }: TopNavProps) {
+export function TopNav({ user, userRole, onLoginClick }: TopNavProps) {
     return (
         <nav className="sticky top-0 z-[100] w-full bg-[var(--background)] border-b border-foreground/10 shadow-sm">
             <div className="max-w-screen-xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -37,7 +39,8 @@ export function TopNav({ user, onLoginClick }: TopNavProps) {
                             <span className="text-xs font-black text-[var(--primary)]">Login</span>
                         </button>
                     )}
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 items-center">
+                        {user && <GlobalAIAssistant user={user} userRole={userRole || null} />}
                         <Button variant="ghost" size="icon" className="glass rounded-full h-9 w-9 md:h-11 md:w-11 relative" onClick={() => toast.info("There are no new notifications at this time.")}>
                             <Bell className="w-4 h-4 md:w-5 md:h-5 text-[var(--primary)]" />
                             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
