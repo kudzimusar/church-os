@@ -1,0 +1,128 @@
+"use client";
+/**
+ * Admin Auth Module
+ * Handles admin session persistence, role caching, and route guarding
+ * for the /shepherd/* dashboard routes.
+ */
+import { supabase } from './supabase';
+
+export const ADMIN_ROLES = ['super_admin', 'owner', 'shepherd', 'admin', 'ministry_lead'] as const;
+export type AdminRole = typeof ADMIN_ROLES[number];
+
+export const ROLE_HIERARCHY: Record<AdminRole, number> = {
+    super_admin: 100,
+    owner: 90,
+    shepherd: 80,
+    admin: 70,
+    ministry_lead: 60,
+};
+
+const CACHE_KEY = 'church_os_admin_session';
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+interface CachedSession {
+    userId: string;
+    email: string;
+    name: string;
+    role: AdminRole;
+    cachedAt: number;
+}
+
+export const AdminAuth = {
+    // ── Get session (from cache or Supabase) ──
+    async getAdminSession(): Promise<CachedSession | null> {
+        // Check cache first
+        if (typeof window !== 'undefined') {
+            const cached = sessionStorage.getItem(CACHE_KEY);
+            if (cached) {
+                try {
+                    const parsed: CachedSession = JSON.parse(cached);
+                    if (Date.now() - parsed.cachedAt < CACHE_TTL_MS) {
+                        return parsed;
+                    }
+                } catch { }
+            }
+        }
+
+        // Fetch from Supabase
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) return null;
+
+            const { data: member } = await supabase
+                .from('org_members')
+                .select('role')
+                .eq('user_id', session.user.id)
+                .single();
+
+            if (!member || !ADMIN_ROLES.includes(member.role as AdminRole)) return null;
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('name')
+                .eq('id', session.user.id)
+                .single();
+
+            const sessionData: CachedSession = {
+                userId: session.user.id,
+                email: session.user.email || '',
+                name: profile?.name || session.user.email || 'Admin',
+                role: member.role as AdminRole,
+                cachedAt: Date.now(),
+            };
+
+            if (typeof window !== 'undefined') {
+                sessionStorage.setItem(CACHE_KEY, JSON.stringify(sessionData));
+            }
+            return sessionData;
+        } catch {
+            return null;
+        }
+    },
+
+    // ── Login ──
+    async loginAdmin(email: string, password: string): Promise<{
+        success: boolean;
+        role?: AdminRole;
+        name?: string;
+        error?: string;
+    }> {
+        // Clear any existing cache
+        if (typeof window !== 'undefined') {
+            sessionStorage.removeItem(CACHE_KEY);
+        }
+
+        const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+        if (authError) return { success: false, error: authError.message };
+
+        const session = await this.getAdminSession();
+        if (!session) {
+            await supabase.auth.signOut();
+            return { success: false, error: 'You do not have admin access. Contact your administrator.' };
+        }
+
+        return { success: true, role: session.role, name: session.name };
+    },
+
+    // ── Logout ──
+    async logoutAdmin() {
+        if (typeof window !== 'undefined') {
+            sessionStorage.removeItem(CACHE_KEY);
+        }
+        await supabase.auth.signOut();
+        const BP = process.env.NEXT_PUBLIC_BASE_PATH || '/jkc-devotion-app';
+        window.location.href = `${BP}/shepherd/login`;
+    },
+
+    // ── Check if role has permission ──
+    can(userRole: AdminRole, requiredRole: AdminRole): boolean {
+        return (ROLE_HIERARCHY[userRole] || 0) >= (ROLE_HIERARCHY[requiredRole] || 0);
+    },
+
+    // ── Clear cache (force refresh) ──
+    clearCache() {
+        if (typeof window !== 'undefined') {
+            sessionStorage.removeItem(CACHE_KEY);
+        }
+    },
+};

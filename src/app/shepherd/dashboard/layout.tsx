@@ -1,20 +1,113 @@
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-    title: "Church Mission Control — JKC Shepherd OS",
-    description: "AI-powered pastoral intelligence platform for Japan Kingdom Church leadership",
-};
+import { useEffect, useState, useCallback, createContext, useContext } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { AdminAuth, AdminRole } from "@/lib/admin-auth";
+import { Sidebar } from "@/components/dashboard/Sidebar";
+import { TopBar } from "@/components/dashboard/TopBar";
+import { AIPanel } from "@/components/dashboard/AIPanel";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { basePath as BP } from "@/lib/utils";
+import { toast } from "sonner";
 
-export default function ShepherdDashboardLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
-    // Layout shell: the actual grid (sidebar / main / ai-panel) is rendered client-side
-    // to enable navigation state. The Server layout just provides metadata + dark bg.
+// ─── Auth Context (shared across all sub-pages) ───
+interface AdminCtx {
+    role: AdminRole;
+    userName: string;
+    userId: string;
+    alertCount: number;
+    refreshDashboard: () => void;
+}
+const AdminContext = createContext<AdminCtx>({
+    role: 'admin', userName: 'Admin', userId: '', alertCount: 0,
+    refreshDashboard: () => { }
+});
+export const useAdminCtx = () => useContext(AdminContext);
+
+export default function ShepherdDashboardLayout({ children }: { children: React.ReactNode }) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const [state, setState] = useState<{ loading: boolean; authed: boolean; ctx: AdminCtx }>({
+        loading: true,
+        authed: false,
+        ctx: { role: 'admin', userName: 'Admin', userId: '', alertCount: 0, refreshDashboard: () => { } }
+    });
+
+    const loadSession = useCallback(async () => {
+        const session = await AdminAuth.getAdminSession();
+        if (!session) {
+            router.replace(`${BP}/shepherd/login`);
+            return;
+        }
+
+        // Load alert count with service role (no 500 errors)
+        const { count } = await supabaseAdmin
+            .from('ai_insights')
+            .select('*', { count: 'exact', head: true })
+            .eq('priority', 'critical')
+            .eq('is_acknowledged', false);
+
+        setState({
+            loading: false,
+            authed: true,
+            ctx: {
+                role: session.role,
+                userName: session.name,
+                userId: session.userId,
+                alertCount: count || 0,
+                refreshDashboard: () => loadSession(),
+            }
+        });
+    }, [router]);
+
+    useEffect(() => { loadSession(); }, [loadSession]);
+
+    const handleRefresh = () => {
+        AdminAuth.clearCache();
+        loadSession();
+        toast.success("Dashboard refreshed");
+    };
+
+    if (state.loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-[#080c14]">
+                <div className="text-center space-y-3">
+                    <Loader2 className="w-7 h-7 text-violet-400 animate-spin mx-auto" />
+                    <p className="text-[10px] font-black text-white/25 uppercase tracking-widest">
+                        Initializing Mission Control
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!state.authed) return null; // router.replace already called
+
     return (
-        <div className="min-h-screen bg-[#080c14] text-white" suppressHydrationWarning>
-            {children}
-        </div>
+        <AdminContext.Provider value={state.ctx}>
+            <div className="flex h-screen overflow-hidden bg-[#080c14] text-white">
+                {/* Sidebar */}
+                <Sidebar />
+
+                {/* Main */}
+                <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+                    {/* TopBar */}
+                    <TopBar
+                        alertCount={state.ctx.alertCount}
+                        userName={state.ctx.userName}
+                        onRefresh={handleRefresh}
+                    />
+
+                    {/* Content + AI Panel */}
+                    <div className="flex flex-1 min-h-0 overflow-hidden">
+                        <main className="flex-1 overflow-y-auto">
+                            {children}
+                        </main>
+                        <AIPanel />
+                    </div>
+                </div>
+            </div>
+        </AdminContext.Provider>
     );
 }
