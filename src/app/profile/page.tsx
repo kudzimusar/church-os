@@ -8,7 +8,7 @@ import { SoapJournal } from "@/lib/soap-journal";
 import {
     User as UserIcon, Users, Heart, Trophy, Shield,
     CreditCard, MessageCircle, AlertCircle, Plus, Save, Clock,
-    Camera, MapPin, Globe, Milestone, Copy, LayoutDashboard, Settings, CheckCircle2
+    Camera, MapPin, Globe, Milestone, Copy, LayoutDashboard, Settings, CheckCircle2, LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -159,6 +159,15 @@ export default function ProfileHub() {
         return <div className="min-h-screen bg-[var(--background)] flex items-center justify-center"><Clock className="w-8 h-8 animate-spin opacity-20" /></div>;
     }
 
+    const handleLogout = async () => {
+        try {
+            await Auth.logout();
+            window.location.href = '/';
+        } catch (error) {
+            toast.error("Error logging out.");
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-black overflow-x-hidden pb-20">
             <TopNav user={user} />
@@ -191,6 +200,14 @@ export default function ProfileHub() {
                                 <nav.icon className="w-4 h-4" /> {nav.label}
                             </button>
                         ))}
+                        <div className="pt-8 w-full border-t border-foreground/5 mt-4">
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-red-500 hover:bg-red-500/10 transition-all"
+                            >
+                                <LogOut className="w-4 h-4" /> Sign Out
+                            </button>
+                        </div>
                     </nav>
                 </aside>
 

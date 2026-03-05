@@ -5,7 +5,7 @@ import { TopNav } from "@/components/layout/TopNav";
 import { Auth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import {
-    Settings, LayoutDashboard, User as UserIcon, Palette, Globe, Shield, Lock, Bell
+    Settings, LayoutDashboard, User as UserIcon, Palette, Globe, Shield, Lock, Bell, LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -48,6 +48,15 @@ export default function SettingsHub() {
         }
     };
 
+    const handleLogout = async () => {
+        try {
+            await Auth.logout();
+            window.location.href = '/';
+        } catch (error) {
+            toast.error("Error logging out.");
+        }
+    };
+
     if (!user) return null;
 
     return (
@@ -81,6 +90,15 @@ export default function SettingsHub() {
                                 <nav.icon className="w-4 h-4" /> {nav.label}
                             </button>
                         ))}
+
+                        <div className="pt-8 w-full border-t border-foreground/5 mt-4">
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-red-500 hover:bg-red-500/10 transition-all"
+                            >
+                                <LogOut className="w-4 h-4" /> Sign Out
+                            </button>
+                        </div>
                     </nav>
                 </aside>
 
@@ -223,7 +241,12 @@ export default function SettingsHub() {
                                     <div className="bg-red-500/5 border border-red-500/20 rounded-3xl p-6 md:p-8 text-red-600">
                                         <h4 className="font-black text-lg mb-2">Danger Zone</h4>
                                         <p className="text-sm opacity-80 mb-6 font-medium">Permanently delete your account and all associated devotional data. This action cannot be undone.</p>
-                                        <Button variant="outline" className="h-12 px-6 rounded-xl border-red-500 text-red-500 font-bold hover:bg-red-500 hover:text-white">Delete Account</Button>
+                                        <div className="flex gap-4">
+                                            <Button variant="outline" className="h-12 px-6 rounded-xl border-red-500 text-red-500 font-bold hover:bg-red-500 hover:text-white">Delete Account</Button>
+                                            <Button onClick={handleLogout} variant="outline" className="h-12 px-6 rounded-xl border-foreground/20 text-foreground font-bold hover:bg-foreground hover:text-background flex md:hidden items-center gap-2">
+                                                <LogOut className="w-4 h-4" /> Sign Out
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             )}
