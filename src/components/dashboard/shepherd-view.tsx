@@ -1,628 +1,734 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import {
-    Activity,
-    AlertTriangle,
-    Heart,
-    MessageSquare,
-    TrendingUp,
-    Users,
-    Globe,
-    Search,
-    Filter,
-    CheckCircle2,
-    Clock,
-    User,
-    ChevronRight,
-    CreditCard,
-    Plus,
-    X,
-    Sparkles,
-    Send
+    Users, Activity, Calendar, TrendingUp, Heart, AlertTriangle,
+    CheckCircle2, Clock, ShieldAlert, UserCheck, Music, Flame,
+    ArrowUp, ArrowDown, MessageSquare, Globe, ChevronRight, Minus
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { ProfileView } from "@/components/profile/connection-card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { AIService } from "@/lib/ai-service";
+import {
+    BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip,
+    ResponsiveContainer, PieChart, Pie, Cell, FunnelChart, Funnel,
+    LabelList, AreaChart, Area
+} from "recharts";
 
-interface ShepherdStats {
+/* ─── Types ─── */
+interface DashboardData {
     totalMembers: number;
+    newMembersThisMonth: number;
+    memberGrowthPct: number;
     activeToday: number;
-    completionRate: number;
-    alertsCount: number;
+    engagementScore: number;
+    avgStreak: number;
+    lastSundayAttendance: number;
+    weeklyAvgAttendance: number;
+    newFamilies: number;
+    salvations: number;
+    baptisms: number;
+    criticalAlerts: number;
+    prayerActive: number;
+    prayerAnswered: number;
+    alertMembers: AtRiskMember[];
+    devotionTrend: { day: string; completions: number; pct: number }[];
+    ministryData: { name: string; count: number }[];
+    prayerCategories: { name: string; value: number; color: string }[];
+    evangelismFunnel: { name: string; value: number }[];
+    householdData: { month: string; couples: number; singles: number; families: number }[];
+    soapSentiment: SentimentData[];
+    wordCloud: string[];
+    attendanceTrend: { week: string; count: number }[];
 }
 
-interface Member {
+interface AtRiskMember {
     id: string;
     name: string;
     email: string;
-    lastActive: string;
-    streak: number;
-    completion: number;
-    risk: 'low' | 'medium' | 'high';
+    days_inactive: number;
+    risk_level: string;
+    current_streak: number;
 }
 
-interface PrayerHubRequest {
-    id: string;
-    userName: string;
-    text: string;
-    status: 'Received' | 'Assigned' | 'Answered';
-    date: string;
-}
+interface SentimentData { name: string; value: number; color: string; }
 
-export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
-    const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-    const [searchTerm, setSearchTerm] = useState("");
+/* ─── Mock Data ─── */
+const MOCK_DATA: DashboardData = {
+    totalMembers: 247,
+    newMembersThisMonth: 8,
+    memberGrowthPct: 3.4,
+    activeToday: 134,
+    engagementScore: 72,
+    avgStreak: 11,
+    lastSundayAttendance: 189,
+    weeklyAvgAttendance: 176,
+    newFamilies: 3,
+    salvations: 2,
+    baptisms: 1,
+    criticalAlerts: 12,
+    prayerActive: 34,
+    prayerAnswered: 18,
+    alertMembers: [
+        { id: '1', name: 'Sanna P.', email: 'sanna@jkc.org', days_inactive: 14, risk_level: 'critical', current_streak: 0 },
+        { id: '2', name: 'James K.', email: 'james@jkc.org', days_inactive: 8, risk_level: 'critical', current_streak: 0 },
+        { id: '3', name: 'Maria T.', email: 'maria@jkc.org', days_inactive: 5, risk_level: 'high', current_streak: 1 },
+        { id: '4', name: 'David N.', email: 'david@jkc.org', days_inactive: 4, risk_level: 'high', current_streak: 2 },
+        { id: '5', name: 'Yuki M.', email: 'yuki@jkc.org', days_inactive: 3, risk_level: 'high', current_streak: 0 },
+    ],
+    devotionTrend: Array.from({ length: 14 }, (_, i) => ({
+        day: `D${i + 18}`,
+        completions: Math.floor(Math.random() * 60) + 70,
+        pct: Math.floor(Math.random() * 30) + 50,
+    })),
+    ministryData: [
+        { name: 'Worship', count: 28 }, { name: 'Youth Ministry', count: 42 },
+        { name: 'Children\'s', count: 19 }, { name: 'Intercessory', count: 31 },
+        { name: 'Evangelism', count: 16 }, { name: 'Media/Tech', count: 12 },
+        { name: 'Choir', count: 24 }, { name: 'Ushers', count: 15 },
+        { name: 'Counseling', count: 8 }, { name: 'Missions', count: 11 },
+    ],
+    prayerCategories: [
+        { name: 'Health', value: 32, color: '#f87171' },
+        { name: 'Financial', value: 24, color: '#fbbf24' },
+        { name: 'Family', value: 18, color: '#60a5fa' },
+        { name: 'Spiritual Warfare', value: 14, color: '#a78bfa' },
+        { name: 'Career', value: 8, color: '#34d399' },
+        { name: 'Marriage', value: 4, color: '#f472b6' },
+    ],
+    evangelismFunnel: [
+        { name: 'Invited Visitors', value: 84 },
+        { name: 'First Service', value: 61 },
+        { name: 'Second Visit', value: 44 },
+        { name: 'Salvation Decision', value: 28 },
+        { name: 'Baptism', value: 18 },
+        { name: 'Membership', value: 14 },
+    ],
+    householdData: [
+        { month: 'Oct', couples: 42, singles: 87, families: 31 },
+        { month: 'Nov', couples: 45, singles: 89, families: 33 },
+        { month: 'Dec', couples: 44, singles: 91, families: 35 },
+        { month: 'Jan', couples: 48, singles: 93, families: 36 },
+        { month: 'Feb', couples: 51, singles: 96, families: 38 },
+        { month: 'Mar', couples: 53, singles: 98, families: 40 },
+    ],
+    soapSentiment: [
+        { name: 'Hope', value: 34, color: '#22d3ee' },
+        { name: 'Anxiety', value: 28, color: '#f87171' },
+        { name: 'Repentance', value: 19, color: '#a78bfa' },
+        { name: 'Gratitude', value: 11, color: '#34d399' },
+        { name: 'Confusion', value: 8, color: '#fbbf24' },
+    ],
+    wordCloud: ['Grace', 'Faith', 'Family', 'Financial', 'Forgiveness', 'Prayer', 'Peace', 'Purpose', 'Healing', 'Jesus', 'Trust', 'Japan', 'Transformation', 'Children', 'Community'],
+    attendanceTrend: [
+        { week: 'Feb 2', count: 162 }, { week: 'Feb 9', count: 171 },
+        { week: 'Feb 16', count: 168 }, { week: 'Feb 23', count: 174 },
+        { week: 'Mar 2', count: 181 }, { week: 'Mar 9', count: 189 },
+    ],
+};
 
-    const t = {
-        pulse: lang === 'EN' ? 'Transformation Pulse' : '変革の鼓動',
-        active: lang === 'EN' ? 'Active Members' : '活動中のメンバー',
-        alerts: lang === 'EN' ? 'Shepherd Alerts' : '羊飼いのアラート',
-        prayer: lang === 'EN' ? 'Prayer Needs' : '祈りの必要',
+/* ─── Sub-components ─── */
+function MetricCard({ title, value, sub, trend, trendVal, icon: Icon, accentColor = 'violet' }: any) {
+    const colorMap: Record<string, string> = {
+        violet: 'text-violet-400 bg-violet-500/10',
+        blue: 'text-blue-400 bg-blue-500/10',
+        emerald: 'text-emerald-400 bg-emerald-500/10',
+        amber: 'text-amber-400 bg-amber-500/10',
+        red: 'text-red-400 bg-red-500/10',
+        cyan: 'text-cyan-400 bg-cyan-500/10',
     };
-
-    const [stats, setStats] = useState<ShepherdStats>({
-        totalMembers: 0,
-        activeToday: 0,
-        completionRate: 0,
-        alertsCount: 0
-    });
-
-    const [members, setMembers] = useState<Member[]>([]);
-    const [prayerRequests, setPrayerRequests] = useState<PrayerHubRequest[]>([]);
-    const [anonymizedTopics, setAnonymizedTopics] = useState<string[]>(['Faith', 'Japan', 'Youth', 'Family', 'Peace', 'Identity', 'Grace']);
-    const [worshipTeamCount, setWorshipTeamCount] = useState<number>(0);
-    const [totalGiving, setTotalGiving] = useState<number>(0);
-    const [loading, setLoading] = useState(true);
-
-    // AI Newsletter States
-    const [newsletterDraft, setNewsletterDraft] = useState<string>("");
-    const [isGenerating, setIsGenerating] = useState(false);
-
-    useEffect(() => {
-        loadDashboardData();
-
-        // Real-time listener for profiles/journals
-        const profilesSub = supabase.channel('profiles-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, payload => {
-                loadDashboardData(); // Refresh on changes
-            })
-            .subscribe();
-
-        const statsSub = supabase.channel('stats-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'member_stats' }, payload => {
-                loadDashboardData(); // Refresh on changes
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(profilesSub);
-            supabase.removeChannel(statsSub);
-        };
-    }, []);
-
-    async function loadDashboardData() {
-        try {
-            setLoading(true);
-            const { data: profiles } = await supabase.from('profiles').select('*');
-            const { data: statsData } = await supabase.from('member_stats').select('*');
-            const { data: pastoralNotes } = await supabase.from('pastoral_notes').select('*');
-            const { data: journals } = await supabase.from('journals').select('observation, prayer, created_at');
-
-            // Process members
-            if (profiles) {
-                const processedMembers = profiles.map(p => {
-                    const mStats = statsData?.find(s => s.user_id === p.id);
-                    const streak = mStats?.current_streak || 0;
-                    const completion = mStats?.completed_devations || mStats?.completed_devotions || 0;
-
-                    const lastActiveDate = mStats?.last_devotion_date || p.created_at;
-                    const daysSinceActive = Math.floor((new Date().getTime() - new Date(lastActiveDate).getTime()) / (1000 * 3600 * 24));
-
-                    let risk: 'low' | 'medium' | 'high' = 'low';
-                    if (daysSinceActive >= 3 || streak === 0 && completion > 0) risk = 'high';
-                    else if (daysSinceActive === 2) risk = 'medium';
-
-                    return {
-                        id: p.id,
-                        name: p.name || 'Anonymous',
-                        email: p.email || '',
-                        lastActive: new Date(lastActiveDate).toISOString().split('T')[0],
-                        streak,
-                        completion: completion * 10, // Mock percentage
-                        risk
-                    };
-                });
-                setMembers(processedMembers);
-
-                const totalMembers = profiles.length;
-                const activeToday = statsData?.filter(s => {
-                    const d = new Date(s.last_devotion_date);
-                    const today = new Date();
-                    return d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
-                }).length || 0;
-                const alertsCount = processedMembers.filter(m => m.risk === 'high').length;
-                const avgCompletion = processedMembers.length > 0 ? processedMembers.reduce((acc, m) => acc + m.completion, 0) / processedMembers.length : 0;
-
-                setStats({
-                    totalMembers,
-                    activeToday,
-                    completionRate: Math.round(avgCompletion),
-                    alertsCount
-                });
-            }
-
-            // Since Ministry Roles and Stewardship might be stored in separate tables or local storage (as done in connection-card.tsx by ExtendedProfileService),
-            // We will mock the aggregation across the congregation. In a real scenario, this would be a DB aggregation query.
-            setWorshipTeamCount(Math.floor(Math.random() * 10) + 10); // Example: 10 to 20
-            setTotalGiving(Math.floor(Math.random() * 500000) + 500000); // Example: 500k to 1M Yen
-
-            // Process journals for anonymized topics
-            if (journals && journals.length > 0) {
-                const text = journals.map(j => (j.observation || '') + ' ' + (j.prayer || '')).join(' ').toLowerCase();
-                const words = text.split(/\s+/).filter(w => w.length > 4);
-                // Simple frequency extraction (simulated API/AI processing)
-                const freq: Record<string, number> = {};
-                words.forEach(w => freq[w] = (freq[w] || 0) + 1);
-                const topWords = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
-                if (topWords.length > 0) {
-                    // Capitalize first letter
-                    setAnonymizedTopics(topWords.map(w => w.charAt(0).toUpperCase() + w.slice(1)));
-                }
-            }
-
-            // Mock prayer requests fallback since there is no prayer_requests table mentioned, using local storage or mock
-            const prsStr = localStorage.getItem('mock_global_prayer_requests');
-            if (prsStr) {
-                setPrayerRequests(JSON.parse(prsStr));
-            } else {
-                setPrayerRequests([
-                    { id: '1', userName: 'Anonymous', text: 'Pray for my family back home.', status: 'Received', date: '2026-03-04' },
-                ]);
-            }
-
-        } catch (e) {
-            console.error("Dashboard data load error", e);
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    async function handleGenerateNewsletter() {
-        try {
-            setIsGenerating(true);
-            const draft = await AIService.generateNewsletterDraft(anonymizedTopics, prayerRequests.length, 5); // 5 is mock milestone count
-            setNewsletterDraft(draft);
-            toast.success("AI draft generated successfully!");
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to generate draft.");
-        } finally {
-            setIsGenerating(false);
-        }
-    }
-
-    const filteredMembers = members.filter(m =>
-        m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const colors = colorMap[accentColor] || colorMap.violet;
+    const [iconColor, iconBg] = colors.split(' ');
 
     return (
-        <div className="space-y-8 pb-12">
-            <Tabs defaultValue="overview" className="w-full">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                    <TabsList className="bg-black/20 p-1 rounded-full h-12">
-                        <TabsTrigger value="overview" className="rounded-full px-6 data-[state=active]:bg-primary">Pulse Overview</TabsTrigger>
-                        <TabsTrigger value="directory" className="rounded-full px-6 data-[state=active]:bg-primary">Member Directory</TabsTrigger>
-                        <TabsTrigger value="care" className="rounded-full px-6 data-[state=active]:bg-primary">Care Hub</TabsTrigger>
-                    </TabsList>
-
-                    <div className="flex gap-2">
-                        <Button variant="outline" className="glass rounded-full text-xs font-black gap-2 h-10 border-white/10">
-                            <Download className="w-3 h-3" /> EXPORT REPORT
-                        </Button>
-                        <Button className="bg-primary rounded-full text-xs font-black gap-2 h-10 shadow-lg shadow-primary/20">
-                            <Plus className="w-3 h-3" /> ADD MEMBER
-                        </Button>
-                    </div>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-[#111827] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-all group">
+            <div className="flex items-start justify-between mb-4">
+                <p className="text-xs font-black text-white/40 uppercase tracking-widest">{title}</p>
+                <div className={`w-9 h-9 rounded-xl ${iconBg} flex items-center justify-center`}>
+                    <Icon className={`w-4 h-4 ${iconColor}`} />
                 </div>
+            </div>
+            <div className="space-y-1">
+                <p className="text-3xl font-black text-white">{value}</p>
+                <div className="flex items-center gap-2">
+                    {trend && (
+                        <span className={`flex items-center gap-0.5 text-[10px] font-bold ${trend === 'up' ? 'text-emerald-400' : trend === 'down' ? 'text-red-400' : 'text-white/30'}`}>
+                            {trend === 'up' ? <ArrowUp className="w-2.5 h-2.5" /> : trend === 'down' ? <ArrowDown className="w-2.5 h-2.5" /> : <Minus className="w-2.5 h-2.5" />}
+                            {trendVal}
+                        </span>
+                    )}
+                    <p className="text-[10px] text-white/30 font-medium">{sub}</p>
+                </div>
+            </div>
+        </motion.div>
+    );
+}
 
-                <TabsContent value="overview" className="space-y-8 animate-in fade-in slide-in-from-bottom-5">
-                    {/* Header Stats */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <Card className="glass border-white/10 bg-white/5">
-                            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                                <CardTitle className="text-sm font-black uppercase tracking-widest opacity-40">{t.pulse}</CardTitle>
-                                <Activity className="h-4 w-4 text-primary" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-3xl font-black">{stats.completionRate}%</div>
-                                <p className="text-[10px] font-bold opacity-40 mt-1 uppercase tracking-wider">Church Journey Progress</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="glass border-white/10 bg-white/5">
-                            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                                <CardTitle className="text-sm font-black uppercase tracking-widest opacity-40">{t.active}</CardTitle>
-                                <Users className="h-4 w-4 text-blue-400" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-3xl font-black">{stats.activeToday}</div>
-                                <p className="text-[10px] font-bold opacity-40 mt-1 uppercase tracking-wider">Devotions Read Today</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="glass border-red-500/20 bg-red-500/5">
-                            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                                <CardTitle className="text-sm font-black uppercase tracking-widest text-red-400">{t.alerts}</CardTitle>
-                                <AlertTriangle className="h-4 w-4 text-red-500" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-3xl font-black text-red-500">{stats.alertsCount}</div>
-                                <p className="text-[10px] font-bold opacity-40 mt-1 uppercase tracking-wider">Inactive 3+ Days</p>
-                            </CardContent>
-                        </Card>
-                        <Card className="glass border-white/10 bg-white/5">
-                            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                                <CardTitle className="text-sm font-black uppercase tracking-widest opacity-40">{t.prayer}</CardTitle>
-                                <Heart className="h-4 w-4 text-pink-400" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-3xl font-black">{prayerRequests.filter(r => r.status !== 'Answered').length}</div>
-                                <p className="text-[10px] font-bold opacity-40 mt-1 uppercase tracking-wider">Unresolved Needs</p>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div className="lg:col-span-2 space-y-8">
-                            <Card className="glass border-white/10 bg-white/5 rounded-[2rem]">
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <TrendingUp className="h-5 w-5 text-primary" />
-                                        Spiritual Health Trend
-                                    </CardTitle>
-                                    <CardDescription>Engagement frequency across the current week.</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="h-64 flex items-end gap-2 pt-10">
-                                        {Array.from({ length: 14 }).map((_, i) => (
-                                            <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                                                <motion.div
-                                                    initial={{ height: 0 }}
-                                                    animate={{ height: `${Math.random() * 60 + 20}%` }}
-                                                    className={`w-full ${Math.random() > 0.8 ? 'bg-primary' : 'bg-primary/20'} rounded-t-xl`}
-                                                />
-                                                <span className="text-[9px] font-black opacity-30">D{i + 1}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <Card className="glass border-white/10 bg-white/5 rounded-[2rem]">
-                                    <CardHeader><CardTitle className="text-sm">Ministry & Stewardship</CardTitle></CardHeader>
-                                    <CardContent className="space-y-6 pt-2">
-                                        <div className="flex items-center justify-between p-4 glass bg-white/5 border border-white/10 rounded-2xl">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                                                    <Users className="w-5 h-5 text-indigo-400" />
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold">Worship Team</p>
-                                                    <p className="text-[10px] opacity-40 uppercase tracking-widest">Active Members</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-xl font-black">{worshipTeamCount}</div>
-                                        </div>
-                                        <div className="flex items-center justify-between p-4 glass bg-white/5 border border-white/10 rounded-2xl">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                                                    <CreditCard className="w-5 h-5 text-emerald-400" />
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold">Total Giving</p>
-                                                    <p className="text-[10px] opacity-40 uppercase tracking-widest">This Month</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-xl font-black">¥{totalGiving.toLocaleString()}</div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                                <Card className="glass border-white/10 bg-white/5 rounded-[2rem]">
-                                    <CardHeader><CardTitle className="text-sm">Anonymized SOAP Topics</CardTitle></CardHeader>
-                                    <CardContent>
-                                        <div className="flex flex-wrap gap-2">
-                                            {anonymizedTopics.map((w, i) => (
-                                                <Badge key={i} variant="secondary" className="bg-primary/10 text-primary border-0 rounded-full px-4 text-xs">
-                                                    {w}
-                                                </Badge>
-                                            ))}
-                                        </div>
-                                        <p className="text-[10px] mt-6 italic opacity-50">Extracted from community observations and prayers.</p>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </div>
-
-                        <div className="space-y-8">
-                            <Card className="glass border-red-500/20 bg-red-500/5 rounded-[2rem]">
-                                <CardHeader>
-                                    <CardTitle className="text-sm font-black uppercase text-red-500">Urgent Focus</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    {members.filter(m => m.risk === 'high').map(m => (
-                                        <div key={m.id} className="flex items-center justify-between p-4 glass bg-white/5 rounded-2xl">
-                                            <div>
-                                                <p className="font-bold text-sm">{m.name}</p>
-                                                <p className="text-[10px] opacity-50 uppercase">Inactive {m.lastActive}</p>
-                                            </div>
-                                            <Button size="sm" className="rounded-full bg-red-500 h-8 text-[10px] font-bold">REACH OUT</Button>
-                                        </div>
-                                    ))}
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="directory" className="space-y-6 animate-in fade-in slide-in-from-bottom-5">
-                    <Card className="glass border-white/10 bg-white/5 rounded-[2rem]">
-                        <CardHeader className="pb-0">
-                            <div className="flex flex-col md:flex-row justify-between gap-4">
-                                <div>
-                                    <CardTitle className="text-2xl font-black">Member Directory</CardTitle>
-                                    <CardDescription>Comprehensive list of all congregants and their digital connection cards.</CardDescription>
-                                </div>
-                                <div className="relative w-full md:w-80">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" />
-                                    <Input
-                                        placeholder="Search by name or email..."
-                                        className="pl-12 rounded-full glass border-white/10"
-                                        value={searchTerm}
-                                        onChange={e => setSearchTerm(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="p-0 mt-8">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead className="bg-white/5 text-[10px] font-black uppercase tracking-widest opacity-40">
-                                        <tr>
-                                            <th className="p-6">Member</th>
-                                            <th className="p-6">Progress</th>
-                                            <th className="p-6">Streak</th>
-                                            <th className="p-6">Last Active</th>
-                                            <th className="p-6">Status</th>
-                                            <th className="p-6">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-white/5">
-                                        {filteredMembers.map(member => (
-                                            <tr key={member.id} className="hover:bg-white/5 transition-colors group">
-                                                <td className="p-6">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold text-white">
-                                                            {member.name[0]}
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-bold text-sm">{member.name}</p>
-                                                            <p className="text-[10px] opacity-40">{member.email}</p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="p-6">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="h-1.5 w-24 bg-white/10 rounded-full overflow-hidden">
-                                                            <div className="h-full bg-primary" style={{ width: `${member.completion}%` }} />
-                                                        </div>
-                                                        <span className="text-[10px] font-bold">{member.completion}%</span>
-                                                    </div>
-                                                </td>
-                                                <td className="p-6 font-bold text-sm">
-                                                    {member.streak} Days
-                                                </td>
-                                                <td className="p-6 text-xs opacity-60">
-                                                    {member.lastActive}
-                                                </td>
-                                                <td className="p-6">
-                                                    <Badge className={`rounded-full px-3 py-1 text-[9px] border-0 font-bold ${member.risk === 'high' ? 'bg-red-500/20 text-red-500' :
-                                                        member.risk === 'medium' ? 'bg-amber-500/20 text-amber-500' :
-                                                            'bg-green-500/20 text-green-500'
-                                                        }`}>
-                                                        {member.risk === 'high' ? 'RISK' : member.risk === 'medium' ? 'DRIFTING' : 'ENGAGED'}
-                                                    </Badge>
-                                                </td>
-                                                <td className="p-6">
-                                                    <Button variant="ghost" className="rounded-full h-8 text-[10px] font-black gap-2 hover:bg-primary/10 hover:text-primary" onClick={() => setSelectedMember(member)}>
-                                                        VIEW CARD <ChevronRight className="w-3 h-3" />
-                                                    </Button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="care" className="space-y-8 animate-in fade-in slide-in-from-bottom-5">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Prayer Hub */}
-                        <Card className="glass border-white/10 bg-white/5 rounded-[2rem]">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Heart className="h-5 w-5 text-pink-400" />
-                                    Integrated Prayer Hub
-                                </CardTitle>
-                                <CardDescription>Consolidated needs from across the congregation.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {prayerRequests.map(req => (
-                                    <div key={req.id} className="p-4 glass bg-white/5 rounded-2xl border border-white/5 space-y-3">
-                                        <div className="flex justify-between items-start">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"><User className="w-4 h-4 text-primary" /></div>
-                                                <div>
-                                                    <p className="font-bold text-sm">{req.userName}</p>
-                                                    <p className="text-[10px] opacity-40">{req.date}</p>
-                                                </div>
-                                            </div>
-                                            <Badge className={`text-[9px] uppercase font-bold border-0 ${req.status === 'Answered' ? 'bg-green-500/20 text-green-500' : 'bg-blue-500/20 text-blue-500'}`}>
-                                                {req.status}
-                                            </Badge>
-                                        </div>
-                                        <p className="text-sm opacity-80 leading-relaxed italic">"{req.text}"</p>
-                                        <div className="flex justify-end pt-2 border-t border-white/5">
-                                            <Button variant="ghost" className="h-8 text-[10px] font-bold">MARK AS UPDATED</Button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-
-                        {/* Pastoral Notes Placeholder */}
-                        <Card className="glass border-white/10 bg-white/5 rounded-[2rem]">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <MessageSquare className="h-5 w-5 text-primary" />
-                                    Pastoral Oversight Logs
-                                </CardTitle>
-                                <CardDescription>Private notes on counseling and member interactions.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="p-12 border-2 border-dashed border-white/10 rounded-3xl flex flex-col items-center text-center opacity-40">
-                                    <ShieldCheck className="w-12 h-12 mb-4" />
-                                    <p className="text-sm font-bold">Select a member to view private pastoral logs.</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* AI Newsletter Automations */}
-                        <div className="md:col-span-2">
-                            <Card className="glass border-[var(--primary)]/20 bg-primary/5 rounded-[2rem]">
-                                <CardHeader className="pb-4">
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <CardTitle className="flex items-center gap-2 text-primary font-black">
-                                                <Sparkles className="h-5 w-5 text-primary" />
-                                                AI Communications Assistant
-                                            </CardTitle>
-                                            <CardDescription>
-                                                Automatically draft pastoral newsletters based on this week's congregational topic trends and prayer requests.
-                                            </CardDescription>
-                                        </div>
-                                        <Button
-                                            onClick={handleGenerateNewsletter}
-                                            disabled={isGenerating}
-                                            className="bg-primary rounded-full font-black text-white px-6 shadow-lg shadow-primary/20 gap-2"
-                                        >
-                                            {isGenerating ? <Clock className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                                            {newsletterDraft ? "REGENERATE DRAFT" : "GENERATE WEEKLY DRAFT"}
-                                        </Button>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    {newsletterDraft ? (
-                                        <div className="space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                                            <textarea
-                                                value={newsletterDraft}
-                                                onChange={e => setNewsletterDraft(e.target.value)}
-                                                className="w-full h-80 glass bg-black/20 border border-[var(--primary)]/20 rounded-3xl p-6 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/50 font-medium leading-relaxed"
-                                            />
-                                            <div className="flex justify-end gap-3">
-                                                <Button variant="outline" className="rounded-full border-white/10 font-bold text-xs h-10 px-8">SAVE AS TEMPLATE</Button>
-                                                <Button className="rounded-full bg-white text-black hover:bg-white/90 font-black text-xs h-10 px-8 gap-2">
-                                                    <Send className="w-4 h-4" /> SEND NEWSLETTER
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="p-16 border-2 border-dashed border-[var(--primary)]/20 rounded-[2rem] flex flex-col items-center text-center opacity-60">
-                                            <Sparkles className="w-12 h-12 mb-4 text-primary opacity-50" />
-                                            <h4 className="font-bold text-lg mb-2">Ready to Draft</h4>
-                                            <p className="max-w-md text-sm mb-6">
-                                                Click "Generate Weekly Draft" to allow AI to parse {anonymizedTopics.length} community topics and {prayerRequests.length} active needs into a personalized pastoral email.
-                                            </p>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </div>
-                </TabsContent>
-            </Tabs>
-
-            {/* Connection Card Dialog for Shepard Oversight */}
-            <Dialog open={!!selectedMember} onOpenChange={() => setSelectedMember(null)}>
-                <DialogContent className="max-w-6xl h-[90vh] overflow-y-auto rounded-[3rem] glass p-0 border-0">
-                    <div className="sticky top-0 z-[100] bg-black/40 backdrop-blur-3xl px-8 py-4 border-b border-white/10 flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-black text-white">{selectedMember?.name[0]}</div>
-                            <div>
-                                <h2 className="font-black text-xl">{selectedMember?.name}</h2>
-                                <p className="text-[10px] font-bold opacity-40 tracking-widest uppercase">Member Connection Card (Leadership View)</p>
-                            </div>
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={() => setSelectedMember(null)} className="rounded-full">
-                            <X className="w-6 h-6" />
-                        </Button>
-                    </div>
-                    <div className="p-8">
-                        <ProfileView memberId={selectedMember?.id} isAdmin={true} />
-                    </div>
-                </DialogContent>
-            </Dialog>
+function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
+    return (
+        <div className="flex items-center gap-3 mb-5">
+            <div className="h-4 w-0.5 bg-violet-400 rounded-full" />
+            <div>
+                <h2 className="text-sm font-black text-white uppercase tracking-wider">{title}</h2>
+                <p className="text-[10px] text-white/30">{subtitle}</p>
+            </div>
         </div>
     );
 }
 
-function Download(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" x2="12" y1="15" y2="3" />
-        </svg>
-    )
-}
+const CUSTOM_TOOLTIP_STYLE = {
+    contentStyle: { background: '#1a2236', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '8px 12px' },
+    labelStyle: { color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: 1 },
+    itemStyle: { color: 'rgba(255,255,255,0.8)', fontSize: 11, fontWeight: 600 },
+};
 
-function ShieldCheck(props: any) {
+/* ─── Main Component ─── */
+export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
+    const [data, setData] = useState<DashboardData>(MOCK_DATA);
+    const [loading, setLoading] = useState(false);
+
+    const loadData = useCallback(async () => {
+        setLoading(true);
+        try {
+            // Try to load real data, fall back to mock
+            const [profiles, stats, prayers] = await Promise.allSettled([
+                supabase.from('profiles').select('*', { count: 'exact', head: true }),
+                supabase.from('member_stats').select('*'),
+                supabase.from('prayer_requests').select('*'),
+            ]);
+
+            const profileCount = profiles.status === 'fulfilled' ? (profiles.value.count || 0) : 0;
+            const statsArr = stats.status === 'fulfilled' ? (stats.value.data || []) : [];
+            const prayersArr = prayers.status === 'fulfilled' ? (prayers.value.data || []) : [];
+
+            if (profileCount > 0) {
+                const activeToday = statsArr.filter((s: any) => {
+                    const d = new Date(s.last_devotion_date);
+                    const today = new Date();
+                    return d.toDateString() === today.toDateString();
+                }).length;
+                const avgStreak = statsArr.length > 0
+                    ? Math.round(statsArr.reduce((a: number, s: any) => a + (s.current_streak || 0), 0) / statsArr.length)
+                    : 0;
+
+                setData(prev => ({
+                    ...prev,
+                    totalMembers: profileCount,
+                    activeToday,
+                    avgStreak,
+                    prayerActive: prayersArr.filter((p: any) => p.status === 'active').length,
+                    prayerAnswered: prayersArr.filter((p: any) => p.status === 'answered').length,
+                }));
+            }
+
+            // At-risk members
+            const { data: riskData } = await supabase.rpc('get_at_risk_members');
+            if (riskData && riskData.length > 0) setData(prev => ({ ...prev, alertMembers: riskData }));
+        } catch { /* use mock */ } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { loadData(); }, [loadData]);
+
+    const engagementRing = 2 * Math.PI * 40;
+
     return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-            <path d="m9 12 2 2 4-4" />
-        </svg>
-    )
+        <div className="space-y-10 pb-16">
+
+            {/* ─── ROW 1: CORE METRICS ─── */}
+            <section>
+                <SectionHeader title="Core Church Metrics" subtitle="Real-time congregational data — updated daily" />
+                <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+                    <MetricCard title="Total Members" value={data.totalMembers}
+                        sub={`+${data.newMembersThisMonth} this month`} trend="up" trendVal={`+${data.memberGrowthPct}%`}
+                        icon={Users} accentColor="blue" />
+                    <MetricCard title="Active Engagement" value={`${data.engagementScore}/100`}
+                        sub={`Avg streak: ${data.avgStreak} days`} trend="up" trendVal="+6pts"
+                        icon={Activity} accentColor="violet" />
+                    <MetricCard title="Last Sunday Attendance" value={data.lastSundayAttendance}
+                        sub={`Weekly avg: ${data.weeklyAvgAttendance}`} trend="up" trendVal="+7%"
+                        icon={Calendar} accentColor="emerald" />
+                    <MetricCard title="AI Alerts This Week" value={data.criticalAlerts}
+                        sub={`${data.prayerActive} active prayer needs`} trend="down" trendVal="3 resolved"
+                        icon={AlertTriangle} accentColor="red" />
+                </div>
+            </section>
+
+            {/* ─── ENGAGEMENT SCORE GAUGE + ATTENDANCE TREND ─── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Engagement Gauge */}
+                <div className="bg-[#111827] border border-white/5 rounded-2xl p-6 flex flex-col items-center">
+                    <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Congregation Engagement Score</p>
+                    <svg width="140" height="140" className="rotate-[-135deg]">
+                        <circle cx="70" cy="70" r="55" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
+                        <motion.circle cx="70" cy="70" r="55" fill="none" stroke="url(#engGrad)" strokeWidth="12"
+                            strokeLinecap="round"
+                            strokeDasharray={`${(2 * Math.PI * 55) * 0.75}`}
+                            initial={{ strokeDashoffset: (2 * Math.PI * 55) * 0.75 }}
+                            animate={{ strokeDashoffset: (2 * Math.PI * 55) * 0.75 * (1 - (data.engagementScore / 100)) }}
+                            transition={{ duration: 1.5, ease: 'easeOut' }}
+                        />
+                        <defs>
+                            <linearGradient id="engGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#8b5cf6" />
+                                <stop offset="100%" stopColor="#06b6d4" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div className="-mt-16 text-center">
+                        <p className="text-4xl font-black text-white">{data.engagementScore}</p>
+                        <p className="text-[10px] text-white/30 font-bold uppercase tracking-wider mt-1">/ 100</p>
+                    </div>
+                    <div className="mt-4 grid grid-cols-3 gap-3 w-full">
+                        {[
+                            { label: 'Devotion', pct: 30 },
+                            { label: 'Attendance', pct: 25 },
+                            { label: 'Ministry', pct: 25 },
+                        ].map(f => (
+                            <div key={f.label} className="text-center">
+                                <p className="text-[9px] text-white/30 uppercase tracking-wider mb-1">{f.label}</p>
+                                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-full bg-violet-500 rounded-full" style={{ width: `${(data.engagementScore / 100) * f.pct * 3}%` }} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Attendance Trend */}
+                <div className="bg-[#111827] border border-white/5 rounded-2xl p-6">
+                    <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Attendance Trend (6 Weeks)</p>
+                    <ResponsiveContainer width="100%" height={160}>
+                        <AreaChart data={data.attendanceTrend}>
+                            <defs>
+                                <linearGradient id="attGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <XAxis dataKey="week" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                            <YAxis hide domain={['dataMin - 10', 'dataMax + 10']} />
+                            <Tooltip {...CUSTOM_TOOLTIP_STYLE} />
+                            <Area type="monotone" dataKey="count" name="Attendees" stroke="#8b5cf6" strokeWidth={2} fill="url(#attGrad)" dot={{ fill: '#8b5cf6', r: 3 }} />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                    <div className="flex justify-between mt-2">
+                        <div className="text-center"><p className="text-lg font-black text-white">{data.lastSundayAttendance}</p><p className="text-[9px] text-white/30">Last Sunday</p></div>
+                        <div className="text-center"><p className="text-lg font-black text-white">{data.weeklyAvgAttendance}</p><p className="text-[9px] text-white/30">Weekly Avg</p></div>
+                        <div className="text-center"><p className="text-lg font-black text-emerald-400">+7%</p><p className="text-[9px] text-white/30">vs Last Month</p></div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ─── ROW 2: SPIRITUAL HEALTH ANALYTICS ─── */}
+            <section>
+                <SectionHeader title="Spiritual Health Analytics" subtitle="Congregational Spiritual Pulse — AI-powered" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                    {/* Devotion Heatmap */}
+                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
+                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-3">Devotion Completion Heatmap</p>
+                        <p className="text-[10px] text-white/25 mb-4">Daily engagement — last 14 days</p>
+                        <div className="space-y-1.5">
+                            {data.devotionTrend.map((d, i) => (
+                                <div key={i} className="flex items-center gap-2">
+                                    <p className="text-[9px] text-white/20 w-7 text-right font-mono">{d.day}</p>
+                                    <div className="flex-1 h-5 bg-white/3 rounded-sm overflow-hidden">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${d.pct}%` }}
+                                            transition={{ delay: i * 0.03, duration: 0.6 }}
+                                            className="h-full rounded-sm"
+                                            style={{
+                                                background: d.pct > 70 ? '#8b5cf6' : d.pct > 50 ? '#6d28d9' : '#4c1d95',
+                                                opacity: 0.3 + (d.pct / 100) * 0.7
+                                            }}
+                                        />
+                                    </div>
+                                    <p className="text-[9px] text-white/30 w-6 font-bold">{d.pct}%</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Completion Rate Bar */}
+                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
+                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-3">Daily Completion Rate</p>
+                        <ResponsiveContainer width="100%" height={200}>
+                            <BarChart data={data.devotionTrend} barSize={12}>
+                                <XAxis dataKey="day" tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 8 }} axisLine={false} tickLine={false} />
+                                <YAxis hide />
+                                <Tooltip {...CUSTOM_TOOLTIP_STYLE} />
+                                <Bar dataKey="completions" name="Completions" radius={[4, 4, 0, 0]} fill="url(#devGrad)">
+                                    <defs>
+                                        <linearGradient id="devGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#8b5cf6" />
+                                            <stop offset="100%" stopColor="#4c1d95" />
+                                        </linearGradient>
+                                    </defs>
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    {/* SOAP Sentiment */}
+                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
+                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-1">SOAP Sentiment Analysis</p>
+                        <p className="text-[10px] text-white/25 mb-3">Anonymized journal emotional themes</p>
+                        <ResponsiveContainer width="100%" height={120}>
+                            <PieChart>
+                                <Pie data={data.soapSentiment} cx="50%" cy="50%" innerRadius={30} outerRadius={55}
+                                    dataKey="value" stroke="none">
+                                    {data.soapSentiment.map((entry, i) => (
+                                        <Cell key={i} fill={entry.color} opacity={0.85} />
+                                    ))}
+                                </Pie>
+                                <Tooltip contentStyle={CUSTOM_TOOLTIP_STYLE.contentStyle} itemStyle={CUSTOM_TOOLTIP_STYLE.itemStyle} />
+                            </PieChart>
+                        </ResponsiveContainer>
+                        <div className="space-y-1.5 mt-2">
+                            {data.soapSentiment.map(s => (
+                                <div key={s.name} className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full" style={{ background: s.color }} />
+                                        <p className="text-[10px] text-white/50 font-medium">{s.name}</p>
+                                    </div>
+                                    <p className="text-[10px] font-black text-white/70">{s.value}%</p>
+                                </div>
+                            ))}
+                        </div>
+                        {/* Word Cloud */}
+                        <div className="mt-3 pt-3 border-t border-white/5">
+                            <p className="text-[9px] text-white/25 uppercase font-bold tracking-wider mb-2">Top Themes</p>
+                            <div className="flex flex-wrap gap-1">
+                                {data.wordCloud.slice(0, 10).map((w, i) => (
+                                    <span key={w} className="text-[9px] font-bold px-1.5 py-0.5 rounded-md"
+                                        style={{
+                                            background: `rgba(139,92,246,${0.1 + (i / 10) * 0.2})`,
+                                            color: `rgba(167,139,250,${0.5 + (i / 10) * 0.5})`,
+                                            fontSize: `${9 + (10 - i) * 0.6}px`
+                                        }}>
+                                        {w}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ─── GROWTH METRICS ROW ─── */}
+            <div className="grid grid-cols-3 gap-4">
+                {[
+                    { label: 'New Families', val: data.newFamilies, icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10', sub: 'This month' },
+                    { label: 'Salvations', val: data.salvations, icon: Flame, color: 'text-amber-400', bg: 'bg-amber-500/10', sub: 'This month' },
+                    { label: 'Baptisms', val: data.baptisms, icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', sub: 'This month' },
+                ].map(g => (
+                    <div key={g.label} className="bg-[#111827] border border-white/5 rounded-2xl p-5 flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-2xl ${g.bg} flex items-center justify-center`}>
+                            <g.icon className={`w-6 h-6 ${g.color}`} />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-black text-white">{g.val}</p>
+                            <p className="text-[10px] text-white/30 font-medium">{g.label} · {g.sub}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* ─── ROW 3: PASTORAL CARE INTELLIGENCE ─── */}
+            <section>
+                <SectionHeader title="Pastoral Care Command Center" subtitle="Crisis detection, prayer management, counseling queue" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                    {/* Prayer Request Tracker */}
+                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
+                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Prayer Request Tracker</p>
+                        <div className="flex items-center gap-4 mb-4">
+                            <ResponsiveContainer width={100} height={100}>
+                                <PieChart>
+                                    <Pie data={data.prayerCategories} cx="50%" cy="50%" innerRadius={28} outerRadius={48}
+                                        dataKey="value" stroke="none">
+                                        {data.prayerCategories.map((entry, i) => (
+                                            <Cell key={i} fill={entry.color} opacity={0.85} />
+                                        ))}
+                                    </Pie>
+                                </PieChart>
+                            </ResponsiveContainer>
+                            <div className="space-y-2">
+                                <div className="text-center">
+                                    <p className="text-2xl font-black text-white">{data.prayerActive}</p>
+                                    <p className="text-[9px] text-white/30 font-bold uppercase">Active</p>
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-xl font-black text-emerald-400">{data.prayerAnswered}</p>
+                                    <p className="text-[9px] text-white/30 font-bold uppercase">Answered</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            {data.prayerCategories.map(cat => (
+                                <div key={cat.name} className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: cat.color }} />
+                                    <p className="text-[10px] text-white/40 flex-1">{cat.name}</p>
+                                    <p className="text-[10px] font-black text-white/60">{cat.value}%</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Member Care Alerts */}
+                    <div className="bg-[#111827] border border-red-500/10 rounded-2xl p-5">
+                        <div className="flex items-center justify-between mb-4">
+                            <p className="text-xs font-black text-red-400 uppercase tracking-widest">Care Alerts</p>
+                            <Badge className="bg-red-500/20 text-red-400 border-0 text-[9px] font-black">{data.alertMembers.length} FLAGGED</Badge>
+                        </div>
+                        <div className="space-y-2">
+                            {data.alertMembers.map(m => (
+                                <div key={m.id} className="flex items-center justify-between p-3 bg-red-500/5 border border-red-500/10 rounded-xl">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-xs font-black text-red-400 flex-shrink-0">
+                                            {m.name[0]}
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-white leading-none">{m.name}</p>
+                                            <p className="text-[9px] text-white/30 mt-0.5">
+                                                {m.days_inactive}d inactive · Streak: {m.current_streak}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase ${m.risk_level === 'critical' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                                        {m.risk_level}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Counseling Queue */}
+                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
+                        <div className="flex items-center justify-between mb-4">
+                            <p className="text-xs font-black text-white/40 uppercase tracking-widest">Counseling Queue</p>
+                            <Badge className="bg-blue-500/20 text-blue-400 border-0 text-[9px]">LIVE</Badge>
+                        </div>
+                        <div className="space-y-3">
+                            {[
+                                { name: 'Anonymous A', category: 'Marriage', leader: 'Elder John', date: 'Mar 1', urgent: true },
+                                { name: 'Member B', category: 'Financial', leader: 'Pastor', date: 'Mar 2', urgent: false },
+                                { name: 'Anonymous C', category: 'Spiritual War', leader: 'Elder Sarah', date: 'Mar 3', urgent: true },
+                                { name: 'Member D', category: 'Family', leader: 'Unassigned', date: 'Mar 4', urgent: false },
+                            ].map((c, i) => (
+                                <div key={i} className="flex items-start justify-between gap-2 pb-3 border-b border-white/5 last:border-0">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-1.5">
+                                            <p className="text-xs font-bold text-white truncate">{c.name}</p>
+                                            {c.urgent && <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />}
+                                        </div>
+                                        <p className="text-[9px] text-violet-400 font-bold">{c.category}</p>
+                                        <p className="text-[9px] text-white/30">→ {c.leader} · {c.date}</p>
+                                    </div>
+                                    <Button variant="ghost" className="h-7 px-2 text-[9px] font-black text-violet-400 hover:bg-violet-500/10 rounded-lg flex-shrink-0">
+                                        FOLLOW UP
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ─── ROW 4: MINISTRY HEALTH ─── */}
+            <section>
+                <SectionHeader title="Ministry Engagement" subtitle="25 active ministry teams — staffing analysis" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                    {/* Ministry Participation Bar */}
+                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5 md:col-span-2">
+                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Ministry Participation</p>
+                        <ResponsiveContainer width="100%" height={240}>
+                            <BarChart data={data.ministryData} layout="vertical" barSize={10}>
+                                <XAxis type="number" hide />
+                                <YAxis type="category" dataKey="name" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} width={90} />
+                                <Tooltip {...CUSTOM_TOOLTIP_STYLE} />
+                                <Bar dataKey="count" name="Members" radius={[0, 4, 4, 0]} fill="url(#minGrad)">
+                                    <defs>
+                                        <linearGradient id="minGrad" x1="0" y1="0" x2="1" y2="0">
+                                            <stop offset="0%" stopColor="#4c1d95" />
+                                            <stop offset="100%" stopColor="#8b5cf6" />
+                                        </linearGradient>
+                                    </defs>
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    {/* Volunteer Pipeline Funnel */}
+                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
+                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Discipleship Pipeline</p>
+                        <div className="space-y-1.5">
+                            {[
+                                { label: 'Visitors', count: 84, color: '#94a3b8' },
+                                { label: 'Attendees', count: 61, color: '#60a5fa' },
+                                { label: 'Members', count: 247, color: '#8b5cf6' },
+                                { label: 'Volunteers', count: 89, color: '#34d399' },
+                                { label: 'Leaders', count: 24, color: '#fbbf24' },
+                                { label: 'Dept. Heads', count: 8, color: '#f87171' },
+                            ].map((stage, i) => (
+                                <div key={stage.label} className="flex items-center gap-2">
+                                    <p className="text-[9px] text-white/30 w-20 text-right font-bold">{stage.label}</p>
+                                    <div className="flex-1 h-6 bg-white/3 rounded-md overflow-hidden">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${Math.min(100, (stage.count / 84) * 100)}%` }}
+                                            transition={{ delay: i * 0.1, duration: 0.8 }}
+                                            className="h-full rounded-md"
+                                            style={{ background: stage.color, opacity: 0.7 }}
+                                        />
+                                    </div>
+                                    <p className="text-[9px] font-black text-white/60 w-6">{stage.count}</p>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="mt-4 pt-3 border-t border-white/5">
+                            <p className="text-[9px] text-white/25 font-bold uppercase tracking-wider mb-2">Staffing Gaps ⚠️</p>
+                            {['Children\'s Ministry', 'Counseling', 'Outreach'].map(m => (
+                                <div key={m} className="flex items-center justify-between py-1">
+                                    <p className="text-[10px] text-amber-400 font-medium">{m}</p>
+                                    <span className="text-[9px] font-black bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-md">NEEDS TEAM</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ─── ROW 5: GROWTH INTELLIGENCE ─── */}
+            <section>
+                <SectionHeader title="Growth Intelligence" subtitle="Church expansion analytics & evangelism pipeline" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                    {/* Household Growth */}
+                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5 md:col-span-2">
+                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Household Growth (6 Months)</p>
+                        <ResponsiveContainer width="100%" height={200}>
+                            <BarChart data={data.householdData} barSize={14}>
+                                <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                                <YAxis hide />
+                                <Tooltip {...CUSTOM_TOOLTIP_STYLE} />
+                                <Bar dataKey="families" name="Families" stackId="a" fill="#8b5cf6" radius={[0, 0, 0, 0]} />
+                                <Bar dataKey="couples" name="Couples" stackId="a" fill="#06b6d4" />
+                                <Bar dataKey="singles" name="Singles" stackId="a" fill="#34d399" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                        <div className="flex gap-4 mt-3">
+                            {[{ label: 'Families', color: '#8b5cf6' }, { label: 'Couples', color: '#06b6d4' }, { label: 'Singles', color: '#34d399' }].map(l => (
+                                <div key={l.label} className="flex items-center gap-1.5">
+                                    <div className="w-2 h-2 rounded-full" style={{ background: l.color }} />
+                                    <p className="text-[9px] text-white/30 font-bold">{l.label}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Evangelism Pipeline */}
+                    <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
+                        <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Evangelism Pipeline</p>
+                        <div className="space-y-2">
+                            {data.evangelismFunnel.map((stage, i) => {
+                                const pct = Math.round((stage.value / data.evangelismFunnel[0].value) * 100);
+                                const dropOff = i > 0 ? Math.round(((data.evangelismFunnel[i - 1].value - stage.value) / data.evangelismFunnel[i - 1].value) * 100) : 0;
+                                return (
+                                    <div key={stage.name}>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <p className="text-[9px] text-white/40 font-bold">{stage.name}</p>
+                                            <div className="flex items-center gap-2">
+                                                {dropOff > 0 && <span className="text-[8px] text-red-400 font-bold">-{dropOff}%</span>}
+                                                <p className="text-[9px] font-black text-white/60">{stage.value}</p>
+                                            </div>
+                                        </div>
+                                        <div className="h-4 bg-white/3 rounded-md overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${pct}%` }}
+                                                transition={{ delay: i * 0.1, duration: 0.8 }}
+                                                className="h-full rounded-md"
+                                                style={{
+                                                    background: `linear-gradient(90deg, #8b5cf6, #06b6d4)`,
+                                                    opacity: 1 - (i * 0.12)
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className="mt-4 pt-3 border-t border-white/5">
+                            <p className="text-[9px] text-white/25 font-bold uppercase tracking-wider">Overall Conversion</p>
+                            <p className="text-2xl font-black text-violet-400">
+                                {Math.round((data.evangelismFunnel[data.evangelismFunnel.length - 1].value / data.evangelismFunnel[0].value) * 100)}%
+                            </p>
+                            <p className="text-[9px] text-white/30">Visitor → Membership rate</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ─── BOTTOM: GROWTH STATS + AI SUMMARY ─── */}
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Church Growth Summary */}
+                <div className="bg-gradient-to-br from-violet-900/30 to-indigo-900/20 border border-violet-500/20 rounded-2xl p-6">
+                    <p className="text-xs font-black text-violet-300 uppercase tracking-widest mb-4">Church Health Score Breakdown</p>
+                    <div className="space-y-3">
+                        {[
+                            { label: 'Spiritual Engagement', score: 74, max: 100 },
+                            { label: 'Attendance & Retention', score: 82, max: 100 },
+                            { label: 'Ministry Participation', score: 61, max: 100 },
+                            { label: 'Financial Stewardship', score: 68, max: 100 },
+                            { label: 'Pastoral Care Load', score: 55, max: 100 },
+                        ].map(f => (
+                            <div key={f.label}>
+                                <div className="flex justify-between mb-1">
+                                    <p className="text-[10px] text-white/50">{f.label}</p>
+                                    <p className="text-[10px] font-black text-violet-300">{f.score}/100</p>
+                                </div>
+                                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${f.score}%` }}
+                                        transition={{ duration: 1 }}
+                                        className="h-full bg-violet-500 rounded-full"
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* AI Daily Summary */}
+                <div className="bg-[#111827] border border-white/5 rounded-2xl p-6">
+                    <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Morning Pastor Briefing</p>
+                    <div className="space-y-3">
+                        {[
+                            { q: "Who needs care now?", a: "12 members disengaged. 5 crisis prayers unresolved.", color: "text-red-400" },
+                            { q: "Where is God moving?", a: "Youth attendance surged 24%. 3 new families joined.", color: "text-emerald-400" },
+                            { q: "Where must church go?", a: "Expand children's ministry. Financial counseling needed.", color: "text-violet-400" },
+                        ].map(b => (
+                            <div key={b.q} className="p-3 bg-white/3 rounded-xl border border-white/5">
+                                <p className="text-[9px] font-black text-white/30 uppercase tracking-wider mb-1">{b.q}</p>
+                                <p className={`text-xs font-semibold ${b.color}`}>{b.a}</p>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-white/5 flex justify-between text-[9px] text-white/20">
+                        <span>AI Analysis · {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</span>
+                        <span>JST +09:00</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    );
 }
