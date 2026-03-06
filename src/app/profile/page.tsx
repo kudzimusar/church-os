@@ -120,14 +120,15 @@ export default function ProfileHub() {
 
     const handleAcceptInvitation = async (notif: any) => {
         try {
-            await supabase.from('member_roles')
-                .update({ status: 'active', active_status: true })
+            await supabase.from('ministry_members')
+                .update({ status: 'active' })
                 .eq('user_id', user.id)
                 .eq('status', 'pending_invitation');
 
             await supabase.from('member_notifications').update({ is_read: true }).eq('id', notif.id);
             setNotifications(notifications.filter(n => n.id !== notif.id));
             toast.success("Welcome to the team!");
+            loadData(user.id);
         } catch (e) {
             toast.error("Acceptance failed");
         }
@@ -196,7 +197,7 @@ export default function ProfileHub() {
             if (mData) setMilestones(mData);
 
             // Ministries
-            const { data: roleData } = await supabase.from('member_roles').select('*').eq('user_id', userId);
+            const { data: roleData } = await supabase.from('ministry_members').select('*').eq('user_id', userId);
             if (roleData) setMinistryRoles(roleData || []);
 
             // Prayers
@@ -356,11 +357,11 @@ export default function ProfileHub() {
             const rec = {
                 user_id: user.id,
                 ministry_name: newMinistry,
-                role_title: newMinistryRoleTitle,
-                active_status: true,
-                start_date: new Date().toISOString().split('T')[0]
+                ministry_role: newMinistryRoleTitle || 'Member',
+                status: 'active',
+                joined_date: new Date().toISOString()
             };
-            const { data, error } = await supabase.from('member_roles').insert([rec]).select().single();
+            const { data, error } = await supabase.from('ministry_members').insert([rec]).select().single();
             if (error) throw error;
 
             setMinistryRoles([...ministryRoles, data]);
@@ -779,9 +780,11 @@ export default function ProfileHub() {
                                                         <div key={m.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-background border border-foreground/10 rounded-2xl gap-4">
                                                             <div>
                                                                 <h5 className="font-bold">{m.ministry_name}</h5>
-                                                                <p className="text-xs text-foreground/60">{m.role_title || 'Member'}</p>
+                                                                <p className="text-xs text-foreground/60">{m.ministry_role || 'Member'}</p>
                                                             </div>
-                                                            <div className="text-xs font-bold tracking-widest uppercase text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full text-center">ACTIVE</div>
+                                                            <div className={`text-xs font-bold tracking-widest uppercase px-3 py-1 rounded-full text-center ${m.status === 'active' ? 'text-emerald-500 bg-emerald-500/10' : 'text-amber-500 bg-amber-500/10'}`}>
+                                                                {m.status?.toUpperCase() || 'ACTIVE'}
+                                                            </div>
                                                         </div>
                                                     ))}
                                                 </div>

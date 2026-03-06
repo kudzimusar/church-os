@@ -1,57 +1,114 @@
 "use client";
-import { FileText, Download, BarChart2, Users, BookOpen, Heart } from "lucide-react";
+import { useEffect, useState } from "react";
+import { FileText, Download, BarChart2, Users, BookOpen, Heart, Sparkles, Clock } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { format } from "date-fns";
 
-const REPORTS = [
+const STATIC_REPORTS = [
     { name: 'Congregational Health Report', desc: 'Devotion streaks, engagement scores, SOAP analytics', icon: Heart, color: 'text-violet-400', bg: 'bg-violet-500/10' },
     { name: 'Member Directory Export', desc: 'Full member list with status, city, and contact info (CSV)', icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
     { name: 'Attendance Summary', desc: 'Sunday service + events attendance for the last 6 months', icon: BarChart2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    { name: 'Devotion Completion Report', desc: 'Daily completion rates, top performers, goal tracking', icon: BookOpen, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-    { name: 'Ministry Staffing Report', desc: 'Team sizes, roles, training status, gaps', icon: FileText, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
-    { name: 'Prayer Request Summary', desc: 'All active/answered requests by category and urgency', icon: Heart, color: 'text-red-400', bg: 'bg-red-500/10' },
-    { name: 'Financial Stewardship Report', desc: 'Anonymous giving summary by type and month', icon: BarChart2, color: 'text-green-400', bg: 'bg-green-500/10' },
-    { name: 'Growth Intelligence Export', desc: 'Evangelism pipeline, conversions, household data', icon: BarChart2, color: 'text-pink-400', bg: 'bg-pink-500/10' },
 ];
 
 export default function ReportsPage() {
+    const [dbReports, setDbReports] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function loadReports() {
+            const { data } = await supabase
+                .from('reports')
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (data) setDbReports(data);
+            setLoading(false);
+        }
+        loadReports();
+    }, []);
+
     const handleExport = (name: string) => {
-        // In production, this would generate a real CSV/PDF via an API route
         alert(`Generating: ${name}\n\nThis would produce a CSV/PDF export in the full production version.`);
     };
 
     return (
         <div className="p-6 xl:p-8">
             <div className="mb-6">
-                <h1 className="text-xl font-black text-white">Reports & Data</h1>
-                <p className="text-[11px] text-white/30 mt-0.5">Export reports for leadership meetings, board reviews, and data analysis</p>
+                <h1 className="text-xl font-black text-white">Prophetic Intelligence & Reports</h1>
+                <p className="text-[11px] text-white/30 mt-0.5">Access AI-generated briefings and standardized church analytics</p>
             </div>
 
-            <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 mb-6 flex items-start gap-3">
-                <BarChart2 className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                <div>
-                    <p className="text-xs font-black text-amber-300">Production Feature</p>
-                    <p className="text-[10px] text-amber-300/60 mt-0.5">Export functionality generates real CSV/PDF via server-side API routes. Currently shows report previews — full export requires backend API deployment.</p>
+            {/* AI BRIEFINGS SECTION */}
+            <div className="mb-10">
+                <div className="flex items-center gap-2 mb-4">
+                    <Sparkles className="w-4 h-4 text-violet-400" />
+                    <h2 className="text-xs font-black uppercase tracking-widest text-white/60">Recent AI Briefings</h2>
                 </div>
+
+                {loading ? (
+                    <div className="flex items-center gap-2 text-white/20">
+                        <Clock className="w-4 h-4 animate-spin" />
+                        <span className="text-[10px] font-bold">Loading intelligence...</span>
+                    </div>
+                ) : dbReports.length === 0 ? (
+                    <div className="p-8 rounded-2xl border border-dashed border-white/5 bg-white/2 text-center">
+                        <p className="text-xs font-bold text-white/20">No generated briefings yet. Use "Quick Actions" to generate one.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {dbReports.map((report) => (
+                            <div key={report.id} className="bg-violet-500/5 border border-violet-500/10 rounded-2xl p-5 hover:border-violet-500/30 transition-all cursor-pointer group">
+                                <div className="flex items-start justify-between mb-3">
+                                    <Badge className="bg-violet-500/20 text-violet-300 border-0 text-[8px] font-black uppercase">
+                                        {report.report_type?.replace('_', ' ') || 'INTEL'}
+                                    </Badge>
+                                    <span className="text-[9px] text-white/20 font-bold">{format(new Date(report.created_at), 'MMM d, yyyy')}</span>
+                                </div>
+                                <h3 className="text-sm font-black text-white group-hover:text-violet-400 transition-colors">{report.title}</h3>
+                                <p className="text-[10px] text-white/40 mt-2 line-clamp-3 leading-relaxed">
+                                    {report.content_json?.summary || "Narrative intelligence briefing for leadership review."}
+                                </p>
+                                <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+                                    <span className="text-[9px] font-black text-violet-500/60 uppercase">Vision Ready</span>
+                                    <button className="text-[9px] font-bold text-white/40 hover:text-white transition-colors">View Briefing →</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {REPORTS.map((report, i) => (
-                    <div key={report.name} className="bg-[#111827] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-all flex items-start gap-4">
-                        <div className={`w-10 h-10 rounded-xl ${report.bg} flex items-center justify-center flex-shrink-0`}>
-                            <report.icon className={`w-5 h-5 ${report.color}`} />
+            {/* STANDARDIZED EXPORTS */}
+            <div>
+                <div className="flex items-center gap-2 mb-4">
+                    <FileText className="w-4 h-4 text-blue-400" />
+                    <h2 className="text-xs font-black uppercase tracking-widest text-white/60">Data Exports</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {STATIC_REPORTS.map((report) => (
+                        <div key={report.name} className="bg-[#111827] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-all flex items-start gap-4">
+                            <div className={`w-10 h-10 rounded-xl ${report.bg} flex items-center justify-center flex-shrink-0`}>
+                                <report.icon className={`w-5 h-5 ${report.color}`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-black text-white">{report.name}</p>
+                                <p className="text-[10px] text-white/35 mt-1 leading-relaxed">{report.desc}</p>
+                            </div>
+                            <button
+                                onClick={() => handleExport(report.name)}
+                                className="flex items-center gap-1 text-[9px] font-black text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 mt-1"
+                            >
+                                <Download className="w-3 h-3" /> Export
+                            </button>
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-black text-white">{report.name}</p>
-                            <p className="text-[10px] text-white/35 mt-1 leading-relaxed">{report.desc}</p>
-                        </div>
-                        <button
-                            onClick={() => handleExport(report.name)}
-                            className="flex items-center gap-1 text-[9px] font-black text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 mt-1"
-                        >
-                            <Download className="w-3 h-3" /> Export
-                        </button>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
         </div>
     );
 }
+
+// Simple Badge component if not available
+function Badge({ children, className }: { children: React.ReactNode, className?: string }) {
+    return <span className={`px-2 py-0.5 rounded-full ${className}`}>{children}</span>;
+}
+

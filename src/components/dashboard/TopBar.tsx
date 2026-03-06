@@ -10,13 +10,7 @@ import { Auth } from "@/lib/auth";
 import { AdminAuth } from "@/lib/admin-auth";
 import { basePath as BP } from "@/lib/utils";
 
-const QUICK_ACTIONS = [
-    { icon: Users, label: "Add Member", action: () => toast.info("Add Member — coming soon") },
-    { icon: Calendar, label: "Create Event", action: () => toast.info("Create Event — coming soon") },
-    { icon: Heart, label: "Add Prayer Request", action: () => toast.info("Add Prayer Request — coming soon") },
-    { icon: BookOpen, label: "Assign Ministry Role", action: () => toast.info("Assign Ministry Role — coming soon") },
-    { icon: FileText, label: "Generate Report", action: () => toast.info("Generate Report — coming soon") },
-];
+import { QuickActionModal, QuickActionType } from "./QuickActionModal";
 
 interface TopBarProps {
     alertCount?: number;
@@ -28,8 +22,27 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
     const [quickOpen, setQuickOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
+
+    // Quick Action Modal State
+    const [activeAction, setActiveAction] = useState<QuickActionType | null>(null);
+    const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+
     const quickRef = useRef<HTMLDivElement>(null);
     const profileRef = useRef<HTMLDivElement>(null);
+
+    const QUICK_ACTIONS_CONFIG = [
+        { icon: Users, label: "Add Member", type: "member" as QuickActionType },
+        { icon: Calendar, label: "Create Event", type: "event" as QuickActionType },
+        { icon: Heart, label: "Add Prayer Request", type: "prayer" as QuickActionType },
+        { icon: BookOpen, label: "Assign Ministry Role", type: "ministry" as QuickActionType },
+        { icon: FileText, label: "Generate Report", type: "report" as QuickActionType },
+    ];
+
+    const openAction = (type: QuickActionType) => {
+        setActiveAction(type);
+        setIsActionModalOpen(true);
+        setQuickOpen(false);
+    };
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -42,6 +55,13 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
 
     return (
         <header className="h-16 flex items-center justify-between px-6 bg-[#0a101c]/80 backdrop-blur-xl border-b border-white/5 flex-shrink-0 z-50">
+            {/* Quick Action Modal Replacement */}
+            <QuickActionModal
+                isOpen={isActionModalOpen}
+                onClose={() => setIsActionModalOpen(false)}
+                type={activeAction}
+            />
+
             {/* Left: Title */}
             <div className="flex items-center gap-4">
                 <div>
@@ -133,10 +153,10 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                                 className="absolute right-0 top-12 w-52 bg-[#111827] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
                             >
                                 <div className="p-2">
-                                    {QUICK_ACTIONS.map((qa) => {
+                                    {QUICK_ACTIONS_CONFIG.map((qa) => {
                                         const Icon = qa.icon;
                                         return (
-                                            <button key={qa.label} onClick={() => { qa.action(); setQuickOpen(false); }}
+                                            <button key={qa.label} onClick={() => openAction(qa.type)}
                                                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs text-white/60 hover:text-white hover:bg-white/8 transition-all text-left font-medium">
                                                 <Icon className="w-4 h-4 text-violet-400" />
                                                 {qa.label}
@@ -148,6 +168,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                         )}
                     </AnimatePresence>
                 </div>
+
 
                 {/* Profile */}
                 <div className="relative ml-2" ref={profileRef}>
