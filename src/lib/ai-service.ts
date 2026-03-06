@@ -65,15 +65,19 @@ export const AIService = {
         let pilContext = "";
         try {
             const { supabase } = await import("./supabase");
-            const { data: insights } = await supabase
-                .from('ai_insights')
-                .select('*')
-                .eq('is_acknowledged', false)
-                .limit(5);
+            const [insightsRes, feedRes] = await Promise.all([
+                supabase.from('prophetic_insights').select('*').eq('is_acknowledged', false).limit(5),
+                supabase.from('vw_ministry_intelligence_feed').select('*').limit(10)
+            ]);
 
-            if (insights && insights.length > 0) {
+            const insights = insightsRes.data || [];
+            const feed = feedRes.data || [];
+
+            if (insights.length > 0 || feed.length > 0) {
                 pilContext = "\n--- PROPHETIC INTELLIGENCE (PIL) FORECASTS ---\n" +
                     insights.map((i: any) => `- [${i.category.toUpperCase()}] ${i.insight_title}: ${i.insight_description} (Prob: ${i.probability_score}%)`).join("\n") +
+                    "\n\n--- OPERATIONAL INTELLIGENCE (MIL) FEED ---\n" +
+                    feed.map((f: any) => `- ${f.metric_type}: ${f.detail} on ${f.event_date} (Val: ${f.value}) - ${f.context}`).join("\n") +
                     "\n--- END PIL ---";
             }
         } catch (e) {

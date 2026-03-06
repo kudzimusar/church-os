@@ -51,6 +51,8 @@ interface DashboardData {
     geoClusters: { name: string; count: number }[];
     manualAttendance: { total: number; adults: number; children: number; visitors: number };
     givingData: { month: string; amount: number }[];
+    counselingQueue: { name: string; category: string; leader: string; date: string; urgent: boolean }[];
+    staffingGaps: string[];
 }
 
 interface AtRiskMember {
@@ -150,7 +152,9 @@ const MOCK_DATA: DashboardData = {
         { month: 'Oct', amount: 840000 }, { month: 'Nov', amount: 920000 },
         { month: 'Dec', amount: 1200000 }, { month: 'Jan', amount: 950000 },
         { month: 'Feb', amount: 1050000 }, { month: 'Mar', amount: 1100000 },
-    ]
+    ],
+    counselingQueue: [],
+    staffingGaps: []
 };
 
 /* ─── Sub-components ─── */
@@ -237,7 +241,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const db = supabaseAdmin;
 
             // 1. Core Counts
-            const [profilesRes, statsRes, prayersRes, attendanceRes, rolesRes, pipelineRes, milestonesRes, healthRes, alertsRes, skillsRes, reportsRes, financeRes] = await Promise.all([
+            const [profilesRes, statsRes, prayersRes, attendanceRes, rolesRes, pipelineRes, milestonesRes, healthRes, propheticRes, alertsRes, skillsRes, reportsRes, financeRes, notesRes] = await Promise.all([
                 db.from('profiles').select('*'),
                 db.from('member_stats').select('*'),
                 db.from('prayer_requests').select('*'),
@@ -246,10 +250,12 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 db.from('evangelism_pipeline').select('*'),
                 db.from('profiles').select('id, salvation_date, baptism_date, membership_status'),
                 db.from('church_health_metrics').select('*').order('created_at', { ascending: false }).limit(1),
+                db.from('prophetic_insights').select('*').eq('is_acknowledged', false).order('generated_at', { ascending: false }).limit(10),
                 db.from('member_alerts').select('*, member:profiles(name)').eq('is_resolved', false).limit(10),
                 db.from('member_skills').select('skill_name'),
                 db.from('service_reports').select('*').order('report_date', { ascending: false }).limit(1),
-                db.from('financial_records').select('*').order('given_date', { ascending: false })
+                db.from('financial_records').select('*').order('given_date', { ascending: false }),
+                db.from('pastoral_notes').select('*, member:profiles(name)').eq('category', 'counseling').eq('is_resolved', false).order('follow_up_date', { ascending: true })
             ]);
 
             const profiles = profilesRes.data || [];
@@ -261,6 +267,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const profileMilestones = milestonesRes.data || [];
             const manualReport = (reportsRes?.data as any)?.[0] || null;
             const financialData = financeRes?.data || [];
+            const propheticInsights = propheticRes.data || [];
+            const pastoralNotes = notesRes.data || [];
 
             // Aggregate Finance
             const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
@@ -307,6 +315,10 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const ministryData = Object.entries(minMap).map(([name, count]) => ({ name, count }))
                 .sort((a, b) => b.count - a.count);
 
+            // Staffing Gaps (Dynamic)
+            const gapMinistries = ['Childrens Ministry', 'Counseling', 'Outreach', 'Missions', 'Intercessory'];
+            const detectedGaps = gapMinistries.filter(m => (minMap[m] || 0) < 5);
+
             // Evangelism Pipeline & Journey Funnel
             const stages = ['invited_visitor', 'first_service', 'second_visit', 'salvation_decision', 'baptism', 'membership'];
             const pipelineFunnel = stages.map(stage => {
@@ -335,13 +347,13 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 });
             }
 
-            // At-risk members
-            const mappedAlerts = (alertsRes.data || []).map((a: any) => ({
-                id: a.id,
-                name: a.member?.name || 'Unknown',
+            // [PIL] Integrated Alerts from prophetic_insights
+            const mappedAlerts = propheticInsights.map((i: any) => ({
+                id: i.id,
+                name: i.insight_title.replace('Disengagement Risk: ', '').split(' ')[0],
                 email: '',
-                days_inactive: 0,
-                risk_level: a.severity || 'high',
+                days_inactive: i.metadata?.days_silent || 0,
+                risk_level: i.risk_level || 'high',
                 current_streak: 0
             }));
 
@@ -377,6 +389,14 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 prayerAnswered: prayers.filter(p => p.status === 'Answered').length,
                 engagementScore: healthRes.data?.[0]?.score || prev.engagementScore,
                 alertMembers: mappedAlerts.length > 0 ? mappedAlerts : prev.alertMembers,
+                counselingQueue: pastoralNotes.map(n => ({
+                    name: (n.member as any)?.name || 'Member',
+                    category: n.category,
+                    leader: 'Pastor',
+                    date: format(new Date(n.created_at), 'MMM d'),
+                    urgent: n.category === 'crisis'
+                })),
+                staffingGaps: detectedGaps,
                 householdData: [
                     { month: format(now, 'MMM'), ...hhSplit }
                 ],
@@ -678,12 +698,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                             <Badge className="bg-blue-500/20 text-blue-400 border-0 text-[9px]">LIVE</Badge>
                         </div>
                         <div className="space-y-3">
-                            {[
-                                { name: 'Anonymous A', category: 'Marriage', leader: 'Elder John', date: 'Mar 1', urgent: true },
-                                { name: 'Member B', category: 'Financial', leader: 'Pastor', date: 'Mar 2', urgent: false },
-                                { name: 'Anonymous C', category: 'Spiritual War', leader: 'Elder Sarah', date: 'Mar 3', urgent: true },
-                                { name: 'Member D', category: 'Family', leader: 'Unassigned', date: 'Mar 4', urgent: false },
-                            ].map((c, i) => (
+                            {data.counselingQueue.length > 0 ? data.counselingQueue.map((c, i) => (
                                 <div key={i} className="flex items-start justify-between gap-2 pb-3 border-b border-white/5 last:border-0">
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-1.5">
@@ -697,7 +712,11 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                         FOLLOW UP
                                     </Button>
                                 </div>
-                            ))}
+                            )) : (
+                                <div className="text-center py-10">
+                                    <p className="text-[10px] text-white/20 font-bold uppercase tracking-widest">No active queue</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -782,12 +801,14 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                         </div>
                         <div className="mt-4 pt-3 border-t border-white/5">
                             <p className="text-[9px] text-white/25 font-bold uppercase tracking-wider mb-2">Staffing Gaps ⚠️</p>
-                            {['Children\'s Ministry', 'Counseling', 'Outreach'].map(m => (
+                            {data.staffingGaps.length > 0 ? data.staffingGaps.map(m => (
                                 <div key={m} className="flex items-center justify-between py-1">
                                     <p className="text-[10px] text-amber-400 font-medium">{m}</p>
                                     <span className="text-[9px] font-black bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-md">NEEDS TEAM</span>
                                 </div>
-                            ))}
+                            )) : (
+                                <p className="text-[9px] text-emerald-400/50 font-bold">All ministries healthy</p>
+                            )}
                         </div>
                     </div>
                 </div>

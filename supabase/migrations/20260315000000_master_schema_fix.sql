@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS public.attendance_records (
     UNIQUE(user_id, event_type, event_date)
 );
 
--- 2. Ensure Forms Engine Tables
+-- 2. Ensure Forms Engine Tables (with org_id for all)
 CREATE TABLE IF NOT EXISTS public.forms (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     org_id uuid REFERENCES public.organizations(id) ON DELETE CASCADE,
@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS public.forms (
 
 CREATE TABLE IF NOT EXISTS public.form_fields (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    org_id uuid REFERENCES public.organizations(id) ON DELETE CASCADE,
     form_id uuid REFERENCES public.forms(id) ON DELETE CASCADE,
     label text NOT NULL,
     field_type text NOT NULL,
@@ -63,6 +64,7 @@ CREATE TABLE IF NOT EXISTS public.form_fields (
 
 CREATE TABLE IF NOT EXISTS public.form_submissions (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    org_id uuid REFERENCES public.organizations(id) ON DELETE CASCADE,
     form_id uuid REFERENCES public.forms(id) ON DELETE CASCADE,
     user_id uuid REFERENCES auth.users(id),
     campus_id uuid,
@@ -73,11 +75,12 @@ CREATE TABLE IF NOT EXISTS public.form_submissions (
 CREATE TABLE IF NOT EXISTS public.form_submission_values (
     submission_id uuid REFERENCES public.form_submissions(id) ON DELETE CASCADE,
     field_id uuid REFERENCES public.form_fields(id) ON DELETE CASCADE,
+    org_id uuid REFERENCES public.organizations(id) ON DELETE CASCADE,
     value text,
     PRIMARY KEY (submission_id, field_id)
 );
 
--- 3. Ensure Evangelism Pipeline (referenced in growth page)
+-- 3. Ensure Evangelism Pipeline
 CREATE TABLE IF NOT EXISTS public.evangelism_pipeline (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     org_id uuid REFERENCES public.organizations(id) ON DELETE CASCADE,
@@ -103,7 +106,8 @@ BEGIN
              AND table_name IN ('households', 'devotions', 'member_stats', 'soap_entries', 
                                'prayer_requests', 'attendance_records', 'ministry_members', 
                                'pastoral_notes', 'fellowship_groups', 'evangelism_pipeline', 
-                               'financial_records', 'events', 'ai_insights')
+                               'financial_records', 'events', 'ai_insights', 'forms', 'form_fields', 
+                               'form_submissions', 'form_submission_values')
     LOOP
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
                        WHERE table_name = t AND column_name = 'org_id' AND table_schema = 'public') THEN
@@ -118,13 +122,11 @@ END;
 $$;
 
 -- 5. Secure All Tables with RLS and org_id
--- We'll apply policies selectively based on table structure.
-
 DO $$
 DECLARE
     t text;
 BEGIN
-    -- 5A. Public Tables (Selectable by everyone, modifiable by staff)
+    -- 5A. Public/Shared Tables (Selectable by everyone in org, modifiable by staff)
     FOREACH t IN ARRAY ARRAY['devotions', 'events', 'forms', 'form_fields', 'fellowship_groups'] LOOP
         EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
         EXECUTE format('DROP POLICY IF EXISTS "Public select" ON public.%I', t);
@@ -134,7 +136,7 @@ BEGIN
     END LOOP;
 
     -- 5B. User-Specific Tables (User sees own, Staff sees org-wide)
-    FOREACH t IN ARRAY ARRAY['attendance_records', 'member_stats', 'soap_entries', 'prayer_requests', 'form_submissions', 'evangelism_pipeline', 'financial_records'] LOOP
+    FOREACH t IN ARRAY ARRAY['attendance_records', 'member_stats', 'soap_entries', 'prayer_requests', 'form_submissions', 'financial_records'] LOOP
         EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
         EXECUTE format('DROP POLICY IF EXISTS "User-Staff Access" ON public.%I', t);
         EXECUTE format('CREATE POLICY "User-Staff Access" ON public.%I FOR ALL USING (
@@ -142,16 +144,32 @@ BEGIN
         )', t);
     END LOOP;
 
-    -- 5C. Tables where User ID is different (pastoral_notes uses member_user_id)
+    -- 5C. Tables with different owner columns
+    -- Evangelism
+    ALTER TABLE public.evangelism_pipeline ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS "Evangelism Access" ON public.evangelism_pipeline;
+    CREATE POLICY "Evangelism Access" ON public.evangelism_pipeline FOR ALL USING (
+        (auth.uid() = invited_by) OR check_is_staff_of_org(auth.uid(), org_id)
+    );
+
+    -- Pastoral Notes
     ALTER TABLE public.pastoral_notes ENABLE ROW LEVEL SECURITY;
     DROP POLICY IF EXISTS "Pastoral Note Access" ON public.pastoral_notes;
     CREATE POLICY "Pastoral Note Access" ON public.pastoral_notes FOR ALL USING (
         (auth.uid() = member_user_id) OR check_is_staff_of_org(auth.uid(), org_id)
     );
+
+    -- Form Values
+    ALTER TABLE public.form_submission_values ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS "Form Values Access" ON public.form_submission_values;
+    CREATE POLICY "Form Values Access" ON public.form_submission_values FOR ALL USING (
+        check_is_staff_of_org(auth.uid(), org_id) OR 
+        EXISTS (SELECT 1 FROM public.form_submissions WHERE id = submission_id AND user_id = auth.uid())
+    );
 END;
 $$;
 
--- 6. Seed initial forms if organizations exist
+-- 6. Seed initial forms
 DO $$
 DECLARE
     v_org_id uuid;
@@ -163,13 +181,13 @@ BEGIN
         VALUES (v_org_id, 'Usher Headcount Report', 'Official service attendance record', 'ushering')
         RETURNING id INTO v_form_id;
 
-        INSERT INTO public.form_fields (form_id, label, field_type, is_required, sort_order)
+        INSERT INTO public.form_fields (org_id, form_id, label, field_type, is_required, sort_order)
         VALUES 
-            (v_form_id, 'Service Name', 'text', true, 0),
-            (v_form_id, 'Adult Count', 'counter', true, 1),
-            (v_form_id, 'Children Count', 'counter', true, 2),
-            (v_form_id, 'First Time Visitors', 'counter', false, 3),
-            (v_form_id, 'Notes', 'text', false, 4);
+            (v_org_id, v_form_id, 'Service Name', 'text', true, 0),
+            (v_org_id, v_form_id, 'Adult Count', 'counter', true, 1),
+            (v_org_id, v_form_id, 'Children Count', 'counter', true, 2),
+            (v_org_id, v_form_id, 'First Time Visitors', 'counter', false, 3),
+            (v_org_id, v_form_id, 'Notes', 'text', false, 4);
     END IF;
 END;
 $$;
