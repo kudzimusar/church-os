@@ -6,21 +6,21 @@ CREATE OR REPLACE VIEW public.vw_attendance_reconciliation AS
 WITH physical_reports AS (
     SELECT 
         report_date,
-        SUM((metrics->>'adults')::int) as adults_physical,
-        SUM((metrics->>'children')::int) as kids_physical,
-        SUM((metrics->>'visitors')::int) as visitors_physical,
-        SUM((metrics->>'total')::int) as total_physical,
-        SUM((metrics->>'first_timers')::int) as first_timers_physical
+        SUM(COALESCE((metrics->>'adults')::int, (metrics->>'adults_count')::int, 0)) as adults_physical,
+        SUM(COALESCE((metrics->>'children')::int, (metrics->>'children_count')::int, 0)) as kids_physical,
+        SUM(COALESCE((metrics->>'visitors')::int, (metrics->>'first_timers_count')::int, 0)) as visitors_physical,
+        SUM(COALESCE((metrics->>'total')::int, (metrics->>'total_count')::int, 0)) as total_physical,
+        SUM(COALESCE((metrics->>'first_timers')::int, (metrics->>'first_timers_count')::int, 0)) as first_timers_physical
     FROM public.ministry_reports
-    WHERE ministry_name IN ('Ushers', 'Protocol')
+    WHERE (ministry_name ILIKE '%Usher%' OR ministry_name ILIKE '%Protocol%')
     GROUP BY report_date
 ),
 digital_checkins AS (
     SELECT 
-        service_date as report_date,
+        event_date as report_date,
         COUNT(id) as total_digital
-    FROM public.service_attendance
-    GROUP BY service_date
+    FROM public.attendance_records
+    GROUP BY event_date
 ),
 kids_checkins AS (
     SELECT 
@@ -48,7 +48,7 @@ SELECT
     COUNT(id) as registered_members,
     COUNT(id) FILTER (WHERE active_status = true) as active_members,
     COUNT(id) FILTER (WHERE is_leader = true) as leaders_count
-FROM public.member_roles
+FROM public.ministry_members
 GROUP BY ministry_name;
 
 -- 3. SPIRITUAL PULSE (Aggregate Milestones)

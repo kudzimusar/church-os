@@ -21,6 +21,7 @@ import {
 import { UsherReportModal } from "./UsherReportModal";
 import { AttendanceReconciliationCard } from "./AttendanceReconciliationCard";
 import { toast } from "sonner";
+import { CRITICAL_MINISTRIES, MINISTRY_OPTIONS } from "@/lib/constants";
 
 /* ─── Types ─── */
 interface DashboardData {
@@ -94,14 +95,7 @@ const MOCK_DATA: DashboardData = {
         completions: Math.floor(Math.random() * 60) + 70,
         pct: Math.floor(Math.random() * 30) + 50,
     })),
-    ministryData: [
-        { name: 'Worship', count: 28 }, { name: 'Youth Ministry', count: 42 },
-        { name: 'Children\'s', count: 19 }, { name: 'Intercessory', count: 31 },
-        { name: 'Evangelism', count: 16 }, { name: 'Media/Tech', count: 12 },
-        { name: 'Choir', count: 24 }, { name: 'Ushers', count: 15 },
-        { name: 'Counseling', count: 8 }, { name: 'Missions', count: 11 },
-        { name: 'Hospitality', count: 14 }, { name: 'Welfare', count: 7 },
-    ],
+    ministryData: MINISTRY_OPTIONS.slice(0, 10).map(m => ({ name: m, count: Math.floor(Math.random() * 30) + 10 })),
     prayerCategories: [
         { name: 'Health', value: 32, color: '#f87171' },
         { name: 'Financial', value: 24, color: '#fbbf24' },
@@ -238,21 +232,32 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            // Using supabaseAdmin to bypass RLS for aggregate analytics
             const db = supabaseAdmin;
 
-            // 1. Core Counts & New Analytic Views
-            const [profilesRes, statsRes, prayersRes, rolesRes, pulseRes, healthRes, propheticRes, notesRes, velocityRes, skillsRes] = await Promise.all([
+            const [
+                profilesRes,
+                statsRes,
+                prayersRes,
+                rolesRes,
+                pulseRes,
+                healthRes,
+                propheticRes,
+                notesRes,
+                velocityRes,
+                skillsRes,
+                reconRes
+            ] = await Promise.all([
                 db.from('profiles').select('*'),
                 db.from('member_stats').select('*'),
                 db.from('prayer_requests').select('*'),
                 db.from('ministry_members').select('*'),
-                db.from('vw_spiritual_pulse').select('*').single(),
+                db.from('vw_spiritual_pulse').select('*').maybeSingle(),
                 db.from('church_health_metrics').select('*').order('created_at', { ascending: false }).limit(1),
                 db.from('prophetic_insights').select('*').eq('is_acknowledged', false).order('generated_at', { ascending: false }).limit(10),
                 db.from('pastoral_notes').select('*, member:profiles(name)').eq('category', 'counseling').eq('is_resolved', false).order('follow_up_date', { ascending: true }),
                 db.from('vw_activity_velocity').select('*'),
-                db.from('member_skills').select('*')
+                db.from('member_skills').select('*'),
+                db.from('vw_attendance_reconciliation').select('*').order('report_date', { ascending: false }).limit(1)
             ]);
 
             const profiles = profilesRes.data || [];
@@ -260,17 +265,14 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const prayers = prayersRes.data || [];
             const ministryMembers = rolesRes.data || [];
             const pulse = pulseRes.data || { total_salvations: 0, total_baptisms: 0, total_formal_members: 0, foundations_complete: 0 };
+            const recon = reconRes.data?.[0] || null;
             const propheticInsights = propheticRes.data || [];
             const pastoralNotes = notesRes.data || [];
-            const velocity = velocityRes.data || [];
 
-            // Aggregate Finance (MOCK fallback for now as we transition)
-            const givingTrend = MOCK_DATA.givingData;
-
-            // 2. Aggregate Aggregations
+            // 2. Calculations
             const now = new Date();
             const startOfThisMonth = startOfMonth(now);
-            const newMembers = profiles.filter(p => isAfter(new Date(p.created_at), startOfThisMonth)).length;
+            const newMembers = profiles.filter(p => isAfter(new Date(p.created_at || now), startOfThisMonth)).length;
 
             const activeToday = stats.filter(s => {
                 if (!s.last_devotion_date) return false;
@@ -282,18 +284,16 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 ? Math.round(stats.reduce((a, s) => a + (s.current_streak || 0), 0) / stats.length)
                 : 0;
 
-            // Sunday Attendance (Now handled via views/reconciliation)
-            const sundayAttendance = 0;
-
             // Household Split
             const hhSplit = { couples: 0, singles: 0, families: 0 };
             profiles.forEach(p => {
-                if (p.household_type === 'Single') hhSplit.singles++;
-                else if (p.household_type === 'Couple') hhSplit.couples++;
-                else if (p.household_type === 'Family with Children') hhSplit.families++;
+                const type = (p.household_type || '').toLowerCase();
+                if (type.includes('single')) hhSplit.singles++;
+                else if (type.includes('couple')) hhSplit.couples++;
+                else if (type.includes('family')) hhSplit.families++;
             });
 
-            // Ministry Split
+            // Ministry Data
             const minMap: Record<string, number> = {};
             ministryMembers.forEach(r => {
                 minMap[r.ministry_name] = (minMap[r.ministry_name] || 0) + 1;
@@ -301,35 +301,20 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const ministryData = Object.entries(minMap).map(([name, count]) => ({ name, count }))
                 .sort((a, b) => b.count - a.count);
 
-            // Staffing Gaps (Dynamic)
-            const gapMinistries = [
-                'Children\'s Ministry', 'Counseling Ministry', 'Evangelism Team',
-                'Missions Team', 'Intercessory Prayer Team', 'Technical Team',
-                'Health & Wellness', 'Benevolence & Welfare'
-            ];
-            const detectedGaps = gapMinistries.filter(m => (minMap[m] || 0) < 5);
+            // Staffing Gaps
+            const detectedGaps = CRITICAL_MINISTRIES.filter(m => (minMap[m] || 0) < 5);
 
-            // Evangelism Pipeline & Journey Funnel (Using Pulse View)
+            // Journey Funnel (Pulse-driven)
             const pipelineFunnel = [
-                { name: 'Visitors', value: profiles.filter(p => !p.membership_status || p.membership_status === 'visitor').length },
-                { name: 'Salvations', value: pulse.total_salvations },
-                { name: 'Foundations', value: pulse.foundations_complete },
-                { name: 'Baptisms', value: pulse.total_baptisms },
-                { name: 'Official Members', value: pulse.total_formal_members },
-                { name: 'Active Leaders', value: ministryMembers.filter(m => m.is_leader).length }
+                { name: 'Visitors', value: profiles.filter(p => !p.membership_status || p.membership_status.toLowerCase() === 'visitor').length },
+                { name: 'Salvations', value: pulse.total_salvations || 0 },
+                { name: 'Foundations', value: pulse.foundations_complete || 0 },
+                { name: 'Baptisms', value: pulse.total_baptisms || 0 },
+                { name: 'Official Members', value: pulse.total_formal_members || 0 },
+                { name: 'Leaders', value: ministryMembers.filter(m => m.is_leader).length }
             ];
 
-            // Attendance Trend (Last 6 weeks) - Simplified for pulse transition
-            const attendanceTrend: any[] = [];
-            for (let i = 5; i >= 0; i--) {
-                const date = subDays(now, i * 7);
-                attendanceTrend.push({
-                    week: format(date, 'MMM d'),
-                    count: Math.floor(Math.random() * 20) + 160 // Fallback to mock for trend until history is populated
-                });
-            }
-
-            // [PIL] Integrated Alerts from prophetic_insights
+            // Alerts Mapping
             const mappedAlerts = propheticInsights.map((i: any) => ({
                 id: i.id,
                 name: i.insight_title.replace('Disengagement Risk: ', '').split(' ')[0],
@@ -339,7 +324,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 current_streak: 0
             }));
 
-            // Skills Aggregation
+            // Skills Mapping
             const skillMap: Record<string, number> = {};
             (skillsRes.data || []).forEach((s: any) => {
                 skillMap[s.skill_name] = (skillMap[s.skill_name] || 0) + 1;
@@ -349,7 +334,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 10);
 
-            // Geo Clustering
+            // Geo Mapping
             const geoMap: Record<string, number> = {};
             profiles.forEach(p => {
                 const loc = p.ward || p.city || 'Unknown';
@@ -366,6 +351,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 newMembersThisMonth: newMembers,
                 activeToday,
                 avgStreak,
+                lastSundayAttendance: recon?.total_physical || prev.lastSundayAttendance,
+                weeklyAvgAttendance: Math.round((recon?.total_physical || prev.lastSundayAttendance) * 0.95),
                 salvations: pulse.total_salvations,
                 baptisms: pulse.total_baptisms,
                 prayerActive: prayers.filter(p => p.status === 'Pending').length,
@@ -380,16 +367,11 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     urgent: n.category === 'crisis'
                 })),
                 staffingGaps: detectedGaps,
-                householdData: [
-                    { month: format(now, 'MMM'), ...hhSplit }
-                ],
+                householdData: [{ month: format(now, 'MMM'), ...hhSplit }],
                 ministryData: ministryData.length > 0 ? ministryData : prev.ministryData,
                 evangelismFunnel: pipelineFunnel,
-                attendanceTrend: attendanceTrend,
                 skillsData: skillsData.length > 0 ? skillsData : prev.skillsData,
-                geoClusters: geoClusters.length > 0 ? geoClusters : prev.geoClusters,
-                manualAttendance: prev.manualAttendance,
-                givingData: givingTrend
+                geoClusters: geoClusters.length > 0 ? geoClusters : prev.geoClusters
             }));
 
         } catch (e) {

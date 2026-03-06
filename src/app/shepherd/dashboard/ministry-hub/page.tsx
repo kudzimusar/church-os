@@ -1,260 +1,199 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import {
-    Users,
-    Heart,
-    BookOpen,
-    ChevronRight,
-    Sparkles,
-    Clock,
-    Database,
-    ShieldCheck,
-    LayoutGrid,
-    Table,
-    Download,
-    DownloadCloud,
-    FlaskConical
-} from "lucide-react";
-import { testMinistryPipeline } from "@/lib/pipeline-tester";
+import { useState, useEffect } from "react";
+import { ShepherdLayout } from "@/components/layout/ShepherdLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DynamicFormRenderer } from "@/components/forms/DynamicFormRenderer";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from "framer-motion";
-import { exportToCSV } from "@/lib/export-utils";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import {
+    Users, Baby, Megaphone, Music,
+    ShieldCheck, Heart, Send, Calendar,
+    TrendingUp, FileText, CheckCircle2, LayoutGrid
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { MINISTRY_OPTIONS } from "@/lib/constants";
 
-const MINISTRY_ICONS: Record<string, any> = {
-    ushering: Users,
-    children: BookOpen,
-    prayer: Heart,
-    evangelism: Sparkles,
+const ICON_MAP: Record<string, any> = {
+    "Worship Ministry": Music,
+    "Choir": Music,
+    "Media / Production": Megaphone,
+    "Ushers": ShieldCheck,
+    "Protocol / Security": ShieldCheck,
+    "Hospitality": Heart,
+    "Children's Ministry": Baby,
+    "Youth Ministry": Users,
+    "Intercessory Prayer Team": Heart,
+    "Evangelism Team": Megaphone,
+    "Counseling Ministry": Heart,
+    "Missions Team": Send,
 };
 
+const DEFAULT_FIELDS = ['Attendance', 'Souls Won', 'First Timers', 'Highlights'];
+
+const MINISTRIES = MINISTRY_OPTIONS.map(name => ({
+    id: name.toLowerCase().replace(/[^a-z]/g, '_'),
+    name: name,
+    icon: ICON_MAP[name] || LayoutGrid,
+    fields: name.toLowerCase().includes('ministry') || name.toLowerCase().includes('team') ? DEFAULT_FIELDS : ['Active Members', 'Status', 'Notes']
+}));
+
 export default function MinistryHub() {
-    const [forms, setForms] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [selectedFormId, setSelectedFormId] = useState<string | null>(null);
-    const [userRole, setUserRole] = useState<string | null>(null);
-    const [userMinistry, setUserMinistry] = useState<string | null>(null);
+    const [selectedMinistry, setSelectedMinistry] = useState(MINISTRIES[0]);
+    const [formData, setFormData] = useState<Record<string, string>>({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [recentReports, setRecentReports] = useState<any[]>([]);
 
     useEffect(() => {
-        async function loadData() {
-            setLoading(true);
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
+        loadRecentReports();
+    }, [selectedMinistry]);
 
-                // 1. Get user role and ministry
-                const { data: member } = await supabase
-                    .from('org_members')
-                    .select('role, ministry_name')
-                    .eq('user_id', user.id)
-                    .single();
+    async function loadRecentReports() {
+        const { data } = await supabase
+            .from('ministry_reports')
+            .select('*')
+            .eq('ministry_name', selectedMinistry.name)
+            .order('report_date', { ascending: false })
+            .limit(5);
+        setRecentReports(data || []);
+    }
 
-                setUserRole(member?.role || 'member');
-                setUserMinistry(member?.ministry_name || null);
+    const handleSubmit = async () => {
+        setIsSubmitting(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Not authenticated");
 
-                // 2. Load forms
-                const { data: allForms, error } = await supabase
-                    .from('forms')
-                    .select('*')
-                    .eq('is_active', true)
-                    .order('name', { ascending: true });
+            const { error } = await supabase.from('ministry_reports').insert([{
+                org_id: (await supabase.from('profiles').select('org_id').eq('id', user.id).single()).data?.org_id,
+                submitted_by: user.id,
+                ministry_name: selectedMinistry.name,
+                metrics: formData,
+                summary: `Operational report for ${selectedMinistry.name}`
+            }]);
 
-                if (error) throw error;
-
-                // 3. Filter based on role
-                const isPrivileged = ['admin', 'shepherd', 'owner', 'super_admin'].includes(member?.role || '');
-                const filtered = allForms?.filter(f => {
-                    if (isPrivileged) return true;
-                    if (!f.ministry) return true; // General forms
-                    return f.ministry.toLowerCase() === member?.ministry_name?.toLowerCase();
-                });
-
-                setForms(filtered || []);
-            } catch (err) {
-                console.error("Failed to load ministry hub data", err);
-            } finally {
-                setLoading(false);
-            }
+            if (error) throw error;
+            toast.success("Report submitted successfully!");
+            setFormData({});
+            loadRecentReports();
+        } catch (e: any) {
+            toast.error(e.message || "Failed to submit report");
+        } finally {
+            setIsSubmitting(false);
         }
-        loadData();
-    }, []);
-
-    const ministryCategories = Array.from(new Set(forms.map(f => f.ministry)));
+    };
 
     return (
-        <div className="p-6 xl:p-8 space-y-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="p-8 space-y-8 max-w-7xl mx-auto">
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-white">Ministry Intelligence Hub</h1>
-                    <p className="text-[11px] text-white/30 mt-1 uppercase tracking-widest font-black">Digital Ministry Operational Reporting Layer</p>
+                    <h1 className="text-4xl font-black text-white tracking-tighter">MINISTRY HUB</h1>
+                    <p className="text-white/40 font-bold uppercase tracking-widest text-[10px] mt-1">Operational Reporting & Data Intake</p>
                 </div>
-
-                <div className="flex items-center gap-3">
-                    <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="text-[10px] font-black text-emerald-400 uppercase">Operational Security Active</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-violet-500/10 border border-violet-500/20">
-                        <Database className="w-3.5 h-3.5 text-violet-400" />
-                        <span className="text-[10px] font-black text-violet-400 uppercase">Live Pipeline Connected</span>
-                    </div>
-                    {['admin', 'shepherd', 'owner', 'super_admin'].includes(userRole || '') && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={testMinistryPipeline}
-                            className="bg-white/5 border-white/10 text-[10px] font-black text-white/40 rounded-xl h-8 px-3 hover:bg-violet-500/10 hover:text-violet-400"
+                <div className="flex items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/10 overflow-x-auto max-w-full no-scrollbar pb-1">
+                    {MINISTRIES.map(m => (
+                        <button
+                            key={m.id}
+                            onClick={() => { setSelectedMinistry(m); setFormData({}); }}
+                            className={`p-3 rounded-xl transition-all flex-shrink-0 ${selectedMinistry.id === m.id ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20' : 'text-white/40 hover:bg-white/5'}`}
                         >
-                            <FlaskConical className="w-3 h-3 mr-2" /> RUN DIAGNOSTICS
+                            <m.icon className="w-5 h-5" />
+                        </button>
+                    ))}
+                </div>
+            </header>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Form Section */}
+                <Card className="lg:col-span-2 bg-[#111] border-white/5 rounded-[2.5rem] overflow-hidden">
+                    <CardHeader className="p-10 pb-4">
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="w-12 h-12 rounded-2xl bg-violet-500/20 flex items-center justify-center text-violet-500">
+                                <selectedMinistry.icon className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-2xl font-black text-white">{selectedMinistry.name.toUpperCase()}</CardTitle>
+                                <p className="text-white/30 text-xs font-bold tracking-wider">Submit current service data</p>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-10 pt-4 space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {selectedMinistry.fields.map(field => (
+                                <div key={field} className="space-y-2">
+                                    <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">{field}</label>
+                                    <Input
+                                        type="text"
+                                        placeholder="Enter value..."
+                                        value={formData[field] || ''}
+                                        onChange={e => setFormData({ ...formData, [field]: e.target.value })}
+                                        className="h-16 bg-white/5 border-white/10 rounded-2xl px-6 text-white font-bold focus:ring-violet-500"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={isSubmitting}
+                            className="w-full h-16 bg-violet-500 hover:bg-violet-600 text-white font-black rounded-2xl shadow-xl shadow-violet-500/20 transition-all border-0"
+                        >
+                            {isSubmitting ? "SYNCING TO SUPABASE..." : "SUBMIT MINISTRY REPORT"}
+                            <Send className="w-4 h-4 ml-2" />
                         </Button>
-                    )}
+                    </CardContent>
+                </Card>
+
+                {/* Recent Reports / Feed */}
+                <div className="space-y-6">
+                    <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-sm font-black text-white uppercase tracking-widest">Recent Activity</h3>
+                            <Badge className="bg-violet-500/20 text-violet-400 border-0">HISTORY</Badge>
+                        </div>
+                        <div className="space-y-4">
+                            {recentReports.length > 0 ? recentReports.map((report, i) => (
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: i * 0.1 }}
+                                    key={report.id}
+                                    className="p-4 bg-white/2 border border-white/5 rounded-2xl flex items-center justify-between group hover:border-white/10 transition-all"
+                                >
+                                    <div>
+                                        <p className="text-xs font-bold text-white">{new Date(report.report_date).toLocaleDateString()}</p>
+                                        <div className="flex gap-2 mt-1">
+                                            {Object.entries(report.metrics).slice(0, 2).map(([k, v]: any) => (
+                                                <span key={k} className="text-[9px] text-white/30 font-bold uppercase">{k}: {v}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </motion.div>
+                            )) : (
+                                <div className="text-center py-10 opacity-20">
+                                    <Calendar className="w-8 h-8 mx-auto mb-2" />
+                                    <p className="text-[9px] font-bold uppercase tracking-widest">No recent reports</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
+                        <div className="relative z-10">
+                            <TrendingUp className="w-8 h-8 mb-4" />
+                            <h3 className="text-xl font-black mb-2">INTELLIGENCE SYNC</h3>
+                            <p className="text-white/70 text-xs font-bold leading-relaxed">
+                                Every report submitted here directly feeds the Mission Control AI analysis models.
+                            </p>
+                        </div>
+                        <div className="absolute -right-4 -bottom-4 opacity-50 group-hover:scale-110 transition-transform duration-700">
+                            <Send className="w-32 h-32 rotate-[-15deg] text-white/10" />
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <AnimatePresence mode="wait">
-                {selectedFormId ? (
-                    <motion.div
-                        key="form"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="bg-[#111827]/50 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-4 md:p-8"
-                    >
-                        <div className="mb-8 pl-4">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setSelectedFormId(null)}
-                                className="text-[10px] font-black text-white/40 hover:text-white uppercase tracking-widest gap-2 bg-white/5 rounded-full px-4"
-                            >
-                                ← Return to Hub
-                            </Button>
-                        </div>
-                        <DynamicFormRenderer
-                            formId={selectedFormId}
-                            onSuccess={() => setSelectedFormId(null)}
-                        />
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        key="list"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="space-y-12"
-                    >
-                        {/* FORM NAVIGATION */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {forms.map((form) => {
-                                const Icon = MINISTRY_ICONS[form.ministry] || Table;
-                                return (
-                                    <button
-                                        key={form.id}
-                                        onClick={() => setSelectedFormId(form.id)}
-                                        className="group relative bg-[#111827] border border-white/5 rounded-3xl p-6 hover:border-violet-500/30 transition-all text-left overflow-hidden active:scale-[0.98]"
-                                    >
-                                        <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 blur-3xl -mr-16 -mt-16 group-hover:bg-violet-500/20 transition-all" />
-
-                                        <div className="flex flex-col h-full gap-4 relative z-10">
-                                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-violet-500/20 transition-all">
-                                                <Icon className="w-5 h-5 text-violet-400" />
-                                            </div>
-
-                                            <div>
-                                                <Badge className="bg-violet-500/20 text-violet-400 border-0 text-[8px] font-black uppercase mb-1.5">
-                                                    {form.ministry}
-                                                </Badge>
-                                                <h3 className="text-sm font-black text-white">{form.name}</h3>
-                                                <p className="text-[10px] text-white/25 mt-1 leading-relaxed font-medium">
-                                                    {form.description}
-                                                </p>
-                                            </div>
-
-                                            <div className="mt-4 flex items-center justify-between pt-4 border-t border-white/5">
-                                                <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">Open Digital Record</span>
-                                                <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-violet-400 group-hover:translate-x-1 transition-all" />
-                                            </div>
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        {/* ANALYTICS PREVIEW SECTION */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div className="bg-[#111827]/50 border border-white/5 rounded-[2rem] p-8">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <LayoutGrid className="w-5 h-5 text-emerald-400" />
-                                    <h2 className="text-xs font-black uppercase tracking-widest text-white/60">Live Intelligence Feed</h2>
-                                </div>
-
-                                <div className="space-y-4">
-                                    {[
-                                        { title: "Attendance Reconciliation", date: "Last Sunday", stat: "98% Coverage", type: "ushering" },
-                                        { title: "Kids Check-in Volume", date: "2 hours ago", stat: "142 Total", type: "children" },
-                                        { title: "Outreach Contacts", date: "Yesterday", stat: "48 New Souls", type: "evangelism" },
-                                    ].map((feed, i) => (
-                                        <div key={i} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl group hover:border-white/10 transition-all cursor-pointer">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-[#0a101c] flex items-center justify-center">
-                                                    <Clock className="w-4 h-4 text-white/20" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-black text-white">{feed.title}</p>
-                                                    <p className="text-[9px] text-white/25 uppercase font-bold tracking-widest mt-0.5">{feed.date} · {feed.type}</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-xs font-black text-emerald-400">{feed.stat}</p>
-                                                <p className="text-[8px] text-white/20 font-black uppercase mt-0.5">Verified</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <Button
-                                    onClick={async () => {
-                                        const { data, error } = await supabase.from('form_submissions').select('*, forms(name)').limit(100);
-                                        if (error) toast.error("Export failed");
-                                        else exportToCSV(data || [], "ministry_submissions");
-                                    }}
-                                    className="w-full mt-6 bg-white/5 hover:bg-white/10 text-[10px] font-black text-white/40 border border-white/10 py-6 rounded-2xl uppercase tracking-widest flex items-center gap-2"
-                                >
-                                    <DownloadCloud className="w-4 h-4" />
-                                    Export Full Operational Audit (CSV)
-                                </Button>
-                            </div>
-
-                            <div className="bg-violet-600 border border-violet-500 rounded-[2rem] p-8 text-white relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl -mr-32 -mt-32" />
-                                <div className="relative z-10 flex flex-col h-full justify-between">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <Sparkles className="w-4 h-4 text-white/60" />
-                                            <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">AI Intelligence</span>
-                                        </div>
-                                        <h2 className="text-xl font-black leading-tight">Ministry trends are being processed in real-time.</h2>
-                                        <p className="text-sm font-medium text-white/80 mt-2">The system is currently synthesizing data from Usher reports and Kids check-ins to forecast next month's volunteer requirements.</p>
-                                    </div>
-
-                                    <div className="mt-8 pt-8 border-t border-white/10 flex items-center justify-between">
-                                        <div>
-                                            <p className="text-[8px] font-black uppercase text-white/60 tracking-widest">Next Analysis Trigger</p>
-                                            <p className="text-xs font-black">March 10, 2026 · 18:00 JST</p>
-                                        </div>
-                                        <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-white animate-spin" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 }
-

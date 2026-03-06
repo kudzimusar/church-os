@@ -1,176 +1,93 @@
-# 🕊️ Church OS: The Comprehensive Operations Manual & System Guide
+# 🕊️ Church OS: The Comprehensive Operations Manual
 
-Welcome to the definitive guide for **Church OS**, a high-performance, AI-driven spiritual infrastructure designed specifically for **Japan Kingdom Church (JKC)** and the "90 Days of Transformation" journey. 
-
-This manual provides an in-depth operational blueprint for every feature within the system, from the member-facing devotional interface to the complex "Shepherd Dashboards" used by leadership.
+Welcome to the **Church OS** ecosystem. This manual is designed to help members, leaders, and administrators understand and operate the various facets of our digital spiritual infrastructure. 
 
 ---
 
-## 📖 1. Devotion Site: The Daily Spiritual Engine
-The Devotion Site is the primary digital sanctuary for our members, engineered to bridge language barriers and foster daily consistency.
+## 📖 1. Devotion Site (The Member Experience)
+The Devotion Site is the heart of the daily spiritual journey for our members, designed for the "90 Days of Transformation" curriculum.
 
-### **A. Real-Time Journey Tracking**
-*   **The 90-Day Progress Ring**: A dynamic SVG-based visualization at the top of the interface. 
-    *   **Calculation Logic**: It calculates the current day status (1–90) and fills clockwise. 
-    *   **The Hero Message**: Using the `AIService`, the system generates a context-aware greeting. If a member is on a streak, it celebrates consistency. If a member hasn't logged in for days, it offers a "Foundations of Grace" greeting to minimize shame and encourage return.
-*   **Day Navigation Bar**: Located at the bottom, this persistent, glassmorphic UI allows members to:
-    *   **Catch Up**: Scroll back to previous days to catch up on missed journaling.
-    *   **Calendar View**: A popover calendar with "high-density" indicators showing which days already have completed entries.
-
-### **B. Bilingual Scripture System (Bolls Bible API Integration)**
-*   **Translation Support**: Fully integrated with the Bolls API to fetch:
-    *   **NASB (English)**: The primary study version for international members.
-    *   **JBS (Japanese 口語訳)**: The standard Japanese translation for local believers.
-*   **Bilingual Toggle**: The "NASB/口語訳/Bilingual" button allows side-by-side viewing. This is critical for JKC's multiracial congregation, allowing families of different nationalities to study the same verse in their heart language.
-*   **Scripture Persistence**: Once a verse is loaded for the day, it is cached locally to ensure the site remains fast even on slow connections.
-
-### **C. AI-Powered "Ask Bible Chat"**
-*   **The "Spirit-Led" Assistant**: This isn't just a generic chatbot. It is a "Data-Aware" assistant that is restricted only to the context of the day's devotional scripture.
-*   **Functionality**: Members can click the "AI CHAT" sparkles button to ask questions like:
-    *   *"What is the historical meaning of 'Submission' in this context?"*
-    *   *"Give me a modern-day example of how to apply this at my workplace."*
-*   **System Bounds**: To ensure theological safety, the AI is prompted to strictly adhere to the provided scripture and avoid speculating on unrelated topics.
-
-### **D. The SOAP Journaling Protocol**
-The site enforces the **SOAP** (Scripture, Observation, Application, Prayer) method:
-*   **Quick Reflection**: A simplified text field for brief daily take-aways.
-*   **Full SOAP Tab**: Four dedicated fields for deep study.
-    *   **Observation Sentiment**: When a member saves their "Observation," the AI (AIService) runs a "Sentiment Analysis" in the background. It identifies if the member is feeling Hopeless, Anxious, or Joyful based on their writing. This anonymized data feeds the Admin Dashboard (Section 4).
-*   **Gamification (Streaks)**: Saving an entry updates the member's "Day Streak," which is visible in their profile.
-
-### **E. Sunday Service Check-In**
-*   **Automated Triggers**: This card *only* appears on Sundays.
-*   **Options**: "AT CHURCH" (using GPS/MapPin metadata) or "ONLINE." 
-*   **Impact**: Check-ins update the "Attendance Trend" charts in the Shepherd Dashboard, helping leaders see who is disconnected from the physical gathering.
+### Key Features:
+*   **Daily Devotions**: Interactive daily passages with "Week Themes" that change the UI mood and colors.
+*   **Bilingual Toggle**: Instantly switch between **English (NASB)** and **Japanese (JBS)** or view them **Bilingual** (side-by-side).
+*   **Ask Bible Chat (AI Assistant)**: A dedicated "Spirit-Led" AI tool that allows members to ask questions about the day's scripture in context.
+*   **SOAP Journaling**: A structured digital diary:
+    *   **S**cripture: The focus of the day.
+    *   **O**bservation: What is God saying?
+    *   **A**pplication: How do I live this out?
+    *   **P**rayer: A written conversation with God.
+*   **Sunday Check-In**: A streamlined button that appears on Sundays for members to log their attendance (In-Person or Online) with a single click.
+*   **Gamification**: Real-time tracking of journey completion (0–90 days) and "Day Streaks" to encourage consistency.
 
 ---
 
-## 👤 2. Member Profile & Settings: The Connection Card Hub
-The Member Profile is more than a settings page; it is a "Digital Identity" that helps leaders shepherd people more effectively.
+## 👤 2. Member Profile & Settings (The Connection Card)
+The "Connection Card" is the digital identity of every member, feeding the church’s intelligence layers.
 
-### **A. Comprehensive Identity Metadata**
-*   **Basic Details**: Birthdate, Gender, and Anniversary dates.
-*   **The "Japan Context"**: Specific fields for "Years in Japan" and "Ward" (区). This helps leaders understand the integration level of international members.
-*   **Education & Occupation**: Members list their backgrounds, allowing the church to find professionals (e.g., accountants, teachers) when administrative needs arise.
-
-### **B. Referral & Growth Intelligence**
-*   **Invite-By Tracking**: Records who brought the member to the church. This allows leaders to see "Spiritual Lineage"—which groups are the most fruitful in evangelism.
-*   **Method Tracking**: Tracks if they found the church via "Social Media," "Street Outreach," "Friend," or "Web Search." This informs the church's marketing and outreach budgets.
-
-### **C. Household & Family Linkages**
-*   **Family Unit Creation**: Members can add spouses and children. 
-*   **Logic**: The system automatically logic-flags the household as "Single," "Couple," or "Family with Children." 
-*   **Shepherding Impact**: If a child's faith is faltering (low streaks), the system allows leaders to see the parent's status in a unified view.
-
-### **D. Spiritual Journey Milestones**
-Trackable dates for:
-*   First Visit Date.
-*   Salvation Decision.
-*   Water Baptism (A key indicator of commitment).
-*   Official Membership Enrollment (The final step in the discipleship funnel).
-
-### **E. Skills, Talents & Ministry Matching**
-*   **Skill Library**: A huge dropdown of skills (Music, Video, Finance, Administration, Intercessory Prayer).
-*   **Ministry Matching Engine**: The profile shows "Ministry Recommendations" based on the skills provided. For example, if a member lists "Video Editing," the system suggests the "Media Ministry."
-
-### **F. Care & Prayer Portal**
-*   **Request Management**: Members can submit private prayer requests.
-*   **Urgency Levels**: Normal, Urgent, or Crisis.
-*   **Pastoral Reach**: A checkbox to "Require direct pastoral contact." If checked, a Red Alert is triggered on the Admin Dashboard immediately.
+### Operating Areas:
+*   **Identity**: Members fill in birthdates, anniversaries, country of origin, and occupation. This helps leaders know *who* the congregation is.
+*   **Household Linkages**: Connect spouses, children, and dependents into one "Family Unit" for simplified care.
+*   **Spiritual Journey**: Track milestones such as **First Visit**, **Salvation Decision**, **Water Baptism**, and **Membership**.
+*   **Care & Prayer**: A private portal to submit prayer requests with urgency levels (Normal, Urgent, Crisis) and requests for direct pastoral contact.
+*   **Skills & Talents**: Members list their professional and personal skills (Music, Tech, Teaching, etc.) which powers the Ministry Matching Engine.
+*   **Settings**: Customize the experience with **Dark Mode**, **Font Scaling** (for accessibility), and **Language Preferences**.
 
 ---
 
-## 🛡️ 3. Admin Dashboard: The Shepherd Mission Control
-The Admin Dashboard is the "Nerve Center" for Japan Kingdom Church leaders, accessible via `/shepherd/dashboard`.
+## 🛡️ 3. Admin Dashboard (The Shepherd Dashboard)
+The Shepherd Dashboard is "Mission Control" for Church Leaders (Pastors, Elders, and Deacons).
 
-### **A. Core Mission Metrics (Mission Control)**
-*   **Engagement Score (0-100)**: A proprietary index that combines:
-    *   Devotion completion rates.
-    *   Sunday attendance consistency.
-    *   Ministry involvement.
-    *   *Result*: A single number that tells the pastor if the church is growing or stagnating.
-*   **Real-Time Gauge**: A visual SVG gauge showing current vs. targeted engagement.
-*   **Attendance Tracking**: Weekly Bar Charts comparing total attendance week-over-week.
-
-### **B. Pastoral Care Intelligence**
-*   **The Care Alerts System**: An AI-powered "Crisis Radar."
-    *   **Critical Alerts (Red)**: Flagged if a member has been inactive for >14 days. These members are considered "At-Risk" of drifting away.
-    *   **Warning Alerts (Amber)**: Flagged if inactive for >7 days.
-*   **Counseling Queue**: 
-    *   Tracks all members waiting for a meeting.
-    *   Categorized by topic (Marriage, Career, Spiritual Warfare, Immigration/Legal).
-    *   Allows leaders to "Acknowledge" or "Follow Up" with a single click.
-
-### **C. AI Insights Dashboard**
-*   A dedicated section (powered by the `ai_insights` table) that generates proactive strategy:
-    *   *"Insight: 80% of new members are from the Adachi-ku area. Suggest opening a new Fellowship Group cluster there."*
-    *   *"Insight: Anxiety sentiment has increased by 30% in journals this week. Suggest a sermon on 'The Peace of God'."*
+### Capabilities:
+*   **Church Mission Control**: A high-level overview of total members, active engagement, and real-time attendance.
+*   **AI Engagement Score**: A unique 0–100 score calculated by analyzing devotion consistency, attendance, and ministry involvement.
+*   **Care Alerts**: An automated "At-Risk" system that flags members who have been inactive for a certain period, allowing for proactive outreach.
+*   **Counseling Queue**: Management of members requesting spiritual guidance, with tracking for "Follow Ups" and unassigned cases.
 
 ---
 
-## 📊 4. Data Analytics Board: Spiritual Intelligence Layer
-The Data Analytics Board uses advanced visualization tools (**recharts**) to turn complex database rows into "Prophetic Data."
+## 📊 4. Data Analytics Board (Spiritual Intelligence)
+This is the "Intelligence Layer" that turns data into wisdom for leadership.
 
-### **A. Collective Spiritual Health (Anonymized)**
-*   **SOAP Sentiment Modeling**: Analyzes the "Observation" field of all members' journals.
-    *   Categorizes results into Hope, Gratitude, Confusion, Anxiety, and Repentance.
-*   **Word Cloud Analysis**: Identifies the top 20 themes appearing in church journals. This gives leaders an inside look at what people are *actually* struggling with or celebrating without violating their privacy.
-
-### **B. Geographic Cluster Mapping**
-*   **Tokyo Ward Density**: Visualizing member counts in wards like **Nerima-ku, Setagaya, and Adachi-ku**.
-*   **Strategy**: This map literally dictates where the church should plant its next physical location or home-church.
-
-### **C. The Discipleship Funnel (Evangelism Pipeline)**
-A high-level view of how many people are moving from each stage:
-1.  **Invited Visitors** (Top of the funnel).
-2.  **Attendance** (Regular Sunday flow).
-3.  **Salvation Decisions** (Spiritual breakthrough).
-4.  **Baptism** (Public commitment).
-5.  **Membership** (Full integration).
-*   *Observation*: If the "drop-off" between Attendance and Salvation is too high, the leadership knows to adjust their gospel presentation.
+### Analytical Modules:
+*   **SOAP Sentiment Analysis**: AI-powered emotional modeling that detects the collective "mood" of the church (e.g., high hope vs. high anxiety) based on *anonymized* journal entries.
+*   **Geographic Clusters**: A spatial density map of where members live (e.g., Nerima-ku vs. Setagaya), identifying where to plant the next Fellowship Group.
+*   **Discipleship Pipeline**: A funnel visualization showing how many people are moving from "Visitor" → "Decided" → "Member" → "Leader."
+*   **Ministry Staffing Analysis**: Compares the skills members have *versus* what the ministry teams currently need.
 
 ---
 
-## 🌟 5. Benefits of the Church OS to the Church
-1.  **Data-Driven Compassion**: Stop guessing who is struggling; the AI identifies them before they leave.
-2.  **Scalable Discipleship**: A small pastoral team can monitor the spiritual habits of hundreds of people with ease.
-3.  **Bilingual Unity**: Removes the language barrier, merging two congregations into one spiritual body.
-4.  **Privacy & Privacy**: Individual journals are private, but the *collective pulse* is shared, providing a balanced approach to oversight.
+## 🌟 5. Benefits of Church OS
+Why use this system instead of traditional spreadsheets?
+
+1.  **Proactive vs. Reactive Care**: Instead of waiting for someone to leave, the AI flags "drift" early.
+2.  **Anonymized Insights**: Understand the *spiritual health* of the church without violating the privacy of the secret place (journal).
+3.  **Bilingual Inclusivity**: Removes the language barrier for international congregations in Japan.
+4.  **Operational Clarity**: A single source of truth for all family, financial, and ministry data.
 
 ---
 
-## 🤖 6. API and MCP Tool: AI Integration & Sermon Prep
-The system includes a **Model Context Protocol (MCP)** server, bridging the gap between the church database and Modern AI Assistants.
+## 🤖 6. API and MCP Tool
+The **Model Context Protocol (MCP)** server allows external AI (like Claude or GPT) to "know" the church knowledge base securely.
 
-### **A. Connection Guide**
-*   Leaders can connect tools like **Claude Desktop** to the `/mcp-server/index.ts` endpoint.
-*   This grants the AI "Contextual Vision" into the church's knowledge base.
-
-### **B. Practical AI Prompts for Leaders**
-1.  *"Search devotions for the theme 'Forgiveness' and summarize the top insights for my sermon prep."*
-2.  *"Analyze the anonymized SOAP journal sentiment for this month and identify the top 3 pastoral needs."*
-3.  *"How many members live in the Setagaya area and are currently not in a Fellowship Group?"*
+### Implementation:
+*   **Knowledge Retrieval**: AI assistants can query the *90 Days of Transformation* library to answer theological questions during sermon prep or counseling.
+*   **Contextual Guidance**: By connecting the AI to the MCP tool, a leader can ask: *"Give me a summary of everything we've taught on Forgiveness this year,"* and get a precise answer.
+*   **Technical Details**: Accessible via local `stdio` connection using the `MCP_API_KEY`.
 
 ---
 
-## ⚙️ 7. Other Operational & Hidden Areas
-*   **Multi-Branch Onboarding Wizard**: A hidden `/onboarding` route for new church branches to join the system. 
-    *   Handles Domain Whitelisting and Tier Selection (Lite/Pro/Enterprise).
-*   **Security Middleware**: A sophisticated layer in `src/middleware.ts` that:
-    *   Authenticates via API Keys.
-    *   Prevents Cross-Domain Hijacking.
-    *   Tracks usage metrics for performance monitoring.
-*   **Mock Stripe Hub**: A fully-ready architecture for handling Tithes and Offerings, currently in a "Mock Demonstration" mode for training and screencasts.
-*   **Global Assistant Bot**: A persistent floating assistant (`GlobalAIAssistant.tsx`) that provides context-aware help on any page of the app.
+## ⚙️ 7. Other Operational Areas
+Beyond devotions and profiles, the system handles:
+
+*   **Church Onboarding**: A multi-step wizard for new churches to set up their domain, choose a service tier (Lite/Pro/Enterprise), and generate API keys.
+*   **Fellowship Groups (Circles)**: Management of small groups with proximity-based suggestions for members.
+*   **Financial Tracking**: Tithes and giving preferences for members, though financial transactions are handled via external mocked layers (Stripe).
+*   **Event Management**: Planning and tracking attendance for special summits and conferences.
 
 ---
-
-> [!IMPORTANT]
-> **Data Security Alert**: All "Shepherd" level dashboards bypass standard member-level security (using `supabaseAdmin`) to provide the aggregate data. This level of access must ONLY be granted to verified Pastoral staff.
 
 > [!TIP]
-> **Operational Tip**: Update the "Hero Messages" and "Week Themes" once a month to keep the app feeling fresh and alive for the congregation. 
+> **Pro Tip for Leaders**: Use the "Geographic Clusters" tool before launching new home groups to ensure you are placing the community where the people already are.
 
----
-**Version 2.0 (Comprehensive Build) - March 2026**
-**Compiled by: Japan Kingdom Church Technology Division**
+> [!IMPORTANT]
+> This manual will be updated as we roll out new features like the **Ministry Recommendations Engine** and **Automated Pastoral SMS Alerts**.

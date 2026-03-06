@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 
+import { toast } from "sonner";
+
 interface Member {
     id: string; name: string; email: string;
     membership_status?: string; city?: string;
@@ -50,8 +52,14 @@ export default function MembersPage() {
 
         if (error) {
             console.error("Error fetching members:", error);
+            toast.error("Failed to load members directory");
         } else {
-            setMembers(data || []);
+            // Flatten milestones for the UI
+            const processed = (data || []).map((m: any) => ({
+                ...m,
+                milestones: m.milestones?.[0] || {}
+            }));
+            setMembers(processed);
         }
         setLoading(false);
     }

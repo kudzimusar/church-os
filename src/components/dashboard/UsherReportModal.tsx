@@ -41,12 +41,20 @@ export function UsherReportModal({ registeredCount, onReportSubmitted }: UsherRe
             const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', user.id).single();
             const org_id = profile?.org_id;
 
-            const { error } = await supabase.from('service_reports').insert([{
-                ...formData,
+            const { error } = await supabase.from('ministry_reports').insert([{
                 org_id,
-                total_count: totalManual,
-                submitted_by: user.id,
-                report_date: new Date().toISOString().split('T')[0]
+                ministry_name: "Ushers",
+                report_date: new Date().toISOString().split('T')[0],
+                submitted_by: user.id as any,
+                metrics: {
+                    ...formData,
+                    total: totalManual,
+                    adults: formData.adults_count,
+                    children: formData.children_count,
+                    first_timers: formData.first_timers_count,
+                    returning: formData.returning_visitors_count
+                },
+                summary: `Sunday Service Report: ${totalManual} total headcount.`
             }]);
 
             if (error) throw error;
