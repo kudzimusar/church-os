@@ -12,12 +12,16 @@ import {
     Database,
     ShieldCheck,
     LayoutGrid,
-    Table
+    Table,
+    Download,
+    DownloadCloud
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DynamicFormRenderer } from "@/components/forms/DynamicFormRenderer";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
+import { exportToCSV } from "@/lib/export-utils";
+import { toast } from "sonner";
 
 const MINISTRY_ICONS: Record<string, any> = {
     ushering: Users,
@@ -175,8 +179,16 @@ export default function MinistryHub() {
                                     ))}
                                 </div>
 
-                                <Button className="w-full mt-6 bg-white/5 hover:bg-white/10 text-[10px] font-black text-white/40 border border-white/10 py-6 rounded-2xl uppercase tracking-widest">
-                                    View Full Operational Audit →
+                                <Button
+                                    onClick={async () => {
+                                        const { data, error } = await supabase.from('form_submissions').select('*, forms(name)').limit(100);
+                                        if (error) toast.error("Export failed");
+                                        else exportToCSV(data || [], "ministry_submissions");
+                                    }}
+                                    className="w-full mt-6 bg-white/5 hover:bg-white/10 text-[10px] font-black text-white/40 border border-white/10 py-6 rounded-2xl uppercase tracking-widest flex items-center gap-2"
+                                >
+                                    <DownloadCloud className="w-4 h-4" />
+                                    Export Full Operational Audit (CSV)
                                 </Button>
                             </div>
 

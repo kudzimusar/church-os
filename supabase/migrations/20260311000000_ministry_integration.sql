@@ -220,6 +220,18 @@ SELECT
     'Mass Outreach Event' as context
 FROM public.form_submissions fs
 JOIN public.forms f ON f.id = fs.form_id
-WHERE f.name = 'Evangelism Activity Log';
+WHERE f.name = 'Evangelism Activity Log'
+UNION ALL
+SELECT 
+    'prayer' as metric_type,
+    submitted_at::date::text as event_date,
+    'Requests Prayed For' as detail,
+    (SELECT value::int FROM public.form_submission_values fsv 
+     JOIN public.form_fields ff ON ff.id = fsv.field_id 
+     WHERE fsv.submission_id = fs.id AND ff.label = 'Requests Prayed For') as value,
+    'Intercessory session' as context
+FROM public.form_submissions fs
+JOIN public.forms f ON f.id = fs.form_id
+WHERE f.name = 'Intercessory Prayer Report';
 
 NOTIFY pgrst, 'reload schema';
