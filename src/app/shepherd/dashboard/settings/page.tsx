@@ -62,7 +62,25 @@ export default function SettingsPage() {
                 data: { role: inviteRole, invited_by: userName }
             });
 
-            if (error) throw error;
+            if (error) {
+                // Handle existing user promotion
+                if (error.message.includes('already been registered')) {
+                    const { data: existingProfile } = await supabase.from('profiles').select('id').eq('email', inviteEmail).single();
+                    if (existingProfile) {
+                        await supabaseAdmin.from('org_members').upsert({
+                            user_id: existingProfile.id,
+                            role: inviteRole,
+                            org_id: orgId,
+                        });
+                        toast.success(`${inviteEmail} promoted to staff role!`);
+                        setInviteEmail("");
+                        setShowInvite(false);
+                        loadData();
+                        return;
+                    }
+                }
+                throw error;
+            }
 
             if (data.user) {
                 await supabaseAdmin.from('org_members').upsert({
