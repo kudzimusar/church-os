@@ -9,7 +9,7 @@ import {
     User as UserIcon, Users, Heart, Trophy, Shield,
     MessageCircle, AlertCircle, Plus, Save, Clock,
     Camera, MapPin, Globe, Milestone, Copy, LayoutDashboard, Settings, CheckCircle2, LogOut,
-    Briefcase, Music, CalendarCheck, Coins, Activity, ChevronRight
+    Briefcase, Music, CalendarCheck, Coins, Activity, ChevronRight, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -115,6 +115,23 @@ export default function ProfileHub() {
     const [fellowshipGroups, setFellowshipGroups] = useState<any[]>([]);
     const [userGroups, setUserGroups] = useState<any[]>([]);
     const [givingData, setGivingData] = useState({ tithe_status: false, preferred_giving_method: 'Cash' });
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [propheticInsight, setPropheticInsight] = useState<any>(null);
+
+    const handleAcceptInvitation = async (notif: any) => {
+        try {
+            await supabase.from('member_roles')
+                .update({ status: 'active', active_status: true })
+                .eq('user_id', user.id)
+                .eq('status', 'pending_invitation');
+
+            await supabase.from('member_notifications').update({ is_read: true }).eq('id', notif.id);
+            setNotifications(notifications.filter(n => n.id !== notif.id));
+            toast.success("Welcome to the team!");
+        } catch (e) {
+            toast.error("Acceptance failed");
+        }
+    };
 
     useEffect(() => {
         const init = async () => {
@@ -190,9 +207,17 @@ export default function ProfileHub() {
             const { data: skillData } = await supabase.from('member_skills').select('*').eq('user_id', userId);
             if (skillData) setSkills(skillData || []);
 
+            // Notifications
+            const { data: notifData } = await supabase.from('member_notifications').select('*').eq('user_id', userId).eq('is_read', false).order('created_at', { ascending: false });
+            if (notifData) setNotifications(notifData);
+
             // Attendance
             const { data: attData } = await supabase.from('service_attendance').select('*').eq('user_id', userId).order('service_date', { ascending: false }).limit(10);
             setAttendanceRecords(attData || []);
+
+            // Prophetic Intelligence (PIL)
+            const { data: pilData } = await supabase.from('prophetic_insights').select('*').eq('subject_id', userId).eq('is_acknowledged', false).maybeSingle();
+            if (pilData) setPropheticInsight(pilData);
 
             // Fellowship
             const { data: groups } = await supabase.from('fellowship_groups').select('*').eq('is_active', true);
@@ -512,6 +537,45 @@ export default function ProfileHub() {
                                         <p className="text-sm text-foreground/50 font-medium mt-2">Manage your structured data for Church analytics.</p>
                                     </div>
 
+                                    {/* Prophetic Intelligence Indicator (PIL) */}
+                                    {propheticInsight && (
+                                        <div className={`mb-8 p-6 rounded-3xl border animate-in slide-in-from-top duration-500 ${propheticInsight.risk_level === 'critical' || propheticInsight.risk_level === 'high'
+                                            ? 'bg-red-500/10 border-red-500/20'
+                                            : 'bg-violet-500/10 border-violet-500/20'
+                                            }`}>
+                                            <div className="flex items-start gap-4">
+                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${propheticInsight.risk_level === 'critical' || propheticInsight.risk_level === 'high'
+                                                    ? 'bg-red-500/20 text-red-500'
+                                                    : 'bg-violet-500/20 text-violet-500'
+                                                    }`}>
+                                                    <Sparkles className="w-6 h-6" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <h4 className={`text-sm font-black uppercase tracking-widest ${propheticInsight.risk_level === 'critical' || propheticInsight.risk_level === 'high' ? 'text-red-500' : 'text-violet-500'
+                                                            }`}>
+                                                            {propheticInsight.category === 'drop_off' ? 'Spiritual Health Alert' : 'Prophetic Insight'}
+                                                        </h4>
+                                                        <Badge variant="outline" className="text-[9px] font-black uppercase border-current opacity-50">{propheticInsight.probability_score}% Probability</Badge>
+                                                    </div>
+                                                    <p className="text-sm font-bold text-foreground mb-1">{propheticInsight.insight_title}</p>
+                                                    <p className="text-xs text-foreground/60 leading-relaxed mb-4">{propheticInsight.insight_description}</p>
+
+                                                    {propheticInsight.category === 'drop_off' && (
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <Button size="sm" className="bg-foreground text-background font-bold text-[10px] h-8 rounded-lg px-4 hover:opacity-90">
+                                                                Renew My Commitment
+                                                            </Button>
+                                                            <Button variant="outline" size="sm" className="border-foreground/10 font-bold text-[10px] h-8 rounded-lg px-4">
+                                                                Request Pastoral Call
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* IDENTITY TAB */}
                                     {activeTab === 'identity' && (
                                         <form onSubmit={idForm.handleSubmit(onIdentitySubmit)} className="space-y-8 animate-in fade-in duration-300">
@@ -673,6 +737,35 @@ export default function ProfileHub() {
                                     {/* SERVICE TAB */}
                                     {activeTab === 'service' && (
                                         <div className="space-y-8 animate-in fade-in duration-300">
+                                            {/* Ministry Invitations (NEW) */}
+                                            {notifications.filter(n => n.type === 'invitation').length > 0 && (
+                                                <div className="bg-violet-500/10 border border-violet-500/20 rounded-3xl p-6 mb-8">
+                                                    <div className="flex items-center gap-3 mb-4">
+                                                        <Sparkles className="w-5 h-5 text-violet-500" />
+                                                        <h4 className="text-sm font-black uppercase tracking-widest text-violet-500">Ministry Opportunities</h4>
+                                                    </div>
+                                                    <div className="grid gap-3">
+                                                        {notifications.filter(n => n.type === 'invitation').map(notif => (
+                                                            <div key={notif.id} className="flex items-center justify-between p-4 bg-background border border-violet-500/10 rounded-2xl">
+                                                                <div className="flex-1">
+                                                                    <p className="text-xs font-black text-foreground">{notif.title}</p>
+                                                                    <p className="text-[10px] text-foreground/60">{notif.message}</p>
+                                                                </div>
+                                                                <div className="flex gap-2">
+                                                                    <Button
+                                                                        onClick={() => handleAcceptInvitation(notif)}
+                                                                        className="h-8 rounded-lg bg-emerald-500 text-white text-[10px] font-bold px-4 hover:bg-emerald-600"
+                                                                    >
+                                                                        Accept & Join
+                                                                    </Button>
+                                                                    <Button variant="ghost" className="h-8 rounded-lg text-[10px] font-bold px-4 text-foreground/40">Later</Button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
                                                 <div className="flex flex-col sm:flex-row gap-4">
                                                     <select value={newMinistry} onChange={e => setNewMinistry(e.target.value)} className="h-14 rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none w-full flex-1">

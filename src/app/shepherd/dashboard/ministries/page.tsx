@@ -48,6 +48,23 @@ export default function MinistriesPage() {
 
     const STAFFING_GAPS = ['childrens', 'counseling', 'missions'];
 
+    const handleInvite = async (candidate: any, ministryName: string) => {
+        try {
+            const { error } = await supabaseAdmin.from('member_roles').insert({
+                user_id: candidate.user_id,
+                ministry_name: ministryName,
+                role_title: 'Invited Member',
+                status: 'pending_invitation',
+                invitation_date: new Date().toISOString()
+            });
+            if (error) throw error;
+            // Optionally update state to show "Invited"
+            alert(`Invitation sent to ${candidate.profiles?.name} for ${ministryName}`);
+        } catch (e) {
+            console.error("Invite Error:", e);
+        }
+    };
+
     return (
         <div className="p-6 xl:p-8">
             <div className="mb-6">
@@ -159,7 +176,10 @@ export default function MinistriesPage() {
                                                         <p className="text-[9px] text-white/30 truncate max-w-[100px]">{c.skill_name} · {c.skill_level}</p>
                                                     </div>
                                                 </div>
-                                                <button className="p-2 bg-violet-500/10 text-violet-400 rounded-xl hover:bg-violet-500/20 transition-colors">
+                                                <button
+                                                    onClick={() => handleInvite(c, min)}
+                                                    className="p-2 bg-violet-500/10 text-violet-400 rounded-xl hover:bg-violet-500/20 transition-colors"
+                                                >
                                                     <Users className="w-3 h-3" />
                                                 </button>
                                             </div>
