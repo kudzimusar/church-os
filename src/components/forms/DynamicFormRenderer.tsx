@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Loader2, CloudOff, Send, CheckCircle2 } from "lucide-react";
+import { useOfflineSync } from "@/hooks/useOfflineSync";
 
 interface FieldDefinition {
     id: string;
@@ -36,6 +37,7 @@ export function DynamicFormRenderer({ formId, campusId, onSuccess }: DynamicForm
     const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState<Record<string, any>>({});
     const [isOffline, setIsOffline] = useState(false);
+    const { addToQueue } = useOfflineSync();
 
     useEffect(() => {
         async function fetchForm() {
@@ -111,10 +113,22 @@ export function DynamicFormRenderer({ formId, campusId, onSuccess }: DynamicForm
         setSubmitting(true);
 
         try {
-            // Get current user
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 toast.error("You must be logged in to submit forms");
+                return;
+            }
+
+            // [ROBUST OFFLINE SYNC]
+            if (!navigator.onLine) {
+                addToQueue({
+                    formId,
+                    userId: user.id,
+                    campusId,
+                    values: formData
+                });
+                localStorage.removeItem(`form_draft_${formId}`);
+                if (onSuccess) onSuccess();
                 return;
             }
 
@@ -136,7 +150,7 @@ export function DynamicFormRenderer({ formId, campusId, onSuccess }: DynamicForm
             const valuesToInsert = Object.entries(formData).map(([fieldId, value]) => ({
                 submission_id: submission.id,
                 field_id: fieldId,
-                value: value.toString()
+                field_value: value.toString()
             }));
 
             const { error: vError } = await supabase
@@ -161,11 +175,7 @@ export function DynamicFormRenderer({ formId, campusId, onSuccess }: DynamicForm
             if (onSuccess) onSuccess();
         } catch (err) {
             console.error("Submission Error:", err);
-            if (isOffline) {
-                toast.warning("Submission queued for offline synchronization");
-            } else {
-                toast.error("Error submitting ministry report");
-            }
+            toast.error("Error submitting ministry report");
         } finally {
             setSubmitting(false);
         }

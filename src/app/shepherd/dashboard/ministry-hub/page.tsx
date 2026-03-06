@@ -14,8 +14,10 @@ import {
     LayoutGrid,
     Table,
     Download,
-    DownloadCloud
+    DownloadCloud,
+    FlaskConical
 } from "lucide-react";
+import { testMinistryPipeline } from "@/lib/pipeline-tester";
 import { Button } from "@/components/ui/button";
 import { DynamicFormRenderer } from "@/components/forms/DynamicFormRenderer";
 import { Badge } from "@/components/ui/badge";
@@ -34,26 +36,51 @@ export default function MinistryHub() {
     const [forms, setForms] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedFormId, setSelectedFormId] = useState<string | null>(null);
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const [userMinistry, setUserMinistry] = useState<string | null>(null);
 
     useEffect(() => {
-        async function loadForms() {
+        async function loadData() {
             setLoading(true);
             try {
-                const { data, error } = await supabase
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+
+                // 1. Get user role and ministry
+                const { data: member } = await supabase
+                    .from('org_members')
+                    .select('role, ministry_name')
+                    .eq('user_id', user.id)
+                    .single();
+
+                setUserRole(member?.role || 'member');
+                setUserMinistry(member?.ministry_name || null);
+
+                // 2. Load forms
+                const { data: allForms, error } = await supabase
                     .from('forms')
                     .select('*')
                     .eq('is_active', true)
                     .order('name', { ascending: true });
 
                 if (error) throw error;
-                setForms(data || []);
+
+                // 3. Filter based on role
+                const isPrivileged = ['admin', 'shepherd', 'owner', 'super_admin'].includes(member?.role || '');
+                const filtered = allForms?.filter(f => {
+                    if (isPrivileged) return true;
+                    if (!f.ministry) return true; // General forms
+                    return f.ministry.toLowerCase() === member?.ministry_name?.toLowerCase();
+                });
+
+                setForms(filtered || []);
             } catch (err) {
-                console.error("Failed to load ministry forms", err);
+                console.error("Failed to load ministry hub data", err);
             } finally {
                 setLoading(false);
             }
         }
-        loadForms();
+        loadData();
     }, []);
 
     const ministryCategories = Array.from(new Set(forms.map(f => f.ministry)));
@@ -75,6 +102,16 @@ export default function MinistryHub() {
                         <Database className="w-3.5 h-3.5 text-violet-400" />
                         <span className="text-[10px] font-black text-violet-400 uppercase">Live Pipeline Connected</span>
                     </div>
+                    {['admin', 'shepherd', 'owner', 'super_admin'].includes(userRole || '') && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={testMinistryPipeline}
+                            className="bg-white/5 border-white/10 text-[10px] font-black text-white/40 rounded-xl h-8 px-3 hover:bg-violet-500/10 hover:text-violet-400"
+                        >
+                            <FlaskConical className="w-3 h-3 mr-2" /> RUN DIAGNOSTICS
+                        </Button>
+                    )}
                 </div>
             </div>
 
