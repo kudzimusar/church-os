@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Users, Search, Filter, UserCheck, UserX, ChevronRight, Mail, Phone, Calendar, MapPin } from "lucide-react";
-import { supabaseAdmin } from "@/lib/supabase-admin";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
+import { getMembers } from "@/app/actions/admin";
 
 interface Member {
     id: string; name: string; email: string;
@@ -28,8 +28,12 @@ export default function MembersPage() {
     const [filter, setFilter] = useState("all");
 
     useEffect(() => {
-        supabaseAdmin.from('profiles').select('*').order('name')
-            .then(({ data }) => { setMembers(data || []); setLoading(false); });
+        getMembers().then(res => {
+            if (res.success) {
+                setMembers(res.data || []);
+            }
+            setLoading(false);
+        });
     }, []);
 
     const filtered = members.filter(m => {

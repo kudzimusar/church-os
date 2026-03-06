@@ -3,6 +3,14 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+// Gemini Service Account Reference (for audit/logging)
+// Email: gemini-devotion-bot@church-os-489402.iam.gserviceaccount.com
+// Name: gemini-devotion-bot
+const SERVICE_ACCOUNT_INFO = {
+    email: process.env.GEMINI_SERVICE_ACCOUNT_EMAIL || "gemini-devotion-bot@church-os-489402.iam.gserviceaccount.com",
+    name: process.env.GEMINI_SERVICE_ACCOUNT_NAME || "gemini-devotion-bot"
+};
+
 const SYSTEM_PROMPT = `You are the "Japan Kingdom Church (JKC) Spiritual Assistant", a specialized AI shepherd. 
 Your goal is to guide members through their "90 Days of Transformation" journey.
 Treat the user with pastoral warmth, but stay grounded in the specific biblical context provided.

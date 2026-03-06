@@ -1,10 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { supabaseAdmin } from "@/lib/supabase-admin";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ChevronDown, CheckCircle2, RefreshCw, AlertTriangle, Info, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { PILEngine } from "@/lib/pil-engine";
+import { runPILScanner, getPropheticInsights, acknowledgeInsight } from "@/app/actions/admin";
 
 const PRIORITY_CONFIG = {
     critical: { color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20', dot: 'bg-red-400', badge: 'bg-red-500/20 text-red-400' },
@@ -22,15 +21,16 @@ export default function AICommandCenterPage() {
 
     const loadInsights = async () => {
         setLoading(true);
-        // Step 1: Query prophetic_insights table
-        const { data } = await supabaseAdmin.from('prophetic_insights').select('*').order('generated_at', { ascending: false });
-        setInsights(data || []);
+        const res = await getPropheticInsights();
+        if (res.success) {
+            setInsights(res.data || []);
+        }
         setLoading(false);
     };
 
     const runSweep = async () => {
         setRunningSweep(true);
-        await PILEngine.runIntelligenceSweep();
+        await runPILScanner();
         await loadInsights();
         setRunningSweep(false);
     };
@@ -41,8 +41,10 @@ export default function AICommandCenterPage() {
 
     const acknowledge = async (id: string) => {
         setAcknowledging(id);
-        await supabaseAdmin.from('prophetic_insights').update({ is_acknowledged: true }).eq('id', id);
-        setInsights(prev => prev.map(i => i.id === id ? { ...i, is_acknowledged: true } : i));
+        const res = await acknowledgeInsight(id);
+        if (res.success) {
+            setInsights(prev => prev.map(i => i.id === id ? { ...i, is_acknowledged: true } : i));
+        }
         setAcknowledging(null);
     };
 

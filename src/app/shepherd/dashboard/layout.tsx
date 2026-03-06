@@ -7,7 +7,7 @@ import { AdminAuth, AdminRole } from "@/lib/admin-auth";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { TopBar } from "@/components/dashboard/TopBar";
 import { AIPanel } from "@/components/dashboard/AIPanel";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getAlertCount } from "@/app/actions/admin";
 import { basePath as BP } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -41,12 +41,8 @@ export default function ShepherdDashboardLayout({ children }: { children: React.
             return;
         }
 
-        // Load alert count with service role (no 500 errors)
-        const { count } = await supabaseAdmin
-            .from('ai_insights')
-            .select('*', { count: 'exact', head: true })
-            .eq('priority', 'critical')
-            .eq('is_acknowledged', false);
+        // Load alert count with server action (secure)
+        const res = await getAlertCount();
 
         setState({
             loading: false,
@@ -55,7 +51,7 @@ export default function ShepherdDashboardLayout({ children }: { children: React.
                 role: session.role,
                 userName: session.name,
                 userId: session.userId,
-                alertCount: count || 0,
+                alertCount: res.success ? res.count : 0,
                 refreshDashboard: () => loadSession(),
             }
         });
