@@ -11,10 +11,12 @@ import { toast } from "sonner";
 import {
     Users, Baby, Megaphone, Music,
     ShieldCheck, Heart, Send, Calendar,
-    TrendingUp, FileText, CheckCircle2, LayoutGrid
+    TrendingUp, FileText, CheckCircle2, LayoutGrid,
+    X, Loader2, Sparkles, Database
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { MINISTRY_OPTIONS } from "@/lib/constants";
+import { MinistryCommandCenter } from "@/components/dashboard/MinistryCommandCenter";
 
 const ICON_MAP: Record<string, any> = {
     "Worship Ministry": Music,
@@ -41,157 +43,174 @@ const MINISTRIES = MINISTRY_OPTIONS.map(name => ({
 }));
 
 export default function MinistryHub() {
-    const [selectedMinistry, setSelectedMinistry] = useState(MINISTRIES[0]);
-    const [formData, setFormData] = useState<Record<string, string>>({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [recentReports, setRecentReports] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedMinistry, setSelectedMinistry] = useState<any>(null);
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const [userMinistry, setUserMinistry] = useState<any>(null);
+    const [allMinistries, setAllMinistries] = useState<any[]>([]);
+    const [activeFormId, setActiveFormId] = useState<string | null>(null);
 
     useEffect(() => {
-        loadRecentReports();
-    }, [selectedMinistry]);
+        async function loadContext() {
+            setLoading(true);
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
 
-    async function loadRecentReports() {
-        const { data } = await supabase
-            .from('ministry_reports')
-            .select('*')
-            .eq('ministry_name', selectedMinistry.name)
-            .order('report_date', { ascending: false })
-            .limit(5);
-        setRecentReports(data || []);
-    }
+                const { data: member } = await supabase
+                    .from('org_members')
+                    .select('role, ministry_id, ministries(*)')
+                    .eq('user_id', user.id)
+                    .single();
 
-    const handleSubmit = async () => {
-        setIsSubmitting(true);
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("Not authenticated");
+                setUserRole(member?.role || 'member');
+                setUserMinistry(member?.ministries || null);
 
-            const { error } = await supabase.from('ministry_reports').insert([{
-                org_id: (await supabase.from('profiles').select('org_id').eq('id', user.id).single()).data?.org_id,
-                submitted_by: user.id,
-                ministry_name: selectedMinistry.name,
-                metrics: formData,
-                summary: `Operational report for ${selectedMinistry.name}`
-            }]);
+                const { data: mData } = await supabase.from('ministries').select('*').order('name');
+                setAllMinistries(mData || []);
 
-            if (error) throw error;
-            toast.success("Report submitted successfully!");
-            setFormData({});
-            loadRecentReports();
-        } catch (e: any) {
-            toast.error(e.message || "Failed to submit report");
-        } finally {
-            setIsSubmitting(false);
+                if (member?.ministries) {
+                    setSelectedMinistry(member.ministries);
+                } else if (mData && mData.length > 0) {
+                    setSelectedMinistry(mData[0]);
+                }
+            } catch (err) {
+                console.error("Failed to load ministry context", err);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadContext();
+    }, []);
+
+    const handleAction = async (action: string) => {
+        let formName = "";
+        if (action === 'usher_report') formName = 'Usher Headcount Report';
+        if (action === 'register_child') formName = 'Child Check-In';
+        if (action === 'log_outreach') formName = 'Evangelism Log';
+        if (action === 'generic_report') formName = 'Weekly Ministry Report';
+
+        if (formName) {
+            const { data } = await supabase.from('forms').select('id').eq('name', formName).single();
+            if (data) {
+                setActiveFormId(data.id);
+            } else {
+                toast.error(`Operational form '${formName}' is not active in the pipeline.`);
+            }
         }
     };
 
+    const isPrivileged = ['admin', 'shepherd', 'owner', 'super_admin', 'pastor'].includes(userRole || '');
+
+    if (loading) return (
+        <div className="min-h-screen flex items-center justify-center bg-black">
+            <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+        </div>
+    );
+
     return (
-        <div className="p-8 space-y-8 max-w-7xl mx-auto">
+        <div className="p-8 space-y-8 max-w-7xl mx-auto min-h-screen">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black text-white tracking-tighter">MINISTRY HUB</h1>
-                    <p className="text-white/40 font-bold uppercase tracking-widest text-[10px] mt-1">Operational Reporting & Data Intake</p>
+                    <h1 className="text-4xl font-black text-white tracking-tighter uppercase">
+                        {userRole === 'ministry_leader' ? `${userMinistry?.name} Command` : 'Intelligence Hub'}
+                    </h1>
+                    <div className="flex items-center gap-2 mt-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Live Pipeline Active</span>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/10 overflow-x-auto max-w-full no-scrollbar pb-1">
-                    {MINISTRIES.map(m => (
-                        <button
-                            key={m.id}
-                            onClick={() => { setSelectedMinistry(m); setFormData({}); }}
-                            className={`p-3 rounded-xl transition-all flex-shrink-0 ${selectedMinistry.id === m.id ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20' : 'text-white/40 hover:bg-white/5'}`}
-                        >
-                            <m.icon className="w-5 h-5" />
-                        </button>
-                    ))}
-                </div>
+
+                {isPrivileged && (
+                    <div className="flex items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/10 overflow-x-auto max-w-full no-scrollbar">
+                        {allMinistries.map(m => (
+                            <button
+                                key={m.id}
+                                onClick={() => setSelectedMinistry(m)}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap ${selectedMinistry?.id === m.id ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20' : 'text-white/40 hover:bg-white/5'}`}
+                            >
+                                {m.name}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Form Section */}
-                <Card className="lg:col-span-2 bg-[#111] border-white/5 rounded-[2.5rem] overflow-hidden">
-                    <CardHeader className="p-10 pb-4">
-                        <div className="flex items-center gap-4 mb-2">
-                            <div className="w-12 h-12 rounded-2xl bg-violet-500/20 flex items-center justify-center text-violet-500">
-                                <selectedMinistry.icon className="w-6 h-6" />
+            {/* Form Overlay */}
+            {activeFormId && (
+                <motion.div
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl p-6 md:p-12 overflow-y-auto"
+                >
+                    <div className="max-w-2xl mx-auto">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center">
+                                    <Send className="w-5 h-5 text-white" />
+                                </div>
+                                <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Operational Intake</h2>
+                            </div>
+                            <Button variant="outline" size="icon" onClick={() => setActiveFormId(null)} className="rounded-full bg-white/5 border-white/10 hover:bg-white/10">
+                                <X className="w-5 h-5 text-white" />
+                            </Button>
+                        </div>
+                        <div className="bg-[#111] border border-white/5 rounded-[3rem] p-2 shadow-2xl">
+                            <DynamicFormRenderer
+                                formId={activeFormId}
+                                onSuccess={() => {
+                                    setActiveFormId(null);
+                                    toast.success("Ministry data synchronized with intelligence feed!");
+                                }}
+                            />
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Ministry Specific Dashboard Grid */}
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <MinistryCommandCenter
+                    ministrySlug={selectedMinistry?.slug || ''}
+                    onAction={handleAction}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
+                {/* Status Column */}
+                <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8">
+                    <h3 className="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-6">Pipeline Health</h3>
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                <ShieldCheck className="w-5 h-5" />
                             </div>
                             <div>
-                                <CardTitle className="text-2xl font-black text-white">{selectedMinistry.name.toUpperCase()}</CardTitle>
-                                <p className="text-white/30 text-xs font-bold tracking-wider">Submit current service data</p>
+                                <p className="text-[11px] font-black text-white">SUPABASE CONNECTED</p>
+                                <p className="text-[9px] text-white/30 font-bold uppercase">Operational integrity verified</p>
                             </div>
                         </div>
-                    </CardHeader>
-                    <CardContent className="p-10 pt-4 space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {selectedMinistry.fields.map(field => (
-                                <div key={field} className="space-y-2">
-                                    <label className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-1">{field}</label>
-                                    <Input
-                                        type="text"
-                                        placeholder="Enter value..."
-                                        value={formData[field] || ''}
-                                        onChange={e => setFormData({ ...formData, [field]: e.target.value })}
-                                        className="h-16 bg-white/5 border-white/10 rounded-2xl px-6 text-white font-bold focus:ring-violet-500"
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                        <Button
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
-                            className="w-full h-16 bg-violet-500 hover:bg-violet-600 text-white font-black rounded-2xl shadow-xl shadow-violet-500/20 transition-all border-0"
-                        >
-                            {isSubmitting ? "SYNCING TO SUPABASE..." : "SUBMIT MINISTRY REPORT"}
-                            <Send className="w-4 h-4 ml-2" />
-                        </Button>
-                    </CardContent>
-                </Card>
-
-                {/* Recent Reports / Feed */}
-                <div className="space-y-6">
-                    <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-sm font-black text-white uppercase tracking-widest">Recent Activity</h3>
-                            <Badge className="bg-violet-500/20 text-violet-400 border-0">HISTORY</Badge>
-                        </div>
-                        <div className="space-y-4">
-                            {recentReports.length > 0 ? recentReports.map((report, i) => (
-                                <motion.div
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: i * 0.1 }}
-                                    key={report.id}
-                                    className="p-4 bg-white/2 border border-white/5 rounded-2xl flex items-center justify-between group hover:border-white/10 transition-all"
-                                >
-                                    <div>
-                                        <p className="text-xs font-bold text-white">{new Date(report.report_date).toLocaleDateString()}</p>
-                                        <div className="flex gap-2 mt-1">
-                                            {Object.entries(report.metrics).slice(0, 2).map(([k, v]: any) => (
-                                                <span key={k} className="text-[9px] text-white/30 font-bold uppercase">{k}: {v}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </motion.div>
-                            )) : (
-                                <div className="text-center py-10 opacity-20">
-                                    <Calendar className="w-8 h-8 mx-auto mb-2" />
-                                    <p className="text-[9px] font-bold uppercase tracking-widest">No recent reports</p>
-                                </div>
-                            )}
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center text-violet-400">
+                                <Sparkles className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-[11px] font-black text-white">AI FEED ACTIVE</p>
+                                <p className="text-[9px] text-white/30 font-bold uppercase">Real-time pattern analysis</p>
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
-                        <div className="relative z-10">
-                            <TrendingUp className="w-8 h-8 mb-4" />
-                            <h3 className="text-xl font-black mb-2">INTELLIGENCE SYNC</h3>
-                            <p className="text-white/70 text-xs font-bold leading-relaxed">
-                                Every report submitted here directly feeds the Mission Control AI analysis models.
-                            </p>
-                        </div>
-                        <div className="absolute -right-4 -bottom-4 opacity-50 group-hover:scale-110 transition-transform duration-700">
-                            <Send className="w-32 h-32 rotate-[-15deg] text-white/10" />
-                        </div>
+                {/* Info Card */}
+                <div className="lg:col-span-2 bg-[#111] border-white/5 rounded-[2.5rem] p-10 flex flex-col justify-center relative overflow-hidden group">
+                    <div className="relative z-10">
+                        <h3 className="text-xl font-black text-white mb-2 uppercase italic tracking-tighter">Strategic Impact</h3>
+                        <p className="text-white/40 text-sm font-bold leading-relaxed max-w-xl">
+                            The data you input here transforms into the proprietary PI (Prophetic Intelligence) layer,
+                            allowing the church leadership to see growth trends and pastoral needs in real-time.
+                        </p>
                     </div>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/5 blur-[120px] rounded-full group-hover:bg-violet-600/10 transition-all duration-1000" />
                 </div>
             </div>
         </div>

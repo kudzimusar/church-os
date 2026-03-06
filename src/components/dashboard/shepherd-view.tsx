@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import {
     Users, Activity, Calendar, TrendingUp, Heart, AlertTriangle,
     CheckCircle2, Clock, ShieldAlert, UserCheck, Music, Flame,
-    ArrowUp, ArrowDown, MessageSquare, Globe, ChevronRight, Minus, MapPin
+    ArrowUp, ArrowDown, MessageSquare, Globe, ChevronRight, Minus, MapPin,
+    UserPlus
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ import {
 } from "recharts";
 import { UsherReportModal } from "./UsherReportModal";
 import { AttendanceReconciliationCard } from "./AttendanceReconciliationCard";
+import { MinistryOnboarding } from "./MinistryOnboarding";
 import { toast } from "sonner";
 import { CRITICAL_MINISTRIES, MINISTRY_OPTIONS } from "@/lib/constants";
 
@@ -213,6 +215,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
     const [data, setData] = useState<DashboardData>(MOCK_DATA);
     const [loading, setLoading] = useState(false);
     const [runningAI, setRunningAI] = useState(false);
+    const [showOnboarding, setShowOnboarding] = useState(false);
 
     const runIntelligence = async () => {
         setRunningAI(true);
@@ -394,6 +397,14 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     <SectionHeader title="Core Church Metrics" subtitle="Real-time congregational data — updated daily" />
                     <div className="flex items-center gap-3">
                         <Button
+                            variant="outline"
+                            onClick={() => setShowOnboarding(!showOnboarding)}
+                            className={`bg-white/5 border-white/10 text-white font-black rounded-xl h-12 px-6 ${showOnboarding ? 'bg-violet-500/20 border-violet-500' : ''}`}
+                        >
+                            <UserPlus className="w-4 h-4 mr-2" />
+                            {showOnboarding ? "CLOSE ONBOARDING" : "ONBOARD LEADERS"}
+                        </Button>
+                        <Button
                             onClick={runIntelligence}
                             disabled={runningAI}
                             variant="outline"
@@ -405,6 +416,12 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                         <UsherReportModal registeredCount={data.lastSundayAttendance} onReportSubmitted={loadData} />
                     </div>
                 </div>
+
+                {showOnboarding && (
+                    <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
+                        <MinistryOnboarding />
+                    </div>
+                )}
                 <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
                     <MetricCard title="Total Members" value={data.totalMembers}
                         sub={`+${data.newMembersThisMonth} this month`} trend="up" trendVal={`+${data.memberGrowthPct}%`}

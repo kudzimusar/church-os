@@ -1,12 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShepherdView } from "@/components/dashboard/shepherd-view";
 import { useAdminCtx } from "./layout";
+import { supabase } from "@/lib/supabase";
 
 export default function ShepherdDashboardPage() {
     const { userName } = useAdminCtx();
     const [dashLang, setDashLang] = useState<"EN" | "JP">("EN");
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function checkRole() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data } = await supabase
+                    .from('org_members')
+                    .select('role')
+                    .eq('user_id', user.id)
+                    .single();
+
+                if (data?.role === 'ministry_leader') {
+                    window.location.href = '/shepherd/dashboard/ministry-hub';
+                    return;
+                }
+                setUserRole(data?.role || null);
+            }
+            setLoading(false);
+        }
+        checkRole();
+    }, []);
+
+    if (loading) return (
+        <div className="min-h-screen flex items-center justify-center bg-black">
+            <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-white/40 font-black text-[10px] tracking-widest uppercase">Initializing Command Center...</p>
+            </div>
+        </div>
+    );
 
     return (
         <div className="p-6 xl:p-8">
