@@ -34,9 +34,18 @@ export function UsherReportModal({ registeredCount, onReportSubmitted }: UsherRe
     const handleSubmit = async () => {
         setLoading(true);
         try {
+            // Get user org_id
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Authentication required");
+
+            const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', user.id).single();
+            const org_id = profile?.org_id;
+
             const { error } = await supabase.from('service_reports').insert([{
                 ...formData,
+                org_id,
                 total_count: totalManual,
+                submitted_by: user.id,
                 report_date: new Date().toISOString().split('T')[0]
             }]);
 
