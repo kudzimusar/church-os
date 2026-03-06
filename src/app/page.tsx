@@ -93,10 +93,10 @@ const SundayCheckIn = ({ user, currentDate }: { user: any, currentDate: Date }) 
 
   useEffect(() => {
     if (user) {
-      supabase.from('service_attendance')
+      supabase.from('attendance_records')
         .select('*')
         .eq('user_id', user.id)
-        .eq('service_date', todayStr)
+        .eq('event_date', todayStr)
         .maybeSingle()
         .then(({ data }) => { if (data) setCheckedIn(true); });
     }
@@ -109,10 +109,11 @@ const SundayCheckIn = ({ user, currentDate }: { user: any, currentDate: Date }) 
     }
     setLoading(true);
     try {
-      const { error } = await supabase.from('service_attendance').insert([{
+      const { error } = await supabase.from('attendance_records').insert([{
         user_id: user.id,
-        service_date: todayStr,
-        attendance_type: type
+        event_date: todayStr,
+        event_type: 'sunday_service',
+        notes: `Checked in as ${type}`
       }]);
       if (error) throw error;
       setCheckedIn(true);

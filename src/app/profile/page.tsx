@@ -213,7 +213,7 @@ export default function ProfileHub() {
             if (notifData) setNotifications(notifData);
 
             // Attendance
-            const { data: attData } = await supabase.from('service_attendance').select('*').eq('user_id', userId).order('service_date', { ascending: false }).limit(10);
+            const { data: attData } = await supabase.from('attendance_records').select('*').eq('user_id', userId).order('event_date', { ascending: false }).limit(10);
             setAttendanceRecords(attData || []);
 
             // Prophetic Intelligence (PIL)
@@ -963,8 +963,8 @@ export default function ProfileHub() {
                                                                     <CalendarCheck className="w-5 h-5 text-emerald-500" />
                                                                 </div>
                                                                 <div>
-                                                                    <p className="font-bold">{new Date(r.service_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-                                                                    <p className="text-xs text-foreground/50 uppercase font-black tracking-widest">{r.attendance_type}</p>
+                                                                    <p className="font-bold">{new Date(r.event_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                                                                    <p className="text-xs text-foreground/50 uppercase font-black tracking-widest">{(r.event_type || 'Sunday Service').replace('_', ' ')}</p>
                                                                 </div>
                                                             </div>
                                                             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
