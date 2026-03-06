@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ShepherdLayout } from "@/components/layout/ShepherdLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +16,7 @@ import {
 import { motion } from "framer-motion";
 import { MINISTRY_OPTIONS } from "@/lib/constants";
 import { MinistryCommandCenter } from "@/components/dashboard/MinistryCommandCenter";
+import { DynamicFormRenderer } from "@/components/forms/DynamicFormRenderer";
 
 const ICON_MAP: Record<string, any> = {
     "Worship Ministry": Music,
