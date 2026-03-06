@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
 
 export function MinistryOnboarding() {
+    const { orgId } = useAdminCtx();
     const [searchQuery, setSearchQuery] = useState("");
     const [members, setMembers] = useState<any[]>([]);
     const [ministries, setMinistries] = useState<any[]>([]);
@@ -23,10 +25,14 @@ export function MinistryOnboarding() {
 
     useEffect(() => {
         loadMinistries();
-    }, []);
+    }, [orgId]);
 
     async function loadMinistries() {
-        const { data } = await supabase.from('ministries').select('*').order('name');
+        let query = supabase.from('ministries').select('*').order('name');
+        if (orgId) {
+            query = query.eq('org_id', orgId);
+        }
+        const { data } = await query;
         setMinistries(data || []);
         if (data && data.length > 0) setSelectedMinistryId(data[0].id);
     }
@@ -129,7 +135,11 @@ export function MinistryOnboarding() {
                                     onChange={(e) => setSelectedMinistryId(e.target.value)}
                                     className="w-full h-16 bg-white/5 border-white/10 rounded-2xl px-6 text-white font-bold appearance-none outline-none focus:ring-2 focus:ring-violet-500"
                                 >
-                                    {ministries.map(m => <option key={m.id} value={m.id} className="bg-[#111]">{m.name}</option>)}
+                                    {ministries.length === 0 ? (
+                                        <option value="" disabled className="bg-[#111]">No ministries found</option>
+                                    ) : (
+                                        ministries.map(m => <option key={m.id} value={m.id} className="bg-[#111]">{m.name}</option>)
+                                    )}
                                 </select>
                             </div>
                             <div className="space-y-2">
@@ -148,11 +158,11 @@ export function MinistryOnboarding() {
 
                         <Button
                             onClick={handleAssign}
-                            disabled={loading}
-                            className="w-full h-16 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-2xl shadow-xl shadow-violet-600/20 uppercase tracking-widest"
+                            disabled={loading || !selectedMinistryId}
+                            className={`w-full h-16 transition-all font-black rounded-2xl shadow-xl uppercase tracking-widest ${!selectedMinistryId ? 'bg-white/5 text-white/20' : 'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-600/20'}`}
                         >
                             {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Mail className="w-5 h-5 mr-2" />}
-                            {loading ? "ASSIGNING..." : `ASSIGN ${selectedMember.name.toUpperCase()} TO LEADERSHIP`}
+                            {loading ? "ASSIGNING..." : (selectedMinistryId ? `ASSIGN ${selectedMember.name.toUpperCase()} TO LEADERSHIP` : "SELECT A MINISTRY TO PROCEED")}
                         </Button>
                     </motion.div>
                 )}

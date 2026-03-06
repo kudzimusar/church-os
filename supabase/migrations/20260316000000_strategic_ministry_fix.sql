@@ -162,6 +162,11 @@ CREATE POLICY "Ministry leaders view relevant form submissions" ON public.form_s
 );
 
 -- Ensure form fields are visible to all authenticated users for rendering
+DROP POLICY IF EXISTS "Authenticated users view ministries" ON public.ministries;
+CREATE POLICY "Authenticated users view ministries" ON public.ministries FOR SELECT USING (
+    auth.role() = 'authenticated'
+);
+
 DROP POLICY IF EXISTS "Authenticated users view form fields" ON public.form_fields;
 CREATE POLICY "Authenticated users view form fields" ON public.form_fields FOR SELECT USING (
     auth.role() = 'authenticated'

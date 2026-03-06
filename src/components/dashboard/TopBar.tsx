@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Auth } from "@/lib/auth";
 import { AdminAuth } from "@/lib/admin-auth";
 import { basePath as BP } from "@/lib/utils";
+import Link from "next/link";
+import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
 
 import { QuickActionModal, QuickActionType } from "./QuickActionModal";
 
@@ -19,6 +21,7 @@ interface TopBarProps {
 }
 
 export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBarProps) {
+    const { role } = useAdminCtx();
     const [quickOpen, setQuickOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
@@ -29,6 +32,14 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
 
     const quickRef = useRef<HTMLDivElement>(null);
     const profileRef = useRef<HTMLDivElement>(null);
+
+    const ROLE_LABELS: Record<string, string> = {
+        super_admin: "System Master",
+        owner: "Organization Owner",
+        shepherd: "Shepherd / Leader",
+        admin: "Administrator",
+        ministry_lead: "Ministry Leader"
+    };
 
     const QUICK_ACTIONS_CONFIG = [
         { icon: Users, label: "Add Member", type: "member" as QuickActionType },
@@ -193,12 +204,12 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                                 <div className="p-2">
                                     <div className="px-3 py-2 mb-1">
                                         <p className="text-xs font-black text-white">{userName}</p>
-                                        <p className="text-[10px] text-white/40">Shepherd / Admin</p>
+                                        <p className="text-[10px] text-white/40 uppercase tracking-widest">{ROLE_LABELS[role] || "Staff Member"}</p>
                                     </div>
                                     <div className="border-t border-white/5 pt-1 space-y-0.5">
-                                        <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-white/60 hover:text-white hover:bg-white/8 transition-all">
+                                        <Link href={`${BP}/shepherd/dashboard/settings`} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-white/60 hover:text-white hover:bg-white/8 transition-all">
                                             <User className="w-3.5 h-3.5" /> My Profile
-                                        </button>
+                                        </Link>
                                         <button onClick={() => AdminAuth.logoutAdmin()} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all">
                                             <LogOut className="w-3.5 h-3.5" /> Sign Out
                                         </button>
