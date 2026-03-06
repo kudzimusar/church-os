@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import {
     UserPlus, Mail, Shield, CheckCircle, Loader2, Search,
-    Copy, Share2, ExternalLink, XCircle
+    Copy, Share2, ExternalLink, XCircle, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
