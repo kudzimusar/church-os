@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 import { Music, Users, CheckCircle2, AlertTriangle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
@@ -179,5 +180,6 @@ export default function MinistriesPage() {
                     </div>
                 </div>
             </div>
-            );
+        </div>
+    );
 }

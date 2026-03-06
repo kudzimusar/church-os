@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import {
     Users, Activity, Calendar, TrendingUp, Heart, AlertTriangle,
     CheckCircle2, Clock, ShieldAlert, UserCheck, Music, Flame,
-    ArrowUp, ArrowDown, MessageSquare, Globe, ChevronRight, Minus
+    ArrowUp, ArrowDown, MessageSquare, Globe, ChevronRight, Minus, MapPin
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

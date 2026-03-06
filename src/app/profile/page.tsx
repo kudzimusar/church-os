@@ -9,7 +9,7 @@ import {
     User as UserIcon, Users, Heart, Trophy, Shield,
     MessageCircle, AlertCircle, Plus, Save, Clock,
     Camera, MapPin, Globe, Milestone, Copy, LayoutDashboard, Settings, CheckCircle2, LogOut,
-    Briefcase, Music, CalendarCheck, Coins
+    Briefcase, Music, CalendarCheck, Coins, Activity, ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
