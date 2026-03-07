@@ -19,8 +19,8 @@ const client = new Client({
 
 async function main() {
     await client.connect();
-    const res = await client.query("SELECT column_name FROM information_schema.columns WHERE table_name = 'profiles'");
-    console.log("Profiles Columns:", res.rows.map(r => r.column_name));
+    const res = await client.query("SELECT column_name FROM information_schema.columns WHERE table_name = 'org_members'");
+    console.log("Org Members Columns:", res.rows.map(r => r.column_name));
     await client.end();
 }
 

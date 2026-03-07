@@ -19,8 +19,8 @@ const client = new Client({
 
 async function main() {
     await client.connect();
-    const res = await client.query("SELECT * FROM org_members WHERE invitation_token IS NOT NULL");
-    console.log("Pending Invitations:", res.rows);
+    const res = await client.query("SELECT * FROM pg_policies WHERE tablename = 'org_members'");
+    console.log("RLS Policies for org_members:", res.rows);
     await client.end();
 }
 

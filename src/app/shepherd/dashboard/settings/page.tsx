@@ -41,12 +41,16 @@ export default function SettingsPage() {
     async function loadData() {
         setLoading(true);
         const [teamRes, invRes] = await Promise.all([
-            supabase.from('org_members').select('*, profiles(name, email)').eq('org_id', orgId),
-            supabase.from('org_members')
-                .select('*, profiles(name, email), ministries(name)')
+            supabaseAdmin.from('org_members').select('*, profiles(name, email)').eq('org_id', orgId),
+            supabaseAdmin.from('org_members')
+                .select('*, profiles(name, email), ministries:ministry_id(name)')
                 .not('invitation_token', 'is', null)
                 .eq('org_id', orgId)
         ]);
+
+        console.log("Team Data (Admin):", teamRes.data);
+        console.log("Invitation Data (Admin):", invRes.data);
+
         setTeam(teamRes.data || []);
         setInvitations(invRes.data || []);
         setLoading(false);

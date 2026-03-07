@@ -17,10 +17,12 @@ const client = new Client({
     ssl: { rejectUnauthorized: false }
 });
 
+const funName = process.argv[2] || 'handle_new_user';
+
 async function main() {
     await client.connect();
-    const res = await client.query("SELECT routine_definition FROM information_schema.routines WHERE routine_name = 'handle_new_user'");
-    console.log("Handle New User Function:", res.rows[0]?.routine_definition);
+    const res = await client.query("SELECT routine_definition FROM information_schema.routines WHERE routine_name = $1", [funName]);
+    console.log(`Function ${funName} Definition:`, res.rows[0]?.routine_definition);
     await client.end();
 }
 

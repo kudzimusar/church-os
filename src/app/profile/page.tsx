@@ -497,8 +497,15 @@ export default function ProfileHub() {
                                             <span className="text-amber-500 font-black">{stats.streak}</span>
                                         </div>
                                     </div>
-                                    <Button variant="outline" className="w-full py-6 rounded-xl font-bold border-foreground/10 hover:bg-foreground/5 text-foreground/80 cursor-default">
-                                        Active Member
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => toast.info(`Current Status: ${profile?.membership_status?.toUpperCase() || 'Visitor'}`)}
+                                        className={`w-full py-6 rounded-xl font-bold border-foreground/10 hover:bg-foreground/5 capitalize ${profile?.membership_status === 'member' ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5' :
+                                                profile?.membership_status === 'pending_approval' ? 'text-amber-500 border-amber-500/20 bg-amber-500/5' :
+                                                    'text-foreground/80'
+                                            }`}
+                                    >
+                                        {profile?.membership_status?.replace('_', ' ') || 'Visitor'}
                                     </Button>
                                 </div>
                             </div>
