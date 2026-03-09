@@ -500,21 +500,21 @@ export default function ProfileHub() {
     }
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] dark:bg-black overflow-x-hidden pb-20">
+        <div className="min-h-screen bg-background overflow-x-hidden pb-20 transition-colors duration-500">
             <TopNav user={user} />
 
             <div className="flex h-[calc(100vh-65px)]">
 
                 {/* GLOBAL LEFT SIDEBAR */}
-                <aside className="w-64 bg-white dark:bg-[#0a0a0a] border-r border-foreground/10 flex-col hidden md:flex shrink-0">
+                <aside className="w-64 bg-card border-r border-border flex-col hidden md:flex shrink-0 transition-colors">
                     <div className="p-8">
                         <img src={`${BP}/church-logo.png`} alt="JKC" className="w-12 h-12 object-contain" />
                     </div>
                     <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
-                        <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 font-semibold text-sm transition-all">
+                        <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:text-foreground hover:bg-foreground/5 font-semibold text-sm transition-all">
                             <LayoutDashboard className="w-4 h-4" /> Home
                         </Link>
-                        <div className="pt-4 pb-2 px-4 text-xs font-black uppercase tracking-widest text-[var(--primary)] opacity-70">
+                        <div className="pt-4 pb-2 px-4 text-xs font-black uppercase tracking-widest text-[var(--primary)] opacity-80">
                             Connection Card
                         </div>
                         {SIDEBAR_NAV.map(nav => (
@@ -523,13 +523,13 @@ export default function ProfileHub() {
                                 onClick={() => setActiveTab(nav.id)}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${activeTab === nav.id
                                     ? 'bg-[var(--primary)]/10 text-[var(--primary)] shadow-sm'
-                                    : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
                                     }`}
                             >
                                 <nav.icon className="w-4 h-4 shrink-0" /> {nav.label}
                             </button>
                         ))}
-                        <div className="pt-8 w-full border-t border-foreground/5 mt-4">
+                        <div className="pt-8 w-full border-t border-border mt-4">
                             <button
                                 onClick={handleLogout}
                                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-red-500 hover:bg-red-500/10 transition-all"
@@ -554,8 +554,8 @@ export default function ProfileHub() {
 
                             {/* LEFT PROFILE CARD */}
                             <div className="w-full lg:w-[320px] shrink-0 space-y-6">
-                                <div className="bg-white dark:bg-[#111] rounded-[2rem] shadow-xl border border-foreground/10 overflow-hidden relative p-8 flex flex-col items-center">
-                                    <div className="w-32 h-32 rounded-full border-4 border-white dark:border-[#111] bg-[var(--primary)] text-white text-5xl font-black flex items-center justify-center relative shadow-xl z-10 mb-6">
+                                <div className="bg-card rounded-[2rem] shadow-xl border border-border overflow-hidden relative p-8 flex flex-col items-center transition-colors">
+                                    <div className="w-32 h-32 rounded-full border-4 border-card bg-[var(--primary)] text-white text-5xl font-black flex items-center justify-center relative shadow-xl z-10 mb-6">
                                         {profile?.name?.[0] || user?.name?.[0]}
                                     </div>
                                     <h2 className="text-2xl font-black text-center text-foreground">{profile?.name || user?.name}</h2>
@@ -583,7 +583,7 @@ export default function ProfileHub() {
                                                 handleRequestMembership();
                                             }
                                         }}
-                                        className={`w-full py-6 rounded-xl font-bold border-foreground/10 hover:bg-foreground/5 capitalize ${profile?.membership_status === 'member' ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5' :
+                                        className={`w-full py-6 rounded-xl font-bold border-border hover:bg-muted capitalize ${profile?.membership_status === 'member' ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5' :
                                             membershipRequest?.status === 'pending' ? 'text-amber-500 border-amber-500/20 bg-amber-500/5' :
                                                 'text-[var(--primary)] border-[var(--primary)]/20 shadow-lg shadow-[var(--primary)]/5 hover:scale-[1.02] active:scale-95 transition-all'
                                             }`}
@@ -604,15 +604,15 @@ export default function ProfileHub() {
                             </div>
 
                             {/* RIGHT TABBED CONTENT */}
-                            <div className="flex-1 bg-white dark:bg-[#111] rounded-[2rem] shadow-xl border border-foreground/10 overflow-hidden">
-                                <div className="flex md:hidden overflow-x-auto border-b border-foreground/10 custom-scrollbar">
+                            <div className="flex-1 bg-card rounded-[2rem] shadow-xl border border-border overflow-hidden transition-colors">
+                                <div className="flex md:hidden overflow-x-auto border-b border-border custom-scrollbar">
                                     {SIDEBAR_NAV.map(nav => (
                                         <button
                                             key={nav.id}
                                             onClick={() => setActiveTab(nav.id)}
                                             className={`whitespace-nowrap px-6 py-4 font-bold text-sm border-b-2 transition-all ${activeTab === nav.id
                                                 ? 'border-[var(--primary)] text-[var(--primary)]'
-                                                : 'border-transparent text-foreground/50 hover:text-foreground'
+                                                : 'border-transparent text-muted-foreground hover:text-foreground'
                                                 }`}
                                         >
                                             {nav.label}
@@ -621,7 +621,7 @@ export default function ProfileHub() {
                                 </div>
 
                                 <div className="p-6 md:p-10 lg:p-12">
-                                    <div className="pb-8 border-b border-foreground/10 mb-8">
+                                    <div className="pb-8 border-b border-border mb-8">
                                         <h3 className="text-2xl font-black capitalize flex items-center gap-3 text-foreground">
                                             {(() => {
                                                 const Icon = SIDEBAR_NAV.find(n => n.id === activeTab)?.icon;
@@ -654,7 +654,7 @@ export default function ProfileHub() {
                                             <div>
                                                 <p className="text-[10px] font-black uppercase tracking-widest text-violet-500/60 mb-1">Lives Impacted</p>
                                                 <p className="text-2xl font-black text-violet-500">{churchImpact.totalSalvations} Salvations</p>
-                                                <p className="text-[10px] text-foreground/40 font-medium">Recorded in the last quarter</p>
+                                                <p className="text-[10px] text-muted-foreground font-medium opacity-70">Recorded in the last quarter</p>
                                             </div>
                                         </div>
 
@@ -671,7 +671,7 @@ export default function ProfileHub() {
                                                         <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${churchImpact.missionProgress}%` }}></div>
                                                     </div>
                                                 </div>
-                                                <p className="text-[10px] text-foreground/40 font-medium">Goal: Church Expansion 2026</p>
+                                                <p className="text-[10px] text-muted-foreground font-medium opacity-70">Goal: Church Expansion 2026</p>
                                             </div>
                                         </div>
                                     </div>
@@ -698,14 +698,14 @@ export default function ProfileHub() {
                                                         <Badge variant="outline" className="text-[9px] font-black uppercase border-current opacity-50">{propheticInsight.probability_score}% Probability</Badge>
                                                     </div>
                                                     <p className="text-sm font-bold text-foreground mb-1">{propheticInsight.insight_title}</p>
-                                                    <p className="text-xs text-foreground/60 leading-relaxed mb-4">{propheticInsight.insight_description}</p>
+                                                    <p className="text-xs text-muted-foreground leading-relaxed mb-4">{propheticInsight.insight_description}</p>
 
                                                     {propheticInsight.category === 'drop_off' && (
                                                         <div className="flex flex-wrap gap-2">
                                                             <Button size="sm" className="bg-foreground text-background font-bold text-[10px] h-8 rounded-lg px-4 hover:opacity-90">
                                                                 Renew My Commitment
                                                             </Button>
-                                                            <Button variant="outline" size="sm" className="border-foreground/10 font-bold text-[10px] h-8 rounded-lg px-4">
+                                                            <Button variant="outline" size="sm" className="border-border font-bold text-[10px] h-8 rounded-lg px-4 bg-card text-foreground">
                                                                 Request Pastoral Call
                                                             </Button>
                                                         </div>
@@ -720,28 +720,28 @@ export default function ProfileHub() {
                                         <form onSubmit={idForm.handleSubmit(onIdentitySubmit)} className="space-y-8 animate-in fade-in duration-300">
                                             <div className="grid md:grid-cols-2 gap-6 md:gap-8">
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Full Name</label>
-                                                    <Input {...idForm.register("name")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Full Name</label>
+                                                    <Input {...idForm.register("name")} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Gender</label>
-                                                    <select {...idForm.register("gender")} className="w-full h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-4 text-sm font-semibold outline-none focus:ring-[var(--primary)]">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Gender</label>
+                                                    <select {...idForm.register("gender")} className="w-full h-14 rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none focus:ring-[var(--primary)] text-foreground">
                                                         <option value="">Select...</option>
                                                         <option value="Male">Male</option>
                                                         <option value="Female">Female</option>
                                                     </select>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Phone Number</label>
-                                                    <Input {...idForm.register("phone_number")} placeholder="+81..." className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Phone Number</label>
+                                                    <Input {...idForm.register("phone_number")} placeholder="+81..." className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Date of Birth</label>
-                                                    <Input type="date" {...idForm.register("birthdate")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Date of Birth</label>
+                                                    <Input type="date" {...idForm.register("birthdate")} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Marital Status</label>
-                                                    <select {...idForm.register("marital_status")} className="w-full h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-4 text-sm font-semibold outline-none focus:ring-[var(--primary)]">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Marital Status</label>
+                                                    <select {...idForm.register("marital_status")} className="w-full h-14 rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none focus:ring-[var(--primary)] text-foreground">
                                                         <option value="">Select...</option>
                                                         <option value="Single">Single</option>
                                                         <option value="Married">Married</option>
@@ -1008,18 +1008,18 @@ export default function ProfileHub() {
                                             </div>
 
                                             <div className="space-y-4">
-                                                <h4 className="font-black text-lg">Recent Giving History</h4>
+                                                <h4 className="font-black text-lg text-foreground">Recent Giving History</h4>
                                                 <div className="grid gap-3">
                                                     {givingHistory.length > 0 ? givingHistory.map(g => (
-                                                        <div key={g.id} className="flex items-center justify-between p-4 bg-foreground/5 border border-foreground/10 rounded-2xl">
+                                                        <div key={g.id} className="flex items-center justify-between p-4 bg-muted border border-border rounded-2xl transition-colors">
                                                             <div>
                                                                 <p className="text-sm font-black text-foreground">{g.record_type.toUpperCase()}</p>
-                                                                <p className="text-[10px] text-foreground/40">{g.given_date}</p>
+                                                                <p className="text-[10px] text-muted-foreground">{g.given_date}</p>
                                                             </div>
                                                             <p className="font-black text-[var(--primary)]">¥{Number(g.amount).toLocaleString()}</p>
                                                         </div>
                                                     )) : (
-                                                        <p className="text-center py-10 text-xs text-foreground/30 font-bold uppercase tracking-widest">No giving records found</p>
+                                                        <p className="text-center py-10 text-xs text-muted-foreground font-bold uppercase tracking-widest">No giving records found</p>
                                                     )}
                                                 </div>
                                             </div>
@@ -1029,14 +1029,14 @@ export default function ProfileHub() {
                                     {/* CARE TAB */}
                                     {activeTab === 'care' && (
                                         <div className="space-y-8 animate-in fade-in duration-300">
-                                            <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
+                                            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 space-y-6 transition-colors">
                                                 <div className="flex flex-col gap-4">
-                                                    <Input placeholder="My prayer is..." value={newPrayerText} onChange={e => setNewPrayerText(e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                    <Input placeholder="My prayer is..." value={newPrayerText} onChange={e => setNewPrayerText(e.target.value)} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
                                                     <div className="flex flex-col sm:flex-row gap-4">
-                                                        <select value={newPrayerCategory} onChange={e => setNewPrayerCategory(e.target.value)} className="h-14 rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none flex-1">
+                                                        <select value={newPrayerCategory} onChange={e => setNewPrayerCategory(e.target.value)} className="h-14 rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none flex-1 text-foreground">
                                                             {PRAYER_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                                                         </select>
-                                                        <select value={newPrayerUrgency} onChange={e => setNewPrayerUrgency(e.target.value)} className="h-14 rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none w-full sm:w-48">
+                                                        <select value={newPrayerUrgency} onChange={e => setNewPrayerUrgency(e.target.value)} className="h-14 rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none w-full sm:w-48 text-foreground">
                                                             <option value="normal">Normal</option>
                                                             <option value="urgent">Urgent</option>
                                                             <option value="crisis">Crisis</option>
@@ -1050,13 +1050,13 @@ export default function ProfileHub() {
                                                 </div>
                                                 <div className="space-y-3 mt-8">
                                                     {prayers.map(p => (
-                                                        <div key={p.id} className="flex flex-col p-4 bg-background border border-foreground/10 rounded-2xl space-y-3">
+                                                        <div key={p.id} className="flex flex-col p-4 bg-muted border border-border rounded-2xl space-y-3 transition-colors">
                                                             <div className="flex justify-between items-start gap-4">
-                                                                <p className={`font-bold text-sm ${p.status === 'Answered' ? 'line-through opacity-50' : ''}`}>{p.request_text}</p>
-                                                                <span className="text-xs shrink-0 bg-foreground/5 px-2 py-1 rounded-md font-semibold text-foreground/60">{p.category}</span>
+                                                                <p className={`font-bold text-sm text-foreground ${p.status === 'Answered' ? 'line-through opacity-50' : ''}`}>{p.request_text}</p>
+                                                                <span className="text-xs shrink-0 bg-card px-2 py-1 rounded-md font-semibold text-muted-foreground">{p.category}</span>
                                                             </div>
                                                             <div className="flex justify-end">
-                                                                <Button onClick={() => togglePrayer(p.id, p.status)} variant="outline" size="sm" className="text-xs font-bold h-8">
+                                                                <Button onClick={() => togglePrayer(p.id, p.status)} variant="outline" size="sm" className="text-xs font-bold h-8 border-border bg-card text-foreground">
                                                                     {p.status === 'Pending' ? 'MARK ANSWERED' : 'MARK PENDING'}
                                                                 </Button>
                                                             </div>
@@ -1070,23 +1070,23 @@ export default function ProfileHub() {
                                     {/* SKILLS TAB */}
                                     {activeTab === 'skills' && (
                                         <div className="space-y-8 animate-in fade-in duration-300">
-                                            <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
+                                            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 space-y-6 transition-colors">
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                                                     <div className="space-y-1">
-                                                        <label className="text-[10px] font-bold text-foreground/40 uppercase pl-1">Category</label>
-                                                        <select value={newSkillCat} onChange={e => setNewSkillCat(e.target.value)} className="h-14 w-full rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none">
+                                                        <label className="text-[10px] font-bold text-muted-foreground uppercase pl-1">Category</label>
+                                                        <select value={newSkillCat} onChange={e => setNewSkillCat(e.target.value)} className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none text-foreground">
                                                             {SKILL_OPTIONS.slice(0, 10).map(o => <option key={o} value={o}>{o}</option>)}
                                                         </select>
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <label className="text-[10px] font-bold text-foreground/40 uppercase pl-1">Talent</label>
-                                                        <select value={newSkill} onChange={e => setNewSkill(e.target.value)} className="h-14 w-full rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none">
+                                                        <label className="text-[10px] font-bold text-muted-foreground uppercase pl-1">Talent</label>
+                                                        <select value={newSkill} onChange={e => setNewSkill(e.target.value)} className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none text-foreground">
                                                             {SKILL_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                                                         </select>
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <label className="text-[10px] font-bold text-foreground/40 uppercase pl-1">Level</label>
-                                                        <select value={newSkillLevel} onChange={e => setNewSkillLevel(e.target.value)} className="h-14 w-full rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none">
+                                                        <label className="text-[10px] font-bold text-muted-foreground uppercase pl-1">Level</label>
+                                                        <select value={newSkillLevel} onChange={e => setNewSkillLevel(e.target.value)} className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none text-foreground">
                                                             <option>Beginner</option>
                                                             <option>Intermediate</option>
                                                             <option>Expert</option>
@@ -1094,22 +1094,22 @@ export default function ProfileHub() {
                                                     </div>
                                                     <div className="flex items-end gap-2">
                                                         <div className="space-y-1 flex-1">
-                                                            <label className="text-[10px] font-bold text-foreground/40 uppercase pl-1">Yrs Exp</label>
-                                                            <Input type="number" value={newSkillExp} onChange={e => setNewSkillExp(parseInt(e.target.value))} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                            <label className="text-[10px] font-bold text-muted-foreground uppercase pl-1">Yrs Exp</label>
+                                                            <Input type="number" value={newSkillExp} onChange={e => setNewSkillExp(parseInt(e.target.value))} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
                                                         </div>
                                                         <Button onClick={handleAddSkill} className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black shadow-lg">Link</Button>
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-wrap gap-2">
                                                     {skills.map(s => (
-                                                        <div key={s.id} className="flex items-center justify-between px-5 py-4 rounded-2xl bg-background border border-foreground/10 shadow-sm">
+                                                        <div key={s.id} className="flex items-center justify-between px-5 py-4 rounded-2xl bg-muted border border-border shadow-sm transition-colors">
                                                             <div className="flex items-center gap-3">
                                                                 <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center">
                                                                     <Briefcase className="w-5 h-5 text-[var(--primary)]" />
                                                                 </div>
                                                                 <div>
-                                                                    <p className="text-sm font-black leading-tight">{s.skill_name}</p>
-                                                                    <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-tight">{s.skill_category} · {s.years_experience} Yrs</p>
+                                                                    <p className="text-sm font-black leading-tight text-foreground">{s.skill_name}</p>
+                                                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight">{s.skill_category} · {s.years_experience} Yrs</p>
                                                                 </div>
                                                             </div>
                                                             <Badge variant="outline" className="text-[9px] font-black border-[var(--primary)]/20 text-[var(--primary)] bg-[var(--primary)]/5 uppercase">
@@ -1120,10 +1120,10 @@ export default function ProfileHub() {
                                                 </div>
 
                                                 {/* MINISTRY MATCHING ENGINE (NEW) */}
-                                                <div className="pt-8 border-t border-foreground/5 overflow-hidden">
+                                                <div className="pt-8 border-t border-border overflow-hidden">
                                                     <div className="flex items-center gap-2 mb-6">
                                                         <Activity className="w-5 h-5 text-[var(--primary)]" />
-                                                        <h4 className="text-sm font-black uppercase tracking-widest text-foreground/60">Ministry Recommendations</h4>
+                                                        <h4 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Ministry Recommendations</h4>
                                                     </div>
                                                     <div className="grid gap-3">
                                                         {skills.length > 0 ? (
@@ -1150,7 +1150,7 @@ export default function ProfileHub() {
                                                                 </div>
                                                             ))
                                                         ) : (
-                                                            <p className="text-xs text-foreground/40 font-medium italic">Add your skills above to see ministry matches.</p>
+                                                            <p className="text-xs text-muted-foreground font-medium italic">Add your skills above to see ministry matches.</p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -1161,18 +1161,18 @@ export default function ProfileHub() {
                                     {/* GIVING TAB */}
                                     {activeTab === 'giving' && (
                                         <div className="space-y-8 animate-in fade-in duration-300">
-                                            <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
+                                            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 space-y-6 transition-colors">
                                                 <div className="flex flex-col gap-6">
-                                                    <div className="flex items-center justify-between p-4 bg-background border border-foreground/10 rounded-2xl">
+                                                    <div className="flex items-center justify-between p-4 bg-muted border border-border rounded-2xl transition-colors">
                                                         <div>
-                                                            <h5 className="font-bold">I am a Tithing Member</h5>
-                                                            <p className="text-xs text-foreground/60">Help leadership project church budgets</p>
+                                                            <h5 className="font-bold text-foreground">I am a Tithing Member</h5>
+                                                            <p className="text-xs text-muted-foreground">Help leadership project church budgets</p>
                                                         </div>
                                                         <input type="checkbox" checked={givingData.tithe_status} onChange={e => setGivingData({ ...givingData, tithe_status: e.target.checked })} className="w-6 h-6 rounded" />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Preferred Giving Method</label>
-                                                        <select value={givingData.preferred_giving_method} onChange={e => setGivingData({ ...givingData, preferred_giving_method: e.target.value })} className="w-full h-14 rounded-2xl bg-background border border-foreground/10 px-4 text-sm font-semibold outline-none">
+                                                        <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Preferred Giving Method</label>
+                                                        <select value={givingData.preferred_giving_method} onChange={e => setGivingData({ ...givingData, preferred_giving_method: e.target.value })} className="w-full h-14 rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none text-foreground">
                                                             <option>Cash (Envelope)</option>
                                                             <option>Bank Transfer (Furikomi)</option>
                                                             <option>Credit Card (Online)</option>
@@ -1189,12 +1189,12 @@ export default function ProfileHub() {
                                         <div className="space-y-8 animate-in fade-in duration-300">
                                             {/* Upcoming Attendance Intent (NEW) */}
                                             <div className="bg-violet-500/5 border border-violet-500/20 rounded-3xl p-6 md:p-8 space-y-6">
-                                                <div className="flex items-center justify-between pb-4 border-b border-violet-500/10">
+                                                <div className="flex items-center justify-between pb-4 border-b border-border transition-colors">
                                                     <div>
                                                         <h4 className="font-black text-lg text-violet-500 flex items-center gap-2">
                                                             <CalendarCheck className="w-6 h-6" /> Upcoming Service Intent
                                                         </h4>
-                                                        <p className="text-xs text-foreground/50">Let leadership know your plans for the next service.</p>
+                                                        <p className="text-xs text-muted-foreground">Let leadership know your plans for the next service.</p>
                                                     </div>
                                                     {upcomingAttendance && (
                                                         <Badge className="bg-violet-500 text-white border-0 text-[10px] font-black uppercase">
@@ -1205,46 +1205,46 @@ export default function ProfileHub() {
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                                     {[
-                                                        { id: 'in-person', label: 'In-Person', icon: MapPin, color: 'text-violet-500 bg-violet-500/10' },
-                                                        { id: 'online', label: 'Watching Online', icon: Globe, color: 'text-blue-500 bg-blue-500/10' },
-                                                        { id: 'not-attending', label: 'Not Attending', icon: XCircle, color: 'text-foreground/40 bg-foreground/5' }
+                                                        { id: 'in-person', label: 'In-Person', icon: MapPin, color: 'text-violet-500' },
+                                                        { id: 'online', label: 'Watching Online', icon: Globe, color: 'text-blue-500' },
+                                                        { id: 'not-attending', label: 'Not Attending', icon: XCircle, color: 'text-muted-foreground' }
                                                     ].map(opt => (
                                                         <button
                                                             key={opt.id}
                                                             onClick={() => handleLogAttendance(opt.id as any)}
                                                             className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all ${upcomingAttendance === opt.id
                                                                 ? 'border-violet-500 bg-violet-500/10'
-                                                                : 'border-foreground/10 bg-background hover:bg-foreground/5'
+                                                                : 'border-border bg-card hover:bg-muted'
                                                                 }`}
                                                         >
                                                             <opt.icon className={`w-8 h-8 mb-3 ${opt.color}`} />
-                                                            <span className="text-xs font-black uppercase tracking-widest">{opt.label}</span>
+                                                            <span className="text-xs font-black uppercase tracking-widest text-foreground">{opt.label}</span>
                                                         </button>
                                                     ))}
                                                 </div>
-                                                <p className="text-[10px] text-foreground/30 text-center uppercase font-bold tracking-widest">
+                                                <p className="text-[10px] text-muted-foreground text-center uppercase font-bold tracking-widest opacity-60">
                                                     Your intent helps us steward resources like child care and online bandwidth.
                                                 </p>
                                             </div>
 
-                                            <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
-                                                <h4 className="font-black text-lg pb-4 border-b border-foreground/10">Recent Attendance History</h4>
+                                            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 space-y-6 transition-colors">
+                                                <h4 className="font-black text-lg pb-4 border-b border-border text-foreground">Recent Attendance History</h4>
                                                 <div className="grid gap-3">
                                                     {attendanceRecords.length > 0 ? attendanceRecords.map((r, i) => (
-                                                        <div key={i} className="flex items-center justify-between p-4 bg-background border border-foreground/10 rounded-2xl">
+                                                        <div key={i} className="flex items-center justify-between p-4 bg-muted border border-border rounded-2xl transition-colors">
                                                             <div className="flex items-center gap-3">
                                                                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
                                                                     <CalendarCheck className="w-5 h-5 text-emerald-500" />
                                                                 </div>
                                                                 <div>
-                                                                    <p className="font-bold">{new Date(r.event_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-                                                                    <p className="text-xs text-foreground/50 uppercase font-black tracking-widest">{(r.event_type || 'Sunday Service').replace('_', ' ')}</p>
+                                                                    <p className="font-bold text-foreground">{new Date(r.event_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                                                                    <p className="text-xs text-muted-foreground uppercase font-black tracking-widest">{(r.event_type || 'Sunday Service').replace('_', ' ')}</p>
                                                                 </div>
                                                             </div>
                                                             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                                                         </div>
                                                     )) : (
-                                                        <div className="text-center py-12 text-foreground/30 font-bold uppercase tracking-widest text-xs">No attendance recorded yet.</div>
+                                                        <div className="text-center py-12 text-muted-foreground font-bold uppercase tracking-widest text-xs">No attendance recorded yet.</div>
                                                     )}
                                                 </div>
                                             </div>
@@ -1254,34 +1254,34 @@ export default function ProfileHub() {
                                     {/* COMMUNITY TAB */}
                                     {activeTab === 'community' && (
                                         <div className="space-y-8 animate-in fade-in duration-300">
-                                            <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
-                                                <h4 className="font-black text-lg pb-4 border-b border-foreground/10">Fellowship Circles</h4>
+                                            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 space-y-6 transition-colors">
+                                                <h4 className="font-black text-lg pb-4 border-b border-border text-foreground">Fellowship Circles</h4>
                                                 <div className="grid md:grid-cols-2 gap-4">
                                                     {fellowshipGroups.length > 0 ? fellowshipGroups.map(g => {
                                                         const joined = userGroups.includes(g.id);
                                                         return (
-                                                            <div key={g.id} className="bg-background border border-foreground/10 rounded-2xl p-5 flex flex-col justify-between">
+                                                            <div key={g.id} className="bg-muted border border-border rounded-2xl p-5 flex flex-col justify-between transition-colors">
                                                                 <div>
                                                                     <div className="flex items-center justify-between mb-2">
                                                                         <span className="text-[10px] font-black bg-[var(--primary)]/10 text-[var(--primary)] px-2 py-0.5 rounded-md uppercase tracking-widest">{g.meeting_frequency}</span>
                                                                         {joined && <Badge className="bg-emerald-500 text-white border-0">Joined</Badge>}
                                                                     </div>
-                                                                    <h5 className="font-bold text-lg mb-1">{g.name}</h5>
-                                                                    <p className="text-xs text-foreground/50 flex items-center gap-1 mb-4">
+                                                                    <h5 className="font-bold text-lg mb-1 text-foreground">{g.name}</h5>
+                                                                    <p className="text-xs text-muted-foreground flex items-center gap-1 mb-4">
                                                                         <MapPin className="w-3 h-3" /> {g.location || 'Online / Various'}
                                                                     </p>
                                                                 </div>
                                                                 <Button
                                                                     onClick={() => handleJoinGroup(g.id)}
                                                                     variant={joined ? "outline" : "default"}
-                                                                    className={`w-full font-bold rounded-xl ${joined ? 'border-red-500/20 text-red-500 hover:bg-red-500/5' : 'bg-[var(--primary)] text-white'}`}
+                                                                    className={`w-full font-bold rounded-xl ${joined ? 'border-destructive/20 text-destructive hover:bg-destructive/5' : 'bg-[var(--primary)] text-white'}`}
                                                                 >
                                                                     {joined ? 'Leave Group' : 'Join Circle'}
                                                                 </Button>
                                                             </div>
                                                         );
                                                     }) : (
-                                                        <div className="col-span-full py-12 text-center text-foreground/30 font-bold uppercase tracking-widest text-xs">
+                                                        <div className="col-span-full py-12 text-center text-muted-foreground font-bold uppercase tracking-widest text-xs">
                                                             No active fellowship groups available to join.
                                                         </div>
                                                     )}
