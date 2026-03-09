@@ -10,9 +10,6 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    env:
-      SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -27,16 +24,8 @@ jobs:
         run: npm ci
 
       - name: Run Intelligence Engine
-        if: env.SUPABASE_URL != '' && env.SUPABASE_KEY != ''
         run: npx tsx scripts/intelligence_engines.ts
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ env.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ env.SUPABASE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-
-      - name: Report Missing Secrets
-        if: env.SUPABASE_URL == '' || env.SUPABASE_KEY == ''
-        run: |
-          echo "❌ Error: Supabase secrets are not configured in GitHub."
-          echo "Please add NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to your repository secrets."
-          exit 1
