@@ -1,22 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
-import { readFileSync } from 'fs';
+import { config } from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Load .env.local
-const envPath = resolve(__dirname, '../.env.local');
-try {
-    const envFile = readFileSync(envPath, 'utf8');
-    envFile.split('\n').forEach(line => {
-        const match = line.match(/^([^=]+)=(.*)$/);
-        if (match) process.env[match[1]] = match[2];
-    });
-} catch (e: any) { }
+// Load environment variables from .env.local or .env
+config({ path: resolve(__dirname, '../.env.local') });
+config({ path: resolve(__dirname, '../.env') });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !serviceKey) {
+    console.error('❌ Error: Missing Supabase configuration.');
+    if (!supabaseUrl) console.error('   - NEXT_PUBLIC_SUPABASE_URL is not defined.');
+    if (!serviceKey) console.error('   - SUPABASE_SERVICE_ROLE_KEY is not defined.');
+    console.error('   Current environment:', Object.keys(process.env).filter(k => k.includes('SUPABASE')));
+    process.exit(1);
+}
+
 const supabase = createClient(supabaseUrl, serviceKey, {
     auth: { persistSession: false },
     db: { schema: 'public' }

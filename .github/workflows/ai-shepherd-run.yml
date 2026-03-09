@@ -24,8 +24,16 @@ jobs:
         run: npm ci
 
       - name: Run Intelligence Engine
+        if: secrets.NEXT_PUBLIC_SUPABASE_URL != '' && secrets.SUPABASE_SERVICE_ROLE_KEY != ''
         run: npx tsx scripts/intelligence_engines.ts
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          # The script also tries to read .env.local, but environmental variables take precedence in Node.js
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Report Missing Secrets
+        if: secrets.NEXT_PUBLIC_SUPABASE_URL == '' || secrets.SUPABASE_SERVICE_ROLE_KEY == ''
+        run: |
+          echo "❌ Error: Supabase secrets are not configured in GitHub."
+          echo "Please add NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to your repository secrets."
+          exit 1
