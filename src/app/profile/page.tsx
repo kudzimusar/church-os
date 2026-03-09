@@ -38,7 +38,12 @@ const identitySchema = z.object({
     preferred_language: z.string().optional(),
     years_in_japan: z.coerce.number().optional(),
     occupation: z.string().optional(),
+    industry: z.string().optional(),
     education_level: z.string().optional(),
+    church_background: z.string().optional(),
+    salvation_date: z.string().optional(),
+    baptism_status: z.string().optional(),
+    baptism_date: z.string().optional(),
     invited_by_name: z.string().optional(),
     invite_method: z.string().optional()
 });
@@ -281,13 +286,37 @@ export default function ProfileHub() {
             }
 
             const { error } = await supabase.from('profiles').update({
-                ...cleanData,
-                household_type
+                name: cleanData.name,
+                email: cleanData.email,
+                phone: cleanData.phone_number,
+                gender: cleanData.gender,
+                date_of_birth: cleanData.birthdate,
+                marital_status: cleanData.marital_status,
+                wedding_anniversary: cleanData.wedding_anniversary,
+                full_address: cleanData.physical_address,
+                city: cleanData.city,
+                ward: cleanData.ward,
+                postal_code: cleanData.postal_code,
+                country_of_origin: cleanData.country_of_origin,
+                preferred_language: cleanData.preferred_language,
+                years_in_japan: cleanData.years_in_japan,
+                occupation: cleanData.occupation,
+                industry: cleanData.industry,
+                education_level: cleanData.education_level,
+                church_background: cleanData.church_background,
+                salvation_date: cleanData.salvation_date,
+                baptism_status: cleanData.baptism_status,
+                baptism_date: cleanData.baptism_date,
+                referral_name: cleanData.invited_by_name,
+                referral_source: cleanData.invite_method,
+                household_type,
+                updated_at: new Date().toISOString()
             }).eq('id', user.id);
 
             if (error) throw error;
             toast.success("Identity updated successfully!");
         } catch (e) {
+            console.error("Profile Save Error:", e);
             toast.error("Failed to update profile");
         } finally {
             setIsSaving(false);
@@ -750,55 +779,85 @@ export default function ProfileHub() {
                                                     </select>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Country of Origin</label>
-                                                    <Input {...idForm.register("country_of_origin")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Country of Origin</label>
+                                                    <Input {...idForm.register("country_of_origin")} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Preferred Language</label>
-                                                    <select {...idForm.register("preferred_language")} className="w-full h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-4 text-sm font-semibold outline-none focus:ring-[var(--primary)]">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Preferred Language</label>
+                                                    <select {...idForm.register("preferred_language")} className="w-full h-14 rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none focus:ring-primary text-foreground">
                                                         <option value="EN">English</option>
                                                         <option value="JP">Japanese</option>
                                                         <option value="BOTH">Bilingual</option>
                                                     </select>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Years in Japan</label>
-                                                    <Input type="number" {...idForm.register("years_in_japan")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Years in Japan</label>
+                                                    <Input type="number" {...idForm.register("years_in_japan")} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Occupation</label>
-                                                    <Input {...idForm.register("occupation")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Occupation</label>
+                                                    <Input {...idForm.register("occupation")} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Education Level</label>
-                                                    <Input {...idForm.register("education_level")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Industry</label>
+                                                    <Input {...idForm.register("industry")} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">City</label>
-                                                    <Input {...idForm.register("city")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Education Level</label>
+                                                    <Input {...idForm.register("education_level")} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Ward</label>
-                                                    <Input {...idForm.register("ward")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">City</label>
+                                                    <Input {...idForm.register("city")} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Postal Code</label>
-                                                    <Input {...idForm.register("postal_code")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Ward</label>
+                                                    <Input {...idForm.register("ward")} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Postal Code</label>
+                                                    <Input {...idForm.register("postal_code")} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
                                                 </div>
                                                 <div className="space-y-2 md:col-span-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Full Home Address</label>
-                                                    <Input {...idForm.register("physical_address")} className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Full Home Address</label>
+                                                    <Input {...idForm.register("physical_address")} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
                                                 </div>
-                                                <div className="pt-4 md:col-span-2 border-t border-foreground/5 mt-4">
-                                                    <h4 className="text-sm font-black uppercase tracking-widest text-[var(--primary)] mb-6">Referral Tracking</h4>
+
+                                                <div className="pt-4 md:col-span-2 border-t border-border mt-4">
+                                                    <h4 className="text-sm font-black uppercase tracking-widest text-primary mb-6">Spiritual Background & Milestones</h4>
                                                     <div className="grid md:grid-cols-2 gap-6">
                                                         <div className="space-y-2">
-                                                            <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Who invited you?</label>
-                                                            <Input {...idForm.register("invited_by_name")} placeholder="Member Name or Guest" className="h-14 rounded-2xl bg-foreground/5 border-foreground/10 px-4" />
+                                                            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Church Background</label>
+                                                            <Input {...idForm.register("church_background")} placeholder="Previous church or tradition" className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
                                                         </div>
                                                         <div className="space-y-2">
-                                                            <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Method</label>
-                                                            <select {...idForm.register("invite_method")} className="w-full h-14 rounded-2xl bg-foreground/5 border border-foreground/10 px-4 text-sm font-semibold outline-none focus:ring-[var(--primary)]">
+                                                            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Date of Salvation</label>
+                                                            <Input type="date" {...idForm.register("salvation_date")} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Baptism Status</label>
+                                                            <select {...idForm.register("baptism_status")} className="w-full h-14 rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none focus:ring-primary text-foreground">
+                                                                <option value="not_baptized">Not Baptized</option>
+                                                                <option value="baptized">Baptized</option>
+                                                            </select>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Date of Baptism</label>
+                                                            <Input type="date" {...idForm.register("baptism_date")} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="pt-4 md:col-span-2 border-t border-border">
+                                                    <h4 className="text-sm font-black uppercase tracking-widest text-primary mb-6">Referral Tracking</h4>
+                                                    <div className="grid md:grid-cols-2 gap-6">
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Who invited you?</label>
+                                                            <Input {...idForm.register("invited_by_name")} placeholder="Member Name or Guest" className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Method</label>
+                                                            <select {...idForm.register("invite_method")} className="w-full h-14 rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none focus:ring-primary text-foreground">
                                                                 <option value="Friend">Friend / Family</option>
                                                                 <option value="Social Media">Social Media</option>
                                                                 <option value="Street Outreach">Street Outreach</option>
@@ -851,31 +910,31 @@ export default function ProfileHub() {
                                         <div className="space-y-8 animate-in fade-in duration-300">
                                             <div className="grid md:grid-cols-2 gap-6 bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8">
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">First Visit Date</label>
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">First Visit Date</label>
                                                     <Input type="date" value={milestones.first_visit_date || ''} onChange={e => setMilestones({ ...milestones, first_visit_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Salvation Decision Date</label>
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Salvation Decision Date</label>
                                                     <Input type="date" value={milestones.salvation_date || ''} onChange={e => setMilestones({ ...milestones, salvation_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Baptism Date</label>
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Baptism Date</label>
                                                     <Input type="date" value={milestones.baptism_date || ''} onChange={e => setMilestones({ ...milestones, baptism_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Membership Date</label>
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Membership Date</label>
                                                     <Input type="date" value={milestones.membership_date || ''} onChange={e => setMilestones({ ...milestones, membership_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Foundation Class Completed</label>
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Foundation Class Completed</label>
                                                     <Input type="date" value={milestones.foundation_class_date || ''} onChange={e => setMilestones({ ...milestones, foundation_class_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Leadership Training</label>
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Leadership Training</label>
                                                     <Input type="date" value={milestones.leadership_training_date || ''} onChange={e => setMilestones({ ...milestones, leadership_training_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-bold uppercase tracking-widest text-foreground/60 pl-1">Ordnained / Commissioned</label>
+                                                    <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Ordnained / Commissioned</label>
                                                     <Input type="date" value={milestones.ordained_date || ''} onChange={e => setMilestones({ ...milestones, ordained_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="col-span-full pt-4">

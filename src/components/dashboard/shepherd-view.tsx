@@ -245,8 +245,26 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
 
     const handleMembershipAction = async (userId: string, status: string) => {
         try {
-            const { error } = await supabaseAdmin.from('profiles').update({ membership_status: status }).eq('id', userId);
-            if (error) throw error;
+            // First, find the pending request for this user
+            const { data: req } = await supabaseAdmin
+                .from('membership_requests')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('status', 'pending')
+                .maybeSingle();
+
+            if (req) {
+                const { error } = await supabaseAdmin
+                    .from('membership_requests')
+                    .update({ status: status === 'member' ? 'approved' : 'rejected' })
+                    .eq('id', req.id);
+                if (error) throw error;
+            } else {
+                // Fallback direct update if no request record found (legacy)
+                const { error } = await supabaseAdmin.from('profiles').update({ membership_status: status }).eq('id', userId);
+                if (error) throw error;
+            }
+
             toast.success(`User set to ${status}`);
             loadData();
         } catch (e) {

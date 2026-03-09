@@ -143,14 +143,17 @@ export default function MembersPage() {
             Status: m.membership_status || 'visitor',
             City: m.city || '-',
             Phone: m.phone || '-',
-            Baptized: m.baptism_status || 'no',
-            Joined: m.date_joined_church || '-',
+            'Join Date': m.created_at || '-',
+            'Membership Status': m.membership_status || 'visitor',
             'Growth Stage': m.growth_stage || 'visitor',
-            Roles: m.org_members?.role || 'member'
+            'Assigned Roles': m.roles?.join(', ') || 'None',
+            'Baptism Status': m.baptism_status || 'not_baptized',
+            'Church Background': m.church_background || '-',
+            'Referral Source': m.referral_source || '-'
         }));
 
-        const headers = ["Name", "Email", "Status", "City", "Phone", "Baptized", "Joined", "Growth Stage", "Roles"];
-        const keys = ["Name", "Email", "Status", "City", "Phone", "Baptized", "Joined", "Growth Stage", "Roles"];
+        const headers = ["Name", "Email", "Status", "City", "Phone", "Join Date", "Membership Status", "Growth Stage", "Assigned Roles", "Baptism Status", "Church Background", "Referral Source"];
+        const keys = headers;
 
         if (format === 'csv') {
             exportToCSV(exportData, filename, headers);
@@ -396,21 +399,35 @@ export default function MembersPage() {
                                 </div>
                             )}
 
-                            <div className="space-y-4 pt-4 border-t border-white/5">
-                                <h4 className="text-xs font-black text-white/20 uppercase tracking-[0.2em]">Pastor's Intel</h4>
-                                <div className="bg-black/20 rounded-2xl p-6 border border-white/5">
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div>
-                                            <p className="text-[10px] font-black text-white/10 uppercase tracking-widest">Growth Stage</p>
-                                            <p className="text-sm font-black text-white uppercase mt-1">{selectedMember.growth_stage || 'Visitor'}</p>
+                            <div className="space-y-6 pt-6 border-t border-border">
+                                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">Personal & Spiritual Context</h4>
+                                <div className="grid grid-cols-2 gap-8">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                                <Calendar className="w-4 h-4 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase">Spiritual History</p>
+                                                <p className="text-xs font-bold text-foreground">Background: {selectedMember.church_background || 'None'}</p>
+                                                <p className="text-[10px] text-muted-foreground">Referred by: {selectedMember.referral_source || 'Direct'}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-[10px] font-black text-white/10 uppercase tracking-widest">Discipleship Score</p>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-violet-500" style={{ width: `${selectedMember.discipleship_score || 0}%` }} />
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                                <UserCheck className="w-4 h-4 text-emerald-500" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase">Pastor's Intelligence</p>
+                                                <p className="text-xs font-bold text-foreground">Stage: {selectedMember.growth_stage || 'Visitor'}</p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <div className="flex-1 w-20 h-1 bg-muted rounded-full">
+                                                        <div className="h-full bg-violet-500 rounded-full" style={{ width: `${selectedMember.discipleship_score || 0}%` }} />
+                                                    </div>
+                                                    <span className="text-[10px] font-black text-violet-500">{selectedMember.discipleship_score || 0}%</span>
                                                 </div>
-                                                <span className="text-xs font-black text-violet-400">{selectedMember.discipleship_score || 0}/100</span>
                                             </div>
                                         </div>
                                     </div>

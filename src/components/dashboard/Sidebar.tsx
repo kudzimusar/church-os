@@ -18,6 +18,7 @@ const NAV_ITEMS = [
     { label: "Spiritual Analytics", icon: HeartPulse, path: "/spiritual" },
     { label: "Pastoral Care", icon: Shield, path: "/care" },
     { label: "Members", icon: Users, path: "/members" },
+    { label: "Membership Requests", icon: ShieldCheck, path: "/requests" },
     { label: "Ministries", icon: Music, path: "/ministries" },
     { label: "Fellowship Circles", icon: MessagesSquare, path: "/fellowship" },
     { label: "Events", icon: Calendar, path: "/events" },
