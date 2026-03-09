@@ -42,6 +42,7 @@ export default function MembersPage() {
     const [filter, setFilter] = useState("all");
     const [selectedMember, setSelectedMember] = useState<Member | null>(null);
     const [showExport, setShowExport] = useState(false);
+    const [membershipRequests, setMembershipRequests] = useState<any[]>([]);
 
     useEffect(() => {
         fetchMembers();
@@ -73,6 +74,13 @@ export default function MembersPage() {
                 growth_stage: m.growth_stage || m.org_members?.[0]?.stage || 'visitor'
             }));
             setMembers(processed);
+
+            // Fetch pending requests
+            const { data: requests } = await supabaseAdmin
+                .from('membership_requests')
+                .select('*, profiles(name, email)')
+                .eq('status', 'pending');
+            setMembershipRequests(requests || []);
         }
         setLoading(false);
     }
@@ -90,13 +98,14 @@ export default function MembersPage() {
 
             if (error) throw error;
 
-            // Also sync to org_members for legacy dashboard consistency
+            // Reconcile membership_requests table
             await supabaseAdmin
-                .from('org_members')
-                .update({ stage: 'disciple' })
-                .eq('user_id', targetId);
+                .from('membership_requests')
+                .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+                .eq('user_id', targetId)
+                .eq('status', 'pending');
 
-            toast.success("Membership approved! Growth stage updated to Disciple.");
+            toast.success("Membership approved!");
             await fetchMembers(); // Refresh list
 
             // Update selected member view if open
@@ -157,7 +166,15 @@ export default function MembersPage() {
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h1 className="text-xl font-black text-white">Member Directory</h1>
-                    <p className="text-[11px] text-white/30 mt-0.5">{members.length} registered members</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-[11px] text-white/30">{members.length} registered members</p>
+                        {membershipRequests.length > 0 && (
+                            <>
+                                <span className="text-[10px] text-white/10">•</span>
+                                <p className="text-[11px] text-amber-500 font-bold">{membershipRequests.length} pending requests</p>
+                            </>
+                        )}
+                    </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="relative">

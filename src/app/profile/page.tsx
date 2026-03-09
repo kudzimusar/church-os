@@ -111,6 +111,7 @@ export default function ProfileHub() {
         missionProgress: 0,
         latestNewsletter: null as any
     });
+    const [membershipRequest, setMembershipRequest] = useState<any>(null);
 
     const handleAcceptInvitation = async (notif: any) => {
         try {
@@ -253,6 +254,10 @@ export default function ProfileHub() {
                 impact.memberGrowth = latestNewsletter.content.impact_metrics.growth || impact.memberGrowth;
             }
             setChurchImpact(impact);
+
+            // Membership Request
+            const { data: mrData } = await supabase.from('membership_requests').select('*').eq('user_id', userId).maybeSingle();
+            setMembershipRequest(mrData);
 
         } catch (e) {
             console.error(e);
@@ -465,10 +470,22 @@ export default function ProfileHub() {
         }
     };
 
-    if (loading) {
-        return <div className="min-h-screen bg-[var(--background)] flex items-center justify-center"><Clock className="w-8 h-8 animate-spin opacity-20" /></div>;
-    }
+    const handleRequestMembership = async () => {
+        if (!user || !profile) return;
+        try {
+            const { data, error } = await supabase.from('membership_requests').insert({
+                user_id: user.id,
+                org_id: profile.org_id,
+                status: 'pending'
+            }).select().single();
 
+            if (error) throw error;
+            setMembershipRequest(data);
+            toast.success("Membership request submitted!");
+        } catch (e) {
+            toast.error("Failed to submit request");
+        }
+    };
     const handleLogout = async () => {
         try {
             await Auth.logout();
@@ -477,6 +494,10 @@ export default function ProfileHub() {
             toast.error("Error logging out.");
         }
     };
+
+    if (loading) {
+        return <div className="min-h-screen bg-[var(--background)] flex items-center justify-center"><Clock className="w-8 h-8 animate-spin opacity-20" /></div>;
+    }
 
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-black overflow-x-hidden pb-20">
@@ -537,30 +558,46 @@ export default function ProfileHub() {
                                     <div className="w-32 h-32 rounded-full border-4 border-white dark:border-[#111] bg-[var(--primary)] text-white text-5xl font-black flex items-center justify-center relative shadow-xl z-10 mb-6">
                                         {profile?.name?.[0] || user?.name?.[0]}
                                     </div>
-                                    <h2 className="text-2xl font-black text-center">{profile?.name || user?.name}</h2>
-                                    <p className="text-sm text-foreground/50 font-semibold mb-8 text-center">{profile?.country_of_origin || 'Local Assembly'}</p>
+                                    <h2 className="text-2xl font-black text-center text-foreground">{profile?.name || user?.name}</h2>
+                                    <p className="text-sm text-muted-foreground font-semibold mb-8 text-center">{profile?.country_of_origin || 'Local Assembly'}</p>
 
-                                    <div className="w-full space-y-4 mb-8">
+                                    <div className="w-full space-y-4 mb-8 text-foreground">
                                         <div className="flex items-center justify-between p-3 px-4 rounded-xl bg-foreground/5">
-                                            <span className="text-sm font-semibold text-foreground/70">Completed Days</span>
+                                            <span className="text-sm font-semibold text-muted-foreground">Completed Days</span>
                                             <span className="text-[var(--primary)] font-black">{stats.completed}</span>
                                         </div>
                                         <div className="flex items-center justify-between p-3 px-4 rounded-xl bg-foreground/5">
-                                            <span className="text-sm font-semibold text-foreground/70">Current Streak</span>
+                                            <span className="text-sm font-semibold text-muted-foreground">Current Streak</span>
                                             <span className="text-amber-500 font-black">{stats.streak}</span>
                                         </div>
                                     </div>
                                     <Button
                                         variant="outline"
-                                        onClick={() => toast.info(`Current Growth Stage: ${profile?.growth_stage?.toUpperCase() || 'Visitor'}`)}
+                                        disabled={!!membershipRequest && membershipRequest.status === 'pending'}
+                                        onClick={() => {
+                                            if (profile?.membership_status === 'member') {
+                                                toast.info("You are an approved member.");
+                                            } else if (membershipRequest?.status === 'pending') {
+                                                toast.info("Your membership request is under review.");
+                                            } else {
+                                                handleRequestMembership();
+                                            }
+                                        }}
                                         className={`w-full py-6 rounded-xl font-bold border-foreground/10 hover:bg-foreground/5 capitalize ${profile?.membership_status === 'member' ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5' :
-                                            profile?.membership_status === 'pending_approval' ? 'text-amber-500 border-amber-500/20 bg-amber-500/5' :
-                                                'text-foreground/80'
+                                            membershipRequest?.status === 'pending' ? 'text-amber-500 border-amber-500/20 bg-amber-500/5' :
+                                                'text-[var(--primary)] border-[var(--primary)]/20 shadow-lg shadow-[var(--primary)]/5 hover:scale-[1.02] active:scale-95 transition-all'
                                             }`}
                                     >
                                         <div className="flex flex-col items-center">
-                                            <span className="text-[10px] opacity-40 uppercase tracking-widest">{profile?.membership_status || 'Visitor'}</span>
-                                            <span>{profile?.growth_stage?.replace('_', ' ') || 'Visitor'}</span>
+                                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                                                {profile?.membership_status === 'member' ? 'Approved' :
+                                                    membershipRequest?.status === 'pending' ? 'Pending Approval' :
+                                                        'Request Membership'}
+                                            </span>
+                                            <span>
+                                                {profile?.membership_status === 'member' ? (profile?.growth_stage?.replace('_', ' ') || 'Member') :
+                                                    membershipRequest?.status === 'pending' ? 'Reviewing' : 'Submit Join Request'}
+                                            </span>
                                         </div>
                                     </Button>
                                 </div>
@@ -585,14 +622,14 @@ export default function ProfileHub() {
 
                                 <div className="p-6 md:p-10 lg:p-12">
                                     <div className="pb-8 border-b border-foreground/10 mb-8">
-                                        <h3 className="text-2xl font-black capitalize flex items-center gap-3">
+                                        <h3 className="text-2xl font-black capitalize flex items-center gap-3 text-foreground">
                                             {(() => {
                                                 const Icon = SIDEBAR_NAV.find(n => n.id === activeTab)?.icon;
                                                 return Icon ? <Icon className="w-6 h-6 text-[var(--primary)]" /> : null;
                                             })()}
                                             {SIDEBAR_NAV.find(n => n.id === activeTab)?.label}
                                         </h3>
-                                        <p className="text-sm text-foreground/50 font-medium mt-2">Manage your structured data for Church analytics.</p>
+                                        <p className="text-sm text-muted-foreground font-medium mt-2">Manage your structured data for Church analytics.</p>
                                     </div>
 
                                     {/* CHURCH IMPACT DASHBOARD (NEW) */}
@@ -605,7 +642,7 @@ export default function ProfileHub() {
                                             <div>
                                                 <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60 mb-1">Recent Growth</p>
                                                 <p className="text-2xl font-black text-emerald-500">+{churchImpact.memberGrowth} members</p>
-                                                <p className="text-[10px] text-foreground/40 font-medium">Joined the mission this month</p>
+                                                <p className="text-[10px] text-muted-foreground font-medium opacity-70">Joined the mission this month</p>
                                             </div>
                                         </div>
 

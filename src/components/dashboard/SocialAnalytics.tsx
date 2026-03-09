@@ -68,19 +68,19 @@ export function SocialAnalytics() {
     );
 
     return (
-        <Card className="bg-card dark:bg-white/5 border-border dark:border-white/10 rounded-[2.5rem] overflow-hidden transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between border-b border-border dark:border-white/5 pb-6">
+        <Card className="bg-card border-border rounded-[2.5rem] overflow-hidden transition-colors">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-border pb-6">
                 <div>
-                    <CardTitle className="text-xl font-black text-foreground dark:text-white uppercase tracking-tighter flex items-center gap-2 transition-colors">
+                    <CardTitle className="text-xl font-black text-foreground uppercase tracking-tighter flex items-center gap-2 transition-colors">
                         <Share2 className="w-5 h-5 text-pink-500" /> Outreach Analytics
                     </CardTitle>
-                    <CardDescription className="text-[10px] font-black text-foreground/30 dark:text-white/30 uppercase tracking-[0.2em] mt-1 transition-colors">Digital Evangelism Pipeline</CardDescription>
+                    <CardDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1 transition-colors">Digital Evangelism Pipeline</CardDescription>
                 </div>
                 <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowAdd(!showAdd)}
-                    className="rounded-xl border-border dark:border-white/10 bg-card dark:bg-white/5 hover:bg-muted dark:hover:bg-white/10 text-[10px] font-black uppercase tracking-widest h-9 text-foreground dark:text-white"
+                    className="rounded-xl border-border bg-card hover:bg-muted text-[10px] font-black uppercase tracking-widest h-9 text-foreground"
                 >
                     {showAdd ? <X className="w-3 h-3 mr-2" /> : <Plus className="w-3 h-3 mr-2" />}
                     {showAdd ? "Cancel" : "Update Reach"}
@@ -91,15 +91,15 @@ export function SocialAnalytics() {
                     {showAdd && (
                         <motion.div
                             initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden border-b border-border dark:border-white/5 pb-8"
+                            className="overflow-hidden border-b border-border pb-8"
                         >
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div className="space-y-1">
-                                    <label className="text-[9px] font-black text-foreground/30 dark:text-white/30 uppercase ml-1 transition-colors">Platform</label>
+                                    <label className="text-[9px] font-black text-muted-foreground uppercase ml-1 transition-colors">Platform</label>
                                     <select
                                         value={newData.platform}
                                         onChange={e => setNewData({ ...newData, platform: e.target.value })}
-                                        className="w-full bg-foreground/5 dark:bg-white/5 border border-border dark:border-white/10 rounded-xl h-10 px-3 text-xs font-bold text-foreground dark:text-white outline-none transition-colors"
+                                        className="w-full bg-foreground/5 dark:bg-white/5 border border-border rounded-xl h-10 px-3 text-xs font-bold text-foreground outline-none transition-colors"
                                     >
                                         <option value="instagram" className="bg-background text-foreground">Instagram</option>
                                         <option value="facebook" className="bg-background text-foreground">Facebook</option>
@@ -108,21 +108,21 @@ export function SocialAnalytics() {
                                     </select>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[9px] font-black text-foreground/30 dark:text-white/30 uppercase ml-1 transition-colors">Reach</label>
+                                    <label className="text-[9px] font-black text-muted-foreground uppercase ml-1 transition-colors">Reach</label>
                                     <Input
                                         type="number"
                                         value={newData.reach}
                                         onChange={e => setNewData({ ...newData, reach: parseInt(e.target.value) })}
-                                        className="bg-foreground/5 dark:bg-white/5 border-border dark:border-white/10 rounded-xl h-10 text-xs font-bold text-foreground dark:text-white transition-colors"
+                                        className="bg-foreground/5 dark:bg-white/5 border-border rounded-xl h-10 text-xs font-bold text-foreground transition-colors"
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[9px] font-black text-foreground/30 dark:text-white/30 uppercase ml-1 transition-colors">Engage</label>
+                                    <label className="text-[9px] font-black text-muted-foreground uppercase ml-1 transition-colors">Engage</label>
                                     <Input
                                         type="number"
                                         value={newData.engagement}
                                         onChange={e => setNewData({ ...newData, engagement: parseInt(e.target.value) })}
-                                        className="bg-foreground/5 dark:bg-white/5 border-border dark:border-white/10 rounded-xl h-10 text-xs font-bold text-foreground dark:text-white transition-colors"
+                                        className="bg-foreground/5 dark:bg-white/5 border-border rounded-xl h-10 text-xs font-bold text-foreground transition-colors"
                                     />
                                 </div>
                                 <div className="flex items-end">
@@ -139,21 +139,21 @@ export function SocialAnalytics() {
                     <div className="space-y-8">
                         {/* Summary Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="p-4 bg-foreground/5 dark:bg-white/5 border border-border dark:border-white/5 rounded-[1.5rem] flex flex-col justify-center transition-colors">
-                                <span className="text-[9px] font-black text-foreground/25 dark:text-white/25 uppercase tracking-widest mb-1 transition-colors">Total Reach</span>
-                                <span className="text-xl font-black text-foreground dark:text-white transition-colors">
+                            <div className="p-4 bg-foreground/5 dark:bg-white/5 border border-border rounded-[1.5rem] flex flex-col justify-center transition-colors">
+                                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1 transition-colors">Total Reach</span>
+                                <span className="text-xl font-black text-foreground transition-colors">
                                     {stats.filter(s => s.platform === stats[stats.length - 1]?.platform).reduce((acc, s) => acc + s.reach, 0).toLocaleString()}
                                 </span>
                             </div>
-                            <div className="p-4 bg-foreground/5 dark:bg-white/5 border border-border dark:border-white/5 rounded-[1.5rem] flex flex-col justify-center transition-colors">
-                                <span className="text-[9px] font-black text-foreground/25 dark:text-white/25 uppercase tracking-widest mb-1 transition-colors">Eng. Rate</span>
-                                <span className="text-xl font-black text-foreground dark:text-white transition-colors">
+                            <div className="p-4 bg-foreground/5 dark:bg-white/5 border border-border rounded-[1.5rem] flex flex-col justify-center transition-colors">
+                                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1 transition-colors">Eng. Rate</span>
+                                <span className="text-xl font-black text-foreground transition-colors">
                                     {(stats[stats.length - 1]?.engagement / stats[stats.length - 1]?.reach * 100 || 0).toFixed(1)}%
                                 </span>
                             </div>
-                            <div className="p-4 bg-foreground/5 dark:bg-white/5 border border-border dark:border-white/5 rounded-[1.5rem] flex flex-col justify-center transition-colors">
-                                <span className="text-[9px] font-black text-foreground/25 dark:text-white/25 uppercase tracking-widest mb-1 transition-colors">Followers</span>
-                                <span className="text-xl font-black text-foreground dark:text-white transition-colors">{stats[stats.length - 1]?.followers.toLocaleString()}</span>
+                            <div className="p-4 bg-foreground/5 dark:bg-white/5 border border-border rounded-[1.5rem] flex flex-col justify-center transition-colors">
+                                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1 transition-colors">Followers</span>
+                                <span className="text-xl font-black text-foreground transition-colors">{stats[stats.length - 1]?.followers.toLocaleString()}</span>
                             </div>
                         </div>
 

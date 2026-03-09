@@ -53,8 +53,8 @@ export function Sidebar() {
                 </div>
                 {!collapsed && (
                     <div>
-                        <p className="text-xs font-black tracking-widest text-foreground dark:text-white/90 uppercase">Church OS</p>
-                        <p className="text-[9px] text-foreground/40 dark:text-white/40 font-medium tracking-wider uppercase">Mission Control</p>
+                        <p className="text-xs font-black tracking-widest text-foreground uppercase">Church OS</p>
+                        <p className="text-[9px] text-muted-foreground font-medium tracking-wider uppercase">Mission Control</p>
                     </div>
                 )}
             </div>
@@ -78,7 +78,7 @@ export function Sidebar() {
                                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 group",
                                     isActive
                                         ? "bg-violet-500/20 text-violet-600 dark:text-violet-300"
-                                        : "text-foreground/40 dark:text-white/40 hover:text-foreground dark:hover:text-white hover:bg-foreground/5 dark:hover:bg-white/5",
+                                        : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-white/5",
                                     collapsed && "justify-center px-0"
                                 )}
                             >
@@ -109,7 +109,7 @@ export function Sidebar() {
             <div className="p-3 border-t border-border dark:border-white/5 flex-shrink-0">
                 <button
                     onClick={() => setCollapsed(c => !c)}
-                    className="w-full flex items-center justify-center p-2 rounded-xl text-foreground/30 dark:text-white/30 hover:text-foreground/60 dark:hover:text-white/60 hover:bg-foreground/5 dark:hover:bg-white/5 transition-all"
+                    className="w-full flex items-center justify-center p-2 rounded-xl text-muted-foreground/60 hover:text-foreground hover:bg-foreground/5 dark:hover:bg-white/5 transition-all"
                 >
                     {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                     {!collapsed && <span className="ml-2 text-xs font-medium">Collapse</span>}

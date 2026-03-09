@@ -71,7 +71,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
     }, []);
 
     return (
-        <header className="h-16 flex items-center justify-between px-6 bg-background/80 dark:bg-[#0a101c]/80 backdrop-blur-xl border-b border-border dark:border-white/5 flex-shrink-0 z-50 transition-colors duration-500">
+        <header className="h-16 flex items-center justify-between px-6 bg-background/80 backdrop-blur-xl border-b border-border flex-shrink-0 z-50 transition-colors duration-500">
             {/* Quick Action Modal Replacement */}
             <QuickActionModal
                 isOpen={isActionModalOpen}
@@ -82,18 +82,18 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
             {/* Left: Title */}
             <div className="flex items-center gap-4">
                 <div>
-                    <h2 className="text-sm font-black tracking-widest text-foreground dark:text-white uppercase">Mission Control</h2>
-                    <p className="text-[10px] text-foreground/40 dark:text-white/30 font-medium tracking-wider">Japan Kingdom Church · Shepherd Dashboard</p>
+                    <h2 className="text-sm font-black tracking-widest text-foreground uppercase">Mission Control</h2>
+                    <p className="text-[10px] text-muted-foreground font-medium tracking-wider">Japan Kingdom Church · Shepherd Dashboard</p>
                 </div>
             </div>
 
             {/* Center: Search */}
             <div className="hidden md:flex flex-1 max-w-xs mx-8">
                 <div className="relative w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                     <input
                         placeholder="Search members, ministries, requests..."
-                        className="w-full h-9 bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 text-xs text-white placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-violet-500/50 focus:bg-white/8 transition-all"
+                        className="w-full h-9 bg-foreground/5 border border-border rounded-xl pl-9 pr-4 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-violet-500/50 transition-all"
                     />
                 </div>
             </div>
@@ -105,14 +105,14 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                     variant="ghost"
                     size="icon"
                     onClick={toggleMode}
-                    className="h-9 w-9 rounded-xl text-foreground/40 dark:text-white/40 hover:text-foreground dark:hover:text-white hover:bg-foreground/5 dark:hover:bg-white/5"
+                    className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-white/5"
                 >
                     {mode === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                 </Button>
 
                 {/* Refresh */}
                 {onRefresh && (
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-foreground/40 dark:text-white/40 hover:text-foreground dark:hover:text-white hover:bg-foreground/5 dark:hover:bg-white/5"
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-white/5"
                         onClick={onRefresh}>
                         <RefreshCw className="w-4 h-4" />
                     </Button>
@@ -124,12 +124,12 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                         variant="ghost"
                         size="icon"
                         id="notifications-btn"
-                        className="h-9 w-9 rounded-xl text-white/40 hover:text-white hover:bg-white/5 relative"
+                        className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-white/5 relative"
                         onClick={() => setNotifOpen(o => !o)}
                     >
                         <Bell className="w-4 h-4" />
                         {alertCount > 0 && (
-                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-[#0a101c]" />
+                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-background" />
                         )}
                     </Button>
                     <AnimatePresence>
@@ -138,10 +138,10 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                                 initial={{ opacity: 0, y: 8, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                                className="absolute right-0 top-12 w-80 bg-[#111827] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
+                                className="absolute right-0 top-12 w-80 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden z-50"
                             >
-                                <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-                                    <p className="text-xs font-black uppercase tracking-widest text-white/60">AI Alerts</p>
+                                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">AI Alerts</p>
                                     {alertCount > 0 && <Badge className="bg-red-500/20 text-red-400 border-0 text-[9px]">{alertCount} URGENT</Badge>}
                                 </div>
                                 <div className="p-3 space-y-2 max-h-64 overflow-y-auto">
@@ -177,14 +177,14 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                                 initial={{ opacity: 0, y: 8, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                                className="absolute right-0 top-12 w-52 bg-[#111827] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
+                                className="absolute right-0 top-12 w-52 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden z-50"
                             >
                                 <div className="p-2">
                                     {QUICK_ACTIONS_CONFIG.map((qa) => {
                                         const Icon = qa.icon;
                                         return (
                                             <button key={qa.label} onClick={() => openAction(qa.type)}
-                                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs text-white/60 hover:text-white hover:bg-white/8 transition-all text-left font-medium">
+                                                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-white/5 transition-all text-left font-medium">
                                                 <Icon className="w-4 h-4 text-violet-400" />
                                                 {qa.label}
                                             </button>
@@ -202,12 +202,12 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                     <button
                         id="admin-profile-btn"
                         onClick={() => setProfileOpen(o => !o)}
-                        className="flex items-center gap-2 h-9 px-3 rounded-xl hover:bg-white/5 transition-all"
+                        className="flex items-center gap-2 h-9 px-3 rounded-xl hover:bg-foreground/5 transition-all"
                     >
                         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-xs font-black text-white">
                             {userName[0]}
                         </div>
-                        <ChevronDown className={`w-3 h-3 text-white/30 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
                     </button>
                     <AnimatePresence>
                         {profileOpen && (
@@ -215,18 +215,18 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                                 initial={{ opacity: 0, y: 8, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                                className="absolute right-0 top-12 w-48 bg-[#111827] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50"
+                                className="absolute right-0 top-12 w-48 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden z-50"
                             >
                                 <div className="p-2">
                                     <div className="px-3 py-2 mb-1">
-                                        <p className="text-xs font-black text-white">{userName}</p>
-                                        <p className="text-[10px] text-white/40 uppercase tracking-widest">{ROLE_LABELS[role] || "Staff Member"}</p>
+                                        <p className="text-xs font-black text-foreground">{userName}</p>
+                                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{ROLE_LABELS[role] || "Staff Member"}</p>
                                     </div>
-                                    <div className="border-t border-white/5 pt-1 space-y-0.5">
-                                        <Link href="/shepherd/dashboard/settings/" className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-white/60 hover:text-white hover:bg-white/8 transition-all">
+                                    <div className="border-t border-border pt-1 space-y-0.5">
+                                        <Link href="/shepherd/dashboard/settings/" className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-white/5 transition-all">
                                             <User className="w-3.5 h-3.5" /> My Profile
                                         </Link>
-                                        <button onClick={() => AdminAuth.logoutAdmin()} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all">
+                                        <button onClick={() => AdminAuth.logoutAdmin()} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all">
                                             <LogOut className="w-3.5 h-3.5" /> Sign Out
                                         </button>
                                     </div>

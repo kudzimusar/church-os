@@ -124,13 +124,13 @@ export default function PastorsDesk() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-foreground dark:text-white uppercase transition-colors">Pastor's Desk</h1>
-                    <p className="text-foreground/40 dark:text-white/40 font-medium transition-colors">Strategic overview of the church's health and impact.</p>
+                    <h1 className="text-3xl font-black tracking-tight text-foreground uppercase transition-colors">Pastor's Desk</h1>
+                    <p className="text-muted-foreground font-medium transition-colors">Strategic overview of the church's health and impact.</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={fetchStats}
-                        className="h-10 px-4 rounded-xl bg-card dark:bg-white/5 border border-border dark:border-white/10 hover:bg-muted dark:hover:bg-white/10 transition-colors flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-foreground dark:text-white"
+                        className="h-10 px-4 rounded-xl bg-card border border-border hover:bg-muted transition-colors flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-foreground"
                     >
                         <RefreshCcw className="w-3.5 h-3.5" /> Refresh Data
                     </button>
@@ -142,14 +142,14 @@ export default function PastorsDesk() {
 
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="bg-card dark:bg-white/5 border-border dark:border-white/10 rounded-3xl overflow-hidden group transition-colors">
+                <Card className="bg-card border-border rounded-3xl overflow-hidden group transition-colors">
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                             <Users className="w-5 h-5 text-violet-400" />
                             <ArrowUpRight className="w-4 h-4 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                        <CardDescription className="text-foreground/40 dark:text-white/40 font-bold uppercase tracking-widest text-[10px]">Total Members</CardDescription>
-                        <CardTitle className="text-3xl font-black text-foreground dark:text-white">{stats.totalMembers}</CardTitle>
+                        <CardDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Total Members</CardDescription>
+                        <CardTitle className="text-3xl font-black text-foreground">{stats.totalMembers}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-center gap-2 text-xs font-bold text-emerald-500">
@@ -159,14 +159,14 @@ export default function PastorsDesk() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-card dark:bg-white/5 border-border dark:border-white/10 rounded-3xl overflow-hidden group transition-colors">
+                <Card className="bg-card border-border rounded-3xl overflow-hidden group transition-colors">
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                             <Calendar className="w-5 h-5 text-blue-400" />
                             <ArrowUpRight className="w-4 h-4 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                        <CardDescription className="text-foreground/40 dark:text-white/40 font-bold uppercase tracking-widest text-[10px]">Attendance Intent</CardDescription>
-                        <CardTitle className="text-3xl font-black text-foreground dark:text-white">
+                        <CardDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Attendance Intent</CardDescription>
+                        <CardTitle className="text-3xl font-black text-foreground">
                             {stats.attendanceIntent.reduce((sum, item) => sum + item.value, 0)}
                         </CardTitle>
                     </CardHeader>
@@ -178,30 +178,30 @@ export default function PastorsDesk() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-card dark:bg-white/5 border-border dark:border-white/10 rounded-3xl overflow-hidden group transition-colors">
+                <Card className="bg-card border-border rounded-3xl overflow-hidden group transition-colors">
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                             <Share2 className="w-5 h-5 text-pink-400" />
                             <ArrowUpRight className="w-4 h-4 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                        <CardDescription className="text-foreground/40 dark:text-white/40 font-bold uppercase tracking-widest text-[10px]">Social Reach</CardDescription>
-                        <CardTitle className="text-3xl font-black text-foreground dark:text-white">{stats.socialMetrics.reach.toLocaleString()}</CardTitle>
+                        <CardDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Social Reach</CardDescription>
+                        <CardTitle className="text-3xl font-black text-foreground">{stats.socialMetrics.reach.toLocaleString()}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-xs font-bold text-white/40">
+                        <div className="text-xs font-bold text-muted-foreground opacity-60">
                             {stats.socialMetrics.engagement} Total Engagement
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-card dark:bg-white/5 border-border dark:border-white/10 rounded-3xl overflow-hidden group transition-colors">
+                <Card className="bg-card border-border rounded-3xl overflow-hidden group transition-colors">
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                             <Heart className="w-5 h-5 text-rose-400" />
                             <ArrowUpRight className="w-4 h-4 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                        <CardDescription className="text-foreground/40 dark:text-white/40 font-bold uppercase tracking-widest text-[10px]">Pastoral Alerts</CardDescription>
-                        <CardTitle className="text-3xl font-black text-foreground dark:text-white">{stats.careAlerts.length}</CardTitle>
+                        <CardDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Pastoral Alerts</CardDescription>
+                        <CardTitle className="text-3xl font-black text-foreground">{stats.careAlerts.length}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className={`text-xs font-bold ${stats.careAlerts.length > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
@@ -214,21 +214,21 @@ export default function PastorsDesk() {
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Attendance Chart */}
-                <Card className="lg:col-span-8 bg-card dark:bg-white/5 border-border dark:border-white/10 rounded-3xl p-6 transition-colors">
+                <Card className="lg:col-span-8 bg-card border-border rounded-3xl p-6 transition-colors">
                     <CardHeader className="px-0 pt-0">
-                        <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2 text-foreground dark:text-white">
+                        <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2 text-foreground">
                             <BarChart3 className="w-5 h-5 text-violet-400" /> Attendance Breakdown
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="h-[350px] px-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={stats.attendanceIntent}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                                <XAxis dataKey="name" stroke="#ffffff40" fontSize={10} fontWeight="bold" />
-                                <YAxis stroke="#ffffff40" fontSize={10} fontWeight="bold" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.1} />
+                                <XAxis dataKey="name" stroke="currentColor" strokeOpacity={0.5} fontSize={10} fontWeight="bold" />
+                                <YAxis stroke="currentColor" strokeOpacity={0.5} fontSize={10} fontWeight="bold" />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#111827', border: '1px solid #ffffff10', borderRadius: '12px' }}
-                                    itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
+                                    contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px' }}
+                                    itemStyle={{ color: 'var(--foreground)', fontSize: '12px', fontWeight: 'bold' }}
                                 />
                                 <Bar dataKey="value" radius={[10, 10, 0, 0]}>
                                     {stats.attendanceIntent.map((entry, index) => (
@@ -242,9 +242,9 @@ export default function PastorsDesk() {
 
                 {/* Status distribution & Care alerts */}
                 <div className="lg:col-span-4 space-y-8">
-                    <Card className="bg-card dark:bg-white/5 border-border dark:border-white/10 rounded-3xl p-6 transition-colors">
+                    <Card className="bg-card border-border rounded-3xl p-6 transition-colors">
                         <CardHeader className="px-0 pt-0">
-                            <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2 text-foreground dark:text-white">
+                            <CardTitle className="text-lg font-black uppercase tracking-widest flex items-center gap-2 text-foreground">
                                 <PieChartIcon className="w-5 h-5 text-blue-400" /> Channel Mix
                             </CardTitle>
                         </CardHeader>
@@ -265,8 +265,8 @@ export default function PastorsDesk() {
                                         ))}
                                     </Pie>
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#111827', border: '1px solid #ffffff10', borderRadius: '12px' }}
-                                        itemStyle={{ color: '#fff' }}
+                                        contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px' }}
+                                        itemStyle={{ color: 'var(--foreground)' }}
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
@@ -274,7 +274,7 @@ export default function PastorsDesk() {
                                 {stats.attendanceIntent.map((item, i) => (
                                     <div key={item.name} className="flex items-center gap-1.5">
                                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i] }} />
-                                        <span className="text-[10px] font-bold text-white/40 uppercase">{item.name}</span>
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{item.name}</span>
                                     </div>
                                 ))}
                             </div>
@@ -289,13 +289,13 @@ export default function PastorsDesk() {
                         </CardHeader>
                         <CardContent className="px-0 space-y-4">
                             {stats.careAlerts.length > 0 ? stats.careAlerts.map((alert, i) => (
-                                <div key={i} className="p-3 bg-card dark:bg-white/5 border border-border dark:border-white/10 rounded-2xl flex items-start gap-3">
+                                <div key={i} className="p-3 bg-card border border-border rounded-2xl flex items-start gap-3">
                                     <div className="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
                                         <Heart className="w-4 h-4 text-rose-500" />
                                     </div>
                                     <div>
-                                        <p className="text-xs font-bold text-foreground dark:text-white">{alert.title}</p>
-                                        <p className="text-[10px] text-foreground/40 dark:text-white/40 mt-1">{alert.insight}</p>
+                                        <p className="text-xs font-bold text-foreground">{alert.title}</p>
+                                        <p className="text-[10px] text-muted-foreground mt-1">{alert.insight}</p>
                                     </div>
                                 </div>
                             )) : (
