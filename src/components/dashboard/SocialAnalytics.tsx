@@ -99,7 +99,7 @@ export function SocialAnalytics() {
                                     <select
                                         value={newData.platform}
                                         onChange={e => setNewData({ ...newData, platform: e.target.value })}
-                                        className="w-full bg-foreground/5 dark:bg-white/5 border border-border rounded-xl h-10 px-3 text-xs font-bold text-foreground outline-none transition-colors"
+                                        className="w-full bg-muted border border-border rounded-xl h-10 px-3 text-xs font-bold text-foreground outline-none transition-colors"
                                     >
                                         <option value="instagram" className="bg-background text-foreground">Instagram</option>
                                         <option value="facebook" className="bg-background text-foreground">Facebook</option>
@@ -113,7 +113,7 @@ export function SocialAnalytics() {
                                         type="number"
                                         value={newData.reach}
                                         onChange={e => setNewData({ ...newData, reach: parseInt(e.target.value) })}
-                                        className="bg-foreground/5 dark:bg-white/5 border-border rounded-xl h-10 text-xs font-bold text-foreground transition-colors"
+                                        className="bg-muted border-border rounded-xl h-10 text-xs font-bold text-foreground transition-colors"
                                     />
                                 </div>
                                 <div className="space-y-1">
@@ -122,7 +122,7 @@ export function SocialAnalytics() {
                                         type="number"
                                         value={newData.engagement}
                                         onChange={e => setNewData({ ...newData, engagement: parseInt(e.target.value) })}
-                                        className="bg-foreground/5 dark:bg-white/5 border-border rounded-xl h-10 text-xs font-bold text-foreground transition-colors"
+                                        className="bg-muted border-border rounded-xl h-10 text-xs font-bold text-foreground transition-colors"
                                     />
                                 </div>
                                 <div className="flex items-end">
@@ -139,19 +139,19 @@ export function SocialAnalytics() {
                     <div className="space-y-8">
                         {/* Summary Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="p-4 bg-foreground/5 dark:bg-white/5 border border-border rounded-[1.5rem] flex flex-col justify-center transition-colors">
+                            <div className="p-4 bg-muted border border-border rounded-[1.5rem] flex flex-col justify-center transition-colors">
                                 <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1 transition-colors">Total Reach</span>
                                 <span className="text-xl font-black text-foreground transition-colors">
                                     {stats.filter(s => s.platform === stats[stats.length - 1]?.platform).reduce((acc, s) => acc + s.reach, 0).toLocaleString()}
                                 </span>
                             </div>
-                            <div className="p-4 bg-foreground/5 dark:bg-white/5 border border-border rounded-[1.5rem] flex flex-col justify-center transition-colors">
+                            <div className="p-4 bg-muted border border-border rounded-[1.5rem] flex flex-col justify-center transition-colors">
                                 <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1 transition-colors">Eng. Rate</span>
                                 <span className="text-xl font-black text-foreground transition-colors">
                                     {(stats[stats.length - 1]?.engagement / stats[stats.length - 1]?.reach * 100 || 0).toFixed(1)}%
                                 </span>
                             </div>
-                            <div className="p-4 bg-foreground/5 dark:bg-white/5 border border-border rounded-[1.5rem] flex flex-col justify-center transition-colors">
+                            <div className="p-4 bg-muted border border-border rounded-[1.5rem] flex flex-col justify-center transition-colors">
                                 <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1 transition-colors">Followers</span>
                                 <span className="text-xl font-black text-foreground transition-colors">{stats[stats.length - 1]?.followers.toLocaleString()}</span>
                             </div>

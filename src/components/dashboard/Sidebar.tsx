@@ -41,11 +41,11 @@ export function Sidebar() {
         <motion.aside
             animate={{ width: collapsed ? 72 : 260 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="relative flex flex-col h-full bg-card dark:bg-[#0d1421] border-r border-border dark:border-white/5 overflow-hidden flex-shrink-0 transition-colors duration-500"
+            className="relative flex flex-col h-full bg-card border-r border-border overflow-hidden flex-shrink-0 transition-colors duration-500"
         >
             {/* Logo */}
             <div className={cn(
-                "flex items-center gap-3 px-5 py-5 border-b border-border dark:border-white/5 flex-shrink-0",
+                "flex items-center gap-3 px-5 py-5 border-b border-border flex-shrink-0",
                 collapsed && "justify-center px-0"
             )}>
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-500/20">
@@ -77,18 +77,18 @@ export function Sidebar() {
                                 className={cn(
                                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 group",
                                     isActive
-                                        ? "bg-violet-500/20 text-violet-600 dark:text-violet-300"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-foreground/5 dark:hover:bg-white/5",
+                                        ? "bg-violet-500/20 text-violet-600 dark:text-violet-400"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-muted",
                                     collapsed && "justify-center px-0"
                                 )}
                             >
                                 <div className={cn(
                                     "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all",
-                                    isActive ? "bg-violet-500/30" : "group-hover:bg-foreground/10 dark:group-hover:bg-white/10"
+                                    isActive ? "bg-violet-500/30" : "group-hover:bg-muted"
                                 )}>
                                     <Icon className={cn(
                                         "w-4 h-4",
-                                        isActive ? "text-violet-600 dark:text-violet-300" : "text-current"
+                                        isActive ? "text-violet-600 dark:text-violet-400" : "text-current"
                                     )} />
                                 </div>
                                 {!collapsed && (
@@ -106,10 +106,10 @@ export function Sidebar() {
             </nav>
 
             {/* Collapse toggle */}
-            <div className="p-3 border-t border-border dark:border-white/5 flex-shrink-0">
+            <div className="p-3 border-t border-border flex-shrink-0">
                 <button
                     onClick={() => setCollapsed(c => !c)}
-                    className="w-full flex items-center justify-center p-2 rounded-xl text-muted-foreground/60 hover:text-foreground hover:bg-foreground/5 dark:hover:bg-white/5 transition-all"
+                    className="w-full flex items-center justify-center p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
                 >
                     {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                     {!collapsed && <span className="ml-2 text-xs font-medium">Collapse</span>}
