@@ -56,6 +56,7 @@ interface DashboardData {
     givingData: { month: string; amount: number }[];
     counselingQueue: { name: string; category: string; leader: string; date: string; urgent: boolean }[];
     staffingGaps: string[];
+    discipleshipData: { label: string; count: number }[];
 }
 
 interface AtRiskMember {
@@ -151,7 +152,15 @@ const MOCK_DATA: DashboardData = {
         { month: 'Feb', amount: 1050000 }, { month: 'Mar', amount: 1100000 },
     ],
     counselingQueue: [],
-    staffingGaps: []
+    staffingGaps: [],
+    discipleshipData: [
+        { label: 'Visitors', count: 84 },
+        { label: 'Attendees', count: 61 },
+        { label: 'Members', count: 247 },
+        { label: 'Volunteers', count: 89 },
+        { label: 'Leaders', count: 24 },
+        { label: 'Dept. Heads', count: 8 },
+    ]
 };
 
 /* ─── Sub-components ─── */
@@ -389,6 +398,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 householdData: [{ month: format(now, 'MMM'), ...hhSplit }],
                 ministryData: ministryData.length > 0 ? ministryData : prev.ministryData,
                 evangelismFunnel: pipelineFunnel,
+                discipleshipData: pipelineFunnel.map(f => ({ label: f.name, count: f.value })),
                 skillsData: skillsData.length > 0 ? skillsData : prev.skillsData,
                 geoClusters: geoClusters.length > 0 ? geoClusters : prev.geoClusters
             }));
