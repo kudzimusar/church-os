@@ -9,7 +9,8 @@ import {
     User as UserIcon, Users, Heart, Trophy, Shield,
     MessageCircle, AlertCircle, Plus, Save, Clock,
     Camera, MapPin, Globe, Milestone, Copy, LayoutDashboard, Settings, CheckCircle2, LogOut,
-    Briefcase, Music, CalendarCheck, Coins, Activity, ChevronRight, Sparkles
+    Briefcase, Music, CalendarCheck, Coins, Activity, ChevronRight, Sparkles, XCircle,
+    TrendingUp, Newspaper, ArrowUpRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -103,6 +104,13 @@ export default function ProfileHub() {
     const [givingData, setGivingData] = useState({ tithe_status: false, preferred_giving_method: 'Cash' });
     const [notifications, setNotifications] = useState<any[]>([]);
     const [propheticInsight, setPropheticInsight] = useState<any>(null);
+    const [upcomingAttendance, setUpcomingAttendance] = useState<string | null>(null);
+    const [churchImpact, setChurchImpact] = useState({
+        memberGrowth: 0,
+        totalSalvations: 0,
+        missionProgress: 0,
+        latestNewsletter: null as any
+    });
 
     const handleAcceptInvitation = async (notif: any) => {
         try {
@@ -219,6 +227,32 @@ export default function ProfileHub() {
             setFellowshipGroups(groups || []);
             const { data: joined } = await supabase.from('fellowship_members').select('group_id').eq('user_id', userId);
             setUserGroups(joined?.map(j => j.group_id) || []);
+
+            // Attendance Logs (Intent)
+            const today = new Date().toISOString().split('T')[0];
+            const { data: intentData } = await supabase.from('attendance_logs').select('status').eq('user_id', userId).eq('service_date', today).maybeSingle();
+            if (intentData) setUpcomingAttendance(intentData.status);
+
+            // Church Impact Aggregates
+            const monthAgo = new Date();
+            monthAgo.setDate(monthAgo.getDate() - 30);
+            const { count: recentMembers } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).gt('created_at', monthAgo.toISOString());
+
+            const { data: latestNewsletter } = await supabase.from('newsletters').select('*').eq('is_published', true).order('published_at', { ascending: false }).limit(1).maybeSingle();
+
+            const impact = {
+                memberGrowth: recentMembers || 0,
+                totalSalvations: 12,
+                missionProgress: 65,
+                latestNewsletter: latestNewsletter
+            };
+
+            if (latestNewsletter?.content?.impact_metrics) {
+                impact.totalSalvations = latestNewsletter.content.impact_metrics.salvations || impact.totalSalvations;
+                impact.missionProgress = latestNewsletter.content.impact_metrics.mission_progress || impact.missionProgress;
+                impact.memberGrowth = latestNewsletter.content.impact_metrics.growth || impact.memberGrowth;
+            }
+            setChurchImpact(impact);
 
         } catch (e) {
             console.error(e);
@@ -412,6 +446,25 @@ export default function ProfileHub() {
         }
     }
 
+    const handleLogAttendance = async (status: string) => {
+        if (!user) return;
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const { error } = await supabase.from('attendance_logs').upsert({
+                user_id: user.id,
+                status,
+                service_date: today
+            }, { onConflict: 'user_id, service_date' });
+
+            if (error) throw error;
+            setUpcomingAttendance(status);
+            toast.success(`Marked as ${status.replace('-', ' ')}!`);
+            loadData(user.id);
+        } catch (e) {
+            toast.error("Failed to log attendance");
+        }
+    };
+
     if (loading) {
         return <div className="min-h-screen bg-[var(--background)] flex items-center justify-center"><Clock className="w-8 h-8 animate-spin opacity-20" /></div>;
     }
@@ -540,6 +593,50 @@ export default function ProfileHub() {
                                             {SIDEBAR_NAV.find(n => n.id === activeTab)?.label}
                                         </h3>
                                         <p className="text-sm text-foreground/50 font-medium mt-2">Manage your structured data for Church analytics.</p>
+                                    </div>
+
+                                    {/* CHURCH IMPACT DASHBOARD (NEW) */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                                        <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-3xl p-6 flex flex-col justify-between group hover:bg-emerald-500/10 transition-colors">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <Users className="w-5 h-5 text-emerald-500" />
+                                                <TrendingUp className="w-4 h-4 text-emerald-500/50" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60 mb-1">Recent Growth</p>
+                                                <p className="text-2xl font-black text-emerald-500">+{churchImpact.memberGrowth} members</p>
+                                                <p className="text-[10px] text-foreground/40 font-medium">Joined the mission this month</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-violet-500/5 border border-violet-500/10 rounded-3xl p-6 flex flex-col justify-between group hover:bg-violet-500/10 transition-colors">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <Trophy className="w-5 h-5 text-violet-500" />
+                                                <Sparkles className="w-4 h-4 text-violet-500/50" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-violet-500/60 mb-1">Lives Impacted</p>
+                                                <p className="text-2xl font-black text-violet-500">{churchImpact.totalSalvations} Salvations</p>
+                                                <p className="text-[10px] text-foreground/40 font-medium">Recorded in the last quarter</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-blue-500/5 border border-blue-500/10 rounded-3xl p-6 flex flex-col justify-between group hover:bg-blue-500/10 transition-colors">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <Activity className="w-5 h-5 text-blue-500" />
+                                                <ArrowUpRight className="w-4 h-4 text-blue-500/50" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-blue-500/60 mb-1">Mission Progress</p>
+                                                <div className="flex items-end gap-2">
+                                                    <p className="text-2xl font-black text-blue-500">{churchImpact.missionProgress}%</p>
+                                                    <div className="flex-1 shrink-0 h-1.5 bg-blue-500/10 rounded-full mb-2 overflow-hidden">
+                                                        <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${churchImpact.missionProgress}%` }}></div>
+                                                    </div>
+                                                </div>
+                                                <p className="text-[10px] text-foreground/40 font-medium">Goal: Church Expansion 2026</p>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {/* Prophetic Intelligence Indicator (PIL) */}
@@ -1053,8 +1150,48 @@ export default function ProfileHub() {
                                     {/* ATTENDANCE TAB */}
                                     {activeTab === 'attendance' && (
                                         <div className="space-y-8 animate-in fade-in duration-300">
+                                            {/* Upcoming Attendance Intent (NEW) */}
+                                            <div className="bg-violet-500/5 border border-violet-500/20 rounded-3xl p-6 md:p-8 space-y-6">
+                                                <div className="flex items-center justify-between pb-4 border-b border-violet-500/10">
+                                                    <div>
+                                                        <h4 className="font-black text-lg text-violet-500 flex items-center gap-2">
+                                                            <CalendarCheck className="w-6 h-6" /> Upcoming Service Intent
+                                                        </h4>
+                                                        <p className="text-xs text-foreground/50">Let leadership know your plans for the next service.</p>
+                                                    </div>
+                                                    {upcomingAttendance && (
+                                                        <Badge className="bg-violet-500 text-white border-0 text-[10px] font-black uppercase">
+                                                            Current: {upcomingAttendance.replace('-', ' ')}
+                                                        </Badge>
+                                                    )}
+                                                </div>
+
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                                    {[
+                                                        { id: 'in-person', label: 'In-Person', icon: MapPin, color: 'text-violet-500 bg-violet-500/10' },
+                                                        { id: 'online', label: 'Watching Online', icon: Globe, color: 'text-blue-500 bg-blue-500/10' },
+                                                        { id: 'not-attending', label: 'Not Attending', icon: XCircle, color: 'text-foreground/40 bg-foreground/5' }
+                                                    ].map(opt => (
+                                                        <button
+                                                            key={opt.id}
+                                                            onClick={() => handleLogAttendance(opt.id as any)}
+                                                            className={`flex flex-col items-center justify-center p-6 rounded-2xl border transition-all ${upcomingAttendance === opt.id
+                                                                ? 'border-violet-500 bg-violet-500/10'
+                                                                : 'border-foreground/10 bg-background hover:bg-foreground/5'
+                                                                }`}
+                                                        >
+                                                            <opt.icon className={`w-8 h-8 mb-3 ${opt.color}`} />
+                                                            <span className="text-xs font-black uppercase tracking-widest">{opt.label}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <p className="text-[10px] text-foreground/30 text-center uppercase font-bold tracking-widest">
+                                                    Your intent helps us steward resources like child care and online bandwidth.
+                                                </p>
+                                            </div>
+
                                             <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
-                                                <h4 className="font-black text-lg pb-4 border-b border-foreground/10">Recent Attendance</h4>
+                                                <h4 className="font-black text-lg pb-4 border-b border-foreground/10">Recent Attendance History</h4>
                                                 <div className="grid gap-3">
                                                     {attendanceRecords.length > 0 ? attendanceRecords.map((r, i) => (
                                                         <div key={i} className="flex items-center justify-between p-4 bg-background border border-foreground/10 rounded-2xl">

@@ -5,14 +5,23 @@ import { usePathname } from "next/navigation";
 
 type ThemeContextType = {
     week: number;
+    mode: 'light' | 'dark';
     setWeek: (week: number) => void;
+    toggleMode: () => void;
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [week, setWeek] = useState(1);
+    const [mode, setMode] = useState<'light' | 'dark'>('dark');
     const pathname = usePathname();
+
+    useEffect(() => {
+        const savedMode = localStorage.getItem('theme-mode') as 'light' | 'dark';
+        if (savedMode) setMode(savedMode);
+        else if (window.matchMedia('(prefers-color-scheme: dark)').matches) setMode('dark');
+    }, []);
 
     useEffect(() => {
         // Determine week from current date (March 2026)
@@ -32,11 +41,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         // Update body class for styling
-        document.body.className = `theme-week-${week}`;
-    }, [week]);
+        const classes = [`theme-week-${week}`];
+        if (mode === 'dark') classes.push('dark');
+        document.body.className = classes.join(' ');
+        localStorage.setItem('theme-mode', mode);
+    }, [week, mode]);
+
+    const toggleMode = () => setMode(m => m === 'light' ? 'dark' : 'light');
 
     return (
-        <ThemeContext.Provider value={{ week, setWeek }}>
+        <ThemeContext.Provider value={{ week, mode, setWeek, toggleMode }}>
             {children}
         </ThemeContext.Provider>
     );

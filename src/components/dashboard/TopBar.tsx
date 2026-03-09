@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, Bell, Plus, ChevronDown, User, LogOut, RefreshCw, BookOpen, Calendar, Heart, Users, FileText } from "lucide-react";
+import {
+    Search, Bell, Plus, ChevronDown, User, LogOut, RefreshCw,
+    BookOpen, Calendar, Heart, Users, FileText, Sun, Moon
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -11,6 +14,7 @@ import { AdminAuth } from "@/lib/admin-auth";
 import { basePath as BP } from "@/lib/utils";
 import Link from "next/link";
 import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
+import { useTheme } from "@/components/theme-provider";
 
 import { QuickActionModal, QuickActionType } from "./QuickActionModal";
 
@@ -22,6 +26,7 @@ interface TopBarProps {
 
 export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBarProps) {
     const { role } = useAdminCtx();
+    const { mode, toggleMode } = useTheme();
     const [quickOpen, setQuickOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
@@ -66,7 +71,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
     }, []);
 
     return (
-        <header className="h-16 flex items-center justify-between px-6 bg-[#0a101c]/80 backdrop-blur-xl border-b border-white/5 flex-shrink-0 z-50">
+        <header className="h-16 flex items-center justify-between px-6 bg-background/80 dark:bg-[#0a101c]/80 backdrop-blur-xl border-b border-border dark:border-white/5 flex-shrink-0 z-50 transition-colors duration-500">
             {/* Quick Action Modal Replacement */}
             <QuickActionModal
                 isOpen={isActionModalOpen}
@@ -77,8 +82,8 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
             {/* Left: Title */}
             <div className="flex items-center gap-4">
                 <div>
-                    <h2 className="text-sm font-black tracking-widest text-white uppercase">Mission Control</h2>
-                    <p className="text-[10px] text-white/30 font-medium tracking-wider">Japan Kingdom Church · Shepherd Dashboard</p>
+                    <h2 className="text-sm font-black tracking-widest text-foreground dark:text-white uppercase">Mission Control</h2>
+                    <p className="text-[10px] text-foreground/40 dark:text-white/30 font-medium tracking-wider">Japan Kingdom Church · Shepherd Dashboard</p>
                 </div>
             </div>
 
@@ -95,9 +100,19 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2">
+                {/* Theme Toggle */}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleMode}
+                    className="h-9 w-9 rounded-xl text-foreground/40 dark:text-white/40 hover:text-foreground dark:hover:text-white hover:bg-foreground/5 dark:hover:bg-white/5"
+                >
+                    {mode === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                </Button>
+
                 {/* Refresh */}
                 {onRefresh && (
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-white/40 hover:text-white hover:bg-white/5"
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-foreground/40 dark:text-white/40 hover:text-foreground dark:hover:text-white hover:bg-foreground/5 dark:hover:bg-white/5"
                         onClick={onRefresh}>
                         <RefreshCw className="w-4 h-4" />
                     </Button>

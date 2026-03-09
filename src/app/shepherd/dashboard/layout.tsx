@@ -88,7 +88,7 @@ export default function ShepherdDashboardLayout({ children }: { children: React.
 
     return (
         <AdminContext.Provider value={state.ctx}>
-            <div className="flex h-screen overflow-hidden bg-[#080c14] text-white">
+            <div className="flex h-screen overflow-hidden bg-background text-foreground transition-colors duration-500">
                 {/* Sidebar */}
                 <Sidebar />
 

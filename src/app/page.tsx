@@ -32,7 +32,8 @@ import {
   AlertCircle,
   MapPin,
   Mail,
-  CheckCircle2
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -109,15 +110,30 @@ const SundayCheckIn = ({ user, currentDate }: { user: any, currentDate: Date }) 
     }
     setLoading(true);
     try {
-      const { error } = await supabase.from('attendance_records').insert([{
+      // 1. Log to attendance_records (legacy/check-in)
+      const { error: err1 } = await supabase.from('attendance_records').insert([{
         user_id: user.id,
         event_date: todayStr,
-        event_type: 'sunday_service',
+        event_type: type === 'Not Attending' ? 'absence' : 'sunday_service',
         notes: `Checked in as ${type}`
       }]);
-      if (error) throw error;
+      if (err1) throw err1;
+
+      // 2. Sync to attendance_logs (new/predictive/pastor-desk)
+      // Map labels to schema tokens: in-person, online, not-attending
+      const statusToken = type === 'In-Person' ? 'in-person' :
+        type === 'Online' ? 'online' : 'not-attending';
+
+      const { error: err2 } = await supabase.from('attendance_logs').upsert({
+        user_id: user.id,
+        service_date: todayStr,
+        status: statusToken
+      }, { onConflict: 'user_id, service_date' });
+
+      if (err2) throw err2;
+
       setCheckedIn(true);
-      toast.success("Checked in! Have a blessed service.");
+      toast.success(type === 'Not Attending' ? "Message sent to leadership. Have a restful day!" : "Checked in! Have a blessed service.");
     } catch (e) {
       console.error(e);
       toast.error("Check-in failed. Please try again.");
@@ -155,6 +171,9 @@ const SundayCheckIn = ({ user, currentDate }: { user: any, currentDate: Date }) 
           </Button>
           <Button disabled={loading} onClick={() => handleCheckIn('Online')} className="bg-white/20 hover:bg-white/30 text-white font-black px-8 py-6 rounded-2xl backdrop-blur-md border border-white/30 h-auto transition-transform active:scale-95">
             <Globe className="w-5 h-5 mr-3" /> ONLINE (ZOOM/STREAM)
+          </Button>
+          <Button disabled={loading} onClick={() => handleCheckIn('Not Attending')} className="bg-white/10 hover:bg-white/20 text-white/60 font-black px-8 py-6 rounded-2xl border border-white/10 h-auto transition-transform active:scale-95">
+            <XCircle className="w-5 h-5 mr-3" /> NOT ATTENDING
           </Button>
         </div>
       </div>

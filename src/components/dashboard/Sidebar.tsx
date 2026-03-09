@@ -6,7 +6,7 @@ import {
     LayoutDashboard, HeartPulse, Users, BookOpen, Music,
     Globe, Calendar, DollarSign, TrendingUp, Sparkles,
     FileText, Settings, ChevronLeft, ChevronRight, Shield,
-    MessagesSquare, Flame, LayoutGrid
+    MessagesSquare, Flame, LayoutGrid, Megaphone
 } from "lucide-react";
 import { basePath as BP } from "@/lib/utils";
 import { useState } from "react";
@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
     { label: "Church Overview", icon: LayoutDashboard, path: "" },
+    { label: "Pastor's Desk", icon: LayoutGrid, path: "/pastors-desk" },
     { label: "Spiritual Analytics", icon: HeartPulse, path: "/spiritual" },
     { label: "Pastoral Care", icon: Shield, path: "/care" },
     { label: "Members", icon: Users, path: "/members" },
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
     { label: "Growth Intelligence", icon: TrendingUp, path: "/growth" },
     { label: "AI Command Center", icon: Sparkles, path: "/ai" },
     { label: "Ministry Hub", icon: LayoutGrid, path: "/ministry-hub" },
+    { label: "Newsletters", icon: Megaphone, path: "/newsletters" },
     { label: "Reports & Data", icon: FileText, path: "/reports" },
     { label: "Settings", icon: Settings, path: "/settings" },
 ];
@@ -39,11 +41,11 @@ export function Sidebar() {
         <motion.aside
             animate={{ width: collapsed ? 72 : 260 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="relative flex flex-col h-full bg-[#0d1421] border-r border-white/5 overflow-hidden flex-shrink-0"
+            className="relative flex flex-col h-full bg-card dark:bg-[#0d1421] border-r border-border dark:border-white/5 overflow-hidden flex-shrink-0 transition-colors duration-500"
         >
             {/* Logo */}
             <div className={cn(
-                "flex items-center gap-3 px-5 py-5 border-b border-white/5 flex-shrink-0",
+                "flex items-center gap-3 px-5 py-5 border-b border-border dark:border-white/5 flex-shrink-0",
                 collapsed && "justify-center px-0"
             )}>
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-500/20">
@@ -51,8 +53,8 @@ export function Sidebar() {
                 </div>
                 {!collapsed && (
                     <div>
-                        <p className="text-xs font-black tracking-widest text-white/90 uppercase">Church OS</p>
-                        <p className="text-[9px] text-white/40 font-medium tracking-wider uppercase">Mission Control</p>
+                        <p className="text-xs font-black tracking-widest text-foreground dark:text-white/90 uppercase">Church OS</p>
+                        <p className="text-[9px] text-foreground/40 dark:text-white/40 font-medium tracking-wider uppercase">Mission Control</p>
                     </div>
                 )}
             </div>
@@ -75,18 +77,18 @@ export function Sidebar() {
                                 className={cn(
                                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 group",
                                     isActive
-                                        ? "bg-violet-500/20 text-violet-300"
-                                        : "text-white/40 hover:text-white/80 hover:bg-white/5",
+                                        ? "bg-violet-500/20 text-violet-600 dark:text-violet-300"
+                                        : "text-foreground/40 dark:text-white/40 hover:text-foreground dark:hover:text-white hover:bg-foreground/5 dark:hover:bg-white/5",
                                     collapsed && "justify-center px-0"
                                 )}
                             >
                                 <div className={cn(
                                     "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all",
-                                    isActive ? "bg-violet-500/30" : "group-hover:bg-white/10"
+                                    isActive ? "bg-violet-500/30" : "group-hover:bg-foreground/10 dark:group-hover:bg-white/10"
                                 )}>
                                     <Icon className={cn(
                                         "w-4 h-4",
-                                        isActive ? "text-violet-300" : "text-current"
+                                        isActive ? "text-violet-600 dark:text-violet-300" : "text-current"
                                     )} />
                                 </div>
                                 {!collapsed && (
@@ -104,10 +106,10 @@ export function Sidebar() {
             </nav>
 
             {/* Collapse toggle */}
-            <div className="p-3 border-t border-white/5 flex-shrink-0">
+            <div className="p-3 border-t border-border dark:border-white/5 flex-shrink-0">
                 <button
                     onClick={() => setCollapsed(c => !c)}
-                    className="w-full flex items-center justify-center p-2 rounded-xl text-white/30 hover:text-white/60 hover:bg-white/5 transition-all"
+                    className="w-full flex items-center justify-center p-2 rounded-xl text-foreground/30 dark:text-white/30 hover:text-foreground/60 dark:hover:text-white/60 hover:bg-foreground/5 dark:hover:bg-white/5 transition-all"
                 >
                     {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                     {!collapsed && <span className="ml-2 text-xs font-medium">Collapse</span>}
