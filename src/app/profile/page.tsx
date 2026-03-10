@@ -65,6 +65,13 @@ const SIDEBAR_NAV = [
 ];
 
 // Options now imported from @/lib/constants
+const GENDER_OPTIONS = ['Male', 'Female', 'Other'];
+const MARITAL_OPTIONS = ['Single', 'Married', 'Engaged', 'Widowed'];
+const CHURCH_BACKGROUNDS = ['Pentecostal', 'Baptist', 'Catholic', 'Anglican', 'Orthodox', 'New Believer', 'None'];
+const EDUCATION_LEVELS = ['High School', 'Bachelors', 'Masters', 'PhD', 'Other'];
+const GROWTH_STAGES = ['visitor', 'seeker', 'disciple', 'leader', 'shepherd', 'pastor'];
+const EXPERIENCE_YEARS = [1, 2, 3, 5, 8, 10, 15, 20];
+const SKILL_LEVELS = ['Beginner', 'Intermediate', 'Expert', 'Professional'];
 
 export default function ProfileHub() {
     const [user, setUser] = useState<any>(null);
@@ -124,18 +131,21 @@ export default function ProfileHub() {
     const [newChildBirthdate, setNewChildBirthdate] = useState("");
 
     const handleAcceptInvitation = async (notif: any) => {
+        if (!user) return;
         try {
-            await supabase.from('ministry_members')
+            const { error: updErr } = await supabase.from('ministry_members')
                 .update({ status: 'active' })
                 .eq('user_id', user.id)
                 .eq('status', 'pending_invitation');
+
+            if (updErr) throw updErr;
 
             await supabase.from('member_notifications').update({ is_read: true }).eq('id', notif.id);
             setNotifications(notifications.filter(n => n.id !== notif.id));
             toast.success("Welcome to the team!");
             loadData(user.id);
-        } catch (e) {
-            toast.error("Acceptance failed");
+        } catch (e: any) {
+            toast.error(e.message || "Acceptance failed");
         }
     };
 
@@ -155,10 +165,20 @@ export default function ProfileHub() {
 
     async function loadData(userId: string) {
         try {
-            // Profile
+            // Profiles and Organization Context
             const { data: pData } = await supabase.from('profiles').select('*').eq('id', userId).single();
             if (pData) {
-                setProfile(pData);
+                // Stabilize Org ID for all queries
+                let currentOrgId = pData.org_id;
+                if (!currentOrgId) {
+                    const { data: globalOrg } = await supabase.from('organizations').select('id').limit(1).maybeSingle();
+                    currentOrgId = globalOrg?.id;
+                    if (currentOrgId) {
+                        await supabase.from('profiles').update({ org_id: currentOrgId }).eq('id', userId);
+                    }
+                }
+
+                setProfile({ ...pData, org_id: currentOrgId });
                 idForm.reset({
                     name: pData.name,
                     gender: pData.gender || '',
@@ -182,102 +202,69 @@ export default function ProfileHub() {
                     tithe_status: pData.tithe_status || false,
                     preferred_giving_method: pData.preferred_giving_method || 'Cash'
                 });
+
+                // Load dependent data using organization context
+                if (currentOrgId) {
+                    // Household
+                    const { data: hhData } = await supabase.from('households').select('id, household_name').eq('head_id', userId).maybeSingle();
+                    if (hhData) {
+                        const { data: members } = await supabase.from('household_members').select('*').eq('household_id', hhData.id);
+                        setHousehold(members || []);
+                    }
+
+                    // Milestones
+                    supabase.from('member_milestones').select('*').eq('user_id', userId).maybeSingle()
+                        .then(({ data }) => data && setMilestones(data));
+
+                    // Ministries
+                    supabase.from('ministry_members').select('*').eq('user_id', userId)
+                        .then(({ data }) => setMinistryRoles(data || []));
+
+                    // Skills
+                    supabase.from('member_skills').select('*').eq('user_id', userId)
+                        .then(({ data }) => setSkills(data || []));
+
+                    // Notifications
+                    supabase.from('member_notifications').select('*').eq('user_id', userId).eq('is_read', false).order('created_at', { ascending: false })
+                        .then(({ data }) => data && setNotifications(data));
+
+                    // Attendance History
+                    supabase.from('attendance_records').select('*').eq('user_id', userId).order('event_date', { ascending: false }).limit(10)
+                        .then(({ data }) => setAttendanceRecords(data || []));
+
+                    // Junior Church
+                    supabase.from('guardian_links').select('*').eq('guardian_id', userId)
+                        .then(({ data }) => setChildren(data || []));
+
+                    // Analytics & Global Metrics
+                    const monthAgo = new Date();
+                    monthAgo.setDate(monthAgo.getDate() - 30);
+                    const [growthRes, salvationRes, baptismRes] = await Promise.all([
+                        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('org_id', currentOrgId).gt('created_at', monthAgo.toISOString()),
+                        supabase.from('member_milestones').select('*', { count: 'exact', head: true }).not('salvation_date', 'is', null),
+                        supabase.from('member_milestones').select('*', { count: 'exact', head: true }).not('baptism_date', 'is', null)
+                    ]);
+
+                    setChurchImpact({
+                        memberGrowth: growthRes.count || 0,
+                        totalSalvations: salvationRes.count || 0,
+                        missionProgress: Math.min(100, Math.round(((baptismRes.count || 0) / 100) * 100)),
+                        latestNewsletter: null
+                    });
+                }
             }
 
-            // Stats
-            const journalStats = await SoapJournal.getStats();
-            setStats(journalStats);
-
-            // Household
-            const { data: hhData } = await supabase.from('households').select('id, household_name').eq('head_id', userId).maybeSingle();
-            if (hhData) {
-                const { data: members } = await supabase.from('household_members').select('*').eq('household_id', hhData.id);
-                setHousehold(members || []);
-            } else {
-                setHousehold([]);
-            }
-
-            // Milestones
-            const { data: mData } = await supabase.from('member_milestones').select('*').eq('user_id', userId).maybeSingle();
-            if (mData) setMilestones(mData);
-
-            // Ministries
-            const { data: roleData } = await supabase.from('ministry_members').select('*').eq('user_id', userId);
-            if (roleData) setMinistryRoles(roleData || []);
-
-            // Prayers
-            const { data: prayerData } = await supabase.from('prayer_requests').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-            if (prayerData) setPrayers(prayerData || []);
-
-            // Skills
-            const { data: skillData } = await supabase.from('member_skills').select('*').eq('user_id', userId);
-            if (skillData) setSkills(skillData || []);
-
-            // Notifications
-            const { data: notifData } = await supabase.from('member_notifications').select('*').eq('user_id', userId).eq('is_read', false).order('created_at', { ascending: false });
-            if (notifData) setNotifications(notifData);
-
-            // Attendance
-            const { data: attData } = await supabase.from('attendance_records').select('*').eq('user_id', userId).order('event_date', { ascending: false }).limit(10);
-            setAttendanceRecords(attData || []);
-
-            // Prophetic Intelligence (PIL)
-            const { data: pilData } = await supabase.from('prophetic_insights').select('*').eq('subject_id', userId).eq('is_acknowledged', false).maybeSingle();
-            if (pilData) setPropheticInsight(pilData);
-
-            // Junior Church
-            const { data: juniorData } = await supabase.from('guardian_links').select('*').eq('guardian_id', userId);
-            setChildren(juniorData || []);
-
-            // Giving History
-            const { data: gHistory } = await supabase.from('financial_records').select('*').eq('user_id', userId).order('given_date', { ascending: false });
-            setGivingHistory(gHistory || []);
-
-            // Fellowship
-            const { data: groups } = await supabase.from('fellowship_groups').select('*').eq('is_active', true);
-            setFellowshipGroups(groups || []);
-            const { data: joined } = await supabase.from('fellowship_members').select('group_id').eq('user_id', userId);
-            setUserGroups(joined?.map(j => j.group_id) || []);
-
-            // Attendance Logs (Intent)
-            const today = new Date().toISOString().split('T')[0];
-            const { data: intentData } = await supabase.from('attendance_logs').select('status').eq('user_id', userId).eq('service_date', today).maybeSingle();
-            if (intentData) setUpcomingAttendance(intentData.status);
-
-            // Church Impact Aggregates
-            const monthAgo = new Date();
-            monthAgo.setDate(monthAgo.getDate() - 30);
-            const { count: recentMembers } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).gt('created_at', monthAgo.toISOString());
-            const { count: totalSalvations } = await supabase.from('member_milestones').select('*', { count: 'exact', head: true }).not('salvation_date', 'is', null);
-            const { count: totalBaptisms } = await supabase.from('member_milestones').select('*', { count: 'exact', head: true }).not('baptism_date', 'is', null);
-
-            const { data: latestNewsletter } = await supabase.from('newsletters').select('*').eq('is_published', true).order('published_at', { ascending: false }).limit(1).maybeSingle();
-
-            const impact = {
-                memberGrowth: recentMembers || 0,
-                totalSalvations: totalSalvations || 0,
-                missionProgress: Math.min(100, Math.round(((totalBaptisms || 0) / 100) * 100)), // Example calculation
-                latestNewsletter: latestNewsletter
-            };
-
-            if (latestNewsletter?.content?.impact_metrics) {
-                impact.totalSalvations = latestNewsletter.content.impact_metrics.salvations || impact.totalSalvations;
-                impact.missionProgress = latestNewsletter.content.impact_metrics.mission_progress || impact.missionProgress;
-                impact.memberGrowth = latestNewsletter.content.impact_metrics.growth || impact.memberGrowth;
-            }
-            setChurchImpact(impact);
+            // Global user role
+            const { data: orgRoleData } = await supabase.from('org_members').select('role').eq('user_id', userId).maybeSingle();
+            setUserRole(orgRoleData?.role || 'visitor');
 
             // Membership Request
             const { data: mrData } = await supabase.from('membership_requests').select('*').eq('user_id', userId).maybeSingle();
             setMembershipRequest(mrData);
 
-            // Fetch role
-            const { data: orgRoleData } = await supabase.from('org_members').select('role').eq('user_id', userId).maybeSingle();
-            setUserRole(orgRoleData?.role || 'visitor');
-
         } catch (e) {
-            console.error(e);
-            toast.error("Failed to load profile data");
+            console.error("Profile Load Error:", e);
+            toast.error("Network synchronization error. Some data may stay local.");
         }
     }
 
@@ -334,52 +321,51 @@ export default function ProfileHub() {
     };
 
     const handleAddHousehold = async () => {
-        if (!newHouseholdName || !user) return;
+        if (!newHouseholdName || !user || !profile?.org_id) {
+            toast.error("Profile context missing. Please refresh.");
+            return;
+        }
+        setIsSaving(true);
         try {
-            // 1. Ensure household exists for head
             let { data: hh } = await supabase.from('households').select('id').eq('head_id', user.id).maybeSingle();
             if (!hh) {
-                const { data: newHh, error: hhErr } = await supabase.from('households').insert([{
+                const { data: newHh, error: hhErr } = await supabase.from('households').insert({
                     head_id: user.id,
-                    household_name: `${user.name}'s Household`
-                }]).select().single();
+                    household_name: `${profile.name}'s Family Hub`,
+                    org_id: profile.org_id
+                }).select().single();
                 if (hhErr) throw hhErr;
                 hh = newHh;
             }
 
-            // 2. Add member
-            const { data: member, error: memErr } = await supabase.from('household_members').insert([{
-                household_id: hh!.id,
-                full_name: newHouseholdName,
-                relationship: newHouseholdRel,
-                user_id: null // Explicitly null for offline members
-            }]).select().single();
-            if (memErr) throw memErr;
+            if (hh) {
+                const { data, error } = await supabase.from('household_members').insert({
+                    household_id: hh.id,
+                    full_name: newHouseholdName,
+                    relationship: newHouseholdRel,
+                    org_id: profile.org_id
+                }).select().single();
 
-            const nh = [...household, member];
-            setHousehold(nh);
-
-            AnalyticsService.logEvent(user.id, 'household_member_added', { member: newHouseholdName });
-
-            // 3. Update identity household_type abstractly
-            let household_type = 'Single';
-            if (nh.some(h => h.relationship === 'Spouse')) household_type = 'Couple';
-            if (nh.some(h => h.relationship === 'Child')) household_type = 'Family with Children';
-            await supabase.from('profiles').update({ household_type }).eq('id', user.id);
-
-            setNewHouseholdName("");
-            toast.success("Household updated!");
+                if (error) throw error;
+                setHousehold([...household, data]);
+                setNewHouseholdName("");
+                toast.success("Family member linked!");
+            }
         } catch (e: any) {
-            console.error("Household Error:", e);
+            console.error(e);
             toast.error(e.message || "Error updating household");
+        } finally {
+            setIsSaving(false);
         }
     };
 
     const handleAddChild = async () => {
-        if (!newChildName || !user) return;
+        if (!newChildName || !user || !profile?.org_id) return;
+        setIsSaving(true);
         try {
             const { data, error } = await supabase.from('guardian_links').insert([{
                 guardian_id: user.id,
+                org_id: profile.org_id,
                 child_name: newChildName,
                 child_birthdate: newChildBirthdate,
                 relationship: 'Parent'
@@ -390,88 +376,99 @@ export default function ProfileHub() {
             setNewChildName("");
             setNewChildBirthdate("");
             setIsAddingChild(false);
-            toast.success("Child linked to your account!");
+            toast.success("Child enrollment confirmed!");
         } catch (e: any) {
             toast.error(e.message || "Failed to link child");
+        } finally {
+            setIsSaving(false);
         }
     };
 
     const saveMilestones = async () => {
-        if (!user) return;
+        if (!user || !profile?.org_id) return;
+        setIsSaving(true);
         try {
             const { error } = await supabase.from('member_milestones').upsert({
                 user_id: user.id,
+                org_id: profile.org_id,
                 ...milestones,
                 updated_at: new Date().toISOString()
-            });
+            }, { onConflict: 'user_id' });
             if (error) throw error;
-            toast.success("Journey milestones saved!");
-        } catch (e) {
-            toast.error("Failed saving milestones");
+            toast.success("Spiritual journey sync complete.");
+        } catch (e: any) {
+            toast.error("Failed to sync milestones.");
+        } finally {
+            setIsSaving(false);
         }
     };
 
     const handleAddPrayer = async () => {
-        if (!newPrayerText || !user) return;
+        if (!newPrayerText || !user || !profile?.org_id) return;
+        setIsSaving(true);
         try {
-            const newRecord = {
+            const { data, error } = await supabase.from('prayer_requests').insert([{
                 user_id: user.id,
+                org_id: profile.org_id,
                 request_text: newPrayerText,
                 category: newPrayerCategory,
                 urgency: newPrayerUrgency,
                 requires_pastoral_contact: pastoralContact,
-                status: 'Pending'
-            };
-            const { data, error } = await supabase.from('prayer_requests').insert([newRecord]).select().single();
+                status: 'pending'
+            }]).select().single();
             if (error) throw error;
-
             setPrayers([data, ...prayers]);
             setNewPrayerText("");
             setPastoralContact(false);
-            toast.success("Prayer request submitted to leadership.");
-        } catch (e) {
+            toast.success("Prayer submitted to leadership.");
+        } catch (e: any) {
             toast.error("Failed submitting prayer");
+        } finally {
+            setIsSaving(false);
         }
     };
 
     const togglePrayer = async (id: string, currentStatus: string) => {
-        if (!user) return;
-        const newStatus = currentStatus === 'Pending' ? 'Answered' : 'Pending';
+        const newStatus = currentStatus === 'pending' ? 'answered' : 'pending';
         try {
             await supabase.from('prayer_requests').update({ status: newStatus }).eq('id', id);
             setPrayers(prayers.map(p => p.id === id ? { ...p, status: newStatus } : p));
-            toast.success("Prayer status updated");
+            toast.success("Prayer status updated.");
         } catch (e) {
-            toast.error("Failed to update");
+            toast.error("Failed update");
         }
     };
 
     const handleAddMinistry = async () => {
-        if (!newMinistry || !user) return;
+        if (!newMinistry || !user || !profile?.org_id) return;
+        setIsSaving(true);
         try {
-            const rec = {
+            const { data, error } = await supabase.from('ministry_members').insert([{
                 user_id: user.id,
+                org_id: profile.org_id,
                 ministry_name: newMinistry,
                 ministry_role: newMinistryRoleTitle || 'Member',
-                status: 'active',
+                status: 'pending',
                 joined_date: new Date().toISOString()
-            };
-            const { data, error } = await supabase.from('ministry_members').insert([rec]).select().single();
+            }]).select().single();
             if (error) throw error;
-
             setMinistryRoles([...ministryRoles, data]);
             setNewMinistryRoleTitle("");
-            toast.success("Ministry role linked!");
-        } catch (e) {
-            toast.error("Error linking role");
+            toast.success("Ministry application sent!");
+        } catch (e: any) {
+            toast.error(e.message || "Error linking role");
+        } finally {
+            setIsSaving(false);
         }
     };
 
     const handleAddSkill = async () => {
-        if (!user) return;
+        if (!user || !profile?.org_id) return;
+        setIsSaving(true);
         try {
             const { data, error } = await supabase.from('member_skills').insert([{
                 user_id: user.id,
+                org_id: profile.org_id,
                 skill_name: newSkill,
                 skill_category: newSkillCat,
                 skill_level: newSkillLevel,
@@ -480,26 +477,31 @@ export default function ProfileHub() {
             if (error) throw error;
             setSkills([...skills, data]);
             toast.success("Skill added!");
-        } catch (e) {
+        } catch (e: any) {
             toast.error("Error adding skill");
+        } finally {
+            setIsSaving(false);
         }
-    }
+    };
 
     const handleJoinGroup = async (groupId: string) => {
-        if (!user) return;
-        const isJoined = userGroups.includes(groupId);
+        if (!user || !profile?.org_id) return;
+        setIsSaving(true);
         try {
+            const isJoined = userGroups.includes(groupId);
             if (isJoined) {
                 await supabase.from('fellowship_members').delete().eq('user_id', user.id).eq('group_id', groupId);
                 setUserGroups(userGroups.filter(id => id !== groupId));
                 toast.success("Left group");
             } else {
-                await supabase.from('fellowship_members').insert([{ user_id: user.id, group_id: groupId }]);
+                await supabase.from('fellowship_members').insert([{ user_id: user.id, group_id: groupId, org_id: profile.org_id }]);
                 setUserGroups([...userGroups, groupId]);
-                toast.success("Joined group!");
+                toast.success("Welcome to the Circle!");
             }
-        } catch (e) {
+        } catch (e: any) {
             toast.error("Action failed");
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -507,72 +509,65 @@ export default function ProfileHub() {
         if (!user) return;
         try {
             await supabase.from('profiles').update(givingData).eq('id', user.id);
-            toast.success("Giving preferences saved");
+            toast.success("Preferences saved");
         } catch (e) {
-            toast.error("Error saving preferences");
+            toast.error("Save failed");
         }
-    }
+    };
 
     const handleLogAttendance = async (status: string) => {
-        if (!user) return;
+        if (!user || !profile?.org_id) return;
         try {
             const today = new Date().toISOString().split('T')[0];
             const { error } = await supabase.from('attendance_logs').upsert({
                 user_id: user.id,
-                org_id: profile?.org_id,
+                org_id: profile.org_id,
                 status,
                 service_date: today
             }, { onConflict: 'user_id, service_date' });
-
             if (error) throw error;
             setUpcomingAttendance(status);
-            toast.success(`Marked as ${status.replace('-', ' ')}!`);
+            toast.success(`Marked as ${status}!`);
             loadData(user.id);
         } catch (e) {
             toast.error("Failed to log attendance");
         }
     };
 
+    const handleChildCheckin = async (childId: string, status: string) => {
+        if (!user || !profile?.org_id) return;
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const { error } = await supabase.from('attendance_logs').upsert({
+                guardian_id: user.id,
+                child_link_id: childId,
+                org_id: profile.org_id,
+                status: status,
+                service_date: today
+            }, { onConflict: 'child_link_id, service_date' });
+            if (error) throw error;
+            toast.success("Child checked in for Junior Church!");
+            loadData(user.id);
+        } catch (e: any) {
+            toast.error("Check-in failed: " + (e.message || "Unknown error"));
+        }
+    };
+
     const handleRequestMembership = async () => {
-        if (!user) return;
+        if (!user || !profile?.org_id) return;
         setIsSaving(true);
         try {
-            // Ensure we have an org_id (Fetch if missing from profile)
-            let org_id = profile?.org_id;
-            if (!org_id) {
-                const { data: orgData } = await supabase.from('organizations').select('id').limit(1).maybeSingle();
-                org_id = orgData?.id;
-
-                if (org_id) {
-                    await supabase.from('profiles').update({ org_id }).eq('id', user.id);
-                    // Refresh local profile
-                    setProfile((prev: any) => prev ? { ...prev, org_id } : null);
-                }
-            }
-
-            if (!org_id) {
-                toast.error("Internal configuration error: Organizational context missing.");
-                setIsSaving(false);
-                return;
-            }
-
             const { data, error } = await supabase.from('membership_requests').upsert({
                 user_id: user.id,
-                org_id: org_id,
+                org_id: profile.org_id,
                 status: 'pending',
                 created_at: new Date().toISOString()
             }, { onConflict: 'user_id, org_id' }).select().single();
-
-            if (error) {
-                console.error("Membership Request Error Details:", error);
-                throw error;
-            }
-
+            if (error) throw error;
             setMembershipRequest(data);
-            toast.success("Membership request submitted! Our leadership team will review it soon.");
+            toast.success("Request submitted to leadership!");
         } catch (e: any) {
-            console.error("Caught Exception in Membership Submission:", e);
-            toast.error(e.message || "Failed to submit request. Please try again or contact support.");
+            toast.error(e.message || "Submission failed");
         } finally {
             setIsSaving(false);
         }
@@ -1100,19 +1095,31 @@ export default function ProfileHub() {
                                                 {children.length > 0 ? (
                                                     <div className="grid gap-4">
                                                         {children.map(child => (
-                                                            <div key={child.id} className="flex items-center justify-between p-5 bg-background border border-foreground/10 rounded-2xl">
-                                                                <div className="flex items-center gap-4">
-                                                                    <div className="w-12 h-12 rounded-2xl bg-violet-500/10 flex items-center justify-center text-violet-500 font-black">
+                                                            <div key={child.id} className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-background border border-foreground/10 rounded-3xl transition-all hover:bg-muted/50 group">
+                                                                <div className="flex items-center gap-4 mb-4 md:mb-0">
+                                                                    <div className="w-14 h-14 rounded-2xl bg-violet-500/10 flex items-center justify-center text-violet-500 text-xl font-black shadow-inner">
                                                                         {child.child_name[0]}
                                                                     </div>
                                                                     <div>
-                                                                        <p className="font-bold text-foreground">{child.child_name}</p>
-                                                                        <p className="text-xs text-foreground/40">{child.child_birthdate || 'Age not specified'}</p>
+                                                                        <p className="font-bold text-lg text-foreground">{child.child_name}</p>
+                                                                        <p className="text-xs text-muted-foreground font-black uppercase tracking-widest opacity-60">
+                                                                            {child.child_birthdate || 'Birth date not set'}
+                                                                        </p>
                                                                     </div>
                                                                 </div>
-                                                                <div className="flex flex-col items-end">
-                                                                    <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[9px] font-black uppercase">Active</Badge>
-                                                                    <p className="text-[10px] text-foreground/30 mt-1">Last seen: Feb 26</p>
+                                                                <div className="flex items-center gap-3">
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        onClick={() => handleChildCheckin(child.id, 'checked-in')}
+                                                                        className="h-10 px-4 rounded-xl border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-500/5 transition-all"
+                                                                    >
+                                                                        Check-in for Sunday
+                                                                    </Button>
+                                                                    <div className="flex flex-col items-end">
+                                                                        <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[9px] font-black uppercase px-2 py-0.5 rounded-md">Active</Badge>
+                                                                        <p className="text-[10px] text-muted-foreground font-bold mt-1.5 opacity-40 uppercase tracking-tighter">Verified Link</p>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         ))}
@@ -1212,35 +1219,43 @@ export default function ProfileHub() {
                                     {activeTab === 'skills' && (
                                         <div className="space-y-8 animate-in fade-in duration-300">
                                             <div className="bg-card border border-border rounded-3xl p-6 md:p-8 space-y-6 transition-colors">
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                                                <div className="flex items-center gap-3 pb-6 border-b border-border">
+                                                    <div className="w-12 h-12 rounded-3xl bg-violet-500/10 flex items-center justify-center">
+                                                        <Briefcase className="w-6 h-6 text-violet-500" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-black text-lg">Skills & Talents Registry</h4>
+                                                        <p className="text-xs text-muted-foreground font-medium">Link your professional and spiritual gifts for easier ministry placement.</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 py-6">
                                                     <div className="space-y-1">
-                                                        <label className="text-[10px] font-bold text-muted-foreground uppercase pl-1">Category</label>
-                                                        <select value={newSkillCat} onChange={e => setNewSkillCat(e.target.value)} className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none text-foreground">
-                                                            {SKILL_OPTIONS.slice(0, 10).map(o => <option key={o} value={o}>{o}</option>)}
+                                                        <label className="text-[10px] font-black text-muted-foreground uppercase pl-1 tracking-widest">Industry Category</label>
+                                                        <select value={newSkillCat} onChange={e => setNewSkillCat(e.target.value)} className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-black outline-none text-foreground appearance-none hover:bg-muted/80 transition-all cursor-pointer">
+                                                            {['Technology', 'Music', 'Media', 'Business', 'Education', 'Health', 'Construction', 'Arts'].map(o => <option key={o} value={o}>{o}</option>)}
                                                         </select>
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <label className="text-[10px] font-bold text-muted-foreground uppercase pl-1">Talent</label>
-                                                        <select value={newSkill} onChange={e => setNewSkill(e.target.value)} className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none text-foreground">
+                                                        <label className="text-[10px] font-black text-muted-foreground uppercase pl-1 tracking-widest">Specific Talent</label>
+                                                        <select value={newSkill} onChange={e => setNewSkill(e.target.value)} className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-black outline-none text-foreground appearance-none hover:bg-muted/80 transition-all cursor-pointer">
                                                             {SKILL_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                                                         </select>
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <label className="text-[10px] font-bold text-muted-foreground uppercase pl-1">Level</label>
-                                                        <select value={newSkillLevel} onChange={e => setNewSkillLevel(e.target.value)} className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none text-foreground">
-                                                            <option>Beginner</option>
-                                                            <option>Intermediate</option>
-                                                            <option>Expert</option>
+                                                        <label className="text-[10px] font-black text-muted-foreground uppercase pl-1 tracking-widest">Mastery Level</label>
+                                                        <select value={newSkillLevel} onChange={e => setNewSkillLevel(e.target.value)} className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-black outline-none text-foreground appearance-none hover:bg-muted/80 transition-all cursor-pointer">
+                                                            {SKILL_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
                                                         </select>
                                                     </div>
                                                     <div className="flex items-end gap-2">
                                                         <div className="space-y-1 flex-1">
-                                                            <label className="text-[10px] font-bold text-muted-foreground uppercase pl-1">Yrs Exp</label>
-                                                            <select value={newSkillExp} onChange={e => setNewSkillExp(parseInt(e.target.value))} className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none text-foreground">
-                                                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20].map(n => <option key={n} value={n}>{n}+ Years</option>)}
+                                                            <label className="text-[10px] font-black text-muted-foreground uppercase pl-1 tracking-widest">Experience</label>
+                                                            <select value={newSkillExp} onChange={e => setNewSkillExp(parseInt(e.target.value))} className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-black outline-none text-foreground appearance-none hover:bg-muted/80 transition-all cursor-pointer">
+                                                                {EXPERIENCE_YEARS.map(n => <option key={n} value={n}>{n}+ Years</option>)}
                                                             </select>
                                                         </div>
-                                                        <Button onClick={handleAddSkill} className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black shadow-lg">Link</Button>
+                                                        <Button disabled={isSaving} onClick={handleAddSkill} className="h-14 px-8 rounded-2xl bg-violet-500 text-white font-black shadow-lg hover:scale-[1.02] active:scale-95 transition-all">Link</Button>
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-wrap gap-2">

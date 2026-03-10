@@ -103,52 +103,76 @@ export const AIService = {
         const historyStr = chatHistory?.map(m => `${m.role.toUpperCase()}: ${m.content}`).join("\n") || "";
         const fullPrompt = `${SYSTEM_PROMPT}\n\n${contextStr}\n\nCONVERSATION HISTORY:\n${historyStr}\n\nUSER QUESTION: ${query}\n\nRESPONSE:`;
 
-        if (apiKey && apiKey !== "YOUR_GEMINI_API_KEY") {
+        // REAL AI INTEGRATION: ENSURE THE KEY IS NOT THE PLACEHOLDER
+        const isPlaceholder = !apiKey || apiKey === "YOUR_GEMINI_API_KEY" || apiKey.trim() === "";
+
+        if (!isPlaceholder) {
             try {
                 const result = await model.generateContent(fullPrompt);
                 const response = await result.response;
-                return response.text();
+                const text = response.text();
+                if (text && text.length > 5) return text;
+                throw new Error("Empty AI response");
             } catch (err) {
-                console.error("Gemini Error:", err);
-                return "I apologize, my spiritual connection is currently interrupted.";
+                console.error("Gemini Production Error:", err);
+                // Graceful degradation with contextual intelligent fallback
+                if (query.toLowerCase().includes("profile")) return "Your profile is the 'Digital Heart' of your ministry. You can update your Identity, add Skills for the gap analysis, and link your family in the 'Family & Households' section.";
+                if (query.toLowerCase().includes("membership")) return "To submit a Membership Request, use the 'Request Membership' button on your profile card. This alerts our leadership team to begin your official discipleship onboarding.";
+                return "I apologize, my spiritual connection is temporarily interrupted. I am here to guide you through your Devotions and Profile setup. What can I assist with specifically?";
             }
         }
 
+        // Diagnostic Fallback for lack of API Key
+        const fallbackResponse = `Blessings, ${userName}! (Note: AI reasoning is currently in diagnostic mode). I see you are ${userRole || 'exploring'} the platform. 
+        You can complete your profile identity to helps us understand your gifts, join a Fellowship Circle for midweek connection, or link your children for Junior Church check-ins. 
+        How can I guide your transformation today?`;
+
         return new Promise<string>((resolve) => {
-            setTimeout(() => {
-                const lowerQuery = query.toLowerCase();
-                if (isAdmin && (lowerQuery.includes('growth') || lowerQuery.includes('intelligence') || lowerQuery.includes('pil'))) {
-                    return resolve(`🌌 **PIL Strategic Briefing:** I am monitoring ${unacknowledgedCount(pilContext)} active trends. We have clusters forming in geographic areas and some members showing high disengagement probability. Review the Prophetic Intelligence Layer for specifics.`);
-                }
-                resolve(`Blessings, ${userName}! As your Spiritual Assistant, I'm analyzing our "90 Days of Transformation" journey. How can I guide you today?`);
-            }, 1000);
+            setTimeout(() => resolve(fallbackResponse), 800);
         });
     },
 
     generateNewsletterDraft: async (topics: string[], activePrayersCount: number, recentMilestonesCount: number) => {
-        return new Promise<string>((resolve) => {
-            setTimeout(() => {
-                const topicString = topics.length > 0 ? topics.slice(0, 3).join(", ") : "Faith and Growth";
-                const draft = `Subject: Embodying ${topicString}... [Drafting]`;
-                resolve(draft);
-            }, 1000);
-        });
+        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        if (apiKey && apiKey !== "YOUR_GEMINI_API_KEY") {
+            try {
+                const prompt = `Draft a church newsletter covering: ${topics.join(", ")}. Mention we have ${activePrayersCount} active prayers and ${recentMilestonesCount} new milestones. Use a warm, visionary tone.`;
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                return response.text();
+            } catch (e) {
+                return `Subject: Weekly Kingdom Briefing\n\nWe are celebrating ${recentMilestonesCount} breakthroughs this week! Join us as we focus on ${topics[0] || 'Faith'}.`;
+            }
+        }
+        return `Subject: Weekly Kingdom Briefing\n\nWe are celebrating ${recentMilestonesCount} breakthroughs this week! Join us as we focus on ${topics[0] || 'Faith'}.`;
     },
 
     processSentiment: async (userId: string, entryId: string, content: string, date: string) => {
-        return new Promise<void>((resolve) => {
-            setTimeout(async () => {
-                const { supabase } = await import("./supabase");
-                await supabase.from('soap_sentiment_metrics').upsert({
-                    user_id: userId,
-                    entry_id: entryId,
-                    date: date,
-                    emotion_category: "Seeking",
-                    keywords: ["spirit", "growth"]
-                });
-                resolve();
-            }, 1000);
-        });
+        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        let category = "Seeking";
+        let keywords = ["Growth"];
+
+        if (apiKey && apiKey !== "YOUR_GEMINI_API_KEY") {
+            try {
+                const prompt = `Analyze the sentiment and key spiritual themes of this devotion entry: "${content}". Return JSON: {category: string, keywords: string[]}`;
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const data = JSON.parse(response.text().replace(/```json|```/g, ""));
+                category = data.category;
+                keywords = data.keywords;
+            } catch (e) {
+                console.error("Sentiment AI error", e);
+            }
+        }
+
+        const { supabase } = await import("./supabase");
+        await supabase.from('soap_sentiment_metrics').upsert({
+            user_id: userId,
+            entry_id: entryId,
+            date: date,
+            emotion_category: category,
+            keywords: keywords
+        }, { onConflict: 'entry_id' });
     }
 };
 
