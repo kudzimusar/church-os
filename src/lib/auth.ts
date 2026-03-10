@@ -154,5 +154,26 @@ export const Auth = {
             const error = err as Error;
             return { success: false, error: error.message };
         }
+    },
+    // Delete account (Client-side cleanup)
+    async deleteAccount(): Promise<AuthResponse> {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { success: false, error: 'No user logged in' };
+
+        try {
+            const { error: profileErr } = await supabase
+                .from('profiles')
+                .delete()
+                .eq('id', user.id);
+
+            if (profileErr) throw profileErr;
+
+            await supabase.auth.signOut();
+            window.location.href = BP || '/';
+            return { success: true };
+        } catch (err) {
+            const error = err as Error;
+            return { success: false, error: error.message };
+        }
     }
 };

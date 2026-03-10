@@ -20,6 +20,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { basePath as BP } from "@/lib/utils";
 import { MINISTRY_OPTIONS, SKILL_OPTIONS, PRAYER_CATEGORIES } from "@/lib/constants";
 
@@ -116,7 +117,11 @@ export default function ProfileHub() {
         missionProgress: 0,
         latestNewsletter: null as any
     });
+    const [userRole, setUserRole] = useState<string | null>(null);
     const [membershipRequest, setMembershipRequest] = useState<any>(null);
+    const [isAddingChild, setIsAddingChild] = useState(false);
+    const [newChildName, setNewChildName] = useState("");
+    const [newChildBirthdate, setNewChildBirthdate] = useState("");
 
     const handleAcceptInvitation = async (notif: any) => {
         try {
@@ -243,13 +248,15 @@ export default function ProfileHub() {
             const monthAgo = new Date();
             monthAgo.setDate(monthAgo.getDate() - 30);
             const { count: recentMembers } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).gt('created_at', monthAgo.toISOString());
+            const { count: totalSalvations } = await supabase.from('member_milestones').select('*', { count: 'exact', head: true }).not('salvation_date', 'is', null);
+            const { count: totalBaptisms } = await supabase.from('member_milestones').select('*', { count: 'exact', head: true }).not('baptism_date', 'is', null);
 
             const { data: latestNewsletter } = await supabase.from('newsletters').select('*').eq('is_published', true).order('published_at', { ascending: false }).limit(1).maybeSingle();
 
             const impact = {
                 memberGrowth: recentMembers || 0,
-                totalSalvations: 12,
-                missionProgress: 65,
+                totalSalvations: totalSalvations || 0,
+                missionProgress: Math.min(100, Math.round(((totalBaptisms || 0) / 100) * 100)), // Example calculation
                 latestNewsletter: latestNewsletter
             };
 
@@ -263,6 +270,10 @@ export default function ProfileHub() {
             // Membership Request
             const { data: mrData } = await supabase.from('membership_requests').select('*').eq('user_id', userId).maybeSingle();
             setMembershipRequest(mrData);
+
+            // Fetch role
+            const { data: orgRoleData } = await supabase.from('org_members').select('role').eq('user_id', userId).maybeSingle();
+            setUserRole(orgRoleData?.role || 'visitor');
 
         } catch (e) {
             console.error(e);
@@ -340,7 +351,8 @@ export default function ProfileHub() {
             const { data: member, error: memErr } = await supabase.from('household_members').insert([{
                 household_id: hh!.id,
                 full_name: newHouseholdName,
-                relationship: newHouseholdRel
+                relationship: newHouseholdRel,
+                user_id: null // Explicitly null for offline members
             }]).select().single();
             if (memErr) throw memErr;
 
@@ -357,8 +369,30 @@ export default function ProfileHub() {
 
             setNewHouseholdName("");
             toast.success("Household updated!");
-        } catch (e) {
-            toast.error("Error updating household");
+        } catch (e: any) {
+            console.error("Household Error:", e);
+            toast.error(e.message || "Error updating household");
+        }
+    };
+
+    const handleAddChild = async () => {
+        if (!newChildName || !user) return;
+        try {
+            const { data, error } = await supabase.from('guardian_links').insert([{
+                guardian_id: user.id,
+                child_name: newChildName,
+                child_birthdate: newChildBirthdate,
+                relationship: 'Parent'
+            }]).select().single();
+
+            if (error) throw error;
+            setChildren([...children, data]);
+            setNewChildName("");
+            setNewChildBirthdate("");
+            setIsAddingChild(false);
+            toast.success("Child linked to your account!");
+        } catch (e: any) {
+            toast.error(e.message || "Failed to link child");
         }
     };
 
@@ -485,6 +519,7 @@ export default function ProfileHub() {
             const today = new Date().toISOString().split('T')[0];
             const { error } = await supabase.from('attendance_logs').upsert({
                 user_id: user.id,
+                org_id: profile?.org_id,
                 status,
                 service_date: today
             }, { onConflict: 'user_id, service_date' });
@@ -529,7 +564,7 @@ export default function ProfileHub() {
 
     return (
         <div className="min-h-screen bg-background overflow-x-hidden pb-20 transition-colors duration-500">
-            <TopNav user={user} />
+            <TopNav user={user} userRole={userRole} stats={stats} />
 
             <div className="flex h-[calc(100vh-65px)]">
 
@@ -1009,10 +1044,30 @@ export default function ProfileHub() {
                                                         <h4 className="font-black text-lg">My Children</h4>
                                                         <p className="text-xs text-foreground/50">Manage your children's enrollment in Junior Church</p>
                                                     </div>
-                                                    <Button variant="outline" className="h-10 rounded-xl border-foreground/10 font-bold px-4">
-                                                        <Plus className="w-4 h-4 mr-2" /> Add Child
+                                                    <Button
+                                                        onClick={() => setIsAddingChild(!isAddingChild)}
+                                                        variant={isAddingChild ? "ghost" : "outline"}
+                                                        className="h-10 rounded-xl border-border font-bold px-4"
+                                                    >
+                                                        {isAddingChild ? "Cancel" : <><Plus className="w-4 h-4 mr-2" /> Add Child</>}
                                                     </Button>
                                                 </div>
+
+                                                {isAddingChild && (
+                                                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-primary/5 rounded-2xl border border-primary/10 grid gap-4">
+                                                        <div className="grid md:grid-cols-2 gap-4">
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] font-black uppercase text-muted-foreground pl-1">Name</label>
+                                                                <Input placeholder="Child's Full Name" value={newChildName} onChange={e => setNewChildName(e.target.value)} className="h-12 rounded-xl bg-background border-border" />
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <label className="text-[10px] font-black uppercase text-muted-foreground pl-1">Birth Date</label>
+                                                                <Input type="date" value={newChildBirthdate} onChange={e => setNewChildBirthdate(e.target.value)} className="h-12 rounded-xl bg-background border-border" />
+                                                            </div>
+                                                        </div>
+                                                        <Button onClick={handleAddChild} className="h-12 bg-primary text-white font-black rounded-xl w-full md:w-auto self-end px-8">Confirm Enrollment</Button>
+                                                    </motion.div>
+                                                )}
 
                                                 {children.length > 0 ? (
                                                     <div className="grid gap-4">
@@ -1153,7 +1208,9 @@ export default function ProfileHub() {
                                                     <div className="flex items-end gap-2">
                                                         <div className="space-y-1 flex-1">
                                                             <label className="text-[10px] font-bold text-muted-foreground uppercase pl-1">Yrs Exp</label>
-                                                            <Input type="number" value={newSkillExp} onChange={e => setNewSkillExp(parseInt(e.target.value))} className="h-14 rounded-2xl bg-muted border-border px-4 text-foreground" />
+                                                            <select value={newSkillExp} onChange={e => setNewSkillExp(parseInt(e.target.value))} className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none text-foreground">
+                                                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20].map(n => <option key={n} value={n}>{n}+ Years</option>)}
+                                                            </select>
                                                         </div>
                                                         <Button onClick={handleAddSkill} className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black shadow-lg">Link</Button>
                                                     </div>

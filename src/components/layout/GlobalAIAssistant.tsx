@@ -8,7 +8,14 @@ import { AIService } from "@/lib/ai-service";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate }: { user: any; userRole: string | null; stats?: any; devotion?: any; currentDate?: Date }) {
+export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate, currentPage }: {
+    user: any;
+    userRole: string | null;
+    stats?: any;
+    devotion?: any;
+    currentDate?: Date;
+    currentPage?: string;
+}) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
@@ -29,7 +36,9 @@ export function GlobalAIAssistant({ user, userRole, stats, devotion, currentDate
             const contextPayload = {
                 stats: stats ? { currentStreak: stats.streak, completedToday: isCompletedToday } : null,
                 devotion: devotion ? { weekTheme: `Week ${devotion.week}: ${devotion.week_theme}`, dailyFocus: devotion.declaration, scripture: devotion.scripture, text: devotion.fullScriptureText || devotion.scripture, theme: devotion.theme } : null,
-                currentDate: currentDate?.toISOString()
+                currentDate: currentDate?.toISOString(),
+                currentPage: currentPage || window.location.pathname,
+                membershipStatus: userRole || ' visitor'
             };
 
             const response = await AIService.chatWithGlobalAssistant(userRole || 'member', user?.name || 'Guest', query, contextPayload, chatHistory);

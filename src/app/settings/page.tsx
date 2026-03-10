@@ -48,6 +48,22 @@ export default function SettingsHub() {
         }
     };
 
+    const handleDeleteAccount = async () => {
+        const confirm = window.confirm("Are you absolutely sure you want to delete your account? This action is permanent and will remove all your devotional data.");
+        if (!confirm) return;
+
+        try {
+            const res = await Auth.deleteAccount();
+            if (res.success) {
+                toast.success("Account deleted successfully.");
+            } else {
+                toast.error(res.error || "Failed to delete account.");
+            }
+        } catch (e) {
+            toast.error("Error deleting account.");
+        }
+    };
+
     const handleLogout = async () => {
         try {
             await Auth.logout();
@@ -242,7 +258,7 @@ export default function SettingsHub() {
                                         <h4 className="font-black text-lg mb-2">Danger Zone</h4>
                                         <p className="text-sm opacity-80 mb-6 font-medium">Permanently delete your account and all associated devotional data. This action cannot be undone.</p>
                                         <div className="flex gap-4">
-                                            <Button variant="outline" className="h-12 px-6 rounded-xl border-red-500 text-red-500 font-bold hover:bg-red-500 hover:text-white">Delete Account</Button>
+                                            <Button onClick={handleDeleteAccount} variant="outline" className="h-12 px-6 rounded-xl border-red-500 text-red-500 font-bold hover:bg-red-500 hover:text-white transition-all">Delete My Account</Button>
                                             <Button onClick={handleLogout} variant="outline" className="h-12 px-6 rounded-xl border-foreground/20 text-foreground font-bold hover:bg-foreground hover:text-background flex md:hidden items-center gap-2">
                                                 <LogOut className="w-4 h-4" /> Sign Out
                                             </Button>

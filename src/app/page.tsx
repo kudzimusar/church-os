@@ -104,6 +104,16 @@ const SundayCheckIn = ({ user, currentDate }: { user: any, currentDate: Date }) 
     }
   }, [user, todayStr]);
 
+  const [children, setChildren] = useState<any[]>([]);
+  const [selectedKids, setSelectedKids] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      supabase.from('guardian_links').select('*').eq('guardian_id', user.id)
+        .then(({ data }) => { if (data) setChildren(data); });
+    }
+  }, [user]);
+
   const handleCheckIn = async (type: string) => {
     if (!user) {
       toast.error("Please login to check-in!");
@@ -120,24 +130,33 @@ const SundayCheckIn = ({ user, currentDate }: { user: any, currentDate: Date }) 
       }]);
       if (err1) throw err1;
 
-      // 2. Sync to attendance_logs (new/predictive/pastor-desk)
-      // Map labels to schema tokens: in-person, online, not-attending
+      // 2. Sync to attendance_logs
       const statusToken = type === 'In-Person' ? 'in-person' :
         type === 'Online' ? 'online' : 'not-attending';
 
-      const { error: err2 } = await supabase.from('attendance_logs').upsert({
+      await supabase.from('attendance_logs').upsert({
         user_id: user.id,
         service_date: todayStr,
         status: statusToken
       }, { onConflict: 'user_id, service_date' });
 
-      if (err2) throw err2;
+      // 3. Log Children Attendance (if any selected)
+      if (selectedKids.length > 0 && type !== 'Not Attending') {
+        const kidLogs = selectedKids.map(kidName => ({
+          guardian_id: user.id,
+          child_name: kidName,
+          check_in_time: new Date().toISOString(),
+          status: 'checked_in',
+          location: type === 'In-Person' ? 'At Church' : 'Online'
+        }));
+        await supabase.from('kids_registry').insert(kidLogs);
+      }
 
       setCheckedIn(true);
-      toast.success(type === 'Not Attending' ? "Message sent to leadership. Have a restful day!" : "Checked in! Have a blessed service.");
+      toast.success(type === 'Not Attending' ? "Message sent to leadership." : "Checked in! Have a blessed service.");
     } catch (e) {
       console.error(e);
-      toast.error("Check-in failed. Please try again.");
+      toast.error("Check-in failed.");
     } finally {
       setLoading(false);
     }
@@ -177,6 +196,36 @@ const SundayCheckIn = ({ user, currentDate }: { user: any, currentDate: Date }) 
             <XCircle className="w-5 h-5 mr-3" /> NOT ATTENDING
           </Button>
         </div>
+
+        {children.length > 0 && (
+          <div className="pt-6 border-t border-white/20 space-y-4">
+            <div className="flex items-center gap-2">
+              <Leaf className="w-4 h-4 text-emerald-300" />
+              <h4 className="text-sm font-black uppercase tracking-widest opacity-80">Junior Church Enrollments</h4>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {children.map(kid => (
+                <button
+                  key={kid.id}
+                  onClick={() => {
+                    setSelectedKids(prev =>
+                      prev.includes(kid.child_name)
+                        ? prev.filter(k => k !== kid.child_name)
+                        : [...prev, kid.child_name]
+                    );
+                  }}
+                  className={`flex flex-col items-center p-3 rounded-2xl border transition-all ${selectedKids.includes(kid.child_name)
+                    ? 'bg-white text-primary border-white scale-[1.02]'
+                    : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                    }`}
+                >
+                  <span className="text-xs font-black">{kid.child_name}</span>
+                  <span className="text-[10px] opacity-60">Ready for service?</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

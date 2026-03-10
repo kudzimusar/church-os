@@ -6,9 +6,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Trash2, ShieldCheck, Mail, Key } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import { Auth } from "@/lib/auth";
 import { basePath as BP } from "@/lib/utils";
-import { Trash2 } from "lucide-react";
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -18,12 +19,14 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: AuthModalProps) {
-    const [authMode, setAuthMode] = useState<"login" | "register">("login");
+    const [authMode, setAuthMode] = useState<"login" | "register" | "forgot" | "magic">("login");
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [name, setName] = useState("");
     const [isMemberRequest, setIsMemberRequest] = useState(false);
+    const [isMagicLinkSent, setIsMagicLinkSent] = useState(false);
+    const [isResetSent, setIsResetSent] = useState(false);
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -46,6 +49,8 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
         setLoading(false);
     };
 
+    const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+
     const handleRegister = async () => {
         if (!email || !password || !name) {
             toast.error("Please fill in all fields.");
@@ -55,11 +60,49 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
         const metadata = isMemberRequest ? { membership_status: 'pending_approval' } : {};
         const res = await Auth.createAccount(email, password, name, metadata);
         if (res.success) {
-            toast.success("Account created! Check your email.");
-            if (onEmailNotConfirmed) onEmailNotConfirmed();
-            onClose();
+            setShowVerificationMessage(true);
+            toast.success("Account created!");
         } else {
             toast.error(res.error || "Signup failed");
+        }
+        setLoading(false);
+    };
+
+    const handleForgotPassword = async () => {
+        if (!email) {
+            toast.error("Please enter your email.");
+            return;
+        }
+        setLoading(true);
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + BP + '/settings',
+        });
+        if (error) {
+            toast.error(error.message);
+        } else {
+            setIsResetSent(true);
+            toast.success("Reset link sent!");
+        }
+        setLoading(false);
+    };
+
+    const handleMagicLink = async () => {
+        if (!email) {
+            toast.error("Please enter your email.");
+            return;
+        }
+        setLoading(true);
+        const { error } = await supabase.auth.signInWithOtp({
+            email,
+            options: {
+                emailRedirectTo: window.location.origin + BP,
+            }
+        });
+        if (error) {
+            toast.error(error.message);
+        } else {
+            setIsMagicLinkSent(true);
+            toast.success("Magic link sent!");
         }
         setLoading(false);
     };
@@ -114,6 +157,16 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
                                 >
                                     {loading ? "AUTHENTICATING..." : "CONTINUE"}
                                 </Button>
+
+                                <div className="flex justify-between items-center px-2">
+                                    <Button variant="ghost" onClick={() => setAuthMode("magic")} className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-40 hover:opacity-100 transition-all h-auto py-2">
+                                        Magic Link
+                                    </Button>
+                                    <Button variant="ghost" onClick={() => setAuthMode("forgot")} className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-40 hover:opacity-100 transition-all h-auto py-2">
+                                        Forgot Password?
+                                    </Button>
+                                </div>
+
                                 <div className="relative py-4 text-center">
                                     <span className="text-[10px] font-black opacity-30 uppercase tracking-[0.3em] px-4 pt-4 block w-full mt-2 border-t border-foreground/10">or secure sign in</span>
                                 </div>
@@ -122,35 +175,124 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
                                 </Button>
                             </TabsContent>
 
+                            <TabsContent value="magic" className="space-y-6 py-6 text-center animate-in slide-in-from-bottom-5">
+                                {isMagicLinkSent ? (
+                                    <div className="space-y-4">
+                                        <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
+                                            <svg className="w-10 h-10 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <h4 className="text-xl font-serif">Check your email</h4>
+                                        <p className="text-sm opacity-50">We sent a secure login link to <br /><strong>{email}</strong></p>
+                                        <Button variant="ghost" onClick={() => { setIsMagicLinkSent(false); setAuthMode("login"); }} className="text-xs font-bold uppercase tracking-widest opacity-40">Back to login</Button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="space-y-2">
+                                            <h4 className="text-xl font-bold">Secure Access</h4>
+                                            <p className="text-sm opacity-50 px-6">Login without a password. We'll send a one-time link to your inbox.</p>
+                                        </div>
+                                        <Input
+                                            placeholder="Enter your email"
+                                            value={email}
+                                            onChange={e => setEmail(e.target.value)}
+                                            className="h-16 rounded-3xl bg-foreground/5 border-0 px-8 text-lg"
+                                        />
+                                        <Button onClick={handleMagicLink} disabled={loading} className="w-full h-16 rounded-full bg-[var(--primary)] font-black text-xl">
+                                            {loading ? "SENDING..." : "SEND MAGIC LINK"}
+                                        </Button>
+                                        <Button variant="ghost" onClick={() => setAuthMode("login")} className="text-xs font-bold uppercase tracking-widest opacity-40">Cancel</Button>
+                                    </>
+                                )}
+                            </TabsContent>
+
+                            <TabsContent value="forgot" className="space-y-6 py-6 text-center animate-in slide-in-from-bottom-5">
+                                {isResetSent ? (
+                                    <div className="space-y-4">
+                                        <div className="w-20 h-20 rounded-full bg-[var(--primary)]/10 flex items-center justify-center mx-auto mb-4">
+                                            <ShieldCheck className="w-10 h-10 text-[var(--primary)]" />
+                                        </div>
+                                        <h4 className="text-xl font-serif">Reset requested</h4>
+                                        <p className="text-sm opacity-50">Check <strong>{email}</strong> for instructions <br />to reset your password.</p>
+                                        <Button variant="ghost" onClick={() => { setIsResetSent(false); setAuthMode("login"); }} className="text-xs font-bold uppercase tracking-widest opacity-40">Back to login</Button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="space-y-2">
+                                            <h4 className="text-xl font-bold">Recover Account</h4>
+                                            <p className="text-sm opacity-50 px-6">We'll send you a link to choose a new password.</p>
+                                        </div>
+                                        <Input
+                                            placeholder="Email address"
+                                            value={email}
+                                            onChange={e => setEmail(e.target.value)}
+                                            className="h-16 rounded-3xl bg-foreground/5 border-0 px-8 text-lg"
+                                        />
+                                        <Button onClick={handleForgotPassword} disabled={loading} className="w-full h-16 rounded-full bg-amber-500 font-black text-xl">
+                                            {loading ? "SENDING..." : "RESET PASSWORD"}
+                                        </Button>
+                                        <Button variant="ghost" onClick={() => setAuthMode("login")} className="text-xs font-bold uppercase tracking-widest opacity-40">Cancel</Button>
+                                    </>
+                                )}
+                            </TabsContent>
+
                             <TabsContent value="register" className="space-y-4">
-                                <div className="space-y-2">
-                                    <Input placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="h-16 rounded-3xl bg-foreground/5 border-0 px-8 text-lg" />
-                                    <Input placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="h-16 rounded-3xl bg-foreground/5 border-0 px-8 text-lg" />
-                                    <Input placeholder="Set Password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-16 rounded-3xl bg-foreground/5 border-0 px-8 text-lg" />
-                                </div>
+                                {showVerificationMessage ? (
+                                    <div className="space-y-6 flex flex-col items-center text-center animate-in zoom-in-95 fade-in duration-500 py-10">
+                                        <div className="w-24 h-24 rounded-full bg-[var(--primary)]/10 flex items-center justify-center mb-4">
+                                            <svg className="w-12 h-12 text-[var(--primary)] animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <h4 className="text-2xl font-serif text-[var(--primary)]">Check Your Email</h4>
+                                            <p className="text-sm text-foreground/60 leading-relaxed px-4">
+                                                We've sent a confirmation link to <span className="font-bold text-foreground">{email}</span>.
+                                                Please verify your account to access your Church OS dashboard.
+                                            </p>
+                                        </div>
+                                        <div className="w-full space-y-3">
+                                            <Button onClick={() => window.location.reload()} className="w-full h-14 rounded-2xl bg-[var(--primary)] text-white font-black">
+                                                I'VE CONFIRMED MY EMAIL
+                                            </Button>
+                                            <Button variant="ghost" onClick={() => setShowVerificationMessage(false)} className="w-full h-12 rounded-2xl text-xs font-bold uppercase tracking-widest opacity-40">
+                                                Back to login
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="space-y-2">
+                                            <Input placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} className="h-16 rounded-3xl bg-foreground/5 border-0 px-8 text-lg" />
+                                            <Input placeholder="Email Address" value={email} onChange={e => setEmail(e.target.value)} className="h-16 rounded-3xl bg-foreground/5 border-0 px-8 text-lg" />
+                                            <Input placeholder="Set Password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-16 rounded-3xl bg-foreground/5 border-0 px-8 text-lg" />
+                                        </div>
 
-                                <div className="flex items-center gap-4 p-5 bg-[var(--primary)]/5 rounded-3xl border border-[var(--primary)]/10">
-                                    <input
-                                        type="checkbox"
-                                        id="memberRequest"
-                                        checked={isMemberRequest}
-                                        onChange={(e) => setIsMemberRequest(e.target.checked)}
-                                        className="w-6 h-6 rounded-lg accent-[var(--primary)] transition-all cursor-pointer"
-                                    />
-                                    <label htmlFor="memberRequest" className="text-[11px] font-bold text-foreground/70 cursor-pointer leading-tight">
-                                        Are you a member of Japan Kingdom Church? <br />
-                                        <span className="opacity-50 font-medium italic">Pending approval to access admin features.</span>
-                                    </label>
-                                </div>
+                                        <div className="flex items-center gap-4 p-5 bg-[var(--primary)]/5 rounded-3xl border border-[var(--primary)]/10">
+                                            <input
+                                                type="checkbox"
+                                                id="memberRequest"
+                                                checked={isMemberRequest}
+                                                onChange={(e) => setIsMemberRequest(e.target.checked)}
+                                                className="w-6 h-6 rounded-lg accent-[var(--primary)] transition-all cursor-pointer"
+                                            />
+                                            <label htmlFor="memberRequest" className="text-[11px] font-bold text-foreground/70 cursor-pointer leading-tight">
+                                                Are you a member of Japan Kingdom Church? <br />
+                                                <span className="opacity-50 font-medium italic">Pending approval to access admin features.</span>
+                                            </label>
+                                        </div>
 
-                                <Button onClick={handleRegister} className="w-full h-16 rounded-full bg-[var(--primary)] font-black text-xl shadow-xl shadow-[var(--primary)]/30 hover:scale-[1.02] active:scale-[0.98] transition-all" disabled={loading}>
-                                    {loading ? "CREATING..." : "CREATE ACCOUNT"}
-                                </Button>
+                                        <Button onClick={handleRegister} className="w-full h-16 rounded-full bg-[var(--primary)] font-black text-xl shadow-xl shadow-[var(--primary)]/30 hover:scale-[1.02] active:scale-[0.98] transition-all" disabled={loading}>
+                                            {loading ? "CREATING..." : "CREATE ACCOUNT"}
+                                        </Button>
+                                    </>
+                                )}
                             </TabsContent>
                         </Tabs>
                     </div>
                 </div>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 }
