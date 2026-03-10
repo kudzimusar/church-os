@@ -534,19 +534,47 @@ export default function ProfileHub() {
     };
 
     const handleRequestMembership = async () => {
-        if (!user || !profile) return;
+        if (!user) return;
+        setIsSaving(true);
         try {
-            const { data, error } = await supabase.from('membership_requests').insert({
-                user_id: user.id,
-                org_id: profile.org_id,
-                status: 'pending'
-            }).select().single();
+            // Ensure we have an org_id (Fetch if missing from profile)
+            let org_id = profile?.org_id;
+            if (!org_id) {
+                const { data: orgData } = await supabase.from('organizations').select('id').limit(1).maybeSingle();
+                org_id = orgData?.id;
 
-            if (error) throw error;
+                if (org_id) {
+                    await supabase.from('profiles').update({ org_id }).eq('id', user.id);
+                    // Refresh local profile
+                    setProfile((prev: any) => prev ? { ...prev, org_id } : null);
+                }
+            }
+
+            if (!org_id) {
+                toast.error("Internal configuration error: Organizational context missing.");
+                setIsSaving(false);
+                return;
+            }
+
+            const { data, error } = await supabase.from('membership_requests').upsert({
+                user_id: user.id,
+                org_id: org_id,
+                status: 'pending',
+                created_at: new Date().toISOString()
+            }, { onConflict: 'user_id, org_id' }).select().single();
+
+            if (error) {
+                console.error("Membership Request Error Details:", error);
+                throw error;
+            }
+
             setMembershipRequest(data);
-            toast.success("Membership request submitted!");
-        } catch (e) {
-            toast.error("Failed to submit request");
+            toast.success("Membership request submitted! Our leadership team will review it soon.");
+        } catch (e: any) {
+            console.error("Caught Exception in Membership Submission:", e);
+            toast.error(e.message || "Failed to submit request. Please try again or contact support.");
+        } finally {
+            setIsSaving(false);
         }
     };
     const handleLogout = async () => {
