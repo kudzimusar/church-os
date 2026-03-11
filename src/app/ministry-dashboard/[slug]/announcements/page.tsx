@@ -81,55 +81,56 @@ export default function MinistryAnnouncementsPage() {
     };
 
     if (loading && !session) {
-        return <div className="min-h-screen bg-neutral-950 flex items-center justify-center text-white">Loading...</div>;
+        return <div className="min-h-screen bg-[#080c14] flex items-center justify-center text-white"><div className="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" /></div>;
     }
 
     if (!session) return null;
 
     return (
-        <div className="min-h-screen bg-neutral-950 text-white p-6">
-            <div className="max-w-4xl mx-auto space-y-8">
+        <div className="min-h-screen bg-[#080c14] text-white p-6 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-violet-900/10 to-transparent pointer-events-none" />
+            <div className="max-w-4xl mx-auto space-y-8 relative z-10">
                 <div>
-                    <h1 className="text-2xl font-bold">{session.ministryName} Announcements</h1>
-                    <p className="text-neutral-400 text-sm">Two-way communication with Mission Control.</p>
+                    <h1 className="text-2xl font-black text-white tracking-wide">{session.ministryName} Announcements</h1>
+                    <p className="text-white/40 text-sm mt-1 font-medium uppercase tracking-widest">Two-way communication with Mission Control.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Inbox */}
                     <div className="col-span-1 md:col-span-2 space-y-4">
-                        <h2 className="text-xl font-semibold mb-4">Inbox</h2>
+                        <h2 className="text-base font-black text-white tracking-wide mb-4 uppercase">Inbox</h2>
                         {announcements.filter(a => a.direction === 'downward' || a.direction === 'upward').length === 0 && !loading && (
-                            <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-8 text-center text-neutral-500">
+                            <div className="bg-[#0d1421] border border-white/10 rounded-3xl p-8 text-center text-white/30 text-sm font-medium">
                                 No messages found.
                             </div>
                         )}
                         {announcements.map(a => (
-                            <div key={a.id} className={`p-5 rounded-xl border ${
+                            <div key={a.id} className={`p-5 rounded-3xl border shadow-xl ${
                                 a.direction === 'downward' 
-                                    ? 'bg-indigo-950/20 border-indigo-500/20' 
-                                    : 'bg-neutral-900 border-neutral-800'
+                                    ? 'bg-violet-950/20 border-violet-500/30' 
+                                    : 'bg-[#0d1421] border-white/10'
                             }`}>
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
                                         {a.direction === 'downward' ? (
-                                            <AlertCircle className="w-4 h-4 text-indigo-400" />
+                                            <AlertCircle className="w-4 h-4 text-violet-400" />
                                         ) : (
                                             <ArrowUpCircle className="w-4 h-4 text-emerald-400" />
                                         )}
                                         <span className={`text-[10px] font-black uppercase tracking-widest ${
-                                            a.direction === 'downward' ? 'text-indigo-400' : 'text-emerald-400'
+                                            a.direction === 'downward' ? 'text-violet-400' : 'text-emerald-400'
                                         }`}>
                                             {a.direction === 'downward' ? 'FROM ADMIN' : 'MY UPDATE'}
                                         </span>
                                     </div>
-                                    <span className="text-xs text-neutral-500">
+                                    <span className="text-[10px] text-white/30 font-medium">
                                         {new Date(a.created_at).toLocaleDateString()}
                                     </span>
                                 </div>
-                                <h3 className="font-semibold text-lg">{a.title}</h3>
-                                <p className="text-neutral-300 text-sm mt-2 whitespace-pre-wrap">{a.body}</p>
+                                <h3 className="font-bold text-base text-white">{a.title}</h3>
+                                <p className="text-white/60 text-sm mt-2 whitespace-pre-wrap leading-relaxed">{a.body}</p>
                                 {a.author?.name && (
-                                    <p className="text-xs text-neutral-500 mt-4">— {a.author.name}</p>
+                                    <p className="text-xs text-white/30 mt-4 font-medium">— {a.author.name}</p>
                                 )}
                             </div>
                         ))}
@@ -138,9 +139,9 @@ export default function MinistryAnnouncementsPage() {
                     {/* Compose Upward */}
                     {MinistryAuth.can(session.ministryRole, 'assistant') && (
                         <div className="col-span-1">
-                            <form onSubmit={handleSendUpward} className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 sticky top-6">
-                                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                                    <Send className="w-4 h-4" /> Message Admin
+                            <form onSubmit={handleSendUpward} className="bg-[#0d1421] border border-white/10 rounded-3xl p-6 shadow-2xl sticky top-6">
+                                <h2 className="text-base font-black tracking-wide mb-5 flex items-center gap-2 text-white">
+                                    <Send className="w-4 h-4 text-violet-400" /> Message Admin
                                 </h2>
                                 <div className="space-y-4">
                                     <input
@@ -149,7 +150,7 @@ export default function MinistryAnnouncementsPage() {
                                         placeholder="Subject"
                                         value={composeTitle}
                                         onChange={e => setComposeTitle(e.target.value)}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-violet-500/50 transition-all"
                                     />
                                     <textarea
                                         required
@@ -157,12 +158,12 @@ export default function MinistryAnnouncementsPage() {
                                         rows={5}
                                         value={composeBody}
                                         onChange={e => setComposeBody(e.target.value)}
-                                        className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-violet-500/50 transition-all resize-none"
                                     />
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg px-4 py-2 transition-colors disabled:opacity-50"
+                                        className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black text-sm rounded-xl px-4 py-3 transition-all disabled:opacity-50 shadow-lg shadow-violet-500/20"
                                     >
                                         {isSubmitting ? 'Sending...' : 'Send to Admin'}
                                     </button>

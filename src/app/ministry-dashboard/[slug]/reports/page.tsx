@@ -1,5 +1,7 @@
 "use client";
 
+import { Loader2 } from 'lucide-react';
+
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -41,38 +43,39 @@ export default function MinistryReportsPage() {
     }, [slug]);
 
     if (loading || !session) {
-        return <div className="min-h-screen bg-neutral-950 flex items-center justify-center text-white"><p>Loading...</p></div>;
+        return <div className="min-h-screen bg-[#080c14] flex items-center justify-center text-white"><Loader2 className="w-6 h-6 text-violet-400 animate-spin" /></div>;
     }
 
     return (
-        <div className="min-h-screen bg-neutral-950 text-white p-6">
-            <div className="max-w-4xl mx-auto space-y-6">
+        <div className="min-h-screen bg-[#080c14] text-white p-6 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-violet-900/10 to-transparent pointer-events-none" />
+            <div className="max-w-4xl mx-auto space-y-6 relative z-10">
                 
-                <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
+                <div className="flex items-center justify-between border-b border-white/10 pb-6">
                     <div>
-                        <h1 className="text-2xl font-bold">{session.ministryName} Reports</h1>
-                        <p className="text-neutral-400 text-sm">Submit operational reports and track metrics.</p>
+                        <h1 className="text-2xl font-black text-white tracking-wide">{session.ministryName} Reports</h1>
+                        <p className="text-white/40 text-sm mt-1 font-medium uppercase tracking-widest">Submit operational reports and track metrics.</p>
                     </div>
-                    <Link href={`/ministry-dashboard/${slug}`} className="text-sm font-medium hover:text-indigo-400 transition-colors">
+                    <Link href={`/ministry-dashboard/${slug}`} className="text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-white transition-colors border border-white/10 px-4 py-2 rounded-full bg-[#0d1421]">
                         ← Back to Ministry Hub
                     </Link>
                 </div>
 
                 {!selectedTemplate ? (
                     <div>
-                        <h2 className="text-xl font-semibold mb-4">Select a Report Type</h2>
+                        <h2 className="text-lg font-black text-white mb-5 tracking-wide">Select a Report Type</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {templates.map(tmpl => (
                                 <button 
                                     key={tmpl.id} 
                                     onClick={() => setSelectedTemplate(tmpl)}
-                                    className="bg-neutral-900 border border-neutral-800 p-6 rounded-xl hover:border-indigo-500 transition-colors text-left group"
+                                    className="bg-[#0d1421] border border-white/10 p-6 rounded-3xl hover:border-violet-500/50 hover:bg-white/5 transition-all shadow-xl text-left group"
                                 >
-                                    <h3 className="font-semibold text-lg text-white group-hover:text-indigo-400">{tmpl.name}</h3>
+                                    <h3 className="font-bold text-lg text-white group-hover:text-violet-400">{tmpl.name}</h3>
                                     {tmpl.description && (
-                                        <p className="text-neutral-400 text-sm mt-2">{tmpl.description}</p>
+                                        <p className="text-white/40 text-sm mt-2 font-medium">{tmpl.description}</p>
                                     )}
-                                    <div className="mt-4 inline-flex text-xs bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded-md">
+                                    <div className="mt-4 inline-flex text-[10px] font-black uppercase tracking-widest bg-violet-500/10 text-violet-400 px-3 py-1.5 rounded-full border border-violet-500/20">
                                         Type: {tmpl.report_type}
                                     </div>
                                 </button>
@@ -83,13 +86,13 @@ export default function MinistryReportsPage() {
                     <div className="space-y-6">
                         <button 
                             onClick={() => setSelectedTemplate(null)}
-                            className="bg-neutral-900 px-4 py-2 border border-neutral-800 rounded-lg text-sm hover:bg-neutral-800 transition-colors"
+                            className="bg-[#0d1421] px-5 py-2.5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors"
                         >
-                            ← Select Different Tool
+                            ← Select Different Report
                         </button>
                         
-                        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
-                            <h2 className="text-xl font-bold text-white mb-6">New: {selectedTemplate.name}</h2>
+                        <div className="bg-[#0d1421] border border-white/10 rounded-3xl p-8 shadow-2xl">
+                            <h2 className="text-xl font-black text-white mb-6 tracking-wide">New: {selectedTemplate.name}</h2>
                             <DynamicFormRenderer 
                                 template={selectedTemplate} 
                                 ministryId={session.ministryId}

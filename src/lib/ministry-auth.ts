@@ -71,7 +71,7 @@ export const MinistryAuth = {
         
         if (!authSession?.user) {
             if (typeof window !== 'undefined') {
-                window.location.href = `${BP}/ministry-dashboard?redirect=/ministry-dashboard/${slug}`;
+                window.location.href = `${BP}/ministry/login/`;
             }
             throw new Error('Access denied: You are not logged in.');
         }
@@ -80,14 +80,14 @@ export const MinistryAuth = {
         
         if (!session) {
             if (typeof window !== 'undefined') {
-                window.location.href = `${BP}/ministry-dashboard`;
+                window.location.href = `${BP}/ministry/login/`;
             }
             throw new Error('Access denied: You are not a member of this ministry.');
         }
 
         if (!this.can(session.ministryRole, minimumRole)) {
              if (typeof window !== 'undefined') {
-                window.location.href = `${BP}/ministry-dashboard`;
+                window.location.href = `${BP}/ministry/login/`;
             }
             throw new Error('Access denied: Insufficient role.');
         }

@@ -1,9 +1,18 @@
-import { MINISTRIES } from "@/lib/constants";
-
 export async function generateStaticParams() {
-    return Object.keys(MINISTRIES).map((slug) => ({
-        slug: slug,
-    }));
+    return [
+        { slug: 'worship' },
+        { slug: 'ushers' },
+        { slug: 'childrens' },
+        { slug: 'youth' },
+        { slug: 'evangelism' },
+        { slug: 'prayer' },
+        { slug: 'media' },
+        { slug: 'hospitality' },
+        { slug: 'fellowship' },
+        { slug: 'finance' },
+        { slug: 'missions' },
+        { slug: 'pastoral' },
+    ];
 }
 
 export default function MinistryLayout({ children }: { children: React.ReactNode }) {
