@@ -1,8 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { DollarSign, TrendingUp, Users, PieChart as PieIcon } from "lucide-react";
+import { DollarSign, TrendingUp, Users, PieChart as PieIcon, Plus, Save } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
 const TOOLTIP_STYLE = {
@@ -17,14 +21,52 @@ const TYPE_COLORS: Record<string, string> = { offering: '#8b5cf6', tithe: '#06b6
 export default function FinancePage() {
     const [records, setRecords] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isTrackerOpen, setIsTrackerOpen] = useState(false);
+    const [formData, setFormData] = useState({ amount: '', record_type: 'offering', notes: '' });
+    const [submitting, setSubmitting] = useState(false);
 
-    useEffect(() => {
+    const loadRecords = () => {
         supabase.from('financial_records').select('*').order('given_date', { ascending: false })
             .then(({ data }) => {
                 setRecords(data || []);
                 setLoading(false);
             });
-    }, []);
+    };
+
+    useEffect(() => { loadRecords(); }, []);
+
+    const handleAddRecord = async () => {
+        if (!formData.amount) return toast.error("Amount is required");
+        setSubmitting(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', user?.id).single();
+            const org_id = profile?.org_id;
+
+            const res = await fetch('/api/finance/donate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    amount: Number(formData.amount),
+                    record_type: formData.record_type,
+                    notes: formData.notes,
+                    user_id: user?.id,
+                    org_id
+                })
+            });
+            
+            if (!res.ok) throw new Error("Failed to insert");
+            
+            toast.success("Transaction recorded");
+            setIsTrackerOpen(false);
+            setFormData({ amount: '', record_type: 'offering', notes: '' });
+            loadRecords();
+        } catch (error: any) {
+            toast.error(error.message || "Failed to add record");
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     const total = records.reduce((a, r) => a + Number(r.amount || 0), 0);
     const byType = RECORD_TYPES.map(type => ({
@@ -33,9 +75,63 @@ export default function FinancePage() {
 
     return (
         <div className="p-6 xl:p-8">
-            <div className="mb-6">
-                <h1 className="text-xl font-black text-white">Giving & Finance</h1>
-                <p className="text-[11px] text-white/30 mt-0.5">Anonymous giving analytics — stewardship overview</p>
+            <div className="flex items-start justify-between mb-6">
+                <div>
+                    <h1 className="text-xl font-black text-white">Giving & Finance</h1>
+                    <p className="text-[11px] text-white/30 mt-0.5">Anonymous giving analytics — stewardship overview</p>
+                </div>
+
+                <Dialog open={isTrackerOpen} onOpenChange={setIsTrackerOpen}>
+                    <DialogTrigger asChild>
+                        <Button className="bg-amber-600 hover:bg-amber-500 text-white font-black rounded-xl h-10 px-5 shadow-lg shadow-amber-500/20">
+                            <Plus className="w-4 h-4 mr-2" /> LOG TRANSACTION
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-[#0f172a] border-white/10 text-white max-w-sm rounded-3xl p-6">
+                        <DialogHeader>
+                            <DialogTitle className="text-lg font-black tracking-tight">Proxy Giving Record</DialogTitle>
+                            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1">Manual Finance Entry</p>
+                        </DialogHeader>
+                        
+                        <div className="space-y-4 mt-6">
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">Amount (¥)</p>
+                                <Input 
+                                    type="number"
+                                    placeholder="e.g. 10000" 
+                                    className="bg-white/5 border-white/10 text-sm h-12 rounded-xl text-white"
+                                    value={formData.amount}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                                />
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">Type</p>
+                                <select 
+                                    value={formData.record_type} 
+                                    onChange={(e) => setFormData(prev => ({ ...prev, record_type: e.target.value }))}
+                                    className="bg-white/5 border border-white/10 w-full h-12 rounded-xl text-sm px-4 text-white appearance-none focus:outline-none focus:border-white/20"
+                                >
+                                    <option value="" disabled className="bg-[#0f172a]">Select Record Type</option>
+                                    {RECORD_TYPES.map(s => (
+                                        <option key={s} value={s} className="bg-[#0f172a] capitalize">
+                                            {s.replace(/_/g, ' ')}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <Button 
+                                onClick={handleAddRecord}
+                                disabled={submitting}
+                                className="w-full bg-amber-600 hover:bg-amber-500 h-12 text-white font-black rounded-xl text-sm mt-4 shadow-xl shadow-amber-600/20"
+                            >
+                                {submitting ? "SAVING..." : "SAVE RECORD"}
+                                <Save className="w-4 h-4 ml-2" />
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </div>
 
             <div className="grid grid-cols-4 gap-3 mb-6">
