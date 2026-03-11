@@ -288,7 +288,10 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 notesRes,
                 velocityRes,
                 skillsRes,
-                reconRes
+                reconRes,
+                soapRes,
+                sentimentRes,
+                evangelismRes
             ] = await Promise.all([
                 db.from('profiles').select('*'),
                 db.from('member_stats').select('*'),
@@ -300,7 +303,10 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 db.from('pastoral_notes').select('*, member:profiles(name)').eq('category', 'counseling').eq('is_resolved', false).order('follow_up_date', { ascending: true }),
                 db.from('vw_activity_velocity').select('*'),
                 db.from('member_skills').select('*'),
-                db.from('vw_attendance_reconciliation').select('*').order('report_date', { ascending: false }).limit(1)
+                db.from('vw_attendance_reconciliation').select('*').order('report_date', { ascending: false }).limit(1),
+                db.from('soap_entries').select('*'),
+                db.from('soap_sentiment_metrics').select('*'),
+                db.from('evangelism_pipeline').select('*')
             ]);
 
             const profiles = profilesRes.data || [];
@@ -311,6 +317,9 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const recon = reconRes.data?.[0] || null;
             const propheticInsights = propheticRes.data || [];
             const pastoralNotes = notesRes.data || [];
+            const soapEntries = soapRes.data || [];
+            const soupSentimentData = sentimentRes.data || [];
+            const evangelismData = evangelismRes.data || [];
 
             // 2. Calculations
             const now = new Date();
@@ -388,6 +397,34 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 4);
 
+            // Process Sentiment Data
+            const sentimentMap: Record<string, number> = {};
+            soupSentimentData.forEach((s: any) => {
+                const cat = s.emotion_category || 'Neutral';
+                sentimentMap[cat] = (sentimentMap[cat] || 0) + 1;
+            });
+            const sentimentColors: Record<string, string> = {
+                'Hope': '#22d3ee', 'Anxiety': '#f87171', 'Repentance': '#a78bfa',
+                'Gratitude': '#34d399', 'Confusion': '#fbbf24', 'Joy': '#60a5fa'
+            };
+            const liveSentiment = Object.entries(sentimentMap).map(([name, value]) => ({
+                name, value, color: sentimentColors[name] || '#94a3b8'
+            }));
+
+            // Process Devotion Trend (Mock -> Real mapping placeholder based on actual recent days, we'll keep 14 days)
+            const liveTrend = Array.from({ length: 14 }, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - (13 - i));
+                const dayStr = format(d, 'MMM d');
+                const entriesForDay = soapEntries.filter((se: any) => new Date(se.created_at).toDateString() === d.toDateString());
+                const totalMems = profiles.length || 1;
+                return {
+                    day: dayStr,
+                    completions: entriesForDay.length,
+                    pct: Math.round((entriesForDay.length / totalMems) * 100)
+                };
+            });
+
             const pendingMembers = profiles.filter(p => p.membership_status === 'pending_approval');
             setMembershipRequests(pendingMembers);
 
@@ -418,9 +455,10 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 evangelismFunnel: pipelineFunnel,
                 discipleshipData: pipelineFunnel.map(f => ({ label: f.name, count: f.value })),
                 skillsData: skillsData.length > 0 ? skillsData : prev.skillsData,
-                geoClusters: geoClusters.length > 0 ? geoClusters : prev.geoClusters
+                geoClusters: geoClusters.length > 0 ? geoClusters : prev.geoClusters,
+                devotionTrend: liveTrend.length > 0 || soapEntries.length > 0 ? liveTrend : prev.devotionTrend,
+                soapSentiment: liveSentiment.length > 0 ? liveSentiment : prev.soapSentiment
             }));
-
         } catch (e) {
             console.error("Dashboard Load Error:", e);
         } finally {
