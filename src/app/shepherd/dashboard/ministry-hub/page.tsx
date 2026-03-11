@@ -1,218 +1,165 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toast } from "sonner";
 import {
     Users, Baby, Megaphone, Music,
     ShieldCheck, Heart, Send, Calendar,
     TrendingUp, FileText, CheckCircle2, LayoutGrid,
-    X, Loader2, Sparkles, Database
+    X, Loader2, Sparkles, Database, AlertCircle
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { MINISTRY_OPTIONS } from "@/lib/constants";
-import { MinistryCommandCenter } from "@/components/dashboard/MinistryCommandCenter";
-import { DynamicFormRenderer } from "@/components/forms/DynamicFormRenderer";
-
-const ICON_MAP: Record<string, any> = {
-    "Worship Ministry": Music,
-    "Choir": Music,
-    "Media / Production": Megaphone,
-    "Ushers": ShieldCheck,
-    "Protocol / Security": ShieldCheck,
-    "Hospitality": Heart,
-    "Children's Ministry": Baby,
-    "Youth Ministry": Users,
-    "Intercessory Prayer Team": Heart,
-    "Evangelism Team": Megaphone,
-    "Counseling Ministry": Heart,
-    "Missions Team": Send,
-};
-
-const DEFAULT_FIELDS = ['Attendance', 'Souls Won', 'First Timers', 'Highlights'];
-
-const MINISTRIES = MINISTRY_OPTIONS.map(name => ({
-    id: name.toLowerCase().replace(/[^a-z]/g, '_'),
-    name: name,
-    icon: ICON_MAP[name] || LayoutGrid,
-    fields: name.toLowerCase().includes('ministry') || name.toLowerCase().includes('team') ? DEFAULT_FIELDS : ['Active Members', 'Status', 'Notes']
-}));
+import { supabase } from "@/lib/supabase";
 
 export default function MinistryHub() {
     const [loading, setLoading] = useState(true);
-    const [selectedMinistry, setSelectedMinistry] = useState<any>(null);
-    const [userRole, setUserRole] = useState<string | null>(null);
-    const [userMinistry, setUserMinistry] = useState<any>(null);
-    const [allMinistries, setAllMinistries] = useState<any[]>([]);
-    const [activeFormId, setActiveFormId] = useState<string | null>(null);
+    const [ministriesHealth, setMinistriesHealth] = useState<any[]>([]);
+    const [stats, setStats] = useState({ active: 0, critical: 0, volunteers: 0, reports: 0 });
 
-    useEffect(() => {
-        async function loadContext() {
-            setLoading(true);
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
+    const loadData = async () => {
+        setLoading(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', user.id).single();
 
-                const { data: member } = await supabase
-                    .from('org_members')
-                    .select('role, ministry_id, ministries(*)')
-                    .eq('user_id', user.id)
-                    .single();
+            if (profile?.org_id) {
+                const { data, error } = await supabaseAdmin
+                    .from('vw_ministry_hub')
+                    .select('*')
+                    .eq('org_id', profile.org_id)
+                    .order('name');
+                
+                if (error) throw error;
+                setMinistriesHealth(data || []);
 
-                setUserRole(member?.role || 'member');
-                setUserMinistry(member?.ministries || null);
+                const v = data?.reduce((acc, current) => {
+                    return {
+                        active: acc.active + 1,
+                        critical: acc.critical + (current.reporting_overdue ? 1 : 0),
+                        volunteers: acc.volunteers + (current.volunteer_count || 0),
+                        reports: acc.reports + (current.total_reports || 0)
+                    };
+                }, { active: 0, critical: 0, volunteers: 0, reports: 0 });
 
-                const { data: mData } = await supabase.from('ministries').select('*').order('name');
-                setAllMinistries(mData || []);
-
-                if (member?.ministries) {
-                    setSelectedMinistry(member.ministries);
-                } else if (mData && mData.length > 0) {
-                    setSelectedMinistry(mData[0]);
-                }
-            } catch (err) {
-                console.error("Failed to load ministry context", err);
-            } finally {
-                setLoading(false);
+                if (v) setStats(v);
             }
-        }
-        loadContext();
-    }, []);
-
-    const handleAction = async (action: string) => {
-        let formName = "";
-        if (action === 'usher_report') formName = 'Usher Headcount Report';
-        if (action === 'register_child') formName = 'Child Check-In';
-        if (action === 'log_outreach') formName = 'Evangelism Log';
-        if (action === 'generic_report') formName = 'Weekly Ministry Report';
-
-        if (formName) {
-            const { data } = await supabase.from('forms').select('id').eq('name', formName).single();
-            if (data) {
-                setActiveFormId(data.id);
-            } else {
-                toast.error(`Operational form '${formName}' is not active in the pipeline.`);
-            }
+        } catch (err: any) {
+            console.error(err);
+            toast.error("Failed to load Ministry Health Intelligence");
+        } finally {
+            setLoading(false);
         }
     };
 
-    const isPrivileged = ['admin', 'shepherd', 'owner', 'super_admin', 'pastor'].includes(userRole || '');
+    useEffect(() => {
+        loadData();
+    }, []);
 
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center bg-black">
-            <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+        <div className="min-h-screen flex items-center justify-center bg-[#0f172a]">
+            <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
         </div>
     );
 
     return (
-        <div className="p-8 space-y-8 max-w-7xl mx-auto min-h-screen">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="p-8 space-y-8 max-w-7xl mx-auto min-h-screen text-white">
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-indigo-500/20 pb-6">
                 <div>
-                    <h1 className="text-4xl font-black text-white tracking-tighter uppercase">
-                        {userRole === 'ministry_leader' ? `${userMinistry?.name} Command` : 'Intelligence Hub'}
-                    </h1>
-                    <div className="flex items-center gap-2 mt-1">
+                    <h1 className="text-4xl font-black tracking-tighter uppercase">Intelligence Hub</h1>
+                    <div className="flex items-center gap-2 mt-2">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Live Pipeline Active</span>
+                        <span className="text-[10px] font-black text-indigo-200/50 uppercase tracking-widest">
+                            Live Prophetic Intelligence Matrix
+                        </span>
                     </div>
                 </div>
-
-                {isPrivileged && (
-                    <div className="flex items-center gap-2 bg-white/5 p-1 rounded-2xl border border-white/10 overflow-x-auto max-w-full no-scrollbar">
-                        {allMinistries.map(m => (
-                            <button
-                                key={m.id}
-                                onClick={() => setSelectedMinistry(m)}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap ${selectedMinistry?.id === m.id ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20' : 'text-white/40 hover:bg-white/5'}`}
-                            >
-                                {m.name}
-                            </button>
-                        ))}
-                    </div>
-                )}
             </header>
 
-            {/* Form Overlay */}
-            {activeFormId && (
-                <motion.div
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl p-6 md:p-12 overflow-y-auto"
-                >
-                    <div className="max-w-2xl mx-auto">
-                        <div className="flex items-center justify-between mb-8">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center">
-                                    <Send className="w-5 h-5 text-white" />
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-[#111827] border border-white/5 rounded-2xl p-6">
+                    <p className="text-3xl font-black text-indigo-400">{stats.active}</p>
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mt-1">Active Ministries</p>
+                </div>
+                <div className="bg-[#111827] border border-white/5 rounded-2xl p-6">
+                    <p className="text-3xl font-black text-emerald-400">{stats.volunteers}</p>
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mt-1">Engaged Volunteers</p>
+                </div>
+                <div className="bg-[#111827] border border-white/5 rounded-2xl p-6">
+                    <p className="text-3xl font-black text-amber-400">{stats.reports}</p>
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mt-1">Reports Analyzed</p>
+                </div>
+                <div className="bg-[#111827] border border-white/5 rounded-2xl p-6 relative overflow-hidden">
+                    <div className={`absolute inset-0 bg-red-500/10 transition-opacity ${stats.critical > 0 ? 'opacity-100' : 'opacity-0'}`} />
+                    <p className={`text-3xl font-black relative z-10 ${stats.critical > 0 ? 'text-red-400' : 'text-neutral-500'}`}>
+                        {stats.critical}
+                    </p>
+                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mt-1 relative z-10">Critical Alerts</p>
+                </div>
+            </div>
+
+            {/* Ministry Health Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {ministriesHealth.map((m: any) => (
+                    <div key={m.id} className="bg-[#111827] border border-white/10 rounded-3xl p-6 relative overflow-hidden hover:border-indigo-500/30 transition-all group">
+                        <div 
+                            className="absolute top-0 right-0 w-32 h-32 blur-[60px] opacity-20 group-hover:opacity-40 transition-all"
+                            style={{ backgroundColor: m.color || '#6366F1' }}
+                        />
+                        
+                        <div className="flex justify-between items-start mb-6 relative z-10">
+                            <div>
+                                <h2 className="text-xl font-black uppercase tracking-tighter text-white inline-flex items-center gap-2">
+                                    {m.name}
+                                </h2>
+                                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mt-1">
+                                    Leader: <span className="text-white/60">{m.leader_name || 'Unassigned'}</span>
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <span className={`text-2xl font-black ${m.health_score >= 80 ? 'text-emerald-400' : m.health_score >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+                                    {m.health_score || 0}
+                                </span>
+                                <p className="text-[8px] font-black text-white/40 uppercase tracking-widest">Health Score</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 mb-6 relative z-10">
+                            <div className="flex justify-between items-center bg-white/5 rounded-xl px-4 py-3">
+                                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Active Volunteers</span>
+                                <span className="text-lg font-black">{m.volunteer_count || 0}</span>
+                            </div>
+                            <div className="flex justify-between items-center bg-white/5 rounded-xl px-4 py-3">
+                                <span className="text-[10px] font-black text-white/50 uppercase tracking-widest">Avg. Attendance</span>
+                                <span className="text-lg font-black text-indigo-300">{m.avg_attendance || 0}</span>
+                            </div>
+                        </div>
+
+                        <div className="border-t border-white/10 pt-4 relative z-10 flex items-center justify-between">
+                            <div className="flex flex-col">
+                                <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">Last Report</span>
+                                <span className={`text-xs font-bold ${m.reporting_overdue ? 'text-red-400' : 'text-emerald-400'}`}>
+                                    {m.last_report_date ? new Date(m.last_report_date).toLocaleDateString() : 'Never'}
+                                </span>
+                            </div>
+                            {m.reporting_overdue && (
+                                <div className="flex items-center gap-1.5 bg-red-500/10 text-red-400 px-3 py-1.5 rounded-lg border border-red-500/20">
+                                    <AlertCircle className="w-3.5 h-3.5" />
+                                    <span className="text-[9px] font-black uppercase tracking-widest">Overdue</span>
                                 </div>
-                                <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Operational Intake</h2>
-                            </div>
-                            <Button variant="outline" size="icon" onClick={() => setActiveFormId(null)} className="rounded-full bg-white/5 border-white/10 hover:bg-white/10">
-                                <X className="w-5 h-5 text-white" />
-                            </Button>
-                        </div>
-                        <div className="bg-[#111] border border-white/5 rounded-[3rem] p-2 shadow-2xl">
-                            <DynamicFormRenderer
-                                formId={activeFormId}
-                                onSuccess={() => {
-                                    setActiveFormId(null);
-                                    toast.success("Ministry data synchronized with intelligence feed!");
-                                }}
-                            />
+                            )}
                         </div>
                     </div>
-                </motion.div>
+                ))}
+            </div>
+
+            {ministriesHealth.length === 0 && !loading && (
+                <div className="text-center bg-[#111827] border border-white/5 rounded-3xl p-12">
+                    <p className="text-white/40 text-sm font-black uppercase tracking-widest">No Ministry Data Found</p>
+                </div>
             )}
-
-            {/* Ministry Specific Dashboard Grid */}
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                <MinistryCommandCenter
-                    ministrySlug={selectedMinistry?.slug || ''}
-                    onAction={handleAction}
-                />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
-                {/* Status Column */}
-                <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8">
-                    <h3 className="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-6">Pipeline Health</h3>
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                                <ShieldCheck className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <p className="text-[11px] font-black text-white">SUPABASE CONNECTED</p>
-                                <p className="text-[9px] text-white/30 font-bold uppercase">Operational integrity verified</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center text-violet-400">
-                                <Sparkles className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <p className="text-[11px] font-black text-white">AI FEED ACTIVE</p>
-                                <p className="text-[9px] text-white/30 font-bold uppercase">Real-time pattern analysis</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Info Card */}
-                <div className="lg:col-span-2 bg-[#111] border-white/5 rounded-[2.5rem] p-10 flex flex-col justify-center relative overflow-hidden group">
-                    <div className="relative z-10">
-                        <h3 className="text-xl font-black text-white mb-2 uppercase italic tracking-tighter">Strategic Impact</h3>
-                        <p className="text-white/40 text-sm font-bold leading-relaxed max-w-xl">
-                            The data you input here transforms into the proprietary PI (Prophetic Intelligence) layer,
-                            allowing the church leadership to see growth trends and pastoral needs in real-time.
-                        </p>
-                    </div>
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-violet-600/5 blur-[120px] rounded-full group-hover:bg-violet-600/10 transition-all duration-1000" />
-                </div>
-            </div>
         </div>
     );
 }

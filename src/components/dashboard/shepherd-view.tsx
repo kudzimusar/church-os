@@ -70,97 +70,38 @@ interface AtRiskMember {
 
 interface SentimentData { name: string; value: number; color: string; }
 
-/* ─── Mock Data ─── */
-const MOCK_DATA: DashboardData = {
-    totalMembers: 247,
-    newMembersThisMonth: 8,
-    memberGrowthPct: 3.4,
-    activeToday: 134,
-    engagementScore: 72,
-    avgStreak: 11,
-    lastSundayAttendance: 189,
-    weeklyAvgAttendance: 176,
-    newFamilies: 3,
-    salvations: 2,
-    baptisms: 1,
-    criticalAlerts: 12,
-    prayerActive: 34,
-    prayerAnswered: 18,
-    alertMembers: [
-        { id: '1', name: 'Sanna P.', email: 'sanna@jkc.org', days_inactive: 14, risk_level: 'critical', current_streak: 0 },
-        { id: '2', name: 'James K.', email: 'james@jkc.org', days_inactive: 8, risk_level: 'critical', current_streak: 0 },
-        { id: '3', name: 'Maria T.', email: 'maria@jkc.org', days_inactive: 5, risk_level: 'high', current_streak: 1 },
-        { id: '4', name: 'David N.', email: 'david@jkc.org', days_inactive: 4, risk_level: 'high', current_streak: 2 },
-        { id: '5', name: 'Yuki M.', email: 'yuki@jkc.org', days_inactive: 3, risk_level: 'high', current_streak: 0 },
-    ],
-    devotionTrend: Array.from({ length: 14 }, (_, i) => ({
-        day: `D${i + 18}`,
-        completions: Math.floor(Math.random() * 60) + 70,
-        pct: Math.floor(Math.random() * 30) + 50,
-    })),
-    ministryData: MINISTRY_OPTIONS.slice(0, 10).map(m => ({ name: m, count: Math.floor(Math.random() * 30) + 10 })),
-    prayerCategories: [
-        { name: 'Health', value: 32, color: '#f87171' },
-        { name: 'Financial', value: 24, color: '#fbbf24' },
-        { name: 'Family', value: 18, color: '#60a5fa' },
-        { name: 'Spiritual Warfare', value: 14, color: '#a78bfa' },
-        { name: 'Career', value: 8, color: '#34d399' },
-        { name: 'Marriage', value: 4, color: '#f472b6' },
-    ],
-    evangelismFunnel: [
-        { name: 'Invited Visitors', value: 84 },
-        { name: 'First Service', value: 61 },
-        { name: 'Second Visit', value: 44 },
-        { name: 'Salvation Decision', value: 28 },
-        { name: 'Baptism', value: 18 },
-        { name: 'Membership', value: 14 },
-    ],
-    householdData: [
-        { month: 'Oct', couples: 42, singles: 87, families: 31 },
-        { month: 'Nov', couples: 45, singles: 89, families: 33 },
-        { month: 'Dec', couples: 44, singles: 91, families: 35 },
-        { month: 'Jan', couples: 48, singles: 93, families: 36 },
-        { month: 'Feb', couples: 51, singles: 96, families: 38 },
-        { month: 'Mar', couples: 53, singles: 98, families: 40 },
-    ],
-    soapSentiment: [
-        { name: 'Hope', value: 34, color: '#22d3ee' },
-        { name: 'Anxiety', value: 28, color: '#f87171' },
-        { name: 'Repentance', value: 19, color: '#a78bfa' },
-        { name: 'Gratitude', value: 11, color: '#34d399' },
-        { name: 'Confusion', value: 8, color: '#fbbf24' },
-    ],
-    wordCloud: ['Grace', 'Faith', 'Family', 'Financial', 'Forgiveness', 'Prayer', 'Peace', 'Purpose', 'Healing', 'Jesus', 'Trust', 'Japan', 'Transformation', 'Children', 'Community'],
-    attendanceTrend: [
-        { week: 'Feb 2', count: 162 }, { week: 'Feb 9', count: 171 },
-        { week: 'Feb 16', count: 168 }, { week: 'Feb 23', count: 174 },
-        { week: 'Mar 2', count: 181 }, { week: 'Mar 9', count: 189 },
-    ],
-    skillsData: [
-        { name: 'Teaching', count: 32 }, { name: 'Music', count: 21 },
-        { name: 'Technology', count: 14 }, { name: 'Counseling', count: 7 },
-        { name: 'Administration', count: 12 }, { name: 'Media', count: 9 },
-    ],
-    geoClusters: [
-        { name: 'Nerima', count: 34 }, { name: 'Adachi', count: 21 },
-        { name: 'Hachioji', count: 15 }, { name: 'Setagaya', count: 12 },
-    ],
-    manualAttendance: { total: 220, adults: 160, children: 60, visitors: 34 },
-    givingData: [
-        { month: 'Oct', amount: 840000 }, { month: 'Nov', amount: 920000 },
-        { month: 'Dec', amount: 1200000 }, { month: 'Jan', amount: 950000 },
-        { month: 'Feb', amount: 1050000 }, { month: 'Mar', amount: 1100000 },
-    ],
+/* ─── Initial State ─── */
+const INITIAL_DATA: DashboardData = {
+    totalMembers: 0,
+    newMembersThisMonth: 0,
+    memberGrowthPct: 0,
+    activeToday: 0,
+    engagementScore: 0,
+    avgStreak: 0,
+    lastSundayAttendance: 0,
+    weeklyAvgAttendance: 0,
+    newFamilies: 0,
+    salvations: 0,
+    baptisms: 0,
+    criticalAlerts: 0,
+    prayerActive: 0,
+    prayerAnswered: 0,
+    alertMembers: [],
+    devotionTrend: [],
+    ministryData: [],
+    prayerCategories: [],
+    evangelismFunnel: [],
+    householdData: [],
+    soapSentiment: [],
+    wordCloud: [],
+    attendanceTrend: [],
+    skillsData: [],
+    geoClusters: [],
+    manualAttendance: { total: 0, adults: 0, children: 0, visitors: 0 },
+    givingData: [],
     counselingQueue: [],
     staffingGaps: [],
-    discipleshipData: [
-        { label: 'Visitors', count: 84 },
-        { label: 'Attendees', count: 61 },
-        { label: 'Members', count: 247 },
-        { label: 'Volunteers', count: 89 },
-        { label: 'Leaders', count: 24 },
-        { label: 'Dept. Heads', count: 8 },
-    ]
+    discipleshipData: []
 };
 
 /* ─── Sub-components ─── */
@@ -221,7 +162,7 @@ const CUSTOM_TOOLTIP_STYLE = {
 
 /* ─── Main Component ─── */
 export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
-    const [data, setData] = useState<DashboardData>(MOCK_DATA);
+    const [data, setData] = useState<DashboardData>(INITIAL_DATA);
     const [loading, setLoading] = useState(false);
     const [runningAI, setRunningAI] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(false);

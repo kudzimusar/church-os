@@ -32,6 +32,21 @@ export const MINISTRY_OPTIONS = [
     "Campus Fellowship"
 ];
 
+export const MINISTRIES: Record<string, string> = {
+    "worship": "Worship Ministry",
+    "ushers": "Ushering Ministry",
+    "childrens": "Children's Ministry",
+    "youth": "Youth Ministry",
+    "evangelism": "Evangelism Ministry",
+    "prayer": "Prayer Ministry",
+    "media": "Media Ministry",
+    "hospitality": "Hospitality Ministry",
+    "fellowship": "Fellowship Circles",
+    "finance": "Finance Ministry",
+    "missions": "Missions Ministry",
+    "pastoral": "Pastoral Care"
+};
+
 export const SKILL_OPTIONS = [
     "Music (Instruments)",
     "Vocals",

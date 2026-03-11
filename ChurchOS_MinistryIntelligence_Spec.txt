@@ -1,0 +1,926 @@
+CHURCH OS
+Ministry Intelligence System
+Distributed Ministry Dashboard Architecture
+Japan Kingdom Church  ·  Full Engineering & Product Specification
+Version 1.0  ·  March 2026  ·  CONFIDENTIAL
+ 
+DATABASE SCHEMA  ·  ROLE SYSTEM  ·  FORM ENGINE  ·  DATA PIPELINE  ·  MIGRATION SQL
+ 
+
+0.  Context — What We Are Building & Why
+Church OS currently runs two operational layers: the Member App (individual devotions and SOAP journaling) and Mission Control (pastoral oversight for admins). The complete database foundation was established on March 11, 2026 — 16 core tables, 4 automatic triggers, and role-consistency enforcement are all in place and verified.
+ 
+What is missing is the middle layer: the Ministry Intelligence Layer. Today, if leadership wants to know how Children's Ministry attendance is trending, or how many people the Evangelism team reached last month, someone has to manually enter that data into the admin dashboard. This makes the admin the bottleneck for every operational insight, and it means ministry leaders have no ownership over their own performance data.
+ 
+This document specifies every database table, trigger, function, role rule, and frontend pattern required to build the distributed ministry reporting infrastructure. After this is implemented, Church OS functions as a genuine Ministry Intelligence Platform — where data is captured at the source by the people closest to each ministry, flows automatically into Mission Control, and gives leadership real-time analytics without any manual entry.
+
+1.  The Three-Layer Architecture
+The system operates across three clearly separated layers. Each has a distinct user base, a distinct data responsibility, and a distinct interface. Data flows strictly upward — from members to ministry leaders to Mission Control. Nothing requires admin manual entry.
+ 
+#
+Layer
+Who Uses It
+Data It Owns
+URL
+1
+Member App
+Individual congregation members
+Profile, SOAP journal, giving, attendance
+/app/*
+2
+Ministry Dashboards
+Ministry leaders, assistants, volunteers
+Service reports, attendance, events, team
+/ministry-dashboard/*
+3
+Mission Control
+Pastors, elders, super admin
+Aggregated analytics across all layers
+/shepherd/dashboard/*
+ 
+The architectural shift this document implements is captured in one sentence: the flow changes from Admin → enters ministry data manually, to Ministry Leaders → enter data through their dashboards → data flows automatically into Mission Control → Admin analyses it.
+
+2.  Role-Based Access Control — Complete Specification
+The ADMIN_ROLES array in the existing admin-auth.ts file already defines the top-tier roles (super_admin, owner, shepherd, admin, ministry_lead, ministry_leader). This section specifies the full role hierarchy, including the ministry-level roles that govern access to the new /ministry-dashboard routes.
+ 
+There are two separate access control systems that must exist in parallel. The existing AdminAuth guards /shepherd/* routes. A new MinistryAuth system must guard /ministry-dashboard/* routes. These are different systems checking different tables.
+ 
+Role
+Level
+Member App
+Ministry Dashboard
+Mission Control
+Set In
+super_admin
+100
+Full
+All ministries — full
+Full system
+org_members
+owner
+90
+Full
+All ministries — full
+Full system
+org_members
+shepherd
+80
+Own profile
+Read all — no submit
+Read + approve
+org_members
+admin
+70
+Own profile
+View all ministries
+Read analytics
+org_members
+ministry_leader
+60
+Own profile
+Own ministry — full
+None
+ministry_members
+assistant
+40
+Own profile
+Own ministry — submit only
+None
+ministry_members
+volunteer
+20
+Own profile
+Own ministry — submit forms only
+None
+ministry_members
+member
+10
+Own profile only
+None
+None
+profiles
+ 
+Key implementation note: A person's role in org_members controls whether they can enter /shepherd/* routes. Their role in ministry_members controls which /ministry-dashboard/* routes they can access and what they can do there. These are independent. A member can be a volunteer in Worship Ministry (ministry_members role: volunteer) and also a regular member elsewhere. MinistryAuth must check ministry_members for the specific ministry slug in the URL.
+
+3.  Database Schema — All Tables to Create
+Run the following SQL in Supabase SQL Editor in the order presented. Each table builds on the previous one. The ministry_members table already exists from the March 11 session — do not drop or recreate it. All other tables below are net-new additions.
+IMPORTANT: Replace every instance of YOUR_ORG_ID in this document with the actual organization UUID: fa547adf-f820-412f-9458-d6bade11517d
+ 
+3.1  ministries — Master Ministry Registry
+This is the most foundational new table. Currently ministry names exist only as string constants in constants.ts with no database representation. This table gives each ministry a proper identity: its own UUID, its own leader, its own color and icon for theming, and its own slug for URL routing. Every other new table references this table by ID.
+ 
+CREATE TABLE IF NOT EXISTS ministries (
+  id          UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  org_id      UUID        NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  name        TEXT        NOT NULL,
+  slug        TEXT        NOT NULL,  -- URL-safe identifier: 'worship', 'childrens', 'ushers'
+  description TEXT,
+  category    TEXT        DEFAULT 'general',
+  -- category options: worship | care | outreach | admin | media
+  leader_id   UUID        REFERENCES auth.users(id),
+  color       TEXT        DEFAULT '#6366F1',  -- Hex color for dashboard theming
+  icon        TEXT        DEFAULT 'users',    -- Lucide icon name
+  is_active   BOOLEAN     DEFAULT TRUE,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(org_id, slug)
+);
+
+-- Seed the 12 core JKC ministries
+-- Run after table creation — replace YOUR_ORG_ID with: fa547adf-f820-412f-9458-d6bade11517d
+INSERT INTO ministries (org_id, name, slug, category, color, icon) VALUES
+  ('YOUR_ORG_ID', 'Worship Ministry',     'worship',     'worship',  '#7C3AED', 'music'),
+  ('YOUR_ORG_ID', 'Ushering Ministry',    'ushers',      'admin',    '#0EA5E9', 'door-open'),
+  ('YOUR_ORG_ID', 'Children''s Ministry', 'childrens',   'care',     '#F59E0B', 'heart'),
+  ('YOUR_ORG_ID', 'Youth Ministry',       'youth',       'care',     '#10B981', 'star'),
+  ('YOUR_ORG_ID', 'Evangelism Ministry',  'evangelism',  'outreach', '#EF4444', 'send'),
+  ('YOUR_ORG_ID', 'Prayer Ministry',      'prayer',      'worship',  '#8B5CF6', 'activity'),
+  ('YOUR_ORG_ID', 'Media Ministry',       'media',       'media',    '#06B6D4', 'video'),
+  ('YOUR_ORG_ID', 'Hospitality Ministry', 'hospitality', 'care',     '#F97316', 'coffee'),
+  ('YOUR_ORG_ID', 'Fellowship Circles',   'fellowship',  'care',     '#84CC16', 'users'),
+  ('YOUR_ORG_ID', 'Finance Ministry',     'finance',     'admin',    '#14B8A6', 'dollar-sign'),
+  ('YOUR_ORG_ID', 'Missions Ministry',    'missions',    'outreach', '#F43F5E', 'globe'),
+  ('YOUR_ORG_ID', 'Pastoral Care',        'pastoral',    'care',     '#A855F7', 'shield')
+ON CONFLICT (org_id, slug) DO NOTHING;
+ 
+3.2  ministry_reports — Central Operational Report Store
+This is the most important table in the entire Ministry Intelligence Layer. Every form submission from every ministry leader across all 12 ministries lands here as a single row. The report_type column identifies which form was submitted. The data JSONB column stores all form field values. This design means you never need to create a separate table for each new form — you simply add a new report_type value and a matching form_template row.
+ 
+CREATE TABLE IF NOT EXISTS ministry_reports (
+  id           UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  org_id       UUID        NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  ministry_id  UUID        NOT NULL REFERENCES ministries(id) ON DELETE CASCADE,
+  submitted_by UUID        NOT NULL REFERENCES auth.users(id),
+  report_type  TEXT        NOT NULL,
+  -- Valid report_type values:
+  -- 'attendance'           General service attendance
+  -- 'activity'             Weekly ministry activity summary
+  -- 'event'                Post-event report
+  -- 'equipment'            Resource/equipment status
+  -- 'outreach'             Evangelism outreach report
+  -- 'children_class'       Sunday school class report
+  -- 'children_safety'      Child safety incident report
+  -- 'media_stream'         Livestream analytics
+  -- 'offering_recon'       Usher offering reconciliation
+  -- 'counseling'           Pastoral care session log
+  -- 'prayer_meeting'       Prayer ministry attendance
+  service_date DATE        NOT NULL DEFAULT CURRENT_DATE,
+  data         JSONB       NOT NULL DEFAULT '{}',
+  -- Example data for 'attendance' report_type:
+  -- { "total_adults": 47, "total_children": 12,
+  --   "first_time_visitors": 3, "notes": "Good service" }
+  status       TEXT        DEFAULT 'submitted',
+  -- status options: submitted | reviewed | flagged
+  reviewed_by  UUID        REFERENCES auth.users(id),
+  reviewed_at  TIMESTAMPTZ,
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Performance indexes
+CREATE INDEX IF NOT EXISTS idx_ministry_reports_ministry_date
+  ON ministry_reports(ministry_id, service_date DESC);
+CREATE INDEX IF NOT EXISTS idx_ministry_reports_org_type
+  ON ministry_reports(org_id, report_type, service_date DESC);
+CREATE INDEX IF NOT EXISTS idx_ministry_reports_data
+  ON ministry_reports USING GIN(data);  -- enables fast JSONB field queries
+ 
+3.3  ministry_events — Ministry-Level Event Tracking
+Tracks ministry-specific events such as rehearsals, outreach trips, and training sessions that may not appear on the main church calendar but are essential for performance analytics per ministry.
+ 
+CREATE TABLE IF NOT EXISTS ministry_events (
+  id                 UUID    PRIMARY KEY DEFAULT uuid_generate_v4(),
+  org_id             UUID    NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  ministry_id        UUID    NOT NULL REFERENCES ministries(id) ON DELETE CASCADE,
+  created_by         UUID    REFERENCES auth.users(id),
+  event_name         TEXT    NOT NULL,
+  event_type         TEXT    DEFAULT 'regular',
+  -- event_type: regular | special | training | outreach | retreat
+  event_date         DATE    NOT NULL,
+  location           TEXT,
+  expected_attendance INT    DEFAULT 0,
+  actual_attendance   INT    DEFAULT 0,
+  visitor_count       INT    DEFAULT 0,
+  salvations          INT    DEFAULT 0,
+  notes               TEXT,
+  created_at         TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ministry_events_ministry
+  ON ministry_events(ministry_id, event_date DESC);
+ 
+3.4  ministry_announcements — Two-Way Communication Channel
+This table enables structured communication between Mission Control and individual ministries, replacing informal WhatsApp messages with a traceable in-system channel. Admins push announcements downward to specific ministries or to all ministries at once. Ministry leaders post updates upward to Mission Control. Every message has a direction, priority, and read status.
+ 
+CREATE TABLE IF NOT EXISTS ministry_announcements (
+  id          UUID    PRIMARY KEY DEFAULT uuid_generate_v4(),
+  org_id      UUID    NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  ministry_id UUID    REFERENCES ministries(id),
+  -- NULL ministry_id = broadcast to ALL ministries
+  author_id   UUID    NOT NULL REFERENCES auth.users(id),
+  direction   TEXT    NOT NULL DEFAULT 'downward',
+  -- direction: 'downward' = Admin to Ministry
+  --            'upward'   = Ministry to Admin
+  --            'lateral'  = Ministry to Ministry (Phase 2)
+  title       TEXT    NOT NULL,
+  body        TEXT    NOT NULL,
+  priority    TEXT    DEFAULT 'normal',
+  -- priority: normal | urgent | critical
+  is_read     BOOLEAN DEFAULT FALSE,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+ 
+3.5  form_templates — Dynamic Form Definition Engine
+This table stores the structure of each form as a JSONB fields array. It is what makes the entire system scalable: when leadership needs a new form type, an admin defines it here without any developer involvement. The DynamicFormRenderer component on the frontend reads a form_templates row and renders the correct inputs automatically. When a ministry leader submits the form, the component writes to ministry_reports using the report_type from this table.
+ 
+CREATE TABLE IF NOT EXISTS form_templates (
+  id          UUID    PRIMARY KEY DEFAULT uuid_generate_v4(),
+  org_id      UUID    NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  ministry_id UUID    REFERENCES ministries(id),
+  -- NULL = universal form available to all ministries
+  name        TEXT    NOT NULL,
+  report_type TEXT    NOT NULL,  -- must match a valid ministry_reports.report_type value
+  description TEXT,
+  fields      JSONB   NOT NULL DEFAULT '[]',
+  -- fields is an ordered array of field definition objects:
+  -- [
+  --   {
+  --     "name":        "total_adults",
+  --     "label":       "Total Adults Present",
+  --     "type":        "number",
+  --     "required":    true,
+  --     "placeholder": "Enter headcount"
+  --   },
+  --   {
+  --     "name":    "service_type",
+  --     "label":   "Service Type",
+  --     "type":    "select",
+  --     "options": ["Sunday Service","Midweek","Special Event","Training"],
+  --     "required": true
+  --   }
+  -- ]
+  is_active   BOOLEAN DEFAULT TRUE,
+  version     INT     DEFAULT 1,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+ 
+3.6  ministry_analytics — Pre-Computed Analytics Cache
+Rather than running expensive live aggregate queries against ministry_reports every time Mission Control loads, this table stores pre-computed weekly and monthly analytics per ministry. A trigger fires on every new report submission to update this cache automatically. Mission Control reads from here for near-instant dashboard loads.
+ 
+CREATE TABLE IF NOT EXISTS ministry_analytics (
+  id              UUID    PRIMARY KEY DEFAULT uuid_generate_v4(),
+  org_id          UUID    NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  ministry_id     UUID    NOT NULL REFERENCES ministries(id) ON DELETE CASCADE,
+  period_start    DATE    NOT NULL,
+  period_end      DATE    NOT NULL,
+  period_type     TEXT    DEFAULT 'weekly',  -- weekly | monthly | quarterly
+  avg_attendance  NUMERIC(8,2) DEFAULT 0,
+  total_reports   INT     DEFAULT 0,
+  volunteer_count INT     DEFAULT 0,
+  event_count     INT     DEFAULT 0,
+  salvations      INT     DEFAULT 0,
+  visitor_count   INT     DEFAULT 0,
+  health_score    INT     DEFAULT 0,  -- 0-100 composite score
+  computed_at     TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(ministry_id, period_start, period_type)
+);
+ 
+3.7  Confirm & Update ministry_members
+The ministry_members table already exists from the March 11 session. However it may be missing columns needed for the ministry dashboard layer. Run the following to add any missing columns without touching existing data.
+ 
+-- Add columns to existing ministry_members table if they are missing
+ALTER TABLE ministry_members ADD COLUMN IF NOT EXISTS ministry_role TEXT DEFAULT 'member';
+-- ministry_role options: leader | assistant | volunteer | member
+ALTER TABLE ministry_members ADD COLUMN IF NOT EXISTS ministry_id  UUID REFERENCES ministries(id);
+ALTER TABLE ministry_members ADD COLUMN IF NOT EXISTS joined_at    TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE ministry_members ADD COLUMN IF NOT EXISTS is_active    BOOLEAN DEFAULT TRUE;
+
+-- Index for MinistryAuth lookup: 'can this user access /ministry-dashboard/[slug]?'
+CREATE INDEX IF NOT EXISTS idx_ministry_members_user_ministry
+  ON ministry_members(user_id, ministry_id) WHERE is_active = TRUE;
+
+4.  Database Triggers and Automation Functions
+Install all four functions and their triggers in Supabase SQL Editor after creating the tables in Section 3. These extend the automatic data pipeline established in the March 11 session to cover ministry-level reporting. After installing, verify they appear by running: SELECT trigger_name FROM information_schema.triggers WHERE trigger_schema = 'public';
+ 
+4.1  Auto-update analytics cache on every report submission
+Every time a ministry leader submits any form, this trigger fires and upserts the analytics cache for that ministry's current week. Mission Control's Ministry Hub page will always show current-week data without any manual refresh or scheduled job.
+ 
+CREATE OR REPLACE FUNCTION update_ministry_analytics_on_report()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_period_start  DATE    := date_trunc('week', NEW.service_date)::DATE;
+  v_period_end    DATE    := (date_trunc('week', NEW.service_date) + INTERVAL '6 days')::DATE;
+  v_attendance    INT     := COALESCE((NEW.data->>'total_adults')::INT, 0)
+                           + COALESCE((NEW.data->>'total_children')::INT, 0);
+  v_visitors      INT     := COALESCE((NEW.data->>'first_time_visitors')::INT, 0);
+  v_salvations    INT     := COALESCE((NEW.data->>'salvations')::INT, 0);
+BEGIN
+  INSERT INTO ministry_analytics (
+    org_id, ministry_id, period_start, period_end,
+    period_type, avg_attendance, total_reports, visitor_count, salvations
+  ) VALUES (
+    NEW.org_id, NEW.ministry_id, v_period_start, v_period_end,
+    'weekly', v_attendance, 1, v_visitors, v_salvations
+  )
+  ON CONFLICT (ministry_id, period_start, period_type) DO UPDATE SET
+    total_reports  = ministry_analytics.total_reports + 1,
+    avg_attendance = ROUND(
+      (ministry_analytics.avg_attendance * ministry_analytics.total_reports
+       + v_attendance) / (ministry_analytics.total_reports + 1), 2),
+    visitor_count  = ministry_analytics.visitor_count  + v_visitors,
+    salvations     = ministry_analytics.salvations     + v_salvations,
+    computed_at    = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS ministry_report_analytics_trigger ON ministry_reports;
+CREATE TRIGGER ministry_report_analytics_trigger
+AFTER INSERT ON ministry_reports
+FOR EACH ROW EXECUTE FUNCTION update_ministry_analytics_on_report();
+ 
+4.2  Alert Mission Control when a report is flagged
+If a ministry leader marks any submitted report as 'flagged' — indicating a safety incident, critical resource failure, or urgent pastoral matter — this trigger immediately creates a member_alert row so Mission Control shows the escalation in the Care Alerts panel without requiring any manual notification.
+ 
+CREATE OR REPLACE FUNCTION alert_admin_on_flagged_report()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_ministry_name TEXT;
+BEGIN
+  IF NEW.status = 'flagged'
+     AND (OLD IS NULL OR OLD.status IS DISTINCT FROM 'flagged') THEN
+    SELECT name INTO v_ministry_name
+    FROM ministries WHERE id = NEW.ministry_id;
+    INSERT INTO member_alerts (member_id, org_id, alert_type, severity, message)
+    VALUES (
+      NEW.submitted_by,
+      NEW.org_id,
+      'Ministry Report Flag',
+      'critical',
+      v_ministry_name || ' submitted a flagged report — '
+        || NEW.report_type || ' on '
+        || TO_CHAR(NEW.service_date, 'Mon DD, YYYY')
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS flagged_report_alert_trigger ON ministry_reports;
+CREATE TRIGGER flagged_report_alert_trigger
+AFTER INSERT OR UPDATE OF status ON ministry_reports
+FOR EACH ROW EXECUTE FUNCTION alert_admin_on_flagged_report();
+ 
+4.3  Compute ministry health score (called by intelligence sweep)
+This function is invoked by the AI Command Center's Run Sweep button via the intelligence engine in route.ts. It computes a 0-100 health score for each ministry based on reporting consistency (40%), attendance trend (35%), and active volunteer count (25%). The score is written back into ministry_analytics and surfaced on the Mission Control Ministry Hub.
+ 
+CREATE OR REPLACE FUNCTION compute_ministry_health_score(p_ministry_id UUID)
+RETURNS INT AS $$
+DECLARE
+  v_reports_30d   INT;
+  v_avg_attend    NUMERIC;
+  v_volunteers    INT;
+  v_consistency   INT;
+  v_attend_score  INT;
+  v_engage_score  INT;
+  v_final         INT;
+BEGIN
+  SELECT COUNT(*) INTO v_reports_30d
+  FROM ministry_reports
+  WHERE ministry_id = p_ministry_id
+    AND service_date >= CURRENT_DATE - INTERVAL '30 days';
+
+  SELECT COALESCE(AVG(
+    COALESCE((data->>''total_adults'')::INT, 0)
+    + COALESCE((data->>''total_children'')::INT, 0)
+  ), 0) INTO v_avg_attend
+  FROM ministry_reports
+  WHERE ministry_id = p_ministry_id
+    AND service_date >= CURRENT_DATE - INTERVAL '30 days';
+
+  SELECT COUNT(*) INTO v_volunteers
+  FROM ministry_members
+  WHERE ministry_id = p_ministry_id AND is_active = TRUE;
+
+  v_consistency  := LEAST(100, v_reports_30d  * 25);  -- 4 reports/mo = 100
+  v_attend_score := LEAST(100, v_avg_attend::INT * 2); -- 50 avg = 100
+  v_engage_score := LEAST(100, v_volunteers    * 10);  -- 10 volunteers = 100
+
+  v_final := ROUND(
+    (v_consistency  * 0.40) +
+    (v_attend_score * 0.35) +
+    (v_engage_score * 0.25)
+  );
+
+  UPDATE ministry_analytics
+  SET health_score = v_final, computed_at = NOW()
+  WHERE ministry_id    = p_ministry_id
+    AND period_type    = 'monthly'
+    AND period_start   = date_trunc('month', CURRENT_DATE)::DATE;
+
+  RETURN v_final;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+5.  Row Level Security Policies
+Enable RLS on all new tables and add the policies below. These follow the same pattern established in the March 11 session. Regular users are restricted to their own data by RLS. All admin dashboard pages use supabaseAdmin (service role key) which bypasses RLS entirely.
+ 
+-- Enable RLS
+ALTER TABLE ministries              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ministry_reports        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ministry_events         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ministry_announcements  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE form_templates          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ministry_analytics      ENABLE ROW LEVEL SECURITY;
+
+-- ministries: any authenticated user can read the ministry list
+DO $$ BEGIN
+IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Read ministries') THEN
+  CREATE POLICY "Read ministries" ON ministries
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+END IF; END $$;
+
+-- ministry_reports: leaders/assistants see their own ministry's reports only
+DO $$ BEGIN
+IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Leaders access own ministry reports') THEN
+  CREATE POLICY "Leaders access own ministry reports" ON ministry_reports
+  FOR ALL USING (
+    auth.uid() = submitted_by
+    OR EXISTS (
+      SELECT 1 FROM ministry_members mm
+      WHERE mm.user_id = auth.uid()
+        AND mm.ministry_id = ministry_reports.ministry_id
+        AND mm.ministry_role IN ('leader','assistant')
+        AND mm.is_active = TRUE
+    )
+  );
+END IF; END $$;
+
+-- form_templates: any authenticated user can read active templates
+DO $$ BEGIN
+IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Read active form templates') THEN
+  CREATE POLICY "Read active form templates" ON form_templates
+  FOR SELECT USING (auth.uid() IS NOT NULL AND is_active = TRUE);
+END IF; END $$;
+
+-- ministry_announcements: members see announcements for their ministries
+DO $$ BEGIN
+IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Members read ministry announcements') THEN
+  CREATE POLICY "Members read ministry announcements" ON ministry_announcements
+  FOR SELECT USING (
+    ministry_id IS NULL  -- broadcast to all
+    OR EXISTS (
+      SELECT 1 FROM ministry_members mm
+      WHERE mm.user_id = auth.uid()
+        AND mm.ministry_id = ministry_announcements.ministry_id
+    )
+  );
+END IF; END $$;
+
+-- ministry_analytics: any authenticated user can read cached analytics
+DO $$ BEGIN
+IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Read ministry analytics') THEN
+  CREATE POLICY "Read ministry analytics" ON ministry_analytics
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+END IF; END $$;
+
+6.  Form Templates — Seed Data
+Run the following SQL to populate the form_templates table with the 4 universal forms (available to all ministries) and 6 ministry-specific forms. Run Section 3.1 first to ensure the ministries table has been seeded. Replace YOUR_ORG_ID with the real org UUID.
+ 
+6.1  Universal Forms — Available to All Ministries
+-- FORM 1: Ministry Attendance Report
+INSERT INTO form_templates (org_id, name, report_type, description, fields) VALUES (
+  'YOUR_ORG_ID',
+  'Ministry Attendance Report',
+  'attendance',
+  'Track service attendance, visitors, and headcount for any ministry',
+  '[
+    {"name":"service_date",   "label":"Service Date",     "type":"date",   "required":true},
+    {"name":"service_type",   "label":"Service Type",     "type":"select", "required":true,
+     "options":["Sunday Service","Midweek Service","Special Event","Training","Retreat"]},
+    {"name":"total_adults",   "label":"Total Adults",     "type":"number", "required":true},
+    {"name":"total_children", "label":"Total Children",   "type":"number", "required":false},
+    {"name":"first_time_visitors","label":"First-Time Visitors","type":"number","required":false},
+    {"name":"notes",          "label":"Notes",            "type":"textarea","required":false}
+  ]'
+);
+
+-- FORM 2: Weekly Ministry Activity Report
+INSERT INTO form_templates (org_id, name, report_type, description, fields) VALUES (
+  'YOUR_ORG_ID',
+  'Ministry Activity Report',
+  'activity',
+  'Weekly summary of ministry activities, outcomes, and prayer requests',
+  '[
+    {"name":"activity_description", "label":"Activity Description", "type":"textarea","required":true},
+    {"name":"members_involved",     "label":"Members Involved",     "type":"number", "required":true},
+    {"name":"outcome",              "label":"Outcome / Result",     "type":"textarea","required":true},
+    {"name":"challenges",           "label":"Challenges Faced",    "type":"textarea","required":false},
+    {"name":"prayer_requests",      "label":"Prayer Requests",     "type":"textarea","required":false},
+    {"name":"status",               "label":"Report Status",       "type":"select", "required":true,
+     "options":["submitted","flagged"]}
+  ]'
+);
+
+-- FORM 3: Event Report
+INSERT INTO form_templates (org_id, name, report_type, description, fields) VALUES (
+  'YOUR_ORG_ID',
+  'Ministry Event Report',
+  'event',
+  'Post-event report capturing attendance, salvations, testimonies, and budget',
+  '[
+    {"name":"event_name",   "label":"Event Name",           "type":"text",    "required":true},
+    {"name":"attendance",   "label":"Total Attendance",     "type":"number",  "required":true},
+    {"name":"visitors",     "label":"Visitors",             "type":"number",  "required":false},
+    {"name":"salvations",   "label":"Salvations",           "type":"number",  "required":false},
+    {"name":"testimonies",  "label":"Testimonies",          "type":"textarea","required":false},
+    {"name":"budget_used",  "label":"Budget Used (JPY)",    "type":"number",  "required":false},
+    {"name":"outcome",      "label":"Overall Outcome",      "type":"textarea","required":true}
+  ]'
+);
+
+-- FORM 4: Resource & Equipment Report
+INSERT INTO form_templates (org_id, name, report_type, description, fields) VALUES (
+  'YOUR_ORG_ID',
+  'Resource & Equipment Report',
+  'equipment',
+  'Track equipment status, damage, and repair needs',
+  '[
+    {"name":"equipment_name",       "label":"Equipment Name",    "type":"text",   "required":true},
+    {"name":"status",               "label":"Status",            "type":"select", "required":true,
+     "options":["Working","Needs Repair","Damaged","Lost"]},
+    {"name":"damage_description",   "label":"Damage Description","type":"textarea","required":false},
+    {"name":"repair_required",      "label":"Repair Required?",  "type":"boolean","required":true},
+    {"name":"urgency",              "label":"Urgency",           "type":"select", "required":false,
+     "options":["Low","Medium","Critical"]}
+  ]'
+);
+ 
+6.2  Ministry-Specific Forms
+-- CHILDREN'S MINISTRY: Sunday School Class Report
+INSERT INTO form_templates (org_id, ministry_id, name, report_type, description, fields)
+SELECT 'YOUR_ORG_ID', m.id,
+  'Sunday School Class Report', 'children_class',
+  'Weekly classroom attendance, lesson tracking, and incident notes',
+  '[
+    {"name":"class_name",           "label":"Class Name",            "type":"text",    "required":true},
+    {"name":"teacher_name",         "label":"Teacher Name",          "type":"text",    "required":true},
+    {"name":"lesson_topic",         "label":"Lesson Topic",          "type":"text",    "required":true},
+    {"name":"bible_passage",        "label":"Bible Passage",         "type":"text",    "required":false},
+    {"name":"children_present",     "label":"Children Present",      "type":"number",  "required":true},
+    {"name":"activities_completed", "label":"Activities Completed",  "type":"textarea","required":false},
+    {"name":"behaviour_notes",      "label":"Behaviour Notes",       "type":"textarea","required":false},
+    {"name":"prayer_requests",      "label":"Children Prayer Requests","type":"textarea","required":false},
+    {"name":"incidents",            "label":"Incidents (if any)",    "type":"textarea","required":false}
+  ]'
+FROM ministries m WHERE m.slug = 'childrens' AND m.org_id = 'YOUR_ORG_ID';
+
+-- USHERING: Service Headcount & Offering
+INSERT INTO form_templates (org_id, ministry_id, name, report_type, description, fields)
+SELECT 'YOUR_ORG_ID', m.id,
+  'Service Headcount Report', 'offering_recon',
+  'Official usher attendance count and offering reconciliation',
+  '[
+    {"name":"total_adults",          "label":"Total Adults",          "type":"number", "required":true},
+    {"name":"total_children",        "label":"Total Children",        "type":"number", "required":true},
+    {"name":"first_time_visitors",   "label":"First-Time Visitors",   "type":"number", "required":true},
+    {"name":"offering_collected",    "label":"Offering Collected (JPY)","type":"number","required":false},
+    {"name":"incidents",             "label":"Incidents or Seating Notes","type":"textarea","required":false}
+  ]'
+FROM ministries m WHERE m.slug = 'ushers' AND m.org_id = 'YOUR_ORG_ID';
+
+-- EVANGELISM: Outreach Report
+INSERT INTO form_templates (org_id, ministry_id, name, report_type, description, fields)
+SELECT 'YOUR_ORG_ID', m.id,
+  'Outreach Event Report', 'outreach',
+  'Capture souls reached, salvations recorded, and follow-up contacts',
+  '[
+    {"name":"outreach_location",  "label":"Location",              "type":"text",    "required":true},
+    {"name":"volunteers_present", "label":"Volunteers Present",    "type":"number",  "required":true},
+    {"name":"people_reached",     "label":"People Reached",        "type":"number",  "required":true},
+    {"name":"salvations",         "label":"Salvations Recorded",   "type":"number",  "required":true},
+    {"name":"contacts_collected", "label":"Contacts Collected",    "type":"number",  "required":false},
+    {"name":"follow_up_notes",    "label":"Follow-Up Notes",       "type":"textarea","required":false}
+  ]'
+FROM ministries m WHERE m.slug = 'evangelism' AND m.org_id = 'YOUR_ORG_ID';
+
+-- MEDIA: Livestream Analytics
+INSERT INTO form_templates (org_id, ministry_id, name, report_type, description, fields)
+SELECT 'YOUR_ORG_ID', m.id,
+  'Livestream Analytics Report', 'media_stream',
+  'Digital reach metrics: viewers, uploads, and technical issues',
+  '[
+    {"name":"stream_platform",     "label":"Platform",           "type":"select",  "required":true,
+     "options":["YouTube","Facebook","YouTube + Facebook","Other"]},
+    {"name":"peak_viewers",        "label":"Peak Viewers",       "type":"number",  "required":true},
+    {"name":"total_views",         "label":"Total Views",        "type":"number",  "required":false},
+    {"name":"recording_uploaded",  "label":"Recording Uploaded?","type":"boolean", "required":true},
+    {"name":"technical_issues",    "label":"Technical Issues",   "type":"textarea","required":false}
+  ]'
+FROM ministries m WHERE m.slug = 'media' AND m.org_id = 'YOUR_ORG_ID';
+
+-- PASTORAL CARE: Counseling / Visitation Log
+INSERT INTO form_templates (org_id, ministry_id, name, report_type, description, fields)
+SELECT 'YOUR_ORG_ID', m.id,
+  'Pastoral Care Session Log', 'counseling',
+  'Log counseling sessions, visitations, and crisis support cases',
+  '[
+    {"name":"session_type",   "label":"Session Type",    "type":"select",  "required":true,
+     "options":["Counseling","Visitation","Crisis Support","Phone Call","Prayer"]},
+    {"name":"anonymous_code", "label":"Member Code (no names)","type":"text","required":true},
+    {"name":"session_summary","label":"Summary",          "type":"textarea","required":true},
+    {"name":"outcome",        "label":"Outcome",          "type":"textarea","required":false},
+    {"name":"follow_up_needed","label":"Follow-Up Needed?","type":"boolean","required":true},
+    {"name":"urgency",        "label":"Urgency Level",    "type":"select",  "required":true,
+     "options":["Normal","Monitor","Urgent","Crisis"]}
+  ]'
+FROM ministries m WHERE m.slug = 'pastoral' AND m.org_id = 'YOUR_ORG_ID';
+
+-- WORSHIP: Rehearsal & Service Report
+INSERT INTO form_templates (org_id, ministry_id, name, report_type, description, fields)
+SELECT 'YOUR_ORG_ID', m.id,
+  'Worship Team Report', 'activity',
+  'Rehearsal attendance, songs used, and technical status per service',
+  '[
+    {"name":"worship_leader",  "label":"Worship Leader",    "type":"text",    "required":true},
+    {"name":"musicians_present","label":"Musicians Present", "type":"number",  "required":true},
+    {"name":"songs_used",      "label":"Songs Used",         "type":"textarea","required":true},
+    {"name":"rehearsal_held",  "label":"Rehearsal Held?",    "type":"boolean", "required":true},
+    {"name":"technical_issues","label":"Technical Issues",   "type":"textarea","required":false},
+    {"name":"notes",           "label":"Notes",              "type":"textarea","required":false}
+  ]'
+FROM ministries m WHERE m.slug = 'worship' AND m.org_id = 'YOUR_ORG_ID';
+
+7.  Frontend Architecture Specification
+ 
+7.1  URL Structure — Ministry Dashboard Routes
+All ministry dashboard routes live under /ministry-dashboard. They are completely separate from the member app (/app/*) and Mission Control (/shepherd/dashboard/*). Do not add ministry dashboard pages inside the shepherd directory.
+ 
+Route
+Page Purpose
+Access Guard
+/ministry-dashboard
+Ministry selector — shows all ministries the user belongs to
+Any ministry_members record
+/ministry-dashboard/[slug]
+Ministry overview card with recent reports and metrics
+Member of that ministry
+/ministry-dashboard/[slug]/reports
+Submit form and view past submissions
+leader or assistant
+/ministry-dashboard/[slug]/attendance
+Quick attendance logging form
+leader or assistant
+/ministry-dashboard/[slug]/events
+Create and manage ministry events
+leader or assistant
+/ministry-dashboard/[slug]/team
+Manage volunteers and assign roles
+leader only
+/ministry-dashboard/[slug]/announcements
+Read announcements from admin, post updates upward
+Any ministry member
+/ministry-dashboard/[slug]/analytics
+Ministry-specific trend charts from analytics cache
+leader only
+ 
+7.2  New File Required: src/lib/ministry-auth.ts
+Create this file as the parallel of the existing src/lib/admin-auth.ts. It guards all /ministry-dashboard/[slug]/* routes. The logic is: extract the ministry slug from the URL, find the logged-in user's record in ministry_members for that ministry, and return their role. If no record exists, redirect to /ministry-dashboard with an 'access denied' message.
+ 
+-- Query that MinistryAuth runs to validate dashboard access
+-- Parameters: slug from URL params, user UUID from auth session
+SELECT
+  mm.ministry_role,
+  mm.ministry_id,
+  m.name        AS ministry_name,
+  m.slug,
+  m.color,
+  m.icon,
+  m.description
+FROM ministry_members mm
+JOIN ministries m ON m.id = mm.ministry_id
+WHERE mm.user_id   = :user_id    -- from auth.uid()
+  AND m.slug       = :slug       -- from URL params
+  AND mm.is_active = TRUE
+  AND m.is_active  = TRUE
+LIMIT 1;
+
+-- Result interpretation:
+-- No row returned          → redirect to /ministry-dashboard (not a member)
+-- ministry_role = 'member' → read-only view, no form submission
+-- ministry_role = 'volunteer'  → can submit forms only
+-- ministry_role = 'assistant'  → can submit forms + view team
+-- ministry_role = 'leader'     → full dashboard access
+ 
+7.3  DynamicFormRenderer Component
+Create src/components/forms/DynamicFormRenderer.tsx. This component accepts a form_templates row (or its ID) as a prop, reads the fields JSONB array, and renders the appropriate HTML inputs. On submit, it writes a row to ministry_reports with the form's report_type value and the collected field values packed into the data JSONB column.
+ 
+The component must support all eight field types:
+ 
+type value
+Renders As
+Stored in data JSONB
+text
+<input type="text">
+"field_name": "string value"
+number
+<input type="number">
+"field_name": 42
+textarea
+<textarea>
+"field_name": "multi-line text"
+date
+<input type="date">
+"field_name": "2026-03-11"
+select
+<select> using options array
+"field_name": "selected option"
+boolean
+<input type="checkbox">
+"field_name": true
+multi_select
+Checkbox group from options
+"field_name": ["a", "b"]
+children_table
+Spreadsheet-style row-per-child table
+"field_name": [{"name":"...", "week1":true}]
+ 
+The children_table type is specifically for Children's Ministry Sunday School attendance — it renders a grid that mirrors the paper attendance sheet format the team already knows, with a row per child and weekly checkboxes. This makes the digital transition familiar and intuitive for teachers.
+
+8.  Mission Control Integration — Required Query Changes
+The existing /shepherd/dashboard pages must be updated to read from the new ministry data tables. No existing pages need to be deleted — only extended. All queries below must use supabaseAdmin (service role key) to bypass RLS.
+ 
+8.1  Ministry Hub — Live Ministry Health Dashboard
+The Ministry Hub page must query the ministries and ministry_analytics tables to show a health card per ministry with its score, recent activity status, and reporting compliance.
+ 
+-- Ministry Hub overview — one card per ministry
+SELECT
+  m.id, m.name, m.slug, m.color, m.icon,
+  p.name                                      AS leader_name,
+  COUNT(DISTINCT mm.id)                       AS volunteer_count,
+  ma.health_score,
+  ma.avg_attendance,
+  ma.total_reports,
+  ma.salvations,
+  -- Date of most recent report submission
+  (SELECT MAX(mr.service_date)
+   FROM ministry_reports mr
+   WHERE mr.ministry_id = m.id)               AS last_report_date,
+  -- Flag if no report submitted in 14 days
+  CASE WHEN (SELECT MAX(mr.service_date)
+             FROM ministry_reports mr
+             WHERE mr.ministry_id = m.id)
+            < CURRENT_DATE - INTERVAL '14 days'
+    THEN TRUE ELSE FALSE
+  END                                          AS reporting_overdue
+FROM ministries m
+LEFT JOIN profiles p         ON p.id = m.leader_id
+LEFT JOIN ministry_members mm ON mm.ministry_id = m.id AND mm.is_active = TRUE
+LEFT JOIN ministry_analytics ma ON ma.ministry_id = m.id
+  AND ma.period_type  = 'monthly'
+  AND ma.period_start = date_trunc('month', CURRENT_DATE)::DATE
+WHERE m.org_id = :org_id AND m.is_active = TRUE
+GROUP BY m.id, p.name, ma.health_score, ma.avg_attendance,
+         ma.total_reports, ma.salvations
+ORDER BY m.name;
+ 
+8.2  Growth Intelligence — Real Salvations from Evangelism Reports
+The Growth Intelligence funnel currently shows zero because no outreach data has been entered. Now that the Evangelism Ministry will submit outreach reports via their dashboard, this query reads from ministry_reports to populate the funnel with real data.
+ 
+-- Salvation & outreach trend (past 6 months)
+SELECT
+  DATE_TRUNC('month', service_date)         AS month,
+  SUM((data->>'salvations')::INT)           AS total_salvations,
+  SUM((data->>'people_reached')::INT)       AS people_reached,
+  SUM((data->>'contacts_collected')::INT)   AS contacts,
+  COUNT(*)                                   AS outreach_events
+FROM ministry_reports
+WHERE org_id      = :org_id
+  AND report_type = 'outreach'
+  AND service_date >= CURRENT_DATE - INTERVAL '6 months'
+GROUP BY DATE_TRUNC('month', service_date)
+ORDER BY month DESC;
+ 
+8.3  Attendance Reconciliation — Usher Headcount vs Digital Check-In
+The existing vw_attendance_reconciliation view tried to compare usher headcounts against digital attendance but failed because ushers never submitted digitally. Now that ushers will submit Service Headcount Reports through their dashboard, replace the view with this query.
+ 
+-- Attendance reconciliation: digital vs usher headcount
+SELECT
+  ar.event_date,
+  ar.digital_count,
+  COALESCE((mr.data->>'total_adults')::INT, 0)
+  + COALESCE((mr.data->>'total_children')::INT, 0)   AS usher_headcount,
+  ar.digital_count
+  - COALESCE((mr.data->>'total_adults')::INT, 0)
+  - COALESCE((mr.data->>'total_children')::INT, 0)   AS unregistered_gap
+FROM (
+  SELECT event_date, COUNT(*) AS digital_count
+  FROM attendance_records
+  WHERE org_id = :org_id
+  GROUP BY event_date
+) ar
+LEFT JOIN ministry_reports mr
+  ON  mr.service_date = ar.event_date
+  AND mr.report_type  = 'offering_recon'
+  AND mr.org_id       = :org_id
+  AND mr.ministry_id  = (
+    SELECT id FROM ministries
+    WHERE slug = 'ushers' AND org_id = :org_id
+  )
+ORDER BY ar.event_date DESC
+LIMIT 12;
+
+9.  Implementation Order — 7 Phases
+Follow this sequence exactly. Each phase has a clear completion test. Do not advance to the next phase until the test passes.
+ 
+Ph
+Name
+Work Required
+Pass Test Before Next Phase
+1
+Database Foundation
+Run ALL SQL from Sections 3, 4, and 5 in order. This creates 6 tables, 3 triggers, 1 function, and all RLS policies.
+SELECT COUNT(*) on all 6 new tables. Run: SELECT trigger_name FROM information_schema.triggers WHERE trigger_schema='public'. All 6 triggers must appear.
+2
+Seed Ministries & Forms
+Run Section 3.1 ministries INSERT. Run Section 6.1 and 6.2 form_templates INSERTs. Replace YOUR_ORG_ID with the real UUID.
+SELECT name, slug FROM ministries; — must return 12 rows. SELECT name, report_type FROM form_templates; — must return 10 rows.
+3
+MinistryAuth System
+Create src/lib/ministry-auth.ts using the query in Section 7.2. Create route guard middleware for all /ministry-dashboard/[slug]/* paths.
+Assign Kudzie as ministry_leader of worship ministry in ministry_members. Verify access to /ministry-dashboard/worship. Verify no access to /ministry-dashboard/ushers.
+4
+Ministry Dashboard UI
+Build all /ministry-dashboard/[slug]/* page shells listed in Section 7.1. Start with the overview and reports pages. Team and analytics pages can follow.
+Navigate to /ministry-dashboard. Confirm the worship ministry card appears. Click it. Confirm the overview page loads with ministry name and color.
+5
+DynamicFormRenderer
+Build src/components/forms/DynamicFormRenderer.tsx using the spec in Section 7.3. Wire the submit handler to write to ministry_reports via supabase client.
+Submit the Ministry Attendance Report form from /ministry-dashboard/worship/reports. Run: SELECT * FROM ministry_reports LIMIT 1. The row must exist. Then check ministry_analytics — it must also have been auto-updated by the trigger.
+6
+Mission Control Integration
+Update Ministry Hub, Growth Intelligence, and Attendance pages in /shepherd/dashboard using the queries from Section 8. All must use supabaseAdmin.
+Submit a test outreach report from evangelism ministry. Verify Growth Intelligence shows salvations. Submit usher headcount. Verify reconciliation gap appears.
+7
+Announcements
+Build announcement inbox on ministry dashboards (read downward messages from admin). Build compose UI for ministry leaders to post upward updates. Wire to ministry_announcements table.
+Post downward announcement from Mission Control to Children's Ministry. Verify Kudzie (as children's ministry leader) sees it. Post upward update. Verify it appears in Mission Control.
+
+10.  constants.ts Alignment — Action Required
+The constants.ts file currently defines ministry names as full strings ('Worship Ministry', 'Ushers', 'Children's Ministry'). The new ministries table uses URL-safe slugs ('worship', 'ushers', 'childrens'). These two systems must be reconciled. The rule going forward is: slugs are used for database lookups and URL routing, full names are used only for display in the UI.
+ 
+Update constants.ts to export a MINISTRIES mapping object instead of (or in addition to) the current MINISTRY_OPTIONS array. The mapping object pairs slug to display name. Any code that compares ministry names against constants must switch to using the slug for database queries and the display name only in <span> or <p> elements.
+ 
+Current constants.ts value
+Database slug
+UI display name
+Worship Ministry
+worship
+Worship Ministry
+Ushers
+ushers
+Ushering Ministry
+Children's Ministry
+childrens
+Children's Ministry
+Youth Ministry
+youth
+Youth Ministry
+Evangelism Team
+evangelism
+Evangelism Ministry
+Intercessory Prayer Team
+prayer
+Prayer Ministry
+Media / Production
+media
+Media Ministry
+Hospitality
+hospitality
+Hospitality Ministry
+Connect Groups / Fellowship Circles
+fellowship
+Fellowship Circles
+Finance Team
+finance
+Finance Ministry
+Missions Team
+missions
+Missions Ministry
+Counseling Ministry
+pastoral
+Pastoral Care
+
+11.  Critical Engineering Rules
+These rules apply to all work on the Ministry Intelligence Layer. They extend the Golden Rules established in the March 11 session report.
+ 
+	•	All /ministry-dashboard/* pages must use the regular supabase client (not supabaseAdmin) so that RLS correctly restricts what ministry leaders can see. Only Mission Control admin pages use supabaseAdmin.
+	•	Never create a separate database table for each ministry's data. All reports go into ministry_reports. The report_type column + data JSONB is the correct pattern.
+	•	Never hardcode ministry slugs as string literals anywhere in component files. Always reference the MINISTRIES constant from constants.ts. This ensures a single source of truth.
+	•	The children_table form field type stores an array of objects in the JSONB data column. Make sure the DynamicFormRenderer serializes this correctly before submitting — do not try to flatten the array into individual fields.
+	•	The ministry_analytics table is a cache, not a source of truth. If analytics look wrong, check whether the trigger fired correctly on the last ministry_reports INSERT. Never manually update ministry_analytics rows — only the trigger should write to them.
+	•	Every new form type added to form_templates must also have its report_type string added to the ministry_reports column comment so the team knows all valid values.
+ 
+
+Church OS is now a three-layer Ministry Intelligence Platform.  Members → Ministry Leaders → Mission Control.
+ 
+Church OS  ·  Ministry Intelligence System Specification  ·  Japan Kingdom Church  ·  March 2026
+CONFIDENTIAL — ENGINEERING TEAM USE ONLY

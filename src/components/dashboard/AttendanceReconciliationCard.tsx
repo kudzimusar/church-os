@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { Users, UserCheck, AlertCircle, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 
@@ -13,10 +13,10 @@ export function AttendanceReconciliationCard() {
         async function fetchStats() {
             setLoading(true);
             try {
-                const { data, error } = await supabase
-                    .from('vw_attendance_reconciliation')
+                const { data, error } = await supabaseAdmin
+                    .from('vw_attendance_reconciliation_new')
                     .select('*')
-                    .order('report_date', { ascending: false })
+                    .order('event_date', { ascending: false })
                     .limit(1);
 
                 if (error) throw error;
@@ -48,7 +48,9 @@ export function AttendanceReconciliationCard() {
     );
 
     const latest = stats[0];
-    const reachPercentage = Math.round((latest.total_digital / latest.total_physical) * 100) || 0;
+    const reachPercentage = latest.usher_headcount > 0 
+        ? Math.round((latest.digital_count / latest.usher_headcount) * 100) 
+        : 0;
 
     return (
         <div className="bg-card border border-border rounded-[2rem] p-8 space-y-8 flex flex-col justify-between h-full group shadow-sm">
@@ -61,7 +63,9 @@ export function AttendanceReconciliationCard() {
                     <p className="text-[10px] text-muted-foreground/60 font-bold uppercase mt-1">Manual vs. Digital Comparison</p>
                 </div>
                 <div className="text-right">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{format(new Date(latest.report_date), 'MMMM d, yyyy')}</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                        {latest.event_date ? format(new Date(latest.event_date), 'MMMM d, yyyy') : 'N/A'}
+                    </p>
                 </div>
             </div>
 
@@ -75,12 +79,12 @@ export function AttendanceReconciliationCard() {
                 <div className="flex gap-2">
                     <div className="flex flex-col items-end">
                         <span className="text-[8px] font-bold text-muted-foreground uppercase">Physical</span>
-                        <span className="text-lg font-black text-foreground">{latest.total_physical}</span>
+                        <span className="text-lg font-black text-foreground">{latest.usher_headcount || 0}</span>
                     </div>
                     <div className="w-[1px] h-8 bg-border self-end mb-1" />
                     <div className="flex flex-col items-end">
                         <span className="text-[8px] font-bold text-muted-foreground uppercase">Digital</span>
-                        <span className="text-lg font-black text-primary">{latest.total_digital}</span>
+                        <span className="text-lg font-black text-primary">{latest.digital_count || 0}</span>
                     </div>
                 </div>
             </div>
@@ -89,20 +93,22 @@ export function AttendanceReconciliationCard() {
                 <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                     <div
                         className="h-full bg-gradient-to-r from-primary to-indigo-500 transition-all duration-1000"
-                        style={{ width: `${reachPercentage}%` }}
+                        style={{ width: `${Math.min(reachPercentage, 100)}%` }}
                     />
                 </div>
 
-                <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-2xl flex items-start gap-4">
-                    <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                        <p className="text-[10px] font-black text-amber-600 dark:text-amber-300 uppercase tracking-widest">System Alert: Reach Gap</p>
-                        <p className="text-[10px] text-amber-600/60 dark:text-amber-300/60 leading-relaxed font-medium">
-                            {latest.unregistered_count} people were counted physically but did not check-in digitally.
-                            Recommendation: Staff more welcome team members at the east entrance.
-                        </p>
+                {latest.unregistered_gap > 0 && (
+                    <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-2xl flex items-start gap-4">
+                        <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-[10px] font-black text-amber-600 dark:text-amber-300 uppercase tracking-widest">System Alert: Reach Gap</p>
+                            <p className="text-[10px] text-amber-600/60 dark:text-amber-300/60 leading-relaxed font-medium">
+                                {latest.unregistered_gap} people were counted physically but did not check-in digitally.
+                                Recommendation: Staff more welcome team members at the entrances.
+                            </p>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
             <div className="flex items-center gap-4 pt-4 border-t border-border">
@@ -113,9 +119,8 @@ export function AttendanceReconciliationCard() {
                         </div>
                     ))}
                 </div>
-                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Verified by Operational Submissions</span>
+                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Verified by Usher Reports</span>
             </div>
         </div>
     );
 }
-

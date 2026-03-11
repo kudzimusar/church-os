@@ -26,8 +26,8 @@ export function MinistryCommandCenter({ ministrySlug, onAction }: MinistryComman
                     </CardHeader>
                     <CardContent className="p-0">
                         <div className="flex items-end gap-2 mb-4">
-                            <span className="text-3xl font-black text-foreground">428</span>
-                            <span className="text-xs font-bold text-emerald-500 mb-1">+12% vs last wk</span>
+                            <span className="text-3xl font-black text-foreground">0</span>
+                            <span className="text-xs font-bold text-muted-foreground mb-1">waiting data</span>
                         </div>
                         <Button onClick={() => onAction('usher_report')} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-black text-[10px] tracking-widest uppercase h-10 transition-all opacity-100 dark:opacity-90 dark:hover:opacity-100">
                             SUBMIT HEADCOUNT
@@ -50,7 +50,7 @@ export function MinistryCommandCenter({ ministrySlug, onAction }: MinistryComman
                     </CardHeader>
                     <CardContent className="p-0">
                         <div className="flex items-end gap-2 mb-4">
-                            <span className="text-3xl font-black text-foreground">142</span>
+                            <span className="text-3xl font-black text-foreground">0</span>
                             <span className="text-xs font-bold text-muted-foreground mb-1">kids active</span>
                         </div>
                         <Button onClick={() => onAction('register_child')} className="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black text-[10px] tracking-widest uppercase h-10">
@@ -66,12 +66,8 @@ export function MinistryCommandCenter({ ministrySlug, onAction }: MinistryComman
                     </CardHeader>
                     <CardContent className="p-0 space-y-3">
                         <div className="flex items-center gap-3">
-                            <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                            <p className="text-[10px] font-bold text-foreground">3 Children with Peanut Allergies</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                            <p className="text-[10px] font-bold text-foreground">2 Pending Authorized Pickups</p>
+                            <div className="w-1.5 h-1.5 rounded-full bg-red-500/30" />
+                            <p className="text-[10px] font-bold text-white/40">No critical alerts</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -90,8 +86,8 @@ export function MinistryCommandCenter({ ministrySlug, onAction }: MinistryComman
                     </CardHeader>
                     <CardContent className="p-0">
                         <div className="flex items-end gap-2 mb-4">
-                            <span className="text-3xl font-black text-foreground">18</span>
-                            <span className="text-xs font-bold text-emerald-500 mb-1">decisions made</span>
+                            <span className="text-3xl font-black text-foreground">0</span>
+                            <span className="text-xs font-bold text-muted-foreground mb-1">decisions made</span>
                         </div>
                         <Button onClick={() => onAction('log_outreach')} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-[10px] tracking-widest uppercase h-10">
                             LOG NEW DECISION

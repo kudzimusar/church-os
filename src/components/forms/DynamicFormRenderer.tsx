@@ -1,278 +1,276 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { TapCounter } from "./TapCounter";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { Loader2, CloudOff, Send, CheckCircle2 } from "lucide-react";
-import { useOfflineSync } from "@/hooks/useOfflineSync";
+import React, { useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
-interface FieldDefinition {
+export interface FormTemplate {
     id: string;
-    label: string;
-    field_type: string;
-    is_required: boolean;
-    sort_order: number;
+    org_id: string;
+    ministry_id: string | null;
+    name: string;
+    report_type: string;
+    description: string | null;
+    fields: FormField[];
+    is_active: boolean;
+    version: number;
 }
 
-interface FormDefinition {
-    id: string;
+export interface FormField {
     name: string;
-    description: string;
-    fields: FieldDefinition[];
+    label: string;
+    type: 'text' | 'number' | 'textarea' | 'date' | 'select' | 'boolean' | 'multi_select' | 'children_table';
+    required: boolean;
+    placeholder?: string;
+    options?: string[];
 }
 
 interface DynamicFormRendererProps {
-    formId: string;
-    campusId?: string;
+    template: FormTemplate;
+    ministryId: string;
     onSuccess?: () => void;
 }
 
-export function DynamicFormRenderer({ formId, campusId, onSuccess }: DynamicFormRendererProps) {
-    const [form, setForm] = useState<FormDefinition | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
+export default function DynamicFormRenderer({ template, ministryId, onSuccess }: DynamicFormRendererProps) {
     const [formData, setFormData] = useState<Record<string, any>>({});
-    const [isOffline, setIsOffline] = useState(false);
-    const { addToQueue } = useOfflineSync();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const router = useRouter();
 
-    useEffect(() => {
-        async function fetchForm() {
-            setLoading(true);
-            try {
-                const { data: formInfo, error: fError } = await supabase
-                    .from('forms')
-                    .select('*')
-                    .eq('id', formId)
-                    .single();
-
-                if (fError) throw fError;
-
-                const { data: fields, error: fiError } = await supabase
-                    .from('form_fields')
-                    .select('*')
-                    .eq('form_id', formId)
-                    .order('sort_order', { ascending: true });
-
-                if (fiError) throw fiError;
-
-                setForm({ ...formInfo, fields });
-
-                // Initialize form data
-                const initial: Record<string, any> = {};
-                fields.forEach((f: any) => {
-                    initial[f.id] = f.field_type === 'counter' || f.field_type === 'number' ? 0 : "";
-                });
-                setFormData(initial);
-
-                // Check for local drafts
-                const savedDraft = localStorage.getItem(`form_draft_${formId}`);
-                if (savedDraft) {
-                    setFormData(JSON.parse(savedDraft));
-                    toast.info("Restored unsubmitted draft");
-                }
-            } catch (err) {
-                console.error("Form Fetch Error:", err);
-                toast.error("Failed to load digital form");
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        fetchForm();
-
-        // Online/Offline detection
-        const handleOnline = () => setIsOffline(false);
-        const handleOffline = () => setIsOffline(true);
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
-        setIsOffline(!navigator.onLine);
-
-        return () => {
-            window.removeEventListener('online', handleOnline);
-            window.removeEventListener('offline', handleOffline);
-        };
-    }, [formId]);
-
-    // Auto-save logic
-    useEffect(() => {
-        if (!loading && form) {
-            localStorage.setItem(`form_draft_${formId}`, JSON.stringify(formData));
-        }
-    }, [formData, loading, form, formId]);
-
-    const handleValueChange = (fieldId: string, val: any) => {
-        setFormData(prev => ({ ...prev, [fieldId]: val }));
+    const handleChange = (name: string, value: any) => {
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleChildrenTableChange = (name: string, index: number, field: string, value: any) => {
+        setFormData(prev => {
+            const currentArray = [...(prev[name] || [])];
+            if (!currentArray[index]) {
+                currentArray[index] = {};
+            }
+            currentArray[index][field] = value;
+            return { ...prev, [name]: currentArray };
+        });
+    };
+
+    const addChildrenTableRow = (name: string) => {
+        setFormData(prev => {
+            const currentArray = [...(prev[name] || [])];
+            currentArray.push({});
+            return { ...prev, [name]: currentArray };
+        });
+    };
+
+    const removeChildrenTableRow = (name: string, index: number) => {
+        setFormData(prev => {
+            const currentArray = [...(prev[name] || [])];
+            currentArray.splice(index, 1);
+            return { ...prev, [name]: currentArray };
+        });
+    };
+
+    const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setSubmitting(true);
+        setIsSubmitting(true);
 
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                toast.error("You must be logged in to submit forms");
-                return;
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) throw new Error("Not authenticated");
+
+            // Extract service_date if it exists in the top-level form data, otherwise use today
+            let serviceDate = new Date().toISOString().split('T')[0];
+            if (formData['service_date']) {
+                serviceDate = formData['service_date'];
             }
 
-            // [ROBUST OFFLINE SYNC]
-            if (!navigator.onLine) {
-                addToQueue({
-                    formId,
-                    userId: user.id,
-                    campusId,
-                    values: formData
-                });
-                localStorage.removeItem(`form_draft_${formId}`);
-                if (onSuccess) onSuccess();
-                return;
-            }
+            // Remove service_date from JSONB data so it's not duplicated (optional, but cleaner)
+            const jsonbData = { ...formData };
 
-            // 1. Create Submission Header
-            const { data: submission, error: sError } = await supabase
-                .from('form_submissions')
-                .insert([{
-                    form_id: formId,
-                    user_id: user.id,
-                    campus_id: campusId,
-                    submitted_at: new Date().toISOString()
-                }])
-                .select()
-                .single();
+            // Determine report status (some forms have a status field)
+            const status = formData['status'] || 'submitted';
 
-            if (sError) throw sError;
-
-            // 2. Insert Values
-            const valuesToInsert = Object.entries(formData).map(([fieldId, value]) => ({
-                submission_id: submission.id,
-                field_id: fieldId,
-                field_value: value.toString()
-            }));
-
-            const { error: vError } = await supabase
-                .from('form_submission_values')
-                .insert(valuesToInsert);
-
-            if (vError) throw vError;
-
-            // 3. Finalize Submission (Trigger Backend Integration Dispatcher)
-            const { error: rpcError } = await supabase.rpc('finalize_form_submission', {
-                p_submission_id: submission.id
+            const { error } = await supabase.from('ministry_reports').insert({
+                org_id: template.org_id,
+                ministry_id: ministryId,
+                submitted_by: session.user.id,
+                report_type: template.report_type,
+                service_date: serviceDate,
+                data: jsonbData,
+                status: status
             });
 
-            if (rpcError) {
-                console.warn("Backend processing alert:", rpcError);
-                // We don't throw here to ensure user sees success since data is saved
-            }
-
-            toast.success("Submission successfully processed!");
-            localStorage.removeItem(`form_draft_${formId}`);
-
+            if (error) throw error;
+            
+            toast.success(`${template.name} submitted successfully`);
             if (onSuccess) onSuccess();
-        } catch (err) {
-            console.error("Submission Error:", err);
-            toast.error("Error submitting ministry report");
+            else router.refresh();
+        } catch (error: any) {
+            console.error("Submit error:", error);
+            toast.error(error.message || "Failed to submit report");
         } finally {
-            setSubmitting(false);
+            setIsSubmitting(false);
         }
     };
 
-    if (loading) return (
-        <div className="flex flex-col items-center justify-center p-12 gap-4">
-            <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
-            <p className="text-xs font-black text-white/40 uppercase tracking-widest">Loading Digital Ministry System...</p>
-        </div>
-    );
-
-    if (!form) return <div className="p-8 text-center text-red-400">Error: Form definition not found.</div>;
-
     return (
-        <div className="flex flex-col gap-6 max-w-xl mx-auto p-4 md:p-6 pb-24">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-black text-white">{form.name}</h1>
-                    <p className="text-xs text-white/40 font-medium">{form.description}</p>
-                </div>
-                {isOffline && (
-                    <div className="bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full text-[10px] font-black flex items-center gap-1.5 border border-amber-500/20">
-                        <CloudOff className="w-3.5 h-3.5" /> OFFLINE MODE
-                    </div>
-                )}
+        <form onSubmit={onSubmit} className="space-y-6 bg-neutral-900 border border-neutral-800 p-8 rounded-xl">
+            {template.description && (
+                <div className="text-neutral-400 mb-6">{template.description}</div>
+            )}
+            
+            <div className="space-y-6">
+                {template.fields.map(field => {
+                    return (
+                        <div key={field.name} className="flex flex-col space-y-2">
+                            <label className="text-sm font-medium text-neutral-300">
+                                {field.label} {field.required && <span className="text-red-500">*</span>}
+                            </label>
+                            
+                            {field.type === 'text' && (
+                                <input
+                                    type="text"
+                                    required={field.required}
+                                    placeholder={field.placeholder || ''}
+                                    value={formData[field.name] || ''}
+                                    onChange={(e) => handleChange(field.name, e.target.value)}
+                                    className="px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white"
+                                />
+                            )}
+                            
+                            {field.type === 'number' && (
+                                <input
+                                    type="number"
+                                    required={field.required}
+                                    placeholder={field.placeholder || ''}
+                                    value={formData[field.name] || ''}
+                                    onChange={(e) => handleChange(field.name, Number(e.target.value))}
+                                    className="px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white"
+                                />
+                            )}
+                            
+                            {field.type === 'textarea' && (
+                                <textarea
+                                    required={field.required}
+                                    placeholder={field.placeholder || ''}
+                                    value={formData[field.name] || ''}
+                                    onChange={(e) => handleChange(field.name, e.target.value)}
+                                    rows={4}
+                                    className="px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white"
+                                />
+                            )}
+                            
+                            {field.type === 'date' && (
+                                <input
+                                    type="date"
+                                    required={field.required}
+                                    value={formData[field.name] || ''}
+                                    onChange={(e) => handleChange(field.name, e.target.value)}
+                                    className="px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white"
+                                />
+                            )}
+                            
+                            {field.type === 'boolean' && (
+                                <div className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        required={field.required && !formData[field.name]}
+                                        checked={!!formData[field.name]}
+                                        onChange={(e) => handleChange(field.name, e.target.checked)}
+                                        className="w-4 h-4 text-indigo-500 bg-neutral-800 border-neutral-700 rounded focus:ring-indigo-500"
+                                    />
+                                    <span className="text-sm text-neutral-400">Yes</span>
+                                </div>
+                            )}
+                            
+                            {field.type === 'select' && (
+                                <select
+                                    required={field.required}
+                                    value={formData[field.name] || ''}
+                                    onChange={(e) => handleChange(field.name, e.target.value)}
+                                    className="px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white"
+                                >
+                                    <option value="" disabled>Select an option</option>
+                                    {field.options?.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            )}
+
+                            {field.type === 'children_table' && (
+                                <div className="space-y-4">
+                                    <div className="overflow-x-auto rounded-lg border border-neutral-700">
+                                        <table className="w-full text-sm text-left text-neutral-400">
+                                            <thead className="text-xs text-neutral-400 uppercase bg-neutral-800">
+                                                <tr>
+                                                    <th className="px-4 py-3">Child Name</th>
+                                                    <th className="px-4 py-3 w-20 text-center">Present</th>
+                                                    <th className="px-4 py-3 w-16"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {(formData[field.name] || []).map((row: any, i: number) => (
+                                                    <tr key={i} className="border-b border-neutral-700 bg-neutral-900">
+                                                        <td className="px-4 py-2">
+                                                            <input 
+                                                                type="text" 
+                                                                value={row.name || ''} 
+                                                                onChange={(e) => handleChildrenTableChange(field.name, i, 'name', e.target.value)}
+                                                                className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-white focus:outline-none focus:border-indigo-500"
+                                                                placeholder="Enter child name"
+                                                            />
+                                                        </td>
+                                                        <td className="px-4 py-2 text-center">
+                                                            <input 
+                                                                type="checkbox" 
+                                                                checked={!!row.present} 
+                                                                onChange={(e) => handleChildrenTableChange(field.name, i, 'present', e.target.checked)}
+                                                                className="w-4 h-4 text-indigo-500 bg-neutral-800 border-neutral-700 rounded focus:ring-indigo-500"
+                                                            />
+                                                        </td>
+                                                        <td className="px-4 py-2">
+                                                            <button 
+                                                                type="button" 
+                                                                onClick={() => removeChildrenTableRow(field.name, i)}
+                                                                className="text-red-500 hover:text-red-400"
+                                                            >
+                                                                ✕
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {(!formData[field.name] || formData[field.name].length === 0) && (
+                                                    <tr>
+                                                        <td colSpan={3} className="px-4 py-4 text-center text-neutral-500">
+                                                            No rows added yet.
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => addChildrenTableRow(field.name)}
+                                        className="text-sm px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg transition-colors border border-neutral-700"
+                                    >
+                                        + Add Row
+                                    </button>
+                                </div>
+                            )}
+
+                        </div>
+                    );
+                })}
             </div>
-
-            <form onSubmit={handleSubmit} className="flex flex-col gap-6 mt-4">
-                {form.fields.map(field => (
-                    <div key={field.id} className="space-y-3">
-                        {field.field_type === 'counter' ? (
-                            <TapCounter
-                                label={field.label}
-                                value={formData[field.id]}
-                                onChange={(val) => handleValueChange(field.id, val)}
-                            />
-                        ) : (
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase text-white/40 tracking-widest ml-1">{field.label}</label>
-                                {field.field_type === 'number' ? (
-                                    <Input
-                                        type="number"
-                                        value={formData[field.id]}
-                                        onChange={(e) => handleValueChange(field.id, e.target.value)}
-                                        className="bg-white/5 border-white/10 rounded-xl py-6 text-base font-bold focus:ring-violet-500/50"
-                                        placeholder="0"
-                                        required={field.is_required}
-                                    />
-                                ) : field.field_type === 'text' && field.label.toLowerCase().includes('notes') ? (
-                                    <Textarea
-                                        value={formData[field.id]}
-                                        onChange={(e) => handleValueChange(field.id, e.target.value)}
-                                        className="bg-white/5 border-white/10 rounded-xl py-4 text-sm font-medium focus:ring-violet-500/50 min-h-[100px]"
-                                        placeholder="Type additional details here..."
-                                        required={field.is_required}
-                                    />
-                                ) : (
-                                    <Input
-                                        type="text"
-                                        value={formData[field.id]}
-                                        onChange={(e) => handleValueChange(field.id, e.target.value)}
-                                        className="bg-white/5 border-white/10 rounded-xl py-6 text-sm font-bold focus:ring-violet-500/50"
-                                        placeholder={`Enter ${field.label}...`}
-                                        required={field.is_required}
-                                    />
-                                )}
-                            </div>
-                        )}
-                    </div>
-                ))}
-
-                <div className="mt-8">
-                    <Button
-                        type="submit"
-                        disabled={submitting}
-                        className="w-full bg-violet-600 hover:bg-violet-500 text-white font-black py-8 rounded-2xl gap-3 shadow-xl shadow-violet-500/30 active:scale-[0.98] transition-all text-sm uppercase tracking-widest"
-                    >
-                        {submitting ? (
-                            <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                Processing Ministry Report...
-                            </>
-                        ) : (
-                            <>
-                                <Send className="w-5 h-5" />
-                                Submit to Mission Control
-                            </>
-                        )}
-                    </Button>
-                </div>
-            </form>
-
-            <div className="flex items-center justify-center gap-2 py-8 border-t border-white/5 mt-8 opacity-20 group hover:opacity-100 transition-opacity">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                <span className="text-[10px] font-black uppercase tracking-widest">End of operational record</span>
+            
+            <div className="pt-6 border-t border-neutral-800">
+                <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50"
+                >
+                    {isSubmitting ? 'Submitting...' : 'Submit Report'}
+                </button>
             </div>
-        </div>
+        </form>
     );
 }

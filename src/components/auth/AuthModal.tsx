@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -113,7 +113,9 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-none">
+            <DialogContent className="max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-none" aria-describedby="auth-modal-description">
+                <DialogTitle className="sr-only">Authenticate to Church OS</DialogTitle>
+                <DialogDescription id="auth-modal-description" className="sr-only">Login or register to access Church OS dashboard.</DialogDescription>
                 <div className="bg-background/80 backdrop-blur-3xl rounded-[3.5rem] border border-foreground/10 overflow-hidden shadow-2xl p-6 md:p-10 transition-all duration-500 animate-in zoom-in-95 fade-in duration-300">
                     <div className="flex flex-col items-center gap-4 relative mb-6">
                         <img src={`${BP}/church-logo.png`} alt="JKC" className="w-16 h-16 object-contain" />
