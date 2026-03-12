@@ -10,6 +10,8 @@ import { supabase } from '@/lib/supabase';
 export default function MinistryOverviewPage() {
     const params = useParams();
     const slug = params.slug as string;
+    const [session, setSession] = useState<MinistrySession | null>(null);
+    const [loading, setLoading] = useState(true);
     const [analytics, setAnalytics] = useState<any>(null);
     const [insights, setInsights] = useState<any[]>([]);
     const [recentActivity, setRecentActivity] = useState<any>(null);
