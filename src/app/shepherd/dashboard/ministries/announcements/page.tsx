@@ -28,19 +28,34 @@ export default function MissionControlAnnouncementsPage() {
             .from('ministry_announcements')
             .select(`
                 *,
-                ministries(name),
-                author:profiles!author_id(name)
+                ministries(name)
             `)
             .eq('org_id', orgId)
             .order('created_at', { ascending: false })
             .limit(100);
 
-        if (!error && data) {
-            setAnnouncements(data);
-        } else {
+        if (error) {
             console.error('Admin fetch error:', error);
             toast.error("Failed to load announcements");
+            setLoading(false);
+            return;
         }
+
+        // Fetch author names separately to avoid RLS/FK join issues
+        const authorIds = [...new Set((data || []).map(a => a.author_id).filter(Boolean))];
+        let authorMap: Record<string, string> = {};
+        if (authorIds.length > 0) {
+            const { data: profiles } = await supabaseAdmin
+                .from('profiles')
+                .select('id, name')
+                .in('id', authorIds);
+            (profiles || []).forEach(p => { authorMap[p.id] = p.name; });
+        }
+
+        setAnnouncements((data || []).map(a => ({
+            ...a,
+            authorName: authorMap[a.author_id] || 'Unknown'
+        })));
         setLoading(false);
     };
 
@@ -161,8 +176,8 @@ export default function MissionControlAnnouncementsPage() {
                                 </div>
                                 <h3 className="text-lg font-black text-white mb-2">{a.title}</h3>
                                 <p className="text-white/60 text-sm leading-relaxed whitespace-pre-wrap">{a.body}</p>
-                                {a.author?.name && (
-                                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mt-4">Transmitted by {a.author.name}</p>
+                                {a.authorName && (
+                                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mt-4">Transmitted by {a.authorName}</p>
                                 )}
                                 {a.direction === 'upward' && (
                                     <button 
