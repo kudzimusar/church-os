@@ -28,8 +28,7 @@ export default function MissionControlAnnouncementsPage() {
             .from('ministry_announcements')
             .select(`
                 *,
-                ministries(name),
-                author:profiles(name)
+                ministries(name)
             `)
             .eq('org_id', orgId)
             .order('created_at', { ascending: false })
@@ -38,6 +37,7 @@ export default function MissionControlAnnouncementsPage() {
         if (!error && data) {
             setAnnouncements(data);
         } else {
+            console.error('Admin fetch error:', error);
             toast.error("Failed to load announcements");
         }
         setLoading(false);
@@ -160,8 +160,8 @@ export default function MissionControlAnnouncementsPage() {
                                 </div>
                                 <h3 className="text-lg font-black text-white mb-2">{a.title}</h3>
                                 <p className="text-white/60 text-sm leading-relaxed whitespace-pre-wrap">{a.body}</p>
-                                {a.author?.name && (
-                                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mt-4">Transmitted by {a.author.name}</p>
+                                {a.author_id && (
+                                    <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mt-4">Transmitted by {a.author_id.substring(0,8)}</p>
                                 )}
                                 {a.direction === 'upward' && (
                                     <button 

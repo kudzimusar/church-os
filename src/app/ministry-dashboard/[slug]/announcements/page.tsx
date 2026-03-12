@@ -21,19 +21,21 @@ export default function MinistryAnnouncementsPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const fetchAnnouncements = async (sess: MinistrySession) => {
+        if (!sess?.ministryId) {
+            setLoading(false);
+            return;
+        }
         setLoading(true);
+
         const { data, error } = await supabase
             .from('ministry_announcements')
-            .select(`
-                *,
-                author:profiles(name)
-            `)
+            .select('id, title, body, direction, created_at, author_id')
             .eq('ministry_id', sess.ministryId)
             .order('created_at', { ascending: false })
             .limit(50);
-            
+
         if (error) {
-            console.error(error);
+            console.error('Announcements fetch error:', error);
             toast.error("Failed to load announcements");
         } else {
             setAnnouncements(data || []);
@@ -53,16 +55,32 @@ export default function MinistryAnnouncementsPage() {
     const handleSendUpward = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!composeTitle || !composeBody || !session) return;
-
         setIsSubmitting(true);
+
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', user?.id).single();
-            
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+            if (authError || !user) {
+                toast.error("Session expired. Please refresh and try again.");
+                setIsSubmitting(false);
+                return;
+            }
+
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('org_id')
+                .eq('id', user.id)
+                .single();
+
+            if (profileError || !profile?.org_id) {
+                toast.error("Could not verify your organization. Please refresh.");
+                setIsSubmitting(false);
+                return;
+            }
+
             const { error } = await supabase.from('ministry_announcements').insert({
-                org_id: profile?.org_id,
+                org_id: profile.org_id,
                 ministry_id: session.ministryId,
-                author_id: user?.id,
+                author_id: user.id,
                 direction: 'upward',
                 title: composeTitle,
                 body: composeBody,
@@ -70,6 +88,7 @@ export default function MinistryAnnouncementsPage() {
             });
 
             if (error) throw error;
+
             toast.success("Your message has been delivered to Mission Control.");
             setComposeTitle('');
             setComposeBody('');
@@ -135,9 +154,6 @@ export default function MinistryAnnouncementsPage() {
                                 </div>
                                 <h3 className="font-bold text-base text-white">{a.title}</h3>
                                 <p className="text-white/60 text-sm mt-2 whitespace-pre-wrap leading-relaxed">{a.body}</p>
-                                {a.author?.name && (
-                                    <p className="text-xs text-white/30 mt-4 font-medium">— {a.author.name}</p>
-                                )}
                             </div>
                         ))}
                     </div>
