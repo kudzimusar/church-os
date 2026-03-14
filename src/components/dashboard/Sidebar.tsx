@@ -24,6 +24,7 @@ const NAV_ITEMS = [
     { label: "Fellowship Circles", icon: MessagesSquare, path: "/fellowship" },
     { label: "Events", icon: Calendar, path: "/events" },
     { label: "Giving & Finance", icon: DollarSign, path: "/finance" },
+    { label: "Donation Log", icon: DollarSign, path: "/finance/giving-log" },
     { label: "Growth Intelligence", icon: TrendingUp, path: "/growth" },
     { label: "AI Command Center", icon: Sparkles, path: "/ai" },
     { label: "Ministry Hub", icon: LayoutGrid, path: "/ministry-hub" },

@@ -7,12 +7,12 @@
 import { createClient } from '@supabase/supabase-js';
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-// Service role key — available in .env.local only, not exposed to browser
-const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    // Fallback for client-side builds (static export limitation)
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhcHhyb3JrY3ZwenprZ2dvcHNhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjUxODYwOSwiZXhwIjoyMDg4MDk0NjA5fQ.J4bSYdw1370BpGFddbEvhkTP5BBlPKTQAe03JuIJxHg';
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+if (!serviceKey) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
+}
 
 export const supabaseAdmin = createClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false }
+  auth: { persistSession: false, autoRefreshToken: false }
 });

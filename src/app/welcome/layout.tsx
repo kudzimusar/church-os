@@ -13,9 +13,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
+export default function PublicLayout({
+  children
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <div className="min-h-screen bg-[oklch(0.08_0.04_255)] text-white">
+    <div
+      className="min-h-screen bg-[oklch(0.08_0.04_255)] text-white"
+      style={{
+        '--primary': 'oklch(0.65 0.25 260)',
+        '--primary-foreground': 'oklch(0.98 0 0)',
+      } as React.CSSProperties}
+    >
       <PublicNav />
       <main>{children}</main>
       <PublicFooter />
