@@ -1,9 +1,36 @@
 'use client';
-
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
 export default function HeroSection() {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
+
+  useEffect(() => {
+    const calcNext = () => {
+      const now = new Date();
+      const jstOffset = 9 * 60;
+      const jstNow = new Date(now.getTime() + (jstOffset - now.getTimezoneOffset()) * 60000);
+      const day = jstNow.getDay(); // 0=Sun
+      const daysUntil = day === 0
+        ? (jstNow.getHours() < 10 || (jstNow.getHours() === 10 && jstNow.getMinutes() < 30)
+          ? 0 : 7)
+        : 7 - day;
+      const nextSunday = new Date(jstNow);
+      nextSunday.setDate(jstNow.getDate() + daysUntil);
+      nextSunday.setHours(10, 30, 0, 0);
+      const diff = nextSunday.getTime() - jstNow.getTime();
+      const totalMins = Math.floor(diff / 60000);
+      setTimeLeft({
+        days: Math.floor(totalMins / (60 * 24)),
+        hours: Math.floor((totalMins % (60 * 24)) / 60),
+        minutes: totalMins % 60
+      });
+    };
+    calcNext();
+    const interval = setInterval(calcNext, 60000);
+    return () => clearInterval(interval);
+  }, []);
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
       {/* Background Orbs */}
@@ -59,9 +86,29 @@ export default function HeroSection() {
             Building a Strong Christian Community that represents Christ to Japanese Society
           </p>
 
-          <div className="inline-flex glass-card rounded-full px-8 py-3 text-[10px] md:text-xs font-black tracking-widest text-white/80 border border-white/10 mt-8 mb-4 backdrop-blur-md bg-white/5">
+          <div className="inline-flex glass-card rounded-full px-8 py-3 text-[10px] md:text-xs font-black tracking-widest text-white/80 border border-white/10 mt-8 mb-2 backdrop-blur-md bg-white/5">
             SUNDAYS · PRAYER 9:30AM · SERVICE 10:30AM JST
           </div>
+
+          <div className="flex gap-6 justify-center mt-4">
+            {[
+              { value: timeLeft.days, label: 'DAYS' },
+              { value: timeLeft.hours, label: 'HRS' },
+              { value: timeLeft.minutes, label: 'MIN' }
+            ].map(({ value, label }) => (
+              <div key={label} className="text-center">
+                <div className="text-3xl font-black text-[var(--primary)]">
+                  {String(value).padStart(2, '0')}
+                </div>
+                <div className="text-[8px] font-black tracking-widest text-white/30 uppercase">
+                  {label}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-white/30 tracking-widest uppercase mt-2">
+            Until next Sunday service
+          </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10">
             <Link 

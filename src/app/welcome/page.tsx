@@ -13,6 +13,7 @@ import ServiceSchedule from '@/components/public/ServiceSchedule';
 import DirectionsSection from '@/components/public/DirectionsSection';
 import ConnectSection from '@/components/public/ConnectSection';
 import { FeedSection } from '@/components/feed/FeedSection';
+import MinistriesSection from '@/components/public/MinistriesSection';
 
 export default function WelcomePage() {
   const [user, setUser] = useState<any>(null);
@@ -64,6 +65,8 @@ export default function WelcomePage() {
       <SermonSection />
       
       <NewHereSection />
+      
+      <MinistriesSection />
       
       <EventsSection />
       

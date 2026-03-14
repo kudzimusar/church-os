@@ -1,0 +1,90 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { basePath as BP } from '@/lib/utils';
+import Link from 'next/link';
+
+type Ministry = {
+  id?: string;
+  name: string;
+  slug: string;
+  description: string;
+};
+
+const fallbacks: Ministry[] = [
+  { name: "Children's Ministry", slug: "kids-ministry",
+    description: "Nurturing the next generation in faith." },
+  { name: "Youth Ministry", slug: "youth-ministry",
+    description: "Empowering young people to live for Christ." },
+  { name: "Worship Ministry", slug: "worship-ministry",
+    description: "Leading the congregation into God's presence." },
+  { name: "Women's Ministry", slug: "womens-ministry",
+    description: "Equipping women to walk in purpose and grace." },
+  { name: "Men's Ministry", slug: "mens-ministry",
+    description: "Building men of faith, character, and vision." },
+  { name: "Language School", slug: "language-school",
+    description: "Kingdom Language School — bridging cultures." }
+];
+
+export default function MinistriesSection() {
+  const [ministries, setMinistries] = useState<Ministry[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from('ministries')
+      .select('id, name, slug, description')
+      .limit(6)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setMinistries(data);
+        } else {
+          setMinistries(fallbacks);
+        }
+      });
+  }, []);
+
+  return (
+    <section className="py-32 px-6 scroll-mt-20 border-t border-white/5 bg-black/20">
+      <div className="max-w-screen-xl mx-auto">
+        <div className="space-y-4 mb-16">
+          <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">
+            GET INVOLVED
+          </p>
+          <h2 className="text-4xl md:text-5xl font-black text-white/90">
+            Find Your <span className="font-serif italic font-medium">Community</span>
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {ministries.map((m) => (
+            <div 
+              key={m.id || m.slug}
+              className="group relative bg-white/5 border border-white/10 rounded-[2.5rem] p-10 flex flex-col justify-between min-h-[280px] hover:border-[var(--primary)]/40 hover:bg-white/[0.07] transition-all duration-500 cursor-pointer overflow-hidden"
+            >
+              <div className="absolute -right-12 -top-12 w-40 h-40 bg-[var(--primary)]/5 blur-3xl rounded-full group-hover:bg-[var(--primary)]/10 transition-all duration-500" />
+              
+              <div className="relative space-y-4">
+                <h3 className="text-2xl font-black text-white group-hover:text-[var(--primary)] transition-colors">
+                  {m.name}
+                </h3>
+                <p className="text-white/50 text-base leading-relaxed font-medium">
+                  {m.description}
+                </p>
+              </div>
+
+              <div className="relative pt-8">
+                <Link 
+                  href="/welcome/about" 
+                  className="text-[10px] font-black tracking-[0.2em] text-[var(--primary)] uppercase group-hover:translate-x-2 transition-transform inline-flex items-center gap-2"
+                >
+                  LEARN MORE <span className="text-lg">→</span>
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

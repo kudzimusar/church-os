@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
     Send, Plus, Trash2, Globe, Sparkles,
     TrendingUp, Trophy, Activity, FileText,
-    ChevronRight, X, Loader2
+    ChevronRight, X, Loader2, Megaphone
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,6 +29,16 @@ export default function NewsletterManager() {
         mission_progress: 0,
         is_published: true
     });
+
+    const [feedData, setFeedData] = useState({
+        feed_type: 'church_announcement',
+        title: '',
+        body: '',
+        cta_text: '',
+        cta_url: '',
+        expires_at: ''
+    });
+    const [isPostingFeed, setIsPostingFeed] = useState(false);
 
     const fetchNewsletters = async () => {
         setLoading(true);
@@ -81,6 +92,44 @@ export default function NewsletterManager() {
         }
     };
 
+    const handlePostFeed = async () => {
+        if (!feedData.title || !feedData.body) {
+            toast.error("Please fill in required feed fields");
+            return;
+        }
+
+        setIsPostingFeed(true);
+        try {
+            const { error } = await supabaseAdmin
+                .from('member_feed_items')
+                .insert({
+                    feed_type: feedData.feed_type,
+                    title: feedData.title,
+                    body: feedData.body,
+                    cta_text: feedData.cta_text || null,
+                    cta_url: feedData.cta_url || null,
+                    expires_at: feedData.expires_at || null,
+                    published_at: new Date().toISOString()
+                });
+
+            if (error) throw error;
+            toast.success("Posted to member feed.");
+            setFeedData({
+                feed_type: 'church_announcement',
+                title: '',
+                body: '',
+                cta_text: '',
+                cta_url: '',
+                expires_at: ''
+            });
+        } catch (e: any) {
+            console.error(e);
+            toast.error(e.message || "Failed to post to feed");
+        } finally {
+            setIsPostingFeed(false);
+        }
+    };
+
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this newsletter?")) return;
         try {
@@ -107,6 +156,96 @@ export default function NewsletterManager() {
                     <Plus className="w-5 h-5" /> Create Weekly Update
                 </Button>
             </header>
+
+            {/* Member Feed Post Section */}
+            <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 space-y-6">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-violet-600/20 flex items-center justify-center text-violet-400">
+                        <Megaphone className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-black uppercase tracking-tight">Post to Member Feed</h2>
+                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Appears on /welcome for logged-in members</p>
+                    </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1 mb-1 block">Feed Type</label>
+                            <select 
+                                value={feedData.feed_type}
+                                onChange={e => setFeedData({ ...feedData, feed_type: e.target.value })}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl h-12 px-4 text-sm text-white focus:border-violet-500 outline-none transition-colors"
+                            >
+                                <option value="church_announcement">Church Announcement</option>
+                                <option value="event_notification">Event Notification</option>
+                                <option value="growth_nudge">Growth Nudge</option>
+                                <option value="ministry_invitation">Ministry Invitation</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1 mb-1 block">Title *</label>
+                            <Input
+                                placeholder="e.g. Prayer Night this Friday"
+                                value={feedData.title}
+                                onChange={e => setFeedData({ ...feedData, title: e.target.value })}
+                                className="bg-white/5 border-white/10 rounded-xl h-12 text-white"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1 mb-1 block">Message *</label>
+                            <Textarea
+                                placeholder="What's happening?"
+                                value={feedData.body}
+                                onChange={e => setFeedData({ ...feedData, body: e.target.value })}
+                                className="bg-white/5 border-white/10 rounded-2xl min-h-[100px] text-white"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1 mb-1 block">CTA Text</label>
+                                <Input
+                                    placeholder="e.g. LEARN MORE"
+                                    value={feedData.cta_text}
+                                    onChange={e => setFeedData({ ...feedData, cta_text: e.target.value })}
+                                    className="bg-white/5 border-white/10 rounded-xl h-12 text-white"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1 mb-1 block">CTA URL</label>
+                                <Input
+                                    placeholder="https://..."
+                                    value={feedData.cta_url}
+                                    onChange={e => setFeedData({ ...feedData, cta_url: e.target.value })}
+                                    className="bg-white/5 border-white/10 rounded-xl h-12 text-white"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1 mb-1 block">Expires At (Optional)</label>
+                            <Input
+                                type="date"
+                                value={feedData.expires_at}
+                                onChange={e => setFeedData({ ...feedData, expires_at: e.target.value })}
+                                className="bg-white/5 border-white/10 rounded-xl h-12 text-white"
+                            />
+                        </div>
+                        <div className="pt-2">
+                            <Button 
+                                onClick={handlePostFeed}
+                                disabled={isPostingFeed}
+                                className="w-full bg-violet-600 hover:bg-violet-700 text-white font-black h-14 rounded-2xl text-sm shadow-xl shadow-violet-600/20"
+                            >
+                                {isPostingFeed ? "POSTING..." : "POST TO MEMBER FEED"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <AnimatePresence>
                 {isCreating && (

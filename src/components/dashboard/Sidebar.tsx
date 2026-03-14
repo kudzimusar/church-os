@@ -6,7 +6,8 @@ import {
     LayoutDashboard, HeartPulse, Users, BookOpen, Music,
     Globe, Calendar, DollarSign, TrendingUp, Sparkles,
     FileText, Settings, ChevronLeft, ChevronRight, Shield,
-    MessagesSquare, Flame, LayoutGrid, Megaphone, ShieldCheck
+    MessagesSquare, Flame, LayoutGrid, Megaphone, ShieldCheck,
+    Youtube, Mail
 } from "lucide-react";
 import { basePath as BP } from "@/lib/utils";
 import { useState } from "react";
@@ -28,6 +29,8 @@ const NAV_ITEMS = [
     { label: "Ministry Hub", icon: LayoutGrid, path: "/ministry-hub" },
     { label: "Ministry Comms", icon: Megaphone, path: "/ministries/announcements" },
     { label: "Newsletters", icon: Megaphone, path: "/newsletters" },
+    { label: "Sermons", icon: Youtube, path: "/sermons" },
+    { label: "Website Inquiries", icon: Mail, path: "/inquiries" },
     { label: "Reports & Data", icon: FileText, path: "/reports" },
     { label: "Settings", icon: Settings, path: "/settings" },
 ];

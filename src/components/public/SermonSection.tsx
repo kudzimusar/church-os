@@ -1,11 +1,25 @@
-'use client';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export default function SermonSection() {
-  const sermon = {
-    title: "A Genuine Believer",
-    speaker: "Elder Sanna Patterson",
-    watch_more_url: "https://www.youtube.com/@JapanKingdomChurch/streams"
-  };
+  const [sermon, setSermon] = useState<any>(null);
+
+  useEffect(() => {
+    supabase
+      .from('public_sermons')
+      .select('*')
+      .eq('featured', true)
+      .order('date', { ascending: false })
+      .limit(1)
+      .single()
+      .then(({ data }) => {
+        if (data) setSermon(data);
+      });
+  }, []);
+
+  const title = sermon?.title || "A Genuine Believer";
+  const speaker = sermon?.speaker || "Elder Sanna Patterson";
+  const watchUrl = sermon?.youtube_url || "https://www.youtube.com/@JapanKingdomChurch/streams";
 
   return (
     <section id="watch" className="py-32 px-6 scroll-mt-20">
@@ -31,7 +45,7 @@ export default function SermonSection() {
               LATEST SERMON
             </p>
             <h2 className="text-4xl md:text-6xl font-serif italic font-black text-white/90 leading-tight">
-              {sermon.title}
+              {title}
             </h2>
           </div>
 
@@ -40,7 +54,7 @@ export default function SermonSection() {
               SPEAKER
             </p>
             <p className="text-2xl font-black text-white/80">
-              {sermon.speaker}
+              {speaker}
             </p>
           </div>
 
@@ -50,7 +64,7 @@ export default function SermonSection() {
 
           <div className="pt-4">
             <a 
-              href={sermon.watch_more_url} 
+              href={watchUrl} 
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-4 border border-white/20 rounded-full px-10 py-5 text-xs font-black tracking-[0.2em] text-white hover:bg-white/5 hover:border-white/40 transition-all active:scale-95"
