@@ -13,15 +13,18 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         '/welcome', '/about', '/visit', '/our-pastor',
         '/staff', '/give', '/watch', '/contact'
     ];
-    const isPublic = PUBLIC_PATHS.some(p => 
-        pathname.startsWith(`/jkc-devotion-app${p}`)
+    const isPublic = PUBLIC_PATHS.some(p =>
+        pathname.startsWith(`/jkc-devotion-app${p}`) || pathname === p || pathname.startsWith(`${p}/`)
     );
-    if (isPublic) return <>{children}</>;
 
     useEffect(() => {
+        if (isPublic) { 
+            setLoading(false); 
+            return; 
+        }
+
         async function checkAuth() {
             const { data: { user } } = await supabase.auth.getUser();
-
             if (!user) {
                 setLoading(false);
                 return;
@@ -62,9 +65,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         }
 
         checkAuth();
-    }, [pathname, router]);
+    }, [pathname, router, isPublic]);
 
-    const isProtected = pathname.startsWith("/admin") || pathname.startsWith("/onboarding") || pathname.startsWith("/shepherd");
+    if (isPublic) return <>{children}</>;
+
+    const isProtected = pathname.startsWith("/admin") || 
+                       pathname.startsWith("/onboarding") || 
+                       pathname.startsWith("/shepherd");
 
     if (loading && isProtected) {
         return (
