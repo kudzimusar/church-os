@@ -55,8 +55,8 @@ export default function GiveClient() {
             transition={{ delay: 0.1 }}
             className="text-6xl md:text-8xl font-black italic font-serif leading-none"
           >
-            Generosity is <br />
-            <span className="text-white">Heart Work.</span>
+            Make a <span className="text-white">Difference</span> <br />
+            <span className="font-sans normal-case text-4xl md:text-6xl tracking-tight opacity-80 italic">in Japan Together</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -83,25 +83,27 @@ export default function GiveClient() {
                </p>
             </div>
             
-            {/* USD -> JPY Chart Surrogate */}
+            {/* USD -> JPY Chart */}
             <div className="glass rounded-3xl p-8 border border-white/10 bg-white/5 space-y-6">
                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black tracking-widest text-white/20 uppercase">Real-time Context</span>
+                  <span className="text-[10px] font-black tracking-widest text-white/20 uppercase">Conversion Guide</span>
                   <div className="flex items-center gap-2 text-emerald-400">
-                    <TrendingUp className="w-4 h-4" />
-                    <span className="text-xs font-black uppercase">Live Conversion</span>
+                    <Globe className="w-4 h-4" />
+                    <span className="text-xs font-black uppercase">USD / JPY</span>
                   </div>
                </div>
-               <div className="flex items-end gap-12">
-                  <div className="space-y-1">
-                    <p className="text-3xl font-black text-white">$100 <span className="text-xs text-white/20">USD</span></p>
-                    <p className="text-[10px] font-black text-white/30 uppercase">International</p>
-                  </div>
-                  <ArrowRightLeft className="w-6 h-6 text-white/10 mb-2" />
-                  <div className="space-y-1">
-                    <p className="text-3xl font-black text-[var(--primary)]">¥15,000 <span className="text-xs text-[var(--primary)]/40">JPY</span></p>
-                    <p className="text-[10px] font-black text-white/30 uppercase">Local Mission</p>
-                  </div>
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { usd: '$20', jpy: '¥2,500' },
+                    { usd: '$40', jpy: '¥5,000' },
+                    { usd: '$80', jpy: '¥10,000' },
+                    { usd: '$800', jpy: '¥100,000' }
+                  ].map((pair, idx) => (
+                    <div key={idx} className="bg-black/20 p-4 rounded-2xl border border-white/5 text-center">
+                      <p className="text-xs font-black text-white/30 uppercase mb-1">{pair.usd}</p>
+                      <p className="text-lg font-black text-white">{pair.jpy}</p>
+                    </div>
+                  ))}
                </div>
                <div className="pt-4 border-t border-white/5">
                   <p className="text-[11px] text-white/40 leading-relaxed italic">
@@ -118,7 +120,7 @@ export default function GiveClient() {
                   <DollarSign className="w-10 h-10" />
                </div>
                <div className="space-y-2">
-                 <h3 className="text-2xl font-black">Fast & Secure</h3>
+                 <h3 className="text-2xl font-black">GIVE ONLINE NOW</h3>
                  <p className="text-white/40 text-sm font-medium">Official giving portal for Japan Kingdom Church</p>
                </div>
                <a 
@@ -187,8 +189,8 @@ export default function GiveClient() {
                  <div className="flex justify-between items-center text-[10px] font-black tracking-widest">
                     <span className="text-white/20 uppercase">RTN (Wire)</span>
                     <div className="flex items-center gap-3">
-                      <span className="text-white/60">121000248</span>
-                      <button onClick={() => copyToClipboard('121000248', 'wf_rtn')} className="hover:text-white transition-colors"><Copy className="w-3 h-3" /></button>
+                      <span className="text-white/60">125200057</span>
+                      <button onClick={() => copyToClipboard('125200057', 'wf_rtn')} className="hover:text-white transition-colors"><Copy className="w-3 h-3" /></button>
                     </div>
                  </div>
                  <div className="flex justify-between items-center text-[10px] font-black tracking-widest">
@@ -249,7 +251,7 @@ export default function GiveClient() {
                    { label: 'Bank Name', val: 'Mitsubishi UFJ Bank ( MUFG )' },
                    { label: 'Branch', val: 'Akishima Branch ( 281 )' },
                    { label: 'Account Type', val: 'Ordinary ( Futsu )' },
-                   { label: 'Account Number', val: '0123456' },
+                   { label: 'Account Number', val: '0286887' },
                    { label: 'Account Name', val: 'JAPAN KINGDOM CHURCH' }
                  ].map((item, i) => (
                    <div key={i} className="flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl bg-white/5 border border-white/5 group hover:bg-white/10 transition-all">
