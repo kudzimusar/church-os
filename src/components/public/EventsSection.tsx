@@ -14,13 +14,22 @@ export default function EventsSection() {
       try {
         const { data, error } = await supabase
           .from('events')
-          .select('id, title, date, description, location')
-          .gte('date', new Date().toISOString().split('T')[0])
-          .order('date', { ascending: true })
+          .select('id, name, event_date, description, location')
+          .gte('event_date', new Date().toISOString().split('T')[0])
+          .order('event_date', { ascending: true })
           .limit(3);
 
         if (error) throw error;
-        setEvents(data || []);
+        
+        // Map to internal UI names for consistency
+        const mappedData = (data || []).map(e => ({
+          id: e.id,
+          title: e.name,
+          date: e.event_date,
+          description: e.description,
+          location: e.location
+        }));
+        setEvents(mappedData);
       } catch (err) {
         console.error('Error fetching events:', err);
       } finally {

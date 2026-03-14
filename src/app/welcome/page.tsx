@@ -43,7 +43,7 @@ export default function WelcomePage() {
       
       <MissionStrip />
       
-      {user && (
+      {user?.id && (
         <section className="bg-black/20 border-y border-white/5 py-12">
           <div className="max-w-screen-xl mx-auto px-6">
             <div className="flex items-center gap-4 mb-8 ml-4">
