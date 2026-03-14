@@ -9,6 +9,15 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const [loading, setLoading] = useState(true);
 
+    const PUBLIC_PATHS = [
+        '/welcome', '/about', '/visit', '/our-pastor',
+        '/staff', '/give', '/watch', '/contact'
+    ];
+    const isPublic = PUBLIC_PATHS.some(p => 
+        pathname.startsWith(`/jkc-devotion-app${p}`)
+    );
+    if (isPublic) return <>{children}</>;
+
     useEffect(() => {
         async function checkAuth() {
             const { data: { user } } = await supabase.auth.getUser();
