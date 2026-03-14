@@ -17,15 +17,21 @@ export default function TestimoniesSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from('public_testimonies')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .then(({ data, error }) => {
-        console.log('Testimonies data:', data, 'Error:', error);
+    async function fetchTestimonies() {
+      try {
+        const { data } = await supabase
+          .from('public_testimonies')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
         if (data) setTestimonies(data);
+      } catch (err) {
+        // Error handled silently
+      } finally {
         setLoading(false);
-      });
+      }
+    }
+    fetchTestimonies();
   }, []);
 
   if (loading) return (
@@ -35,7 +41,6 @@ export default function TestimoniesSection() {
   );
 
   if (testimonies.length === 0) {
-    console.log('No testimonies found in state');
     return null;
   }
 

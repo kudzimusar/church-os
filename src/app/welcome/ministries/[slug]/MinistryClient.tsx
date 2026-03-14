@@ -63,14 +63,13 @@ export default function MinistryClient({ slug }: { slug: string }) {
     e.preventDefault();
     setSubmitting(true);
 
-    const fullMessage = `Ministry Interest: ${ministry?.name} — ${formData.message}`;
-
     const { error } = await supabase
       .from('public_inquiries')
       .insert([{
-        name: formData.name,
+        first_name: formData.name,
+        last_name: '',
         email: formData.email,
-        message: fullMessage
+        message: `Ministry Interest: ${ministry?.name} — ${formData.message}`
       }]);
 
     if (error) {
@@ -163,7 +162,7 @@ export default function MinistryClient({ slug }: { slug: string }) {
                     value={formData.name}
                     onChange={e => setFormData({...formData, name: e.target.value})}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-white placeholder:text-white/20 focus:border-[var(--primary)]/50 transition-all outline-none"
-                    placeholder="Your Name"
+                    placeholder="Your full name"
                   />
                 </div>
 
