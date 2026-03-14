@@ -22,8 +22,8 @@ export default function PublicLayout({
     <div
       className="min-h-screen bg-[oklch(0.08_0.04_255)] text-white"
       style={{
-        '--primary': 'oklch(0.65 0.25 260)',
-        '--primary-foreground': 'oklch(0.98 0 0)',
+        '--primary': 'oklch(0.6 0.25 285)',
+        '--primary-foreground': 'oklch(0.98 0.01 285)',
       } as React.CSSProperties}
     >
       <PublicNav />
