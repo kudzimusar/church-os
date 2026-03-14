@@ -28,7 +28,7 @@ const fallbacks: Ministry[] = [
 ];
 
 export default function MinistriesSection() {
-  const [ministries, setMinistries] = useState<Ministry[]>([]);
+  const [ministries, setMinistries] = useState<Ministry[]>(fallbacks);
 
   useEffect(() => {
     supabase
@@ -38,9 +38,8 @@ export default function MinistriesSection() {
       .then(({ data }) => {
         if (data && data.length > 0) {
           setMinistries(data);
-        } else {
-          setMinistries(fallbacks);
         }
+        // No need for else setMinistries(fallbacks) since it's already initial state
       });
   }, []);
 
@@ -75,7 +74,7 @@ export default function MinistriesSection() {
 
               <div className="relative pt-8">
                 <Link 
-                  href="/welcome/about" 
+                  href="/welcome" 
                   className="text-[10px] font-black tracking-[0.2em] text-[var(--primary)] uppercase group-hover:translate-x-2 transition-transform inline-flex items-center gap-2"
                 >
                   LEARN MORE <span className="text-lg">→</span>
