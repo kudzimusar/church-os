@@ -74,7 +74,7 @@ export default function MinistriesSection() {
 
               <div className="relative pt-8">
                 <Link 
-                  href="/welcome" 
+                  href={`/welcome/ministries/${m.slug}`} 
                   className="text-[10px] font-black tracking-[0.2em] text-[var(--primary)] uppercase group-hover:translate-x-2 transition-transform inline-flex items-center gap-2"
                 >
                   LEARN MORE <span className="text-lg">→</span>

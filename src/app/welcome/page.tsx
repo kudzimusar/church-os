@@ -14,6 +14,7 @@ import DirectionsSection from '@/components/public/DirectionsSection';
 import ConnectSection from '@/components/public/ConnectSection';
 import { FeedSection } from '@/components/feed/FeedSection';
 import MinistriesSection from '@/components/public/MinistriesSection';
+import TestimoniesSection from '@/components/public/TestimoniesSection';
 
 export default function WelcomePage() {
   const [user, setUser] = useState<any>(null);
@@ -63,6 +64,8 @@ export default function WelcomePage() {
       <SundayCheckIn user={user} currentDate={currentDate} />
       
       <SermonSection />
+      
+      <TestimoniesSection />
       
       <NewHereSection />
       

@@ -1,8 +1,9 @@
 {
-    "name": "JKC Transformed Life 2026",
-    "short_name": "Transformed",
-    "description": "90 Days of Spiritual Transformation - March 2026 Devotional",
-    "start_url": "/jkc-devotion-app/",
+    "name": "Japan Kingdom Church",
+    "short_name": "JKC",
+    "description": "Japan Kingdom Church — Tokyo",
+    "start_url": "/jkc-devotion-app/welcome/",
+    "scope": "/jkc-devotion-app/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#2dd4bf",

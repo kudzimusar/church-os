@@ -1,8 +1,33 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import TestimoniesSection from '@/components/public/TestimoniesSection';
+
 export default function WatchPage() {
+  const [sermons, setSermons] = useState<any[]>([]);
+  const [filter, setFilter] = useState<string>('all');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from('public_sermons')
+      .select('*')
+      .order('date', { ascending: false })
+      .then(({ data }) => {
+        setSermons(data || []);
+        setLoading(false);
+      });
+  }, []);
+
+  const uniqueSeries = Array.from(new Set(sermons.map(s => s.series).filter(Boolean)));
+  
+  const filteredSermons = filter === 'all' 
+    ? sermons 
+    : sermons.filter(s => s.series === filter);
+
   return (
-    <div className="pt-16 min-h-screen">
+    <div className="pt-16 min-h-screen bg-[oklch(0.08_0.04_255)] text-white">
       {/* Hero Strip */}
       <section className="relative py-32 px-6 flex items-center justify-center overflow-hidden bg-black/40">
         <div className="absolute inset-0 pointer-events-none">
@@ -11,7 +36,7 @@ export default function WatchPage() {
         <div className="relative z-10 text-center space-y-4">
           <p className="text-[10px] font-black tracking-[0.4em] text-white/40 uppercase">SERMONS · TESTIMONIES · LIVE STREAM</p>
           <h1 className="text-5xl md:text-7xl font-sans leading-none font-black uppercase tracking-tight">
-            <span className="font-serif italic font-medium pr-4 normal-case text-white/90">Watch</span> Live
+            <span className="font-serif italic font-medium pr-4 normal-case text-white/90">Watch</span> Library
           </h1>
           <nav className="flex justify-center gap-2 text-[10px] font-black tracking-widest text-white/30 uppercase pt-6">
             <span className="text-[var(--primary)]">Welcome</span>
@@ -22,69 +47,103 @@ export default function WatchPage() {
       </section>
 
       <div className="max-w-screen-xl mx-auto px-6 py-24 space-y-32">
-        {/* Latest Sermon */}
-        <section className="space-y-12">
-          <div className="space-y-4 text-center">
-            <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">LATEST SERMON</p>
-            <h2 className="text-4xl md:text-5xl font-black italic font-serif">"A Genuine Believer"</h2>
-          </div>
-          
-          <div className="glass rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl">
-            <div className="aspect-video w-full">
-              <iframe 
-                className="w-full h-full"
-                src="https://www.youtube.com/embed?listType=user_uploads&list=japankingdomchurch" 
-                title="YouTube Video Player"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+        {/* Latest Featured Sermon (Big) */}
+        {sermons.filter(s => s.featured)[0] && (
+          <section className="space-y-12">
+            <div className="space-y-4 text-center">
+              <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">FEATURED SERMON</p>
+              <h2 className="text-4xl md:text-5xl font-black italic font-serif">"{sermons.find(s => s.featured)?.title}"</h2>
             </div>
-            <div className="p-12 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8 bg-white/5">
-              <div className="space-y-2">
-                <p className="text-[10px] font-black tracking-[0.5em] text-[var(--primary)] uppercase">SPEAKER</p>
-                <h3 className="text-3xl font-black">Elder Sanna Patterson</h3>
+            
+            <div className="glass rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl">
+              <div className="aspect-video w-full bg-black">
+                <iframe 
+                  className="w-full h-full"
+                  src={sermons.find(s => s.featured)?.youtube_url.replace('watch?v=', 'embed/')} 
+                  title="Featured Sermon"
+                  frameBorder="0"
+                  allowFullScreen
+                />
               </div>
-              <a 
-                href="https://www.youtube.com/@JapanKingdomChurch/streams" 
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white text-black font-black px-12 py-5 rounded-full text-xs tracking-[0.3em] hover:scale-105 active:scale-95 transition-all text-center whitespace-nowrap"
-              >
-                WATCH MORE SERMONS →
-              </a>
             </div>
+          </section>
+        )}
+
+        {/* Sermon Archive Archive */}
+        <section className="space-y-16">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="space-y-2">
+               <h2 className="text-4xl font-black">All <span className="font-serif italic font-medium text-white/60">Services</span></h2>
+               <p className="text-white/40 font-medium">Browse our full library of messages.</p>
+            </div>
+
+            {/* Series Filter */}
+            <div className="flex flex-wrap gap-3 justify-center">
+              <button 
+                onClick={() => setFilter('all')}
+                className={`px-8 py-3 rounded-full text-[10px] font-black tracking-widest transition-all ${filter === 'all' ? 'bg-[var(--primary)] text-white' : 'border border-white/10 text-white/40 hover:bg-white/5'}`}
+              >
+                ALL
+              </button>
+              {uniqueSeries.map(s => (
+                <button 
+                  key={s as string}
+                  onClick={() => setFilter(s as string)}
+                  className={`px-8 py-3 rounded-full text-[10px] font-black tracking-widest transition-all ${filter === s ? 'bg-[var(--primary)] text-white' : 'border border-white/10 text-white/40 hover:bg-white/5'}`}
+                >
+                  {(s as string).toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredSermons.map((s) => (
+              <div key={s.id} className="group glass rounded-[2rem] p-8 border border-white/10 hover:border-[var(--primary)]/30 transition-all flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] tracking-[0.3em] font-black text-[var(--primary)] opacity-60 uppercase">
+                      {new Date(s.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                    {s.series && (
+                      <span className="bg-[var(--primary)]/10 text-[var(--primary)] text-[9px] font-black tracking-widest px-3 py-1 rounded-full uppercase">
+                        {s.series}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-xl font-black leading-snug group-hover:text-[var(--primary)] transition-colors">
+                    {s.title}
+                  </h3>
+                  <p className="text-sm text-white/40 font-medium italic">
+                    {s.speaker}
+                  </p>
+                </div>
+                <div className="pt-8">
+                  <a 
+                    href={s.youtube_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] font-black tracking-widest text-white/30 group-hover:text-white transition-colors flex items-center gap-2"
+                  >
+                    WATCH SERMON <span className="group-hover:translate-x-1 transition-transform">→</span>
+                  </a>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* Testimonies */}
-        <section className="relative rounded-[4rem] overflow-hidden bg-white/5 border border-white/5 p-16 md:p-32 text-center">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--primary)]/10 blur-[100px] rounded-full" />
-          <div className="relative z-10 space-y-8">
-            <div className="space-y-4">
-              <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">TRANSFORMED LIVES</p>
-              <h2 className="text-4xl md:text-5xl font-black italic font-serif uppercase tracking-tight">Check Out <br className="hidden md:block"/> Testimonies</h2>
-              <p className="text-white/40 text-lg max-w-xl mx-auto italic font-medium pt-4">Hear what God is doing in the lives of our members across Japan.</p>
-            </div>
-            <a 
-              href="https://youtube.com/playlist?list=PLrToBpeUhvIaxvLawq93QKwEzzIi-Oq0P" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block border border-white/20 text-white font-black px-12 py-5 rounded-full text-xs tracking-[0.3em] hover:bg-white/5 hover:border-white/40 active:scale-95 transition-all"
-            >
-              WATCH TESTIMONIES →
-            </a>
-          </div>
-        </section>
+        {/* Testimonies Section */}
+        <TestimoniesSection />
 
         {/* Watch Live CTA */}
         <section className="space-y-12 text-center pb-12">
-           <div className="inline-flex glass-card rounded-full px-10 py-5 text-sm font-black tracking-[0.3em] text-[var(--primary)] border border-[var(--primary)]/20 shadow-2xl shadow-primary/10">
+           <div className="inline-flex glass rounded-full px-10 py-5 text-sm font-black tracking-[0.3em] text-[var(--primary)] border border-white/10 shadow-2xl">
               SUNDAYS @ 10:30AM JST
            </div>
-           <h2 className="text-4xl md:text-6xl font-black italic font-serif max-w-2xl mx-auto">Join us live every Sunday morning</h2>
+           <h2 className="text-4xl md:text-6xl font-black italic font-serif max-w-2xl mx-auto text-white/90">Join us live every Sunday morning</h2>
            <a 
-             href="http://youtube.com/japankingdomchurch" 
+             href="https://youtube.com/japankingdomchurch" 
              target="_blank"
              rel="noopener noreferrer"
              className="inline-block bg-[var(--primary)] text-white font-black px-16 py-6 rounded-full text-xs tracking-[0.3em] hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-primary/20"
