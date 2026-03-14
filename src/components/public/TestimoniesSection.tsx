@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Play } from 'lucide-react';
+import { Play, Loader2 } from 'lucide-react';
 
 type Testimony = {
   id: string;
@@ -21,13 +21,23 @@ export default function TestimoniesSection() {
       .from('public_testimonies')
       .select('*')
       .order('created_at', { ascending: false })
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        console.log('Testimonies data:', data, 'Error:', error);
         if (data) setTestimonies(data);
         setLoading(false);
       });
   }, []);
 
-  if (loading || testimonies.length === 0) return null;
+  if (loading) return (
+    <div className="py-20 flex justify-center items-center">
+       <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]/20" />
+    </div>
+  );
+
+  if (testimonies.length === 0) {
+    console.log('No testimonies found in state');
+    return null;
+  }
 
   return (
     <section className="py-32 overflow-hidden bg-black/5">
