@@ -10,7 +10,7 @@ import {
     MessageCircle, AlertCircle, Plus, Save, Clock,
     Camera, MapPin, Globe, Milestone, Copy, LayoutDashboard, Settings, CheckCircle2, LogOut,
     Briefcase, Music, CalendarCheck, Coins, Activity, ChevronRight, Sparkles, XCircle,
-    TrendingUp, Newspaper, ArrowUpRight
+    TrendingUp, Newspaper, ArrowUpRight, Landmark, Smartphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -1161,38 +1161,123 @@ export default function ProfileHub() {
                                     {/* GIVING TAB */}
                                     {activeTab === 'giving' && (
                                         <div className="space-y-8 animate-in fade-in duration-300">
-                                            <div className="grid md:grid-cols-2 gap-6 pb-8 border-b border-foreground/10">
-                                                <div className="bg-foreground/5 p-6 rounded-3xl border border-foreground/10">
-                                                    <p className="text-xs font-black text-foreground/40 uppercase tracking-widest mb-4">Giving Preferences</p>
-                                                    <div className="space-y-4">
-                                                        <div className="flex items-center justify-between mb-2">
-                                                            <span className="text-sm font-semibold">Automatic Tithing</span>
-                                                            <input type="checkbox" checked={givingData.tithe_status} onChange={e => setGivingData({ ...givingData, tithe_status: e.target.checked })} />
+                                            {/* Online Giving Card */}
+                                            <div className="bg-primary/5 border border-primary/20 rounded-3xl p-8 relative overflow-hidden group">
+                                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl -mr-16 -mt-16 group-hover:scale-110 transition-transform" />
+                                                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                                                    <div className="space-y-2 text-center md:text-left">
+                                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Secure Online Giving</p>
+                                                        <h4 className="text-2xl font-black text-foreground">Support the Mission</h4>
+                                                        <p className="text-sm text-muted-foreground font-medium max-w-sm">The fastest way to give via Credit Card, Apple Pay, or Google Pay.</p>
+                                                    </div>
+                                                    <Button 
+                                                        asChild
+                                                        className="h-16 px-10 rounded-2xl bg-primary text-white font-black text-sm tracking-widest shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                                                    >
+                                                        <a href="https://tithe.ly/give_new/www/#/tithely/give-one-time/4010992" target="_blank">
+                                                            GIVE NOW ON TITHE.LY <ArrowUpRight className="ml-2 w-4 h-4" />
+                                                        </a>
+                                                    </Button>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid md:grid-cols-2 gap-6">
+                                                {/* Local Transfer (Japan) */}
+                                                <div className="bg-card border border-border rounded-3xl p-6 space-y-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
+                                                            <Landmark className="w-5 h-5 text-red-500" />
                                                         </div>
-                                                        <select value={givingData.preferred_giving_method} onChange={e => setGivingData({ ...givingData, preferred_giving_method: e.target.value })} className="w-full h-12 rounded-xl bg-background border border-foreground/10 px-4 text-sm font-semibold">
-                                                            <option>Cash</option>
-                                                            <option>Bank Transfer</option>
-                                                            <option>Card / Digital</option>
-                                                        </select>
-                                                        <Button onClick={saveGiving} className="w-full bg-[var(--primary)] text-white font-black h-12 rounded-xl">Save Preferences</Button>
+                                                        <h5 className="font-black text-sm uppercase tracking-wider text-foreground">Domestic Giving (Japan)</h5>
+                                                    </div>
+                                                    <div className="space-y-3">
+                                                        <div className="flex justify-between items-center p-3 rounded-xl bg-muted/50 border border-border">
+                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase">Bank</span>
+                                                            <span className="text-xs font-black text-foreground">MUFG Bank, Ltd.</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center p-3 rounded-xl bg-muted/50 border border-border">
+                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase">Account</span>
+                                                            <span className="text-xs font-black text-foreground">0286887</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center p-3 rounded-xl bg-muted/50 border border-border">
+                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase">SWIFT</span>
+                                                            <span className="text-xs font-black text-foreground">BOTKJPJT</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* USA Partners */}
+                                                <div className="bg-card border border-border rounded-3xl p-6 space-y-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                                                            <Smartphone className="w-5 h-5 text-emerald-500" />
+                                                        </div>
+                                                        <h5 className="font-black text-sm uppercase tracking-wider text-foreground">Global Options (USA)</h5>
+                                                    </div>
+                                                    <div className="space-y-3">
+                                                        <div className="flex justify-between items-center p-3 rounded-xl bg-muted/50 border border-border">
+                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase">Cash App</span>
+                                                            <span className="text-xs font-black text-foreground">$JapanKingdomChurch</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center p-3 rounded-xl bg-muted/50 border border-border">
+                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase">Zelle</span>
+                                                            <span className="text-xs font-black text-foreground">finance.jkchurch@gmail.com</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center p-3 rounded-xl bg-muted/50 border border-border">
+                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase">Wells Fargo</span>
+                                                            <span className="text-xs font-black text-foreground">7520856647</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-4">
-                                                <h4 className="font-black text-lg text-foreground">Recent Giving History</h4>
-                                                <div className="grid gap-3">
-                                                    {givingHistory.length > 0 ? givingHistory.map(g => (
-                                                        <div key={g.id} className="flex items-center justify-between p-4 bg-muted border border-border rounded-2xl transition-colors">
-                                                            <div>
-                                                                <p className="text-sm font-black text-foreground">{g.record_type.toUpperCase()}</p>
-                                                                <p className="text-[10px] text-muted-foreground">{g.given_date}</p>
+                                            <div className="grid md:grid-cols-2 gap-8 pt-8 border-t border-border">
+                                                <div className="space-y-4">
+                                                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest pl-1">Preferences</p>
+                                                    <div className="bg-muted/30 p-6 rounded-3xl border border-border space-y-6">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="space-y-1">
+                                                                <p className="text-sm font-black text-foreground">Stewardship Commitment</p>
+                                                                <p className="text-[10px] text-muted-foreground font-medium">I pledge to tithe regularly</p>
                                                             </div>
-                                                            <p className="font-black text-[var(--primary)]">¥{Number(g.amount).toLocaleString()}</p>
+                                                            <input 
+                                                                type="checkbox" 
+                                                                className="w-6 h-6 rounded accent-primary border-border bg-background"
+                                                                checked={givingData.tithe_status} 
+                                                                onChange={e => setGivingData({ ...givingData, tithe_status: e.target.checked })} 
+                                                            />
                                                         </div>
-                                                    )) : (
-                                                        <p className="text-center py-10 text-xs text-muted-foreground font-bold uppercase tracking-widest">No giving records found</p>
-                                                    )}
+                                                        <div className="space-y-2">
+                                                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Preferred Method</p>
+                                                            <select value={givingData.preferred_giving_method} onChange={e => setGivingData({ ...givingData, preferred_giving_method: e.target.value })} className="w-full h-14 rounded-2xl bg-background border border-border px-4 text-sm font-black text-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                                                                <option>Cash (Envelope)</option>
+                                                                <option>Bank Transfer (Furikomi)</option>
+                                                                <option>Credit Card (Online)</option>
+                                                            </select>
+                                                        </div>
+                                                        <Button onClick={saveGiving} className="w-full h-14 bg-foreground text-background font-black rounded-2xl shadow-xl shadow-foreground/10 hover:scale-[1.02] active:scale-95 transition-all">Save Commitment</Button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest pl-1">Recent Local Records</p>
+                                                    <div className="space-y-3">
+                                                        {givingHistory.length > 0 ? givingHistory.map(g => (
+                                                            <div key={g.id} className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-2xl">
+                                                                <div>
+                                                                    <p className="text-sm font-black text-foreground">{g.record_type.toUpperCase()}</p>
+                                                                    <p className="text-[10px] text-muted-foreground">{new Date(g.given_date).toLocaleDateString()}</p>
+                                                                </div>
+                                                                <p className="font-black text-primary">¥{Number(g.amount).toLocaleString()}</p>
+                                                            </div>
+                                                        )) : (
+                                                            <div className="bg-muted/30 border border-dashed border-border rounded-3xl p-10 flex flex-col items-center justify-center text-center">
+                                                                <Coins className="w-8 h-8 text-muted-foreground/30 mb-3" />
+                                                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">No local history available</p>
+                                                                <p className="text-[9px] text-muted-foreground/60 mt-2 px-6 font-medium">Online gifts via Tithe.ly are managed in your bank statement. Local gifts are updated weekly.</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1340,31 +1425,7 @@ export default function ProfileHub() {
                                         </div>
                                     )}
 
-                                    {/* GIVING TAB */}
-                                    {activeTab === 'giving' && (
-                                        <div className="space-y-8 animate-in fade-in duration-300">
-                                            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 space-y-6 transition-colors">
-                                                <div className="flex flex-col gap-6">
-                                                    <div className="flex items-center justify-between p-4 bg-muted border border-border rounded-2xl transition-colors">
-                                                        <div>
-                                                            <h5 className="font-bold text-foreground">I am a Tithing Member</h5>
-                                                            <p className="text-xs text-muted-foreground">Help leadership project church budgets</p>
-                                                        </div>
-                                                        <input type="checkbox" checked={givingData.tithe_status} onChange={e => setGivingData({ ...givingData, tithe_status: e.target.checked })} className="w-6 h-6 rounded" />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Preferred Giving Method</label>
-                                                        <select value={givingData.preferred_giving_method} onChange={e => setGivingData({ ...givingData, preferred_giving_method: e.target.value })} className="w-full h-14 rounded-2xl bg-muted border border-border px-4 text-sm font-semibold outline-none text-foreground">
-                                                            <option>Cash (Envelope)</option>
-                                                            <option>Bank Transfer (Furikomi)</option>
-                                                            <option>Credit Card (Online)</option>
-                                                        </select>
-                                                    </div>
-                                                    <Button onClick={saveGiving} className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black w-full sm:w-auto self-start">Save Preferences</Button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+
 
                                     {/* ATTENDANCE TAB */}
                                     {activeTab === 'attendance' && (
