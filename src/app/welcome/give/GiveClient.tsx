@@ -33,12 +33,12 @@ export default function GiveClient() {
   };
 
   return (
-    <div className="min-h-screen bg-[oklch(0.08_0.04_255)] text-white/90 selection:bg-[var(--primary)] selection:text-white">
+    <div className="min-h-screen selection:bg-[var(--primary)] selection:text-white">
       {/* Hero Section */}
       <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[var(--primary)]/10 blur-[160px] rounded-full" />
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-[oklch(0.08_0.04_255)]" />
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-background/20" />
         </div>
 
         <div className="relative z-10 text-center space-y-8 px-6 max-w-4xl mx-auto">

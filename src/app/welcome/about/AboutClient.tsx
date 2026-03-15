@@ -48,7 +48,7 @@ export default function AboutClient() {
   ];
 
   return (
-    <div className="pt-16 min-h-screen bg-[oklch(0.08_0.04_255)] text-white">
+    <div className="pt-16 min-h-screen">
       <section className="relative py-32 px-6 flex items-center justify-center overflow-hidden bg-black/40">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[var(--primary)] blur-[120px] rounded-full opacity-10" />
