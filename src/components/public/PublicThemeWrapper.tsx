@@ -27,8 +27,11 @@ export function PublicThemeWrapper({
           ? 'oklch(0.65 0.25 260)'
           : 'oklch(0.45 0.20 245)',
         '--primary-foreground': 'oklch(0.98 0 0)',
-        background: isDark ? 'oklch(0.08 0.04 255)' : '#f0f4ff',
-        color: isDark ? 'white' : '#0a1628',
+        '--background': isDark ? 'oklch(0.08 0.04 255)' : '#f8faff',
+        '--foreground': isDark ? 'white' : '#0f172a',
+        '--muted': isDark ? 'rgba(255,255,255,0.4)' : 'rgba(15,23,42,0.5)',
+        background: 'var(--background)',
+        color: 'var(--foreground)',
       } as React.CSSProperties}
       className="min-h-screen transition-colors duration-300"
     >

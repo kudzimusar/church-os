@@ -6,7 +6,9 @@ export default function PrivacyPage() {
         <p className="text-[10px] font-black tracking-widest
                       text-[var(--primary)] uppercase">Legal</p>
         <h1 className="text-5xl font-black">Privacy Policy</h1>
-        <p className="text-white/40 text-sm">
+        <p 
+          style={{ color: 'var(--muted)' }}
+          className="text-sm">
           Last updated: March 2026
         </p>
       </div>
@@ -59,7 +61,9 @@ export default function PrivacyPage() {
         <div key={section.title} className="space-y-3 border-t
                                             border-white/10 pt-8">
           <h2 className="text-xl font-black">{section.title}</h2>
-          <p className="text-white/60 leading-relaxed">{section.body}</p>
+          <p 
+            style={{ color: 'var(--muted)' }}
+            className="leading-relaxed">{section.body}</p>
         </div>
       ))}
     </div>
