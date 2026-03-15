@@ -6,18 +6,22 @@ export default function OurPastorPage() {
   const books = [
     {
       title: "Power of Purpose",
+      src: "/jkc-devotion-app/images/books/book-power-of-purpose.png",
       link: "https://a.co/d/0hKjjYn1"
     },
     {
       title: "A Miraculous Encounter",
+      src: "/jkc-devotion-app/images/books/book-miraculous-encounter.webp",
       link: "https://a.co/d/0eXyvya6"
     },
     {
       title: "The Reason I'm Black",
+      src: "/jkc-devotion-app/images/books/book-why-i-am-black.png",
       link: "https://a.co/d/00mPTRES"
     },
     {
       title: "The Ultimate Love Challenge Guide",
+      src: "/jkc-devotion-app/images/books/book-love-challenge.jpg",
       link: "https://form.jotform.com/202568624678467"
     }
   ];
@@ -42,25 +46,26 @@ export default function OurPastorPage() {
         </div>
       </section>
 
-      <div className="max-w-screen-xl mx-auto px-6 py-24 space-y-32">
+      <div className="max-w-screen-xl mx-auto px-6 py-24 space-y-24">
         {/* Bio Section */}
-        <section className="grid lg:grid-cols-2 gap-20 items-stretch">
+        <section className="grid lg:grid-cols-2 gap-16 items-start">
           <div className="relative order-2 lg:order-1">
-            <div className="absolute -inset-4 bg-[var(--primary)]/10 blur-3xl rounded-full" />
-            <div className="relative h-full aspect-[3/4] glass rounded-[3rem] border border-white/10 flex flex-col items-center justify-center overflow-hidden">
-               <div className="w-24 h-24 rounded-full border-2 border-white/10 flex items-center justify-center mb-6">
-                 <span className="text-4xl font-black text-white/10">MJG</span>
-               </div>
-               <p className="text-white/20 text-xs font-black uppercase tracking-widest">Pastor Marcel Jonte Gadsden</p>
+            <div className="rounded-[2rem] overflow-hidden aspect-[4/3] md:aspect-auto md:h-[600px] glass border border-white/10">
+              <img
+                src="/jkc-devotion-app/images/pastor/pastor-profile.png"
+                alt="Pastor Marcel Jonte Gadsden"
+                className="w-full h-full object-cover object-top"
+                loading="eager"
+              />
             </div>
           </div>
           
-          <div className="space-y-10 order-1 lg:order-2 flex flex-col justify-center">
+          <div className="space-y-8 order-1 lg:order-2">
             <div className="space-y-4">
               <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] uppercase">MEET OUR LEADER</p>
               <h2 className="text-4xl md:text-6xl font-black italic font-serif leading-none">Pastor <br/>Marcel Jonte</h2>
             </div>
-            <div className="space-y-6 text-white/60 text-lg leading-relaxed font-bold">
+            <div className="space-y-6 text-white/60 text-lg leading-relaxed font-bold max-w-full overflow-hidden">
               <p>
                 Pastor Marcel Jonte is an American CEO and Pastor abiding in Tokyo,
                 Japan who is an expert communicator and motivational speaker to all
@@ -89,6 +94,16 @@ export default function OurPastorPage() {
                 programs.
               </p>
             </div>
+            
+            {/* Secondary Photo */}
+            <div className="rounded-[2rem] overflow-hidden aspect-video mt-8 border border-white/10">
+              <img
+                src="/jkc-devotion-app/images/pastor/pastor-event.jpg"
+                alt="Pastor Marcel at an event"
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
           </div>
         </section>
 
@@ -101,17 +116,24 @@ export default function OurPastorPage() {
           
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-10">
             {books.map((book, idx) => (
-              <div key={idx} className="glass rounded-[2rem] p-6 border border-white/10 hover:border-white/30 transition-all flex flex-col group">
-                <div className="aspect-[2/3] bg-white/5 rounded-2xl border border-white/5 flex items-center justify-center p-8 text-center group-hover:bg-white/10 transition-colors">
-                  <span className="text-[10px] font-black uppercase text-white/10 group-hover:text-white/20 transition-colors tracking-[0.2em]">{book.title}</span>
+              <div key={idx} className="group flex flex-col items-center">
+                <div className="aspect-[2/3] w-full rounded-xl overflow-hidden glass border border-white/10 mb-6 flex flex-col">
+                  <img
+                    src={book.src}
+                    alt={book.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
                 </div>
-                <div className="mt-6 space-y-4 flex-1 flex flex-col justify-between">
-                  <h3 className="text-sm font-black text-white/90 leading-tight uppercase tracking-widest">{book.title}</h3>
+                <div className="text-center space-y-4 px-2">
+                  <h3 className="text-[10px] font-black text-white/90 leading-tight uppercase tracking-[0.2em] min-h-[2.5rem] flex items-center justify-center">
+                    {book.title}
+                  </h3>
                   <a 
                     href={book.link} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-[10px] font-black tracking-[0.3em] text-[var(--primary)] uppercase hover:text-white transition-colors border-t border-white/5 pt-4"
+                    className="inline-block text-[9px] font-black tracking-[0.3em] text-[var(--primary)] uppercase hover:text-white transition-colors border border-white/10 rounded-full px-6 py-3"
                   >
                     GET BOOK →
                   </a>
@@ -124,7 +146,7 @@ export default function OurPastorPage() {
         {/* Speaking CTA */}
         <section className="relative rounded-[4rem] overflow-hidden bg-white/5 border border-white/5 p-16 md:p-32 text-center group">
           <div className="absolute inset-0 bg-gradient-to-br from-[var(--primary)]/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-          <div className="relative z-10 space-y-10">
+          <div className="relative z-10 space-y-10 focus-within:z-20">
             <h2 className="text-4xl md:text-6xl font-black italic font-serif max-w-2xl mx-auto">Book Pastor Marcel for your next event</h2>
             <Link 
               href="/welcome/contact"

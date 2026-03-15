@@ -17,6 +17,25 @@ import { FeedSection } from '@/components/feed/FeedSection';
 import MinistriesSection from '@/components/public/MinistriesSection';
 import TestimoniesSection from '@/components/public/TestimoniesSection';
 
+import { motion } from 'framer-motion';
+
+const FadeInSection = ({
+  children,
+  delay = 0
+}: {
+  children: React.ReactNode;
+  delay?: number
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 32 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: '-80px' }}
+    transition={{ duration: 0.6, delay, ease: 'easeOut' }}
+  >
+    {children}
+  </motion.div>
+);
+
 export default function WelcomeClient() {
   const [user, setUser] = useState<any>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -39,7 +58,11 @@ export default function WelcomeClient() {
   return (
     <div className="overflow-x-hidden pt-16">
       <HeroSection />
-      <MissionStrip />
+      
+      <FadeInSection>
+        <MissionStrip />
+      </FadeInSection>
+      
       {user?.id && (
         <section className="bg-black/20 border-y border-white/5 py-12">
           <div className="max-w-screen-xl mx-auto px-6">
@@ -55,15 +78,40 @@ export default function WelcomeClient() {
           </div>
         </section>
       )}
+
       <SundayCheckIn user={user} currentDate={currentDate} />
-      <SermonSection />
-      <TestimoniesSection />
-      <NewHereSection />
-      <MinistriesSection />
-      <EventsSection />
-      <ServiceSchedule />
-      <DirectionsSection />
-      <ConnectSection />
+      
+      <FadeInSection delay={0.1}>
+        <SermonSection />
+      </FadeInSection>
+
+      <FadeInSection delay={0.1}>
+        <TestimoniesSection />
+      </FadeInSection>
+
+      <FadeInSection delay={0.1}>
+        <NewHereSection />
+      </FadeInSection>
+
+      <FadeInSection delay={0.1}>
+        <MinistriesSection />
+      </FadeInSection>
+
+      <FadeInSection delay={0.1}>
+        <EventsSection />
+      </FadeInSection>
+
+      <FadeInSection delay={0.1}>
+        <ServiceSchedule />
+      </FadeInSection>
+
+      <FadeInSection delay={0.1}>
+        <DirectionsSection />
+      </FadeInSection>
+
+      <FadeInSection delay={0.1}>
+        <ConnectSection />
+      </FadeInSection>
     </div>
   );
 }

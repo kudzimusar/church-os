@@ -210,7 +210,7 @@ export default function GiveClient() {
              <p className="text-white/40 text-sm font-black tracking-widest uppercase">For our partners in the United States</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Cash App */}
             <div className="glass rounded-[2rem] p-10 border border-white/5 bg-white/5 space-y-6 hover:border-emerald-500/30 transition-all group">
               <Smartphone className="w-8 h-8 text-emerald-400" />

@@ -2,23 +2,47 @@
 
 export default function StaffPage() {
   const staff = [
-    { name: "Pastor Marcel Jonte Gadsden", role: "Senior Pastor" },
-    { name: "Elder Sanna Patterson", role: "Assistant Pastor / Discipleship Director" },
-    { name: "Min. Yutaka Nakamura", role: "Teacher / Fellowship Director" },
-    { name: "Eri Kudo", role: "Worship Director" },
-    { name: "Eiko Kuboyama", role: "Evangelism Director / Finance Leader" },
-    { name: "Yurie Suzuki", role: "Welcome Director" },
-    { name: "Naomi Yamamoto", role: "Youth Director" },
-    { name: "Itsuki Kuboyama", role: "Language Class Director" }
+    {
+      name: 'Pastor Marcel Jonte Gadsden',
+      role: 'Senior Pastor',
+      photo: '/jkc-devotion-app/images/staff/pastor-marcel.jpg'
+    },
+    {
+      name: 'Elder Sanna Patterson',
+      role: 'Assistant Pastor / Discipleship Director',
+      photo: '/jkc-devotion-app/images/staff/sanna-patterson.jpg'
+    },
+    {
+      name: 'Min. Yutaka Nakamura',
+      role: 'Teacher / Fellowship Director',
+      photo: '/jkc-devotion-app/images/staff/yutaka-nakamura.jpg'
+    },
+    {
+      name: 'Eri Kudo',
+      role: 'Worship Director',
+      photo: '/jkc-devotion-app/images/staff/eri-kudo.jpg'
+    },
+    {
+      name: 'Eiko Kuboyama',
+      role: 'Evangelism Director / Finance Leader',
+      photo: '/jkc-devotion-app/images/staff/eiko-kuboyama.jpg'
+    },
+    {
+      name: 'Yurie Suzuki',
+      role: 'Welcome Director',
+      photo: '/jkc-devotion-app/images/staff/yurie-suzuki.jpg'
+    },
+    {
+      name: 'Naomi Yamamoto',
+      role: 'Youth Director',
+      photo: '/jkc-devotion-app/images/staff/naomi-yamamoto.jpg'
+    },
+    {
+      name: 'Itsuki Kuboyama',
+      role: 'Language Class Director',
+      photo: '/jkc-devotion-app/images/staff/itsuki-kuboyama.jpg'
+    },
   ];
-
-  const getInitials = (name: string) => {
-    return name.split(' ')
-      .map(n => n[0])
-      .filter((_, i, arr) => i === 0 || i === arr.length - 1)
-      .join('')
-      .toUpperCase();
-  };
 
   return (
     <div className="pt-16 min-h-screen">
@@ -49,26 +73,28 @@ export default function StaffPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {staff.map((person, idx) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {staff.map((member, idx) => (
             <div 
               key={idx} 
-              className="glass rounded-[3rem] p-10 border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all text-center flex flex-col items-center group"
+              className="group glass rounded-[2rem] p-4 border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all text-center flex flex-col h-full"
             >
-              <div className="relative mb-8">
-                <div className="absolute -inset-2 bg-[var(--primary)]/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative w-24 h-24 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/30 group-hover:border-[var(--primary)] group-hover:bg-[var(--primary)] group-hover:text-white flex items-center justify-center text-3xl font-black transition-all">
-                  {getInitials(person.name)}
-                </div>
+              <div className="w-full aspect-[4/5] rounded-[1.5rem] overflow-hidden bg-white/5 mb-6">
+                <img
+                  src={member.photo}
+                  alt={member.name}
+                  className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
               </div>
               
-              <div className="space-y-2">
-                <h3 className="text-sm font-black text-white/90 uppercase tracking-widest leading-tight h-10 flex items-center justify-center">
-                  {person.name}
+              <div className="space-y-3 pb-4">
+                <h3 className="text-[11px] font-black text-white/90 uppercase tracking-[0.2em] leading-tight">
+                  {member.name}
                 </h3>
-                <div className="h-px w-8 bg-white/10 mx-auto" />
-                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest px-4 group-hover:text-[var(--primary)] transition-colors">
-                  {person.role}
+                <div className="h-px w-6 bg-white/10 mx-auto" />
+                <p className="text-[9px] text-white/40 font-black uppercase tracking-widest px-2 group-hover:text-[var(--primary)] transition-colors">
+                  {member.role}
                 </p>
               </div>
             </div>

@@ -46,8 +46,48 @@ export default function VisitPage() {
         </section>
 
         {/* Directions (Reused Component) */}
-        <div className="max-w-screen-xl mx-auto">
+        <div className="max-w-screen-xl mx-auto space-y-12">
           <DirectionsSection />
+          
+          <div className="px-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="rounded-[2.5rem] overflow-hidden aspect-video border border-white/10 glass">
+                <img
+                  src="/jkc-devotion-app/images/church/building-exterior.webp"
+                  alt="Japan Kingdom Church building exterior"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <div className="rounded-[2.5rem] overflow-hidden aspect-video border border-white/10 glass">
+                <img
+                  src="/jkc-devotion-app/images/church/building-banner.png"
+                  alt="Japan Kingdom Church banner"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <div className="rounded-3xl overflow-hidden aspect-video border border-white/10 glass">
+                <img
+                  src="/jkc-devotion-app/images/church/parking-1.webp"
+                  alt="Church parking area"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <div className="rounded-3xl overflow-hidden aspect-video border border-white/10 glass">
+                <img
+                  src="/jkc-devotion-app/images/church/parking-2.webp"
+                  alt="Church parking area 2"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* What to Expect */}
@@ -66,7 +106,7 @@ export default function VisitPage() {
                 <div className="w-12 h-12 rounded-full bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)] font-black text-xs border border-[var(--primary)]/20">
                   0{idx + 1}
                 </div>
-                <h3 className="text-xl font-black uppercase tracking-widest">{item.title}</h3>
+                <h3 className="text-xl font-black uppercase tracking-widest leading-none min-h-[3rem] flex items-center">{item.title}</h3>
                 <p className="text-white/60 leading-relaxed font-bold italic text-sm">{item.desc}</p>
               </div>
             ))}

@@ -20,9 +20,31 @@ export default function AboutClient() {
   ];
 
   const outreach = [
-    { title: "Akiramenai Homeless Program", desc: "Rehabilitating and supporting homeless individuals in Tokyo." },
-    { title: "Food Pantry", desc: "Providing food support to those in need in our community." },
-    { title: "Gospel Music Workshop", desc: "Using music as a bridge to share the Gospel across cultures." }
+    { 
+      title: "Akiramenai Homeless Program", 
+      desc: "Rehabilitating and supporting homeless individuals in Tokyo.",
+      image: "/jkc-devotion-app/images/outreach/akiramenai.jpg"
+    },
+    { 
+      title: "Food Pantry", 
+      desc: "Providing food support to those in need in our community.",
+      image: "/jkc-devotion-app/images/outreach/food-pantry.jpg"
+    },
+    { 
+      title: "PinkLove Women's Outreach", 
+      desc: "Supporting and caring for women in Tokyo's urban environment.",
+      image: "/jkc-devotion-app/images/outreach/pinklove.jpg"
+    },
+    { 
+      title: "Street Evangelism", 
+      desc: "Sharing hope and faith on the streets of Tokyo.",
+      image: "/jkc-devotion-app/images/outreach/street-evangelism.jpg"
+    },
+    { 
+      title: "Toyoko Youth Program", 
+      desc: "Providing a safe space and mentorship for young people.",
+      image: "/jkc-devotion-app/images/outreach/toyoko-youth.jpg"
+    }
   ];
 
   return (
@@ -45,19 +67,58 @@ export default function AboutClient() {
       </section>
 
       <div className="max-w-screen-xl mx-auto px-6 py-24 space-y-32">
-        <section className="grid lg:grid-cols-2 gap-20 items-center">
+        <section className="grid lg:grid-cols-2 gap-20 items-start">
           <div className="space-y-8">
             <div className="space-y-2">
               <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">THE BEGINNING</p>
               <h2 className="text-4xl md:text-5xl font-black italic font-serif">A Vision for Japan</h2>
             </div>
-            <div className="space-y-6 text-white/60 text-lg leading-relaxed font-medium">
+            <div className="space-y-6 text-white/60 text-lg leading-relaxed font-bold">
               <p>In 2017, Japan Kingdom Church held its first service in Pastor Marcel's living room...</p>
+              
               <p>Recognizing the need to further support the community, Pastor Marcel envisioned a church facility...</p>
+
+              {/* History Gallery */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-8">
+                {[
+                  { src: '/jkc-devotion-app/images/history/beginning-1.png', alt: 'JKC early days' },
+                  { src: '/jkc-devotion-app/images/history/beginning-2.png', alt: 'JKC congregation' },
+                  { src: '/jkc-devotion-app/images/history/beginning-3.png', alt: 'JKC growth' },
+                ].map(img => (
+                  <div key={img.src} className="rounded-[1.5rem] overflow-hidden aspect-video border border-white/10 glass">
+                    <img
+                      src={img.src}
+                      alt={img.alt}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+
               <p>Since then, Japan Kingdom Church has rehabilitated over a dozen homeless individuals...</p>
+
+              {/* Service Photos */}
+              <div className="grid grid-cols-3 gap-4 my-8">
+                {[
+                  '/jkc-devotion-app/images/history/service-1.jpg',
+                  '/jkc-devotion-app/images/history/service-2.jpg',
+                  '/jkc-devotion-app/images/history/service-3.jpg',
+                ].map(src => (
+                  <div key={src} className="rounded-2xl overflow-hidden aspect-square border border-white/10 glass">
+                    <img src={src} alt="JKC service" className="w-full h-full object-cover" loading="lazy" />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-          <div className="relative aspect-square glass rounded-[3rem] border border-white/10 overflow-hidden bg-white/5 flex items-center justify-center text-white/20 font-black">IMAGE</div>
+          <div className="relative aspect-square md:aspect-auto md:h-[600px] glass rounded-[3rem] border border-white/10 overflow-hidden group">
+            <img 
+              src="/jkc-devotion-app/images/pastor/pastor-and-chiaki.png" 
+              alt="Pastor Marcel and Chiaki"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+            />
+          </div>
         </section>
 
         <section className="grid md:grid-cols-2 gap-8">
@@ -68,6 +129,31 @@ export default function AboutClient() {
           <div className="glass rounded-[3rem] p-12 border border-white/10 border-l-4 border-l-indigo-400 space-y-6 bg-white/5">
             <p className="text-[10px] font-black tracking-[0.3em] text-indigo-400 uppercase">OUR MISSION</p>
             <p className="text-3xl font-black italic font-serif leading-tight">"We exist to build a strong Christian community that represents Christ to society."</p>
+          </div>
+        </section>
+
+        {/* Outreach Section */}
+        <section className="space-y-12">
+          <div className="text-center space-y-4">
+            <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">OUR IMPACT</p>
+            <h2 className="text-4xl md:text-6xl font-black italic font-serif">Community Outreach</h2>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {outreach.map((item, idx) => (
+              <div key={idx} className="group glass rounded-[2.5rem] overflow-hidden border border-white/10 flex flex-col h-full bg-white/5">
+                <div className="aspect-video overflow-hidden">
+                  <img 
+                    src={item.image} 
+                    alt={item.title} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                </div>
+                <div className="p-8 space-y-4">
+                  <h3 className="text-sm font-black text-white uppercase tracking-widest">{item.title}</h3>
+                  <p className="text-white/50 text-xs font-medium leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 

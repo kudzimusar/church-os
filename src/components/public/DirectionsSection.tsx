@@ -22,11 +22,12 @@ export default function DirectionsSection() {
         {/* Left — Google Maps embed */}
         <div className="rounded-[3rem] overflow-hidden aspect-video md:aspect-auto h-full min-h-[400px] border border-white/10 shadow-2xl relative">
           <iframe
-            src="https://maps.google.com/maps?q=東京都昭島市昭和町2-1-6+TE+Bldg&output=embed"
-            className="w-full h-full border-0 grayscale invert opacity-70 contrast-125"
-            title="JKC Location"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3239.567!2d139.3539!3d35.7059!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6019144e82b3e6d1%3A0x1!2z5p2x5Lqs6YO95Lit5aSu5biC5YGL5Yqb5YS_77yS5LiB55uu77yR4oiS77yW!5e0!3m2!1sja!2sjp!4v1"
+            className="w-full h-full border-0"
             allowFullScreen
             loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            title="Japan Kingdom Church Location"
           />
           <div className="absolute inset-0 pointer-events-none ring-1 ring-inset ring-white/10 rounded-[3rem]" />
         </div>
