@@ -43,9 +43,9 @@
         .jkc-light nav .border-white\\/30 {
           border-color: rgba(0,0,0,0.2) !important;
         }
-        /* All sections */
+        /* All sections - use color only to preserve images */
         .jkc-light section {
-          background: transparent;
+          background-color: transparent !important;
         }
         .jkc-light h1, .jkc-light h2, .jkc-light h3,
         .jkc-light h4, .jkc-light h5, .jkc-light h6 {

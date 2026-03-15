@@ -95,7 +95,7 @@ export default function MinistryClient({ slug }: { slug: string }) {
   );
 
   return (
-    <div className="min-h-screen pt-16 bg-[oklch(0.08_0.04_255)] text-white">
+    <div className="min-h-screen pt-16">
       {/* Hero Strip */}
       <section className="relative py-32 px-6 flex items-center justify-center overflow-hidden bg-black/40 border-b border-white/5">
         <div className="absolute inset-0 pointer-events-none">
