@@ -1,0 +1,37 @@
+
+<style>
+.sec{margin-bottom:18px}
+.sec-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);letter-spacing:.08em;text-transform:uppercase;padding:6px 0;border-bottom:.5px solid var(--color-border-tertiary);margin-bottom:10px}
+.row{display:flex;gap:12px;padding:8px 0;border-bottom:.5px solid var(--color-border-tertiary);font-size:13px;align-items:flex-start}
+.row:last-child{border-bottom:none}
+.lbl{min-width:180px;color:var(--color-text-secondary);font-size:12px;flex-shrink:0}
+.val{color:var(--color-text-primary);flex:1;line-height:1.5}
+.badge{display:inline-block;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:500;margin-right:4px}
+.bg{background:var(--color-background-success);color:var(--color-text-success)}
+.by{background:var(--color-background-warning);color:var(--color-text-warning)}
+.br{background:var(--color-background-danger);color:var(--color-text-danger)}
+.bi{background:var(--color-background-info);color:var(--color-text-info)}
+</style>
+
+<div class="sec">
+  <div class="sec-title">Issues confirmed and root cause identified</div>
+  <div class="row"><div class="lbl">1. Hero background video</div><div class="val"><span class="br badge">Fix needed</span> Wix homepage has a full-background video. New site has animated gradient orbs only. The Wix video URL is <code>https://static.wixstatic.com/media/b25f99_e2700740cf4c4191b1d0a25f23ec0917f000.jpg</code> — this is a still photo used as hero bg. The actual background video must be found. We will use the existing Pastor Marcel Wix video as fallback until confirmed.</div></div>
+  <div class="row"><div class="lbl">2. Logo</div><div class="val"><span class="by badge">Download needed</span> The correct logo is the horizontal "J + Japan Kingdom Church" in blue on transparent background, visible in Image 6. Wix URL: <code>https://static.wixstatic.com/media/91bb3f_58238f7c9ccd461d9be46d2851df29db~mv2.png</code>. Must be downloaded to <code>public/images/logo.png</code> and replace the current church-logo.png circle icon in PublicNav.</div></div>
+  <div class="row"><div class="lbl">3. Light/dark theme toggle</div><div class="val"><span class="by badge">Build needed</span> Public site currently forced dark only via <code>oklch(0.08_0.04_255)</code> in layout.tsx. Need a toggle that switches between dark (current) and a light mode inspired by the Wix blue/white palette. This is a layout.tsx + CSS variable change.</div></div>
+  <div class="row"><div class="lbl">4. About page truncated text</div><div class="val"><span class="br badge">Fix needed</span> Developer wrote short summary sentences instead of the full Wix text. All four paragraphs of church history must be restored word for word from the Wix about page.</div></div>
+  <div class="row"><div class="lbl">5. Sign in routing / nav merge</div><div class="val"><span class="br badge">Fix needed</span> Currently SIGN IN takes user to devotion app root and they are stuck there with no way back to /welcome. The two apps must be connected. PublicNav needs: user avatar when logged in, and links to Devotion, Profile, Settings. When not logged in: SIGN IN opens auth modal directly on /welcome without leaving the page.</div></div>
+  <div class="row"><div class="lbl">6. AI chatbot on /welcome</div><div class="val"><span class="by badge">Build needed</span> The GlobalAIAssistant already exists in the codebase and is used on the devotion app. It needs to be surfaced on /welcome with church-specific context: directions, history, service times, giving.</div></div>
+  <div class="row"><div class="lbl">7. Countdown placement</div><div class="val"><span class="by badge">Move needed</span> Countdown is below the service time badge and the CTA buttons. You want it visible without scrolling, right below the service time badge — before the CTA buttons.</div></div>
+  <div class="row"><div class="lbl">8. Ministry pages routing broken</div><div class="val"><span class="br badge">Fix needed</span> Ministry cards link to <code>/welcome/ministries/[slug]</code> but those pages may not be routing correctly. Need to confirm generateStaticParams covers all slugs and the pages load with actual ministry content rather than redirecting to devotion app.</div></div>
+  <div class="row"><div class="lbl">9. Missing Wix page content</div><div class="val"><span class="by badge">Scrape needed</span> Pages not yet fully ported: /christianity, /baptism, /class (language school), /calendar. Need to fetch and add their content.</div></div>
+  <div class="row"><div class="lbl">10. Privacy Policy + Terms</div><div class="val"><span class="by badge">Build needed</span> Currently links to #. Since the site collects name, email, and giving data, these documents are legally required. Need proper pages at /welcome/privacy and /welcome/terms.</div></div>
+</div>
+
+<div class="sec">
+  <div class="sec-title">Files I need before writing the instruction</div>
+  <div class="row"><div class="lbl">src/components/public/PublicNav.tsx</div><div class="val">To see the current nav structure and plan the auth-aware user avatar addition.</div></div>
+  <div class="row"><div class="lbl">src/app/welcome/about/AboutClient.tsx</div><div class="val">To see exactly what history text exists and what is missing.</div></div>
+  <div class="row"><div class="lbl">src/components/public/HeroSection.tsx</div><div class="val">To see current countdown placement and move it above the CTAs.</div></div>
+  <div class="row"><div class="lbl">src/app/welcome/ministries/[slug]/MinistryClient.tsx</div><div class="val">To confirm routing and content for each ministry page.</div></div>
+  <div class="row"><div class="lbl">src/components/layout/GlobalAIAssistant.tsx</div><div class="val">To understand the existing AI assistant so we can surface it on /welcome.</div></div>
+</div>
