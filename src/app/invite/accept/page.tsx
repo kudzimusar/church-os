@@ -73,7 +73,7 @@ function AcceptInviteContent() {
 
             setStatus('success');
             setTimeout(() => {
-                router.push(`${BP}/login/`);
+                router.push("/login/");
             }, 3000);
 
         } catch (err: any) {

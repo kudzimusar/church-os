@@ -23,11 +23,11 @@ export default function UnifiedLoginPage() {
 
     const performRedirection = (role: string, skipMemberRedirect: boolean = false) => {
         if (['pastor', 'owner', 'super_admin'].includes(role)) {
-            router.replace(`${BP}/pastor-hq/`);
+            router.replace("/pastor-hq/");
         } else if (['admin', 'shepherd', 'ministry_leader', 'ministry_lead'].includes(role)) {
-            router.replace(`${BP}/shepherd/dashboard/`);
+            router.replace("/shepherd/dashboard/");
         } else if (role === 'member' && !skipMemberRedirect) {
-            router.replace(`${BP}/`);
+            router.replace("/");
         }
         // If role is member and skipMemberRedirect is true, we stay on the login page
     };

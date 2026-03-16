@@ -15,8 +15,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         '/staff', '/give', '/watch', '/contact',
         '/privacy', '/terms', '/login', '/invite'
     ];
-    // Normalize pathname by removing base path if present
-    const cleanPath = pathname.replace(new RegExp(`^${BP}`), '') || '/';
+    // Normalize pathname by removing ALL occurrences of base path from the start
+    let cleanPath = pathname;
+    while (cleanPath.startsWith(BP)) {
+        cleanPath = cleanPath.substring(BP.length);
+    }
+    if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
     
     const isPublic = PUBLIC_PATHS.some(p =>
         cleanPath === p || cleanPath.startsWith(`${p}/`)
@@ -74,10 +78,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     if (isPublic) return <>{children}</>;
 
-    const isProtected = pathname.startsWith("/admin") || 
-                       pathname.startsWith("/onboarding") || 
-                       pathname.startsWith("/shepherd") ||
-                       pathname.startsWith("/pastor-hq");
+    const isProtected = cleanPath.startsWith("/admin") || 
+                       cleanPath.startsWith("/onboarding") || 
+                       cleanPath.startsWith("/shepherd") ||
+                       cleanPath.startsWith("/pastor-hq");
 
     if (loading && isProtected) {
         return (

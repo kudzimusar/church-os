@@ -19,7 +19,7 @@ function MinistryDashboardContent() {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        router.replace(`${BP}/login/`);
+        router.replace("/login/");
         return;
       }
       setSessionUser(session.user);
@@ -31,7 +31,7 @@ function MinistryDashboardContent() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session?.user) {
-         router.replace(`${BP}/login/`);
+         router.replace("/login/");
       } else if (!sessionUser) {
          setSessionUser(session.user);
          loadMemberships(session.user.id);
@@ -84,7 +84,7 @@ function MinistryDashboardContent() {
           <button 
              onClick={async () => {
                  await supabase.auth.signOut();
-                 router.replace(`${BP}/login/`);
+                 router.replace("/login/");
              }}
              className="w-full h-12 rounded-xl bg-white/5 border border-white/10 font-bold text-white hover:bg-white/10 transition-colors"
           >
@@ -110,7 +110,7 @@ function MinistryDashboardContent() {
             <button 
                 onClick={async () => {
                    await supabase.auth.signOut();
-                   router.replace(`${BP}/login/`);
+                   router.replace("/login/");
                 }}
                 className="text-xs text-white/40 font-bold hover:text-white transition-colors uppercase tracking-widest"
             >

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, ComponentType } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { AdminAuth, AdminRole } from "@/lib/admin-auth";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
@@ -20,6 +20,7 @@ export function withRoleGuard<T extends object>(
 ) {
     return function RoleGuardedComponent(props: T) {
         const router = useRouter();
+        const pathname = usePathname();
         const [status, setStatus] = useState<{
             loading: boolean;
             authorized: boolean;
@@ -34,7 +35,7 @@ export function withRoleGuard<T extends object>(
 
                 if (!session) {
                     // Not logged in
-                    router.replace(`${BP}/login/`);
+                    router.replace("/login/");
                     return;
                 }
 
@@ -43,13 +44,13 @@ export function withRoleGuard<T extends object>(
                 if (!isAuthorized) {
                     // ... (keep existing redirection logic for unauthorized roles)
                     if (['pastor', 'owner', 'super_admin'].includes(session.role)) {
-                        router.replace(`${BP}/pastor-hq/`);
+                        router.replace("/pastor-hq/");
                     } else if (['admin', 'shepherd'].includes(session.role)) {
-                        router.replace(`${BP}/shepherd/dashboard/`);
+                        router.replace("/shepherd/dashboard/");
                     } else if (session.role === 'ministry_leader' || session.role === 'ministry_lead') {
-                        router.replace(`${BP}/shepherd/dashboard/`);
+                        router.replace("/shepherd/dashboard/");
                     } else {
-                        router.replace(`${BP}/dashboard/`);
+                        router.replace("/");
                     }
                     return;
                 }
@@ -58,11 +59,15 @@ export function withRoleGuard<T extends object>(
                 if (['pastor', 'super_admin', 'owner'].includes(session.role)) {
                     const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
                     if (mfaData?.currentLevel !== 'aal2') {
-                        // User is privileged but doesn't have MFA active/verified
-                        // Allow them to proceed to /pastor-hq/settings or a dedicated /enable-mfa page
-                        // For now, we redirect to settings if they try to access main HQ
-                        if (!window.location.pathname.includes('/settings')) {
-                           router.replace(`${BP}/pastor-hq/settings?mfa_required=true`);
+                        
+                        let currentPath = pathname;
+                        while(currentPath.startsWith(BP)) {
+                            currentPath = currentPath.substring(BP.length);
+                        }
+                        if (!currentPath.startsWith('/')) currentPath = '/' + currentPath;
+
+                        if (!currentPath.includes('/settings')) {
+                           router.replace("/pastor-hq/settings?mfa_required=true");
                            return;
                         }
                     }

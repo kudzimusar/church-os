@@ -12,7 +12,7 @@ export default function LegacyLoginPage() {
     const router = useRouter();
     
     useEffect(() => {
-        router.replace(`${BP}/login/`);
+        router.replace("/login/");
     }, [router]);
 
     return (
