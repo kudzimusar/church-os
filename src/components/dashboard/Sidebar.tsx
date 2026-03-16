@@ -15,7 +15,6 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
     { label: "Church Overview", icon: LayoutDashboard, path: "" },
-    { label: "Pastor's Desk", icon: LayoutGrid, path: "/pastors-desk" },
     { label: "Spiritual Analytics", icon: HeartPulse, path: "/spiritual" },
     { label: "Pastoral Care", icon: Shield, path: "/care" },
     { label: "Members", icon: Users, path: "/members" },
@@ -39,10 +38,22 @@ const NAV_ITEMS = [
 
 const BASE_PATH = "/shepherd/dashboard";
 
+import { useEffect } from "react";
+import { AdminAuth, AdminRole } from "@/lib/admin-auth";
+
 export function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
     const [collapsed, setCollapsed] = useState(false);
+    const [role, setRole] = useState<AdminRole | null>(null);
+
+    useEffect(() => {
+        AdminAuth.getAdminSession().then(session => {
+            if (session) setRole(session.role);
+        });
+    }, []);
+
+    const showPastorSwitch = role === 'super_admin' || role === 'owner' || (role as string) === 'pastor';
 
     return (
         <motion.aside
@@ -113,14 +124,23 @@ export function Sidebar() {
                 </div>
             </nav>
 
-            {/* Collapse toggle */}
-            <div className="p-3 border-t border-border flex-shrink-0">
+            {/* Pastor Switch & Collapse */}
+            <div className="p-3 border-t border-border flex-shrink-0 space-y-1">
+                {showPastorSwitch && !collapsed && (
+                    <button
+                        onClick={() => router.push("/pastor-hq/")}
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-violet-600 dark:text-violet-400 hover:bg-violet-500/10 transition-all group"
+                    >
+                        <ShieldCheck className="w-4 h-4" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Pastor&apos;s HQ</span>
+                    </button>
+                )}
                 <button
                     onClick={() => setCollapsed(c => !c)}
                     className="w-full flex items-center justify-center p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
                 >
                     {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                    {!collapsed && <span className="ml-2 text-xs font-medium">Collapse</span>}
+                    {!collapsed && <span className="ml-2 text-xs font-medium">Collapse Sidebar</span>}
                 </button>
             </div>
         </motion.aside>

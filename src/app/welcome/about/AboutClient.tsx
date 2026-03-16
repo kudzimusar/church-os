@@ -49,7 +49,7 @@ export default function AboutClient() {
 
   return (
     <div className="pt-16 min-h-screen">
-      <section className="relative py-32 px-6 flex items-center justify-center overflow-hidden bg-black/40">
+      <section data-section="about-hero" className="relative py-32 px-6 flex items-center justify-center overflow-hidden bg-black/40">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[var(--primary)] blur-[120px] rounded-full opacity-10" />
         </div>
@@ -66,8 +66,9 @@ export default function AboutClient() {
         </div>
       </section>
 
+
       <div className="max-w-screen-xl mx-auto px-6 py-24 space-y-32">
-        <section className="grid lg:grid-cols-2 gap-20 items-start">
+        <section data-section="about-history" className="grid lg:grid-cols-2 gap-20 items-start">
           <div className="space-y-8">
             <div className="space-y-2">
               <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">THE BEGINNING</p>
@@ -123,7 +124,7 @@ export default function AboutClient() {
           </div>
         </section>
 
-        <section className="grid md:grid-cols-2 gap-8">
+        <section data-section="about-vision" className="grid md:grid-cols-2 gap-8">
           <div className="glass rounded-[3rem] p-12 border border-white/10 border-l-4 border-l-[var(--primary)] space-y-6 bg-white/5">
             <p className="text-[10px] font-black tracking-[0.3em] text-[var(--primary)] uppercase">OUR VISION</p>
             <p className="text-3xl font-black italic font-serif leading-tight">"To Make a Difference In Japan and Around the World Together!"</p>
@@ -135,7 +136,7 @@ export default function AboutClient() {
         </section>
 
         {/* Outreach Section */}
-        <section className="space-y-12">
+        <section data-section="about-outreach" className="space-y-12">
           <div className="text-center space-y-4">
             <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">OUR IMPACT</p>
             <h2 className="text-4xl md:text-6xl font-black italic font-serif">Community Outreach</h2>
@@ -159,7 +160,7 @@ export default function AboutClient() {
           </div>
         </section>
 
-        <section className="space-y-12 bg-white/5 rounded-[4rem] p-12 md:p-20 border border-white/5 shadow-2xl">
+        <section data-section="about-beliefs" className="space-y-12 bg-white/5 rounded-[4rem] p-12 md:p-20 border border-white/5 shadow-2xl">
           <div className="text-center space-y-4">
             <p className="text-[10px] font-black tracking-[0.4em] text-[var(--primary)] opacity-60 uppercase">WHAT WE BELIEVE</p>
             <h2 className="text-4xl md:text-6xl font-black italic font-serif">Statement of Faith</h2>
@@ -174,6 +175,7 @@ export default function AboutClient() {
           </div>
         </section>
       </div>
+
     </div>
   );
 }

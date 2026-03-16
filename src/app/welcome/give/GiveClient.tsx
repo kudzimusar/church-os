@@ -35,13 +35,14 @@ export default function GiveClient() {
   return (
     <div className="min-h-screen selection:bg-[var(--primary)] selection:text-white">
       {/* Hero Section */}
-      <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
+      <section data-section="give-hero" className="relative h-[70vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[var(--primary)]/10 blur-[160px] rounded-full" />
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-background/20" />
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-black/20" />
         </div>
 
         <div className="relative z-10 text-center space-y-8 px-6 max-w-4xl mx-auto">
+
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -70,7 +71,7 @@ export default function GiveClient() {
       </section>
       
       {/* Fix 9: Pastor Marcel Video */}
-      <section className="max-w-4xl mx-auto px-6 py-8">
+      <section data-section="give-video" className="max-w-4xl mx-auto px-6 py-8">
         <div
           className="relative w-full rounded-[2.5rem] overflow-hidden
                       border border-white/10 shadow-2xl"
@@ -90,7 +91,8 @@ export default function GiveClient() {
       </section>
 
       {/* Fix 10: Legal Tax Status */}
-      <section className="max-w-3xl mx-auto px-6 py-8 space-y-6">
+      <section data-section="give-legal" className="max-w-3xl mx-auto px-6 py-8 space-y-6">
+
         <p className="text-white/70 text-base leading-relaxed font-medium">
           Japan Kingdom Church operates both as a recognized 501(c)(3)
           nonprofit organization in the USA as{' '}
@@ -141,7 +143,7 @@ export default function GiveClient() {
       <div className="max-w-screen-xl mx-auto px-6 pb-32 space-y-40">
         
         {/* Method 1: Tithe.ly */}
-        <section className="grid lg:grid-cols-2 gap-16 items-center">
+        <section data-section="give-online" className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-8">
             <div className="space-y-4">
                <h2 className="text-4xl font-black flex items-center gap-4">
@@ -204,7 +206,7 @@ export default function GiveClient() {
         </section>
 
         {/* Method 2, 3, 4: USA Digital */}
-        <section className="space-y-16">
+        <section data-section="give-us" className="space-y-16">
           <div className="text-center space-y-4">
              <h2 className="text-4xl font-black italic font-serif">US Options</h2>
              <p className="text-white/40 text-sm font-black tracking-widest uppercase">For our partners in the United States</p>
@@ -308,7 +310,7 @@ export default function GiveClient() {
         </section>
 
         {/* Method 5 & 6: PayPal */}
-        <section className="grid md:grid-cols-2 gap-8">
+        <section data-section="give-paypal" className="grid md:grid-cols-2 gap-8">
            {/* Church PayPal */}
            <div className="glass rounded-[2.5rem] p-12 border border-blue-500/10 bg-blue-500/[0.02] flex flex-col items-center text-center space-y-6">
               <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
@@ -335,7 +337,7 @@ export default function GiveClient() {
         </section>
 
         {/* Method 7: MUFG Japan */}
-        <section className="relative overflow-hidden glass rounded-[4rem] border border-white/5 bg-white/[0.02]">
+        <section data-section="give-domestic" className="relative overflow-hidden glass rounded-[4rem] border border-white/5 bg-white/[0.02]">
            <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/5 blur-[120px] rounded-full -mr-48 -mt-48" />
            <div className="p-12 md:p-20 relative z-10 grid lg:grid-cols-5 gap-16 items-center">
               <div className="lg:col-span-2 space-y-8">
@@ -374,7 +376,7 @@ export default function GiveClient() {
         </section>
 
         {/* Impact Grid */}
-        <section className="space-y-20">
+        <section data-section="give-impact" className="space-y-20">
           <div className="text-center space-y-4">
              <h2 className="text-4xl md:text-6xl font-black italic font-serif">Your Impact</h2>
              <p className="text-white/40 text-sm font-black tracking-widest uppercase">Where your generosity goes</p>
@@ -396,7 +398,7 @@ export default function GiveClient() {
         </section>
 
         {/* Monthly Partner */}
-        <section className="relative">
+        <section data-section="give-partner" className="relative">
            <div className="absolute inset-0 bg-gradient-to-r from-[var(--primary)] to-indigo-600 rounded-[4rem] blur-[100px] opacity-10" />
            <div className="relative glass rounded-[4rem] border border-white/10 bg-gradient-to-br from-white/10 to-transparent p-12 md:p-24 text-center space-y-10 overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
@@ -416,6 +418,7 @@ export default function GiveClient() {
         </section>
 
       </div>
+
     </div>
   );
 }

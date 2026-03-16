@@ -62,9 +62,13 @@ export function PublicThemeWrapper({
   border-color: rgba(0,0,0,0.06) !important;
   box-shadow: 0 2px 24px rgba(27,58,107,0.08) !important;
 }
-.jkc-light nav a { color: #1b3a6b !important; font-weight: 900; }
+.jkc-light nav a, 
+.jkc-light nav [class*="text-white"] { color: #1b3a6b !important; font-weight: 900; }
 .jkc-light nav a:hover { color: #f5a623 !important; }
 .jkc-light nav button:not([aria-label]) { color: #1b3a6b !important; }
+.jkc-light nav div[class*="glass"] { border-color: rgba(27,58,107,0.2) !important; }
+.jkc-light nav span[class*="text-white"] { color: #1b3a6b !important; }
+
 
 /* Global text */
 .jkc-light h1, .jkc-light h2, .jkc-light h3 { color: #1b3a6b !important; }
@@ -82,6 +86,39 @@ export function PublicThemeWrapper({
 .jkc-light [class*="text-white\\/30"],
 .jkc-light [class*="text-white\\/20"] { color: #64748b !important; }
 
+/* ── DARK ISLANDS (Stay dark in light mode) ── */
+.jkc-light [data-section="give-video"],
+.jkc-light [data-section="give-partner"],
+.jkc-light [data-section="testimonies"],
+.jkc-light [data-section="schedule"],
+.jkc-light footer {
+    color: white !important;
+}
+
+.jkc-light [data-section="give-video"] *,
+.jkc-light [data-section="give-partner"] *,
+.jkc-light [data-section="testimonies"] *,
+.jkc-light [data-section="schedule"] *,
+.jkc-light footer * {
+    color: inherit !important;
+}
+
+.jkc-light [data-section="give-video"] p,
+.jkc-light [data-section="give-partner"] p,
+.jkc-light [data-section="testimonies"] p,
+.jkc-light [data-section="schedule"] p,
+.jkc-light footer p {
+    color: rgba(255,255,255,0.7) !important;
+}
+
+.jkc-light [data-section="give-video"] h1, .jkc-light [data-section="give-video"] h2, .jkc-light [data-section="give-video"] h3,
+.jkc-light [data-section="give-partner"] h1, .jkc-light [data-section="give-partner"] h2, .jkc-light [data-section="give-partner"] h3,
+.jkc-light [data-section="testimonies"] h1, .jkc-light [data-section="testimonies"] h2, .jkc-light [data-section="testimonies"] h3,
+.jkc-light [data-section="schedule"] h1, .jkc-light [data-section="schedule"] h2, .jkc-light [data-section="schedule"] h3,
+.jkc-light footer h1, .jkc-light footer h2, .jkc-light footer h3, .jkc-light footer h4 {
+    color: white !important;
+}
+
 /* Primary always navy blue */
 .jkc-light [class*="text-[var(--primary)]"] { color: #1b3a6b !important; }
 .jkc-light [class*="bg-[var(--primary)]"] { background: #1b3a6b !important; }
@@ -92,16 +129,24 @@ export function PublicThemeWrapper({
 .jkc-light [class*="border-white\\/20"] { border-color: rgba(27,58,107,0.15) !important; }
 
 /* Backgrounds */
-.jkc-light [class*="bg-black\\/"] { background: rgba(255,255,255,0.8) !important; }
+  .jkc-light [class*="bg-black\\/20"],
+  .jkc-light [class*="bg-black\\/30"] {
+    background: rgba(27,58,107,0.04) !important;
+  }
+  /* Do NOT override bg-black/40, bg-black/50, bg-black/60 
+     as these are used for overlays on dark sections */
 .jkc-light [class*="bg-white\\/5"] { background: rgba(27,58,107,0.04) !important; }
 .jkc-light [class*="bg-white\\/10"] { background: rgba(27,58,107,0.06) !important; }
 
-/* Glass cards */
+/* Glass cards - refined for light mode */
 .jkc-light .glass,
 .jkc-light [class*="glass-card"] {
-  background: rgba(255,255,255,0.9) !important;
-  border-color: rgba(27,58,107,0.1) !important;
-  box-shadow: 0 4px 32px rgba(27,58,107,0.08) !important;
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(16px) !important;
+  border-color: rgba(27, 58, 107, 0.08) !important;
+  box-shadow: 
+    0 4px 6px -1px rgba(27, 58, 107, 0.05),
+    0 10px 15px -3px rgba(27, 58, 107, 0.1) !important;
 }
 
 /* Inputs */
@@ -121,17 +166,102 @@ export function PublicThemeWrapper({
   color: #1b3a6b !important;
 }
 
+/* Hero — always keeps dark overlay regardless of theme */
+.jkc-light section[class*="min-h-screen"]:not([data-section]),
+.jkc-light [data-section="hero"] { 
+    background: none !important; 
+}
+.jkc-light section[class*="min-h-screen"]:not([data-section]) [class*="text-white"],
+.jkc-light [data-section="hero"] [class*="text-white"] { 
+    color: white !important; 
+}
+.jkc-light section[class*="min-h-screen"]:not([data-section]) p,
+.jkc-light [data-section="hero"] p { 
+    color: rgba(255,255,255,0.7) !important; 
+}
+
 /* ── SECTION PERSONALITIES ── */
+
+/* Give Page - Hero */
+.jkc-light [data-section="give-hero"] {
+    background: linear-gradient(180deg, #fff9f0 0%, #fef8ec 100%) !important;
+}
+.jkc-light [data-section="give-hero"] h1,
+.jkc-light [data-section="give-hero"] p,
+.jkc-light [data-section="give-hero"] span { color: #1b3a6b !important; }
+.jkc-light [data-section="give-hero"] [class*="text-[var(--primary)]"] { color: #f5a623 !important; }
+
+/* Give Page - Video (Dark Island) */
+.jkc-light [data-section="give-video"] {
+    background: #0d1b2e !important;
+}
+
+/* Give Page - Legal */
+.jkc-light [data-section="give-legal"] {
+    background: white !important;
+}
+
+/* Give Page - Online */
+.jkc-light [data-section="give-online"] {
+    background: white !important;
+}
+
+/* Give Page - US Options */
+.jkc-light [data-section="give-us"] {
+    background: #fbf9f4 !important;
+}
+
+/* Give Page - Domestic (MUFG) */
+.jkc-light [data-section="give-domestic"] {
+    background: #fffcfc !important;
+}
+.jkc-light [data-section="give-domestic"] h2 { color: #991b1b !important; }
+
+/* Give Page - Impact */
+.jkc-light [data-section="give-impact"] {
+    background: white !important;
+}
+
+/* Give Page - Partner (Dark Island) */
+.jkc-light [data-section="give-partner"] {
+    background: linear-gradient(135deg, #1b3a6b 0%, #1e40af 100%) !important;
+}
+.jkc-light [data-section="give-partner"] span { color: #f5a623 !important; }
+
+/* About Page - Hero (Light/Cream) */
+.jkc-light [data-section="about-hero"] {
+    background: #fff9f0 !important;
+}
+.jkc-light [data-section="about-hero"] h1,
+.jkc-light [data-section="about-hero"] p,
+.jkc-light [data-section="about-hero"] span { color: #1b3a6b !important; }
+.jkc-light [data-section="about-hero"] .bg-black\/40 { background: none !important; }
+
+/* About Page - History */
+.jkc-light [data-section="about-history"] {
+    background: #fef8ec !important;
+}
+
+/* About Page - Vision/Mission */
+.jkc-light [data-section="about-vision"] {
+    background: white !important;
+}
+
+/* About Page - Outreach */
+.jkc-light [data-section="about-outreach"] {
+    background: #fdfaf3 !important;
+}
+
+/* About Page - Beliefs */
+.jkc-light [data-section="about-beliefs"] {
+    background: white !important;
+}
 
 /* MissionStrip — full gold */
 .jkc-light [data-section="mission"] {
   background: #f5a623 !important;
-  color: #1b3a6b !important;
 }
-.jkc-light [data-section="mission"] p {
-  color: #1b3a6b !important;
-  opacity: 0.95;
-}
+.jkc-light [data-section="mission"] p,
 .jkc-light [data-section="mission"] span {
   color: #1b3a6b !important;
 }
@@ -145,63 +275,23 @@ export function PublicThemeWrapper({
 .jkc-light [data-section="testimonies"] {
   background: #1b3a6b !important;
 }
-.jkc-light [data-section="testimonies"] h2,
-.jkc-light [data-section="testimonies"] h3,
-.jkc-light [data-section="testimonies"] p,
-.jkc-light [data-section="testimonies"] a,
-.jkc-light [data-section="testimonies"] [class*="text-white"] {
-  color: white !important;
-}
-.jkc-light [data-section="testimonies"] [class*="text-[var(--primary)]"] {
-  color: #f5a623 !important;
-}
-.jkc-light [data-section="testimonies"] [class*="bg-white\\/5"],
-.jkc-light [data-section="testimonies"] [class*="border-white\\/10"] {
-  background: rgba(255,255,255,0.08) !important;
-  border-color: rgba(255,255,255,0.15) !important;
-}
 
 /* MinistriesSection — warm gold band */
 .jkc-light [data-section="ministries"] {
   background: linear-gradient(160deg, #fef3c7 0%, #fde68a 100%) !important;
-  border-color: rgba(245,158,11,0.2) !important;
 }
 .jkc-light [data-section="ministries"] h2 { color: #92400e !important; }
 .jkc-light [data-section="ministries"] h3 { color: #1b3a6b !important; }
 .jkc-light [data-section="ministries"] p { color: #44403c !important; }
-.jkc-light [data-section="ministries"] [class*="bg-white\\/5"],
-.jkc-light [data-section="ministries"] [class*="bg-white\\/"] {
-  background: rgba(255,255,255,0.75) !important;
-  border-color: rgba(245,158,11,0.25) !important;
-}
-.jkc-light [data-section="ministries"] [class*="text-[var(--primary)]"] {
-  color: #92400e !important;
-}
 
 /* ServiceSchedule — navy full-bleed */
 .jkc-light [data-section="schedule"] {
   background: #1b3a6b !important;
 }
-.jkc-light [data-section="schedule"] h2,
-.jkc-light [data-section="schedule"] p,
-.jkc-light [data-section="schedule"] [class*="text-white"] { color: white !important; }
-.jkc-light [data-section="schedule"] [class*="text-[var(--primary)]"] { color: #f5a623 !important; }
-.jkc-light [data-section="schedule"] [class*="glass"],
-.jkc-light [data-section="schedule"] [class*="rounded"] {
-  background: rgba(255,255,255,0.1) !important;
-  border-color: rgba(255,255,255,0.2) !important;
-}
-.jkc-light [data-section="schedule"] a {
-  color: white !important;
-  background: #f5a623 !important;
-}
 
 /* DirectionsSection — clean cream */
 .jkc-light [data-section="directions"] {
   background: #f8f6f0 !important;
-}
-.jkc-light [data-section="directions"] [class*="border-white\\/10"] {
-  border-color: rgba(27,58,107,0.12) !important;
 }
 
 /* ConnectSection — gold tint */
@@ -212,39 +302,29 @@ export function PublicThemeWrapper({
 /* NewHere cards */
 .jkc-light [data-card="visitor"] {
   background: linear-gradient(135deg, #1b3a6b 0%, #1e4080 100%) !important;
-  border-color: #1b3a6b !important;
 }
-.jkc-light [data-card="visitor"] h2,
-.jkc-light [data-card="visitor"] p { color: white !important; }
 .jkc-light [data-card="member"] {
   background: linear-gradient(135deg, #f5a623 0%, #e8940a 100%) !important;
-  border-color: #f5a623 !important;
 }
 .jkc-light [data-card="member"] h2,
 .jkc-light [data-card="member"] p { color: #1b3a6b !important; }
-.jkc-light [data-card="member"] a {
-  border-color: rgba(27,58,107,0.4) !important;
-  color: #1b3a6b !important;
-}
 
 /* Footer — navy */
 .jkc-light footer {
   background: #1b3a6b !important;
-  color: white !important;
 }
-.jkc-light footer p, .jkc-light footer a,
-.jkc-light footer h4, .jkc-light footer h5,
-.jkc-light footer span,
-.jkc-light footer [class*="text-white"] { color: rgba(255,255,255,0.75) !important; }
-.jkc-light footer a:hover { color: #f5a623 !important; }
-.jkc-light footer [class*="text-[var(--primary)]"] { color: #f5a623 !important; }
-.jkc-light footer [class*="border-white\\/5"],
-.jkc-light footer [class*="border-white\\/10"] { border-color: rgba(255,255,255,0.1) !important; }
 
-/* Hero — always keeps dark overlay regardless of theme */
-.jkc-light section[class*="min-h-screen"] { background: none !important; }
-.jkc-light section[class*="min-h-screen"] [class*="text-white"] { color: white !important; }
-.jkc-light section[class*="min-h-screen"] p { color: rgba(255,255,255,0.7) !important; }
+/* Footer always stays navy — cannot be overridden */
+.jkc-light footer,
+.jkc-light footer * {
+  background-color: transparent !important;
+}
+.jkc-light footer {
+  background-color: #1b3a6b !important;
+}
+
+
+
 `}</style>
 
       {/* Theme toggle */}

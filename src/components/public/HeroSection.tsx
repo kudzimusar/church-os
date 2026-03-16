@@ -41,7 +41,8 @@ export default function HeroSection() {
       }}
     >
       {/* Dark overlay for readability */}
-      <div className="absolute inset-0 bg-black/60 z-0" />
+      <div className="absolute inset-0 z-0" 
+           style={{ background: 'rgba(0,0,0,0.55)' }} />
 
       {/* Background Orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
@@ -96,7 +97,14 @@ export default function HeroSection() {
             Building a Strong Christian Community that represents Christ to Japanese Society
           </p>
 
-          <div className="inline-flex glass-card rounded-full px-8 py-3 text-[10px] md:text-xs font-black tracking-widest text-white/80 border border-white/10 mt-8 mb-2 backdrop-blur-md bg-white/5">
+          <div className="inline-flex rounded-full px-8 py-3 text-[10px] 
+          md:text-xs font-black tracking-widest mt-8 mb-2"
+          style={{ 
+            background: 'rgba(255,255,255,0.15)', 
+            border: '1px solid rgba(255,255,255,0.3)',
+            color: 'rgba(255,255,255,0.9)',
+            backdropFilter: 'blur(12px)'
+          }}>
             SUNDAYS · PRAYER 9:30AM · SERVICE 10:30AM JST
           </div>
 
@@ -111,7 +119,13 @@ export default function HeroSection() {
               href="https://youtube.com/japankingdomchurch" 
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto border border-white/20 text-white font-black px-10 py-5 rounded-full text-xs tracking-[0.2em] hover:bg-white/5 hover:border-white/40 active:scale-95 transition-all text-center"
+              className="w-full sm:w-auto font-black px-10 py-5 rounded-full 
+              text-xs tracking-[0.2em] active:scale-95 transition-all 
+              text-center"
+              style={{
+                border: '1px solid rgba(255,255,255,0.4)',
+                color: 'white'
+              }}
             >
               WATCH LIVE
             </a>

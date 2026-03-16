@@ -7,11 +7,12 @@
 import { supabase } from './supabase';
 import { basePath as BP } from './utils';
 
-export const ADMIN_ROLES = ['super_admin', 'owner', 'shepherd', 'admin', 'ministry_lead', 'ministry_leader'] as const;
+export const ADMIN_ROLES = ['super_admin', 'pastor', 'owner', 'shepherd', 'admin', 'ministry_lead', 'ministry_leader'] as const;
 export type AdminRole = typeof ADMIN_ROLES[number];
 
 export const ROLE_HIERARCHY: Record<AdminRole, number> = {
     super_admin: 100,
+    pastor: 100,
     owner: 90,
     shepherd: 80,
     admin: 70,
