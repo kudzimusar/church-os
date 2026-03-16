@@ -21,24 +21,26 @@ export default function UnifiedLoginPage() {
     const [error, setError] = useState<string | null>(null);
     const [checkingSession, setCheckingSession] = useState(true);
 
-    const performRedirection = (role: string) => {
+    const performRedirection = (role: string, skipMemberRedirect: boolean = false) => {
         if (['pastor', 'owner', 'super_admin'].includes(role)) {
             router.replace(`${BP}/pastor-hq/`);
-        } else if (['admin', 'shepherd'].includes(role)) {
+        } else if (['admin', 'shepherd', 'ministry_leader', 'ministry_lead'].includes(role)) {
             router.replace(`${BP}/shepherd/dashboard/`);
-        } else if (['ministry_leader', 'ministry_lead'].includes(role)) {
-            // Future: fetch the specific ministry slug to redirect to /ministry-dashboard/[slug]
-            // For now, redirect to the general admin view or a hub
-            router.replace(`${BP}/shepherd/dashboard/`);
-        } else {
+        } else if (role === 'member' && !skipMemberRedirect) {
             router.replace(`${BP}/`);
         }
+        // If role is member and skipMemberRedirect is true, we stay on the login page
     };
 
     useEffect(() => {
         AdminAuth.getAdminSession().then(session => {
             if (session) {
-                performRedirection(session.role);
+                // If they are already a leader, send them to their dashboard
+                // If they are a member, stay here so they can log in as admin if needed
+                performRedirection(session.role, true);
+                if (session.role === 'member') {
+                    setCheckingSession(false);
+                }
             } else {
                 setCheckingSession(false);
             }

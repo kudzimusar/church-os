@@ -12,7 +12,7 @@ ALTER TABLE public.org_members ADD COLUMN IF NOT EXISTS invited_by uuid REFERENC
 -- Since we are in a static export, we need a way for a "non-user" to verify a token.
 -- SECURITY: This view only exposes the role and token.
 CREATE OR REPLACE VIEW public.vw_invitation_check AS
-SELECT invitation_token, role, org_id, invited_by
+SELECT invitation_token, role, org_id, invited_by, email
 FROM public.org_members
 WHERE invitation_status = 'pending';
 

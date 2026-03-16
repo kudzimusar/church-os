@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { basePath as BP } from "@/lib/utils";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
     const router = useRouter();
