@@ -83,6 +83,9 @@ export default function MinistriesSection() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {ministries.map((m, idx) => {
+            const isOutreach = ['toyoko-youth-outreach', 'akiramenai', 'food-pantry', 'street-evangelism'].includes(m.slug);
+            const rootPath = isOutreach ? '/welcome/outreach' : '/welcome/ministries';
+            
             const slugMatch = MINISTRY_IMAGES[m.slug];
             const nameMatch = Object.entries(MINISTRY_IMAGES).find(([k]) => m.name.toLowerCase().includes(k))?.[1];
             const imageUrl = (m as any).image_url || slugMatch || nameMatch || '/jkc-devotion-app/images/hero-background.jpg';
@@ -90,7 +93,7 @@ export default function MinistriesSection() {
             return (
               <Link
                 key={m.id || m.slug}
-                href={`/welcome/ministries/${m.slug}`}
+                href={`${rootPath}/${m.slug}`}
                 className="group relative flex flex-col justify-end min-h-[220px] transition-all duration-300 overflow-hidden rounded-[2rem] border shadow-sm hover:-translate-y-2"
                 style={{
                   borderColor: 'var(--border)',
