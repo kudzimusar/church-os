@@ -138,7 +138,7 @@ export default function MinistryClient({ slug }: { slug: string }) {
                   We believe in building a strong foundation of faith and providing a space where 
                   everyone can grow together, worship, and serve Japan according to their unique divine gifts.
                </p>
-               {ministry.description.includes('Led by') || (ministry as any).leader_name ? (
+               {ministry.description?.includes('Led by') || (ministry as any).leader_name ? (
                  <div className="pt-8 p-8 rounded-3xl border border-dashed border-[var(--border)]" style={{ background: 'var(--section-alt)' }}>
                     <p className="text-[10px] font-black tracking-widest text-[var(--jkc-gold)] uppercase mb-2">MINISTRY VISION</p>
                     <p className="text-xl font-bold italic" style={{ color: 'var(--foreground)' }}>
