@@ -240,7 +240,7 @@ export default function ProfileHub() {
                         .then(({ data }) => setChildren(data || []));
 
                     // Merchandise Orders
-                    ShopService.getOrders(currentOrgId, userId)
+                    ShopService.getUserOrders(userId)
                         .then(setMerchandiseOrders);
 
                     // Analytics & Global Metrics
