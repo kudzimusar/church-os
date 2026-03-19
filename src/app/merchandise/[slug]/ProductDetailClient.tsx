@@ -34,16 +34,41 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState(0);
     const [scrolled, setScrolled] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
+    const [wishlist, setWishlist] = useState<string[]>([]);
 
     const ORG_ID = "fa547adf-f820-412f-9458-d6bade11517d";
 
     useEffect(() => {
         if (slug) loadProduct();
         
+        // Load wishlist from localStorage
+        const stored = JSON.parse(localStorage.getItem("merchandise_wishlist") || "[]");
+        setWishlist(stored);
+        if (product && stored.includes(product.id)) setIsLiked(true);
+        
         const handleScroll = () => setScrolled(window.scrollY > 400);
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
-    }, [slug]);
+    }, [slug, product?.id]);
+
+    const toggleLike = () => {
+        if (!product) return;
+        const newIsLiked = !isLiked;
+        setIsLiked(newIsLiked);
+        
+        let newWishlist = wishlist;
+        if (newIsLiked) {
+            newWishlist = [...wishlist, product.id];
+        } else {
+            newWishlist = wishlist.filter(id => id !== product.id);
+        }
+        
+        setWishlist(newWishlist);
+        localStorage.setItem("merchandise_wishlist", JSON.stringify(newWishlist));
+        
+        if (newIsLiked) toast.success("Added to your Kingdom Wishlist");
+    };
 
     async function loadProduct() {
         try {
@@ -53,9 +78,10 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                 // Ensure data is rich for our UI
                 const enriched: Merchandise = {
                     ...data,
-                    subtitle: data.subtitle || "The Kingdom AWAKENING by Pastor Marcel",
-                    features: data.features || ["Foundational protocols for supernatural living", "Step-by-step activation guides", "Luxury hardback with gold foil accents", "Global Kingdom Perspectives"],
-                    specifications: data.specifications || { "Format": "Hardcover", "Language": "English/Japanese", "Publisher": "JKC Press", "Edition": "2026 Collector's Edition" }
+                    subtitle: data.subtitle || "Kingdom Essentials for the Prophetic Age",
+                    features: data.features || ["Divine protection and spiritual awareness", "Premium quality materials with symbolic significance", "Designed for the modern kingdom citizen", "Equipped for supernatural daily living"],
+                    specifications: data.specifications || { "Material": "Prophetic Grade", "Origin": "Kingdom Design Lab", "Version": "2026 Release", "Quality": "Premium" },
+                    long_description: data.long_description || data.description || "This exclusive JKC Store product is designed to equip you for the vision. Every item in our collection is carefully curated to reflect the glory and excellence of the Kingdom of God, serving as a reminder of your divine purpose and identity."
                 };
                 setProduct(enriched);
             }
@@ -110,7 +136,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
         <div className="min-h-screen bg-white text-foreground flex flex-col">
             <PublicNav />
             
-            <main className="flex-1 pt-24 md:pt-32 pb-20">
+            <main className="flex-1 pt-20 md:pt-24 pb-20">
                 <div className="container mx-auto max-w-7xl px-4">
                     {/* Back Button */}
                     <Link href="/merchandise" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all mb-10 group">
@@ -120,7 +146,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 xxl:gap-24 items-start">
                         {/* 1. IMAGE GALLERY */}
                         <div className="space-y-6">
-                            <div className="relative aspect-square md:aspect-[4/5] bg-[#f8f9fa] rounded-[3rem] overflow-hidden border border-border/50 shadow-sm group">
+                            <div className="relative aspect-square md:aspect-[4/5] bg-[#f8f9fa] rounded-[3rem] overflow-hidden border border-border/50 shadow-sm group mx-auto md:ml-0 max-h-[500px] flex items-center justify-center">
                                 <AnimatePresence mode="wait">
                                     <motion.img 
                                         key={selectedImage}
@@ -133,9 +159,13 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]" 
                                     />
                                 </AnimatePresence>
-                                <div className="absolute top-8 right-8">
-                                    <Button size="icon" className="h-12 w-12 rounded-full bg-white text-black hover:bg-white/90 shadow-xl border-none">
-                                        <Heart size={20} />
+                                <div className="absolute top-6 right-6">
+                                    <Button 
+                                        size="icon" 
+                                        onClick={toggleLike}
+                                        className={`h-11 w-11 rounded-full shadow-xl border-none transition-all active:scale-90 ${isLiked ? 'bg-red-500 text-white' : 'bg-white text-black hover:bg-white/90'}`}
+                                    >
+                                        <Heart size={20} fill={isLiked ? "currentColor" : "none"} />
                                     </Button>
                                 </div>
                             </div>
@@ -157,16 +187,16 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                         </div>
 
                         {/* 2. PRODUCT INFO */}
-                        <div className="space-y-10">
+                        <div className="space-y-6">
                             <div className="space-y-4">
                                 <Badge className="bg-primary/10 text-primary border-none text-[8px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full mb-2">
                                     {product.category?.name || "Global Publication"}
                                 </Badge>
                                 <div>
-                                    <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight leading-none mb-3">
+                                    <h1 className="text-2xl md:text-4xl font-black uppercase tracking-tight leading-none mb-2">
                                         {product.name}
                                     </h1>
-                                    <p className="text-lg md:text-xl text-muted-foreground font-medium uppercase tracking-[0.05em] leading-relaxed">
+                                    <p className="text-sm md:text-base text-muted-foreground font-medium uppercase tracking-[0.05em] leading-relaxed">
                                         {product.subtitle}
                                     </p>
                                 </div>
@@ -181,10 +211,10 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
 
                             <div className="bg-[#fcfcff] border border-border/50 rounded-[2.5rem] p-8 md:p-10 space-y-8 shadow-sm">
                                 <div className="flex items-baseline gap-4">
-                                    <div className="text-5xl font-black text-foreground">
+                                    <div className="text-4xl font-black text-foreground">
                                         {getCurrencySymbol(ORG_ID)}{product.price.toLocaleString()}
                                     </div>
-                                    <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">(税込 / TAX INCLUDED)</span>
+                                    <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">(税込 / TAX INCLUDED)</span>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -247,7 +277,11 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                                 <AccordionItem value="narrative" className="border-border">
                                     <AccordionTrigger className="text-[10px] font-black uppercase tracking-widest py-6">The Narrative</AccordionTrigger>
                                     <AccordionContent className="text-muted-foreground leading-relaxed font-medium pt-2 pb-8">
-                                        {product.long_description}
+                                        <div className="prose prose-sm max-w-none prose-neutral">
+                                            {product.long_description?.split('\n').map((para, i) => (
+                                                <p key={i} className={i > 0 ? "mt-4" : ""}>{para}</p>
+                                            ))}
+                                        </div>
                                     </AccordionContent>
                                 </AccordionItem>
                                 <AccordionItem value="specifications" className="border-border">
@@ -264,19 +298,30 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                                     </AccordionContent>
                                 </AccordionItem>
                                 <AccordionItem value="faqs" className="border-border">
-                                    <AccordionTrigger className="text-[10px] font-black uppercase tracking-widest py-6">Divine Assistance (FAQs)</AccordionTrigger>
+                                    <AccordionTrigger className="text-[10px] font-black uppercase tracking-widest py-6">FAQs</AccordionTrigger>
                                     <AccordionContent className="pt-2 pb-8 space-y-4">
                                         <div className="space-y-4">
-                                            <p className="text-xs font-black uppercase tracking-widest text-primary mb-2">Frequently Asked</p>
+                                            <p className="text-xs font-black uppercase tracking-widest text-primary mb-2">Frequently Asked Questions</p>
                                             <div className="space-y-6">
-                                                <div>
-                                                    <p className="text-sm font-black mb-1 uppercase">Global Shipping Reach?</p>
-                                                    <p className="text-xs text-muted-foreground leading-relaxed">We ship to over 180 nations worldwide using premium logistics partners.</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-black mb-1 uppercase">Kingdom Gift Wrapping?</p>
-                                                    <p className="text-xs text-muted-foreground leading-relaxed">Yes, elegant gift wrapping with a personalized note from the ministry is available at checkout.</p>
-                                                </div>
+                                                {product.faqs && product.faqs.length > 0 ? (
+                                                    product.faqs.map((faq, i) => (
+                                                        <div key={i}>
+                                                            <p className="text-sm font-black mb-1 uppercase">{faq.question}</p>
+                                                            <p className="text-xs text-muted-foreground leading-relaxed">{faq.answer}</p>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <>
+                                                        <div>
+                                                            <p className="text-sm font-black mb-1 uppercase">Global Shipping Reach?</p>
+                                                            <p className="text-xs text-muted-foreground leading-relaxed">We ship to over 180 nations worldwide using premium logistics partners.</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-black mb-1 uppercase">Kingdom Gift Wrapping?</p>
+                                                            <p className="text-xs text-muted-foreground leading-relaxed">Yes, elegant gift wrapping with a personalized note from the ministry is available at checkout.</p>
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                     </AccordionContent>

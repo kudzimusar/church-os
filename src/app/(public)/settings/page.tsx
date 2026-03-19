@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TopNav } from "@/components/layout/TopNav";
 import { Auth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import {
@@ -77,7 +76,6 @@ export default function SettingsHub() {
 
     return (
         <div className="min-h-screen bg-[#f8fafc] dark:bg-black overflow-x-hidden pb-20">
-            <TopNav user={user} />
 
             <div className="flex h-[calc(100vh-65px)] max-w-7xl mx-auto">
 

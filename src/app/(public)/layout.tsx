@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Japan Kingdom Church',
     description: 'A Christian community in Tokyo, Japan.',
-    url: 'https://kudzimusar.github.io/jkc-devotion-app/welcome/',
+    url: 'https://kudzimusar.github.io/jkc-devotion-app/',
     siteName: 'Japan Kingdom Church',
   },
 };
@@ -22,7 +22,7 @@ export default function PublicLayout({
   return (
     <PublicThemeWrapper>
       <PublicNav />
-      <main>{children}</main>
+      <main className="flex-1">{children}</main>
       <PublicFooter />
     </PublicThemeWrapper>
   );

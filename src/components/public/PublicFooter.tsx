@@ -28,7 +28,7 @@ export default function PublicFooter() {
 
           {/* Column 1: Brand */}
           <div className="flex flex-col gap-6">
-            <Link href="/welcome">
+            <Link href="/">
               <img
                 src="/jkc-devotion-app/images/logo-horizontal.png"
                 alt="Japan Kingdom Church"
@@ -141,12 +141,12 @@ export default function PublicFooter() {
                 <p className="text-[10px] font-black uppercase tracking-widest m-0" style={{ color: dimText }}>
                   Partners & Links
                 </p>
-                <Link href="/welcome" className="text-sm font-bold flex items-center gap-2 hover:text-[var(--jkc-gold)] transition-colors"
+                <Link href="/" className="text-sm font-bold flex items-center gap-2 hover:text-[var(--jkc-gold)] transition-colors"
                   style={{ color: mutedText }}>
                   <Globe className="w-4 h-4" />
                   JKC Home
                 </Link>
-                <Link href="/" className="text-sm font-bold hover:text-[var(--jkc-gold)] transition-colors" style={{ color: mutedText }}>
+                <Link href="/welcome/devotion" className="text-sm font-bold hover:text-[var(--jkc-gold)] transition-colors" style={{ color: mutedText }}>
                   Internal Login
                 </Link>
               </div>

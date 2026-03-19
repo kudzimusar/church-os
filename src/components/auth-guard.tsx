@@ -11,9 +11,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     const PUBLIC_PATHS = [
-        '/welcome', '/about', '/visit', '/our-pastor',
+        '/', '/welcome', '/about', '/visit', '/our-pastor',
         '/staff', '/give', '/watch', '/contact',
-        '/privacy', '/terms', '/login', '/invite'
+        '/privacy', '/terms', '/login', '/invite',
+        '/merchandise'
     ];
     // Normalize pathname by removing ALL occurrences of base path from the start
     let cleanPath = pathname;

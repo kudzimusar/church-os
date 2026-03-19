@@ -44,12 +44,24 @@ export default function MerchandiseAdminPage() {
         slug: "",
         images: [] as string[],
         features: [] as string[],
-        specifications: {} as Record<string, string>
+        specifications: {} as Record<string, string>,
+        faqs: [] as { question: string; answer: string }[],
+        delivery_options: [] as { name: string; price: number; time: string }[]
     });
+
+    const [shippingName, setShippingName] = useState("");
+    const [shippingPrice, setShippingPrice] = useState(0);
+    const [shippingTime, setShippingTime] = useState("");
+
+    const [faqQuestion, setFaqQuestion] = useState("");
+    const [faqAnswer, setFaqAnswer] = useState("");
+    const [imageInput, setImageInput] = useState("");
 
     const [featureInput, setFeatureInput] = useState("");
     const [specKey, setSpecKey] = useState("");
     const [specVal, setSpecVal] = useState("");
+    const [selectedOrder, setSelectedOrder] = useState<MerchandiseOrder | null>(null);
+    const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
 
     const [newCategory, setNewCategory] = useState({
         name: "",
@@ -114,7 +126,32 @@ export default function MerchandiseAdminPage() {
         setSpecKey("");
         setSpecVal("");
     };
+    const addFAQ = () => {
+        if (!faqQuestion.trim() || !faqAnswer.trim()) return;
+        setNewProduct(prev => ({ 
+            ...prev, 
+            faqs: [...(prev.faqs || []), { question: faqQuestion.trim(), answer: faqAnswer.trim() }] 
+        }));
+        setFaqQuestion("");
+        setFaqAnswer("");
+    };
 
+    const addImage = () => {
+        if (!imageInput.trim()) return;
+        setNewProduct(prev => ({ ...prev, images: [...prev.images, imageInput.trim()] }));
+        setImageInput("");
+    };
+
+    const addShipping = () => {
+        if (!shippingName.trim()) return;
+        setNewProduct(prev => ({ 
+            ...prev, 
+            delivery_options: [...(prev.delivery_options || []), { name: shippingName.trim(), price: shippingPrice, time: shippingTime.trim() }] 
+        }));
+        setShippingName("");
+        setShippingPrice(0);
+        setShippingTime("");
+    };
     async function handleCreateProduct() {
         if (!orgId) return;
         try {
@@ -132,7 +169,8 @@ export default function MerchandiseAdminPage() {
             setNewProduct({ 
                 name: "", subtitle: "", description: "", long_description: "", 
                 price: 0, discount_price: 0, stock_quantity: 0, category_id: "", 
-                status: "published", slug: "", images: [], features: [], specifications: {} 
+                status: "published", slug: "", images: [], features: [], specifications: {},
+                faqs: [], delivery_options: []
             });
         } catch (err) {
             toast.error("Deployment failed.");
@@ -223,9 +261,22 @@ export default function MerchandiseAdminPage() {
                                             <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-1">Narrative (Long Description)</label>
                                             <Textarea placeholder="The story behind the gear..." value={newProduct.long_description} onChange={e => setNewProduct({...newProduct, long_description: e.target.value})} className="rounded-2xl bg-white/5 border-white/10 min-h-[120px]" />
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-1">Primary Image Asset (URL)</label>
-                                            <Input placeholder="https://..." value={newProduct.images[0] || ""} onChange={e => setNewProduct({...newProduct, images: [e.target.value]})} className="h-14 rounded-2xl bg-white/5 border-white/10" />
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-1">Visual Assets (Multi-Image Gallery)</label>
+                                            <div className="flex gap-2">
+                                                <Input placeholder="Image URL..." value={imageInput} onChange={e => setImageInput(e.target.value)} className="h-11 rounded-xl bg-white/5 border-white/10" />
+                                                <Button onClick={addImage} variant="outline" className="h-11 rounded-xl border-white/10">+</Button>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {newProduct.images.map((img, i) => (
+                                                    <div key={i} className="relative group/img">
+                                                        <img src={img} className="w-16 h-16 rounded-xl object-cover border border-white/10" />
+                                                        <button onClick={() => setNewProduct({...newProduct, images: newProduct.images.filter((_, idx) => idx !== i)})} className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                                            <X size={10} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                         
                                         {/* Features List */}
@@ -245,7 +296,7 @@ export default function MerchandiseAdminPage() {
                                         </div>
 
                                         {/* Specs Table */}
-                                        <div className="space-y-3 pt-4">
+                                        <div className="space-y-3 pt-4 border-t border-white/5">
                                             <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-1 text-emerald-400">Technical Specs (JSON)</label>
                                             <div className="flex gap-2">
                                                 <Input placeholder="Key (e.g. Fabric)" value={specKey} onChange={e => setSpecKey(e.target.value)} className="h-11 rounded-xl bg-white/5 border-white/10 w-1/3" />
@@ -257,6 +308,32 @@ export default function MerchandiseAdminPage() {
                                                     <div key={k} className="flex justify-between items-center bg-white/5 p-2 px-4 rounded-xl text-[10px] font-bold">
                                                         <span className="text-white/40 uppercase tracking-widest">{k}</span>
                                                         <span className="text-white">{v}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Shipping Options */}
+                                        <div className="space-y-3 pt-4 border-t border-white/5">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-1 text-blue-400">Logistics (Shipping Options)</label>
+                                            <div className="space-y-2">
+                                                <Input placeholder="Option Name (e.g. Express)" value={shippingName} onChange={e => setShippingName(e.target.value)} className="h-11 rounded-xl bg-white/5 border-white/10 w-full" />
+                                                <div className="flex gap-2">
+                                                    <Input type="number" placeholder="Price" value={shippingPrice} onChange={e => setShippingPrice(parseFloat(e.target.value))} className="h-11 rounded-xl bg-white/5 border-white/10 w-1/3" />
+                                                    <Input placeholder="Est. Time (e.g. 2-3 days)" value={shippingTime} onChange={e => setShippingTime(e.target.value)} className="h-11 rounded-xl bg-white/5 border-white/10 flex-1" />
+                                                    <Button onClick={addShipping} variant="outline" className="h-11 rounded-xl border-white/10">+</Button>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {newProduct.delivery_options?.map((d, i) => (
+                                                    <div key={i} className="bg-white/5 p-3 rounded-xl flex justify-between items-center group/ship">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[9px] font-black text-white uppercase">{d.name} — {getCurrencySymbol(orgId || "")}{d.price}</span>
+                                                            <span className="text-[8px] text-white/40">{d.time}</span>
+                                                        </div>
+                                                        <button onClick={() => setNewProduct({...newProduct, delivery_options: (newProduct.delivery_options || []).filter((_, idx) => idx !== i)})} className="text-white/20 hover:text-red-400 p-1 opacity-0 group-hover/ship:opacity-100 transition-opacity">
+                                                            <Trash2 size={12} />
+                                                        </button>
                                                     </div>
                                                 ))}
                                             </div>
@@ -435,6 +512,16 @@ export default function MerchandiseAdminPage() {
                                                     <td className="px-8 py-6 text-[9px] font-black uppercase text-white/40">
                                                         {new Date(order.created_at).toLocaleDateString()}
                                                     </td>
+                                                    <td className="px-8 py-6 text-right">
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            onClick={() => { setSelectedOrder(order); setIsOrderDetailsOpen(true); }}
+                                                            className="h-10 w-10 text-white/20 hover:text-indigo-400 hover:bg-white/5"
+                                                        >
+                                                            <ChevronRight size={18} />
+                                                        </Button>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -445,31 +532,87 @@ export default function MerchandiseAdminPage() {
                     )}
 
                     {activeTab === "inventory" && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                           <Card className="bg-[#0d1421] border-white/10 rounded-[3rem] p-10 flex flex-col items-center justify-center text-center shadow-xl border-dashed border-2">
-                                <div className="w-20 h-20 bg-indigo-500/10 rounded-[2rem] flex items-center justify-center text-indigo-400 mb-6">
-                                    <Boxes size={40} />
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                           <Card className="lg:col-span-2 bg-[#0d1421] border-white/10 rounded-[3rem] overflow-hidden shadow-xl">
+                                <div className="p-8 border-b border-white/10 flex items-center justify-between">
+                                    <h3 className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
+                                        <Boxes className="text-emerald-400" /> Stock Health Monitor
+                                    </h3>
+                                    <Badge className="bg-emerald-500/10 text-emerald-400 border-none font-black text-[9px] uppercase px-4 py-1">Real-time Sync</Badge>
                                 </div>
-                                <h3 className="text-2xl font-black uppercase tracking-tight mb-4">Inventory Logs Inactive</h3>
-                                <p className="text-white/40 text-sm font-medium leading-relaxed max-w-xs">Detailed historical tracking of stock changes will appear here as orders are synthesized and restock protocols are logged.</p>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead className="bg-white/5">
+                                            <tr>
+                                                <th className="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-white/40">Product</th>
+                                                <th className="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-white/40">Status</th>
+                                                <th className="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-white/40">Quantity</th>
+                                                <th className="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-white/40">Trend</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/10">
+                                            {products.map((p) => (
+                                                <tr key={p.id} className="hover:bg-white/5 transition-all">
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-10 h-10 rounded-xl bg-white/5 overflow-hidden">
+                                                                <img src={p.images?.[0]} className="w-full h-full object-cover" />
+                                                            </div>
+                                                            <span className="font-black text-xs uppercase text-white">{p.name}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <Badge className={`font-black text-[8px] uppercase tracking-widest border-none px-3 py-1 ${
+                                                            p.stock_quantity === 0 ? "bg-red-500/20 text-red-400" :
+                                                            p.stock_quantity < 10 ? "bg-amber-500/20 text-amber-400" :
+                                                            "bg-emerald-500/20 text-emerald-400"
+                                                        }`}>
+                                                            {p.stock_quantity === 0 ? "Exhausted" : p.stock_quantity < 10 ? "Critical" : "Healthy"}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="px-8 py-6 font-mono text-sm font-bold text-white/60">
+                                                        {p.stock_quantity.toString().padStart(3, '0')}
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-1">
+                                                            {Array.from({ length: 12 }).map((_, i) => (
+                                                                <div key={i} className={`w-1 h-4 rounded-full ${i < (p.stock_quantity / 5) ? "bg-indigo-500" : "bg-white/5"}`} />
+                                                            ))}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                            </Card>
                            
-                           <Card className="bg-[#0d1421] border-white/10 rounded-[3rem] p-10 space-y-8">
+                           <Card className="bg-[#0d1421] border-white/10 rounded-[3rem] p-10 space-y-8 h-fit">
                                 <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Inventory Health Thresholds</h4>
                                 <div className="space-y-6">
-                                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                                        <span className="text-white/40">Critical Depletion (Low)</span>
-                                        <span className="text-red-400">10 Units</span>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                                            <span className="text-white/40">Critical Depletion (Low)</span>
+                                            <span className="text-red-400">10 Units</span>
+                                        </div>
+                                        <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                                            <div className="h-full bg-red-500 w-[10%]" />
+                                        </div>
                                     </div>
-                                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                                        <div className="h-full bg-red-500 w-[10%]" />
+
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                                            <span className="text-white/40">Standard Restock Level</span>
+                                            <span className="text-indigo-400">50 Units</span>
+                                        </div>
+                                        <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                                            <div className="h-full bg-indigo-500 w-[50%]" />
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                                        <span className="text-white/40">Standard Restock Level</span>
-                                        <span className="text-indigo-400">50 Units</span>
-                                    </div>
-                                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                                        <div className="h-full bg-indigo-500 w-[50%]" />
+                                    
+                                    <div className="pt-8 border-t border-white/5 space-y-4">
+                                        <p className="text-[8px] font-bold text-white/30 uppercase leading-relaxed uppercase tracking-widest text-center">Protocol: Orders automatically decrement inventory upon verification. Restock must be manually logged for reconciliation.</p>
+                                        <Button variant="outline" className="w-full h-12 rounded-2xl border-white/10 text-[9px] font-black uppercase tracking-widest">Generate Reconciliation Report</Button>
                                     </div>
                                 </div>
                            </Card>
@@ -500,6 +643,81 @@ export default function MerchandiseAdminPage() {
                     )}
                 </motion.div>
             </AnimatePresence>
+
+            {/* Order Details Dialog */}
+            <Dialog open={isOrderDetailsOpen} onOpenChange={setIsOrderDetailsOpen}>
+                <DialogContent className="max-w-2xl bg-[#0d1421] border-white/10 rounded-[2.5rem] p-10 overflow-hidden shadow-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black uppercase tracking-tight">Deployment Intelligence: ORD-{selectedOrder?.id.slice(0, 8)}</DialogTitle>
+                    </DialogHeader>
+                    
+                    {selectedOrder && (
+                        <div className="space-y-8 mt-6">
+                            {/* Consignee Data */}
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-1">
+                                    <p className="text-[8px] font-black uppercase tracking-widest text-white/30">Consignee Name</p>
+                                    <p className="text-sm font-black text-white">{selectedOrder.shipping_address?.full_name || "Unknown Identity"}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-[8px] font-black uppercase tracking-widest text-white/30">Contact Signal</p>
+                                    <p className="text-sm font-black text-white">{selectedOrder.contact_phone || "No Pulse"}</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <p className="text-[8px] font-black uppercase tracking-widest text-white/30">Deployment Coordinates (Address)</p>
+                                <p className="text-sm font-bold text-white/80 leading-relaxed uppercase">
+                                    {selectedOrder.shipping_address?.address_line1}, {selectedOrder.shipping_address?.city}, {selectedOrder.shipping_address?.zip_code}, {selectedOrder.shipping_address?.country}
+                                </p>
+                            </div>
+
+                            {/* Inventory Manifest */}
+                            <div className="space-y-4 pt-6 border-t border-white/5">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-indigo-400">Inventory Manifest</p>
+                                <div className="space-y-3">
+                                    {selectedOrder.items?.map((item, i) => (
+                                        <div key={i} className="flex items-center justify-between bg-white/5 p-4 rounded-2xl">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-black/40 overflow-hidden">
+                                                    <img src={item.product?.images?.[0]} className="w-full h-full object-cover" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-black uppercase text-white">{item.product?.name}</p>
+                                                    <p className="text-[9px] font-bold text-white/20 uppercase">Units: {item.quantity}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-xs font-black text-white">{getCurrencySymbol(orgId || "")}{(item.unit_price * item.quantity).toLocaleString()}</p>
+                                                <p className="text-[8px] font-bold text-white/20 uppercase">EA: {getCurrencySymbol(orgId || "")}{item.unit_price.toLocaleString()}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Logistics Status */}
+                            <div className="flex items-center justify-between pt-6">
+                                <div className="space-y-1">
+                                    <p className="text-[8px] font-black uppercase tracking-widest text-white/30">Total Investment</p>
+                                    <p className="text-2xl font-black text-white">{getCurrencySymbol(orgId || "")}{selectedOrder.total_amount.toLocaleString()}</p>
+                                </div>
+                                <Badge className={`h-10 px-6 rounded-xl font-black text-[10px] uppercase tracking-widest border-none ${
+                                    selectedOrder.status === 'delivered' ? 'bg-emerald-500/20 text-emerald-400' :
+                                    selectedOrder.status === 'pending' ? 'bg-amber-500/20 text-amber-400' :
+                                    'bg-indigo-500/20 text-indigo-400'
+                                }`}>
+                                    {selectedOrder.status}
+                                </Badge>
+                            </div>
+                        </div>
+                    )}
+                    
+                    <DialogFooter className="pt-10">
+                        <Button onClick={() => setIsOrderDetailsOpen(false)} className="w-full h-14 bg-white/5 hover:bg-white/10 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl border border-white/10">Close Logistics View</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

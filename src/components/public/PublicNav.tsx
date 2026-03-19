@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Menu, X, User, Settings, LogOut, BookOpen,
-         ChevronDown } from 'lucide-react';
+         ChevronDown, ShoppingCart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Auth } from '@/lib/auth';
 import { AuthModal } from '@/components/auth/AuthModal';
@@ -19,6 +19,7 @@ export default function PublicNav() {
   const [user, setUser] = useState<any>(null);
   const [scrolled, setScrolled] = useState(false);
   const [isLive, setIsLive] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   // Poll for live events every 60 seconds
   useEffect(() => {
@@ -60,6 +61,22 @@ export default function PublicNav() {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    updateCartCount();
+    window.addEventListener('storage', updateCartCount);
+    // Custom event for same-window updates
+    window.addEventListener('cart-updated', updateCartCount);
+    return () => {
+      window.removeEventListener('storage', updateCartCount);
+      window.removeEventListener('cart-updated', updateCartCount);
+    };
+  }, []);
+
+  const updateCartCount = () => {
+    const cart = JSON.parse(localStorage.getItem('merchandise_cart') || '[]');
+    setCartCount(cart.reduce((acc: number, item: any) => acc + item.quantity, 0));
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -78,7 +95,7 @@ export default function PublicNav() {
     { label: 'ABOUT', href: '/welcome/about' },
     { label: 'GIVE', href: '/welcome/give' },
     { label: 'SHOP', href: '/merchandise' },
-    { label: 'DEVOTION', href: '/' },
+    { label: 'DEVOTION', href: '/welcome/devotion' },
   ];
 
   const LIVE_URL = 'https://www.youtube.com/@JapanKingdomChurch/streams';
@@ -104,7 +121,7 @@ export default function PublicNav() {
         <div className="max-w-screen-xl mx-auto px-6 h-full flex
                         items-center justify-between">
 
-          <Link href="/welcome" className="hover:opacity-80 transition-opacity">
+          <Link href="/" className="hover:opacity-80 transition-opacity">
             <img
               src="/jkc-devotion-app/images/logo-horizontal.png"
               alt="Japan Kingdom Church"
@@ -127,7 +144,6 @@ export default function PublicNav() {
 
           {/* Desktop right — LIVE badge + auth */}
           <div className="hidden md:flex items-center gap-3">
-            {/* LIVE badge — only renders when admin marks an event as live */}
             {isLive && (
               <a
                 href={LIVE_URL}
@@ -143,6 +159,16 @@ export default function PublicNav() {
                 LIVE
               </a>
             )}
+
+            <Link href="/merchandise/cart" className="relative p-2 hover:opacity-80 transition-opacity">
+              <ShoppingCart size={18} style={{ color: 'var(--foreground)' }} />
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 w-4 h-4 bg-[var(--jkc-gold)] text-[var(--jkc-navy)] text-[8px] font-black rounded-full flex items-center justify-center border border-white">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+
             {user ? (
               <div className="relative">
                 <button
@@ -168,7 +194,7 @@ export default function PublicNav() {
                 {isDropdownOpen && (
                   <div className="absolute right-0 top-full mt-2 w-48 backdrop-blur-xl border rounded-2xl overflow-hidden shadow-2xl z-[200]"
                        style={{ background: 'var(--card)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-xl)' }}>
-                    <Link href="/"
+                    <Link href="/welcome/devotion"
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-3 text-xs font-bold hover:bg-[var(--muted)] transition-all"
                       style={{ color: 'var(--foreground)' }}>
@@ -209,11 +235,21 @@ export default function PublicNav() {
           </div>
 
           {/* Mobile hamburger */}
-          <button className="md:hidden p-2 transition-colors"
-            style={{ color: 'var(--foreground)' }}
-            onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <Link href="/merchandise/cart" className="relative p-2">
+              <ShoppingCart size={22} style={{ color: 'var(--foreground)' }} />
+              {cartCount > 0 && (
+                <span className="absolute top-1 right-1 w-4 h-4 bg-[var(--jkc-gold)] text-[var(--jkc-navy)] text-[8px] font-black rounded-full flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+            <button className="p-2 transition-colors"
+              style={{ color: 'var(--foreground)' }}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}>
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </nav>
 

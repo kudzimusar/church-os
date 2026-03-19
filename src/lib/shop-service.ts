@@ -206,10 +206,9 @@ export class ShopService {
 
     richFields.forEach(field => {
       if (field in cleanProduct) {
+        // If it's in metadata but also a top-level field, we keep both for compatibility
+        // but Supabase will use the top-level column if it exists.
         metadata[field] = (cleanProduct as any)[field];
-        // We leave them in the top level if they DO exist as columns (Supabase ignores extras if they don't exist? No, it errors)
-        // So we delete them from the top level to be safe and only have them in metadata
-        delete cleanProduct[field];
       }
     });
 

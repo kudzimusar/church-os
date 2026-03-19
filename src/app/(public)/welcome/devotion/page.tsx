@@ -55,8 +55,6 @@ import { AIService } from "@/lib/ai-service";
 import type { User as AuthUser } from "@/lib/auth";
 import { SoapJournal, SoapEntry, SOAP_EXPLANATION } from "@/lib/soap-journal";
 import { basePath as BP } from "@/lib/utils";
-import { TopNav } from "@/components/layout/TopNav";
-import { AuthModal } from "@/components/auth/AuthModal";
 import { FeedSection } from "@/components/feed/FeedSection";
 
 const FloatingHearts = () => {
@@ -408,39 +406,7 @@ export default function DevotionalApp() {
   return (
     <main className="min-h-screen bg-[var(--background)]">
       {/* Background Orbs */}
-      <div className="fixed inset-0 pointer-events-none opacity-20 overflow-hidden">
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[var(--primary)] blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-indigo-500 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
-      </div>
-
       <FloatingHearts />
-
-      <TopNav user={user} userRole={userRole} stats={stats} devotion={devotion ? { ...devotion, fullScriptureText: activeVerses.map(v => v.text).join(" ") } : null} currentDate={currentDate} onLoginClick={() => setIsAuthModalOpen(true)} />
-
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onSuccess={handleLoginSuccess}
-        onEmailNotConfirmed={() => setEmailNotConfirmed(true)}
-      />
-
-      {/* Email Verification Alert */}
-      <AnimatePresence>
-        {emailNotConfirmed && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="bg-primary/10 border-b border-primary/20 text-center py-2 px-4"
-          >
-            <div className="max-w-2xl mx-auto flex items-center justify-center gap-2 text-xs font-bold text-primary">
-              <AlertCircle className="w-3 h-3" />
-              Please check your email to verify your account.
-              <button className="underline ml-1" onClick={() => setEmailNotConfirmed(false)}>Dismiss</button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <div className="max-w-screen-xl mx-auto px-4 py-8 relative z-10 transition-all duration-500">
         <div className={`max-w-2xl mx-auto space-y-12 pb-32 transition-all duration-500`}>
@@ -740,39 +706,6 @@ export default function DevotionalApp() {
         </SheetContent>
       </Sheet>
 
-      {/* Comprehensive Church Footer */}
-      <footer className="w-full bg-black/20 dark:bg-foreground/5 border-t border-foreground/10 pt-16 pb-32 mt-20 relative z-10 backdrop-blur-xl">
-        <div className="max-w-screen-xl mx-auto px-6 grid md:grid-cols-3 gap-12">
-          <div className="space-y-4">
-            <div className="w-12 h-12 relative opacity-80">
-              <img src={`${BP}/church-logo.png`} alt="JKC Logo" className="w-full h-full object-contain" />
-            </div>
-            <h4 className="font-serif text-2xl font-black">Japan Kingdom Church</h4>
-            <p className="opacity-60 text-sm max-w-sm font-medium leading-relaxed">
-              Equipping believers for transformation, building healthy habits, and raising disciples for Christ in Japan.
-            </p>
-          </div>
-          <div className="space-y-4">
-            <h5 className="font-black uppercase tracking-widest text-xs opacity-40">Contact & Location</h5>
-            <div className="space-y-2 opacity-80 text-sm">
-              <p className="flex items-center gap-2"><MapPin className="w-4 h-4 text-primary" /> Tokyo, Japan</p>
-              <p className="flex items-center gap-2"><Mail className="w-4 h-4 text-primary" /> contact@japankingdomchurch.com</p>
-              <p className="flex items-center gap-2"><Globe className="w-4 h-4 text-primary" /> japankingdomchurch.com</p>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <h5 className="font-black uppercase tracking-widest text-xs opacity-40">Navigation</h5>
-            <div className="space-y-2 text-sm flex flex-col">
-              <Link href="/welcome" className="opacity-80 hover:text-primary transition-colors hover:opacity-100 w-fit font-bold decoration-none">JKC Portal</Link>
-              <Link href="/welcome/about" className="opacity-80 hover:text-primary transition-colors hover:opacity-100 w-fit font-bold decoration-none">About Us</Link>
-              <Link href="/welcome/give" className="opacity-80 hover:text-primary transition-colors hover:opacity-100 w-fit font-bold decoration-none">Give</Link>
-            </div>
-          </div>
-        </div>
-        <div className="max-w-screen-xl mx-auto px-6 mt-16 pt-8 border-t border-foreground/10 text-center opacity-40 text-xs font-bold uppercase tracking-widest">
-          © {new Date().getFullYear()} Japan Kingdom Church. All rights reserved.
-        </div>
-      </footer>
     </main >
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TopNav } from "@/components/layout/TopNav";
 import { Auth } from "@/lib/auth";
 import { supabase, ExtendedProfileService, AnalyticsService } from "@/lib/supabase";
 import { SoapJournal } from "@/lib/soap-journal";
@@ -618,7 +617,6 @@ export default function ProfileHub() {
 
     return (
         <div className="min-h-screen bg-background overflow-x-hidden pb-20 transition-colors duration-500">
-            <TopNav user={user} userRole={userRole} stats={stats} />
 
             <div className="flex h-[calc(100vh-65px)]">
 

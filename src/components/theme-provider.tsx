@@ -21,6 +21,7 @@ export function ThemeProvider({
 } & React.ComponentProps<typeof NextThemesProvider>) {
     const [week, setWeek] = useState(1);
     const { theme, setTheme, resolvedTheme } = useNextTheme();
+    const pathname = usePathname();
     const [mounted, setMounted] = useState(false);
     
     // Bridge next-themes 'theme' to internal 'mode'
@@ -50,12 +51,15 @@ export function ThemeProvider({
         if (!mounted) return;
         const root = window.document.documentElement;
 
-        // Apply week theme class
+        // Apply week theme class ONLY on the devotion page
         root.classList.forEach(className => {
             if (className.startsWith('theme-week-')) root.classList.remove(className);
         });
-        root.classList.add(`theme-week-${week}`);
-    }, [week, mounted]);
+        
+        if (pathname.includes('/welcome/devotion')) {
+            root.classList.add(`theme-week-${week}`);
+        }
+    }, [week, mounted, pathname]);
 
     const toggleMode = () => {
         setTheme(mode === 'light' ? 'dark' : 'light');
