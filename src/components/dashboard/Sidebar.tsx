@@ -7,7 +7,7 @@ import {
     Globe, Calendar, DollarSign, TrendingUp, Sparkles,
     FileText, Settings, ChevronLeft, ChevronRight, Shield,
     MessagesSquare, Flame, LayoutGrid, Megaphone, ShieldCheck,
-    Youtube, Mail, Play
+    Youtube, Mail, Play, ShoppingBag
 } from "lucide-react";
 import { basePath as BP } from "@/lib/utils";
 import { useState } from "react";
@@ -31,6 +31,7 @@ const NAV_ITEMS = [
     { label: "Newsletters", icon: Megaphone, path: "/newsletters" },
     { label: "Sermons", icon: Youtube, path: "/sermons" },
     { label: "Testimonies", icon: Play, path: "/testimonies" },
+    { label: "Merchandise", icon: ShoppingBag, path: "/merchandise" },
     { label: "Website Inquiries", icon: Mail, path: "/inquiries" },
     { label: "Reports & Data", icon: FileText, path: "/reports" },
     { label: "Settings", icon: Settings, path: "/settings" },

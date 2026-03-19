@@ -123,6 +123,7 @@ export default function PublicFooter() {
                 { label: 'Outreach', href: '/welcome/outreach' },
                 { label: 'Ministries', href: '/welcome/ministries' },
                 { label: 'Give', href: '/welcome/give' },
+                { label: 'Shop', href: '/merchandise' },
                 { label: 'About', href: '/welcome/about' },
                 { label: 'Pastor', href: '/welcome/our-pastor' },
                 { label: 'Staff', href: '/welcome/staff' },

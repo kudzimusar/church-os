@@ -1,0 +1,308 @@
+"use client";
+
+import { supabase } from '@/lib/supabase';
+
+export function getCurrencySymbol(org_id: string, country?: string) {
+    // Organizations in Japan get Yen
+    if (org_id === "fa547adf-f820-412f-9458-d6bade11517d") return "¥";
+    if (country === "Japan") return "¥";
+    return "$";
+}
+
+import { PostgrestError } from '@supabase/supabase-js';
+
+export type MerchandiseStatus = 'draft' | 'published' | 'archived';
+
+export interface Merchandise {
+  id: string;
+  org_id: string;
+  category_id: string | null;
+  name: string;
+  subtitle?: string;
+  description: string | null;
+  long_description?: string;
+  price: number;
+  discount_price?: number;
+  stock_quantity: number;
+  images: string[];
+  slug: string;
+  status: MerchandiseStatus;
+  metadata: Record<string, any>;
+  specifications?: Record<string, string>;
+  variants?: any[];
+  features?: string[];
+  delivery_options?: any[];
+  average_rating?: number;
+  review_count?: number;
+  reviews?: any[];
+  faqs?: { question: string; answer: string }[];
+  currency?: string;
+  created_at: string;
+  updated_at: string;
+  category?: {
+    name: string;
+    slug: string;
+  };
+}
+
+export interface MerchandiseCategory {
+  id: string;
+  org_id: string;
+  name: string;
+  description: string | null;
+  slug: string;
+  created_at: string;
+}
+
+export interface OrderItem {
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+}
+
+export interface MerchandiseOrder {
+  id: string;
+  org_id: string;
+  user_id: string | null;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  total_amount: number;
+  payment_intent_id: string | null;
+  payment_status: 'unpaid' | 'paid' | 'refunded';
+  shipping_address: Record<string, any>;
+  contact_email: string | null;
+  contact_phone: string | null;
+  created_at: string;
+  items?: (OrderItem & { product: Merchandise })[];
+}
+
+export class ShopService {
+  /**
+   * Fetch all published products for an organization
+   */
+  static async getProducts(orgId: string) {
+    const { data, error } = await supabase
+      .from('merchandise')
+      .select('*, category:merchandise_categories(name, slug)')
+      .eq('org_id', orgId)
+      .eq('status', 'published')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    
+    // Spread metadata into the main object for convenience
+    return (data || []).map(p => ({
+        ...p,
+        ...(p.metadata || {}),
+        metadata: p.metadata // Keep original
+    })) as Merchandise[];
+  }
+
+  /**
+   * Fetch a single product by slug
+   */
+  static async getProductBySlug(orgId: string, slug: string) {
+    const { data, error } = await supabase
+      .from('merchandise')
+      .select('*, category:merchandise_categories(name, slug)')
+      .eq('org_id', orgId)
+      .eq('slug', slug)
+      .single();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    // Spread metadata into the main object
+    return {
+        ...data,
+        ...(data.metadata || {}),
+        metadata: data.metadata
+    } as Merchandise;
+  }
+
+  /**
+   * Fetch categories for an organization
+   */
+  static async getCategories(orgId: string) {
+    const { data, error } = await supabase
+      .from('merchandise_categories')
+      .select('*')
+      .eq('org_id', orgId)
+      .order('name');
+
+    if (error) throw error;
+    return data as MerchandiseCategory[];
+  }
+
+  /**
+   * Create a new order
+   */
+  static async createOrder(orderData: Partial<MerchandiseOrder>, items: OrderItem[]) {
+    // 1. Create the order
+    const { data: order, error: orderError } = await supabase
+      .from('merchandise_orders')
+      .insert([orderData])
+      .select()
+      .single();
+
+    if (orderError) throw orderError;
+
+    // 2. Add order items
+    const orderItems = items.map(item => ({
+      ...item,
+      order_id: order.id
+    }));
+
+    const { error: itemsError } = await supabase
+      .from('merchandise_order_items')
+      .insert(orderItems);
+
+    if (itemsError) throw itemsError;
+
+    return order;
+  }
+
+  /**
+   * Fetch user orders
+   */
+  static async getUserOrders(userId: string) {
+    const { data, error } = await supabase
+      .from('merchandise_orders')
+      .select('*, items:merchandise_order_items(*, product:merchandise(*))')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data as MerchandiseOrder[];
+  }
+
+  /**
+   * Admin: Get all orders for an organization
+   */
+  static async getOrgOrders(orgId: string) {
+    const { data, error } = await supabase
+      .from('merchandise_orders')
+      .select('*, items:merchandise_order_items(*, product:merchandise(*))')
+      .eq('org_id', orgId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data as MerchandiseOrder[];
+  }
+
+  /**
+   * Admin: Add/Update Product
+   */
+  static async upsertProduct(product: Partial<Merchandise>) {
+    // Known rich fields that might be missing as columns
+    const richFields = [
+      'subtitle', 'long_description', 'features', 
+      'specifications', 'faqs', 'delivery_options', 
+      'average_rating', 'review_count', 'variants',
+      'currency', 'discount_price'
+    ];
+
+    const cleanProduct: any = { ...product };
+    const metadata = { ...(cleanProduct.metadata || {}) };
+
+    richFields.forEach(field => {
+      if (field in cleanProduct) {
+        metadata[field] = (cleanProduct as any)[field];
+        // We leave them in the top level if they DO exist as columns (Supabase ignores extras if they don't exist? No, it errors)
+        // So we delete them from the top level to be safe and only have them in metadata
+        delete cleanProduct[field];
+      }
+    });
+
+    cleanProduct.metadata = metadata;
+
+    const { data, error } = await supabase
+      .from('merchandise')
+      .upsert([cleanProduct])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as Merchandise;
+  }
+
+  /**
+   * Admin: Update inventory
+   */
+  static async logInventoryChange(productId: string, amount: number, reason: string) {
+    // 1. Log the change
+    const { error: logError } = await supabase
+      .from('merchandise_inventory_logs')
+      .insert([{ product_id: productId, change_amount: amount, reason }]);
+
+    if (logError) throw logError;
+
+    // 2. Update the product stock (in a real app, use a RPC or trigger for concurrency)
+    const { data: product, error: fetchError } = await supabase
+      .from('merchandise')
+      .select('stock_quantity')
+      .eq('id', productId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const { error: updateError } = await supabase
+      .from('merchandise')
+      .update({ stock_quantity: product.stock_quantity + amount })
+      .eq('id', productId);
+
+    if (updateError) throw updateError;
+  }
+
+  /**
+   * Admin: Add/Update Category
+   */
+  static async upsertCategory(category: Partial<MerchandiseCategory>) {
+    const { data, error } = await supabase
+      .from('merchandise_categories')
+      .upsert([category])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as MerchandiseCategory;
+  }
+
+  /**
+   * Admin: Delete Product
+   */
+  static async deleteProduct(productId: string) {
+    const { error } = await supabase
+      .from('merchandise')
+      .delete()
+      .eq('id', productId);
+
+    if (error) throw error;
+  }
+
+  /**
+   * Admin: Delete Category
+   */
+  static async deleteCategory(categoryId: string) {
+    const { error } = await supabase
+      .from('merchandise_categories')
+      .delete()
+      .eq('id', categoryId);
+
+    if (error) throw error;
+  }
+
+  /**
+   * Admin: Update Order Status
+   */
+  static async updateOrderStatus(orderId: string, status: MerchandiseOrder['status']) {
+    const { data, error } = await supabase
+      .from('merchandise_orders')
+      .update({ status })
+      .eq('id', orderId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as MerchandiseOrder;
+  }
+}

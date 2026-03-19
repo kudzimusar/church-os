@@ -77,6 +77,7 @@ export default function PublicNav() {
     { label: 'VISIT', href: '/welcome/visit' },
     { label: 'ABOUT', href: '/welcome/about' },
     { label: 'GIVE', href: '/welcome/give' },
+    { label: 'SHOP', href: '/merchandise' },
     { label: 'DEVOTION', href: '/' },
   ];
 

@@ -10,8 +10,9 @@ import {
     MessageCircle, AlertCircle, Plus, Save, Clock,
     Camera, MapPin, Globe, Milestone, Copy, LayoutDashboard, Settings, CheckCircle2, LogOut,
     Briefcase, Music, CalendarCheck, Coins, Activity, ChevronRight, Sparkles, XCircle,
-    TrendingUp, Newspaper, ArrowUpRight, Landmark, Smartphone
+    TrendingUp, Newspaper, ArrowUpRight, Landmark, Smartphone, ShoppingBag, Package
 } from "lucide-react";
+import { ShopService } from "@/lib/shop-service";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -61,7 +62,8 @@ const SIDEBAR_NAV = [
     { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
     { id: 'skills', label: 'Skills & Talents', icon: Briefcase },
     { id: 'community', label: 'Circle Community', icon: Globe },
-    { id: 'giving', label: 'Giving & Tithe', icon: Coins }
+    { id: 'giving', label: 'Giving & Tithe', icon: Coins },
+    { id: 'orders', label: 'Merchandise Orders', icon: ShoppingBag }
 ];
 
 // Options now imported from @/lib/constants
@@ -114,6 +116,7 @@ export default function ProfileHub() {
     const [givingHistory, setGivingHistory] = useState<any[]>([]);
     const [fellowshipGroups, setFellowshipGroups] = useState<any[]>([]);
     const [userGroups, setUserGroups] = useState<any[]>([]);
+    const [merchandiseOrders, setMerchandiseOrders] = useState<any[]>([]);
     const [givingData, setGivingData] = useState({ tithe_status: false, preferred_giving_method: 'Cash' });
     const [notifications, setNotifications] = useState<any[]>([]);
     const [propheticInsight, setPropheticInsight] = useState<any>(null);
@@ -235,6 +238,10 @@ export default function ProfileHub() {
                     // Junior Church
                     supabase.from('guardian_links').select('*').eq('guardian_id', userId)
                         .then(({ data }) => setChildren(data || []));
+
+                    // Merchandise Orders
+                    ShopService.getOrders(currentOrgId, userId)
+                        .then(setMerchandiseOrders);
 
                     // Analytics & Global Metrics
                     const monthAgo = new Date();
@@ -1529,6 +1536,77 @@ export default function ProfileHub() {
                                                         </div>
                                                     )}
                                                 </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ORDERS TAB */}
+                                    {activeTab === 'orders' && (
+                                        <div className="space-y-8 animate-in fade-in duration-300">
+                                            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 space-y-6 transition-colors">
+                                                <div className="flex items-center justify-between pb-4 border-b border-border">
+                                                    <div>
+                                                        <h4 className="font-black text-lg text-foreground flex items-center gap-2">
+                                                            <ShoppingBag className="w-6 h-6 text-primary" /> Purchase History
+                                                        </h4>
+                                                        <p className="text-xs text-muted-foreground">Manage and track your merchandise orders.</p>
+                                                    </div>
+                                                </div>
+
+                                                {merchandiseOrders.length > 0 ? (
+                                                    <div className="grid gap-4">
+                                                        {merchandiseOrders.map(order => (
+                                                            <div key={order.id} className="bg-muted/30 border border-border rounded-3xl p-6 hover:border-primary/20 transition-all group">
+                                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                                    <div className="flex items-center gap-4">
+                                                                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                                                                            <ShoppingBag className="w-6 h-6" />
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="font-bold text-foreground">Order #{order.id.slice(0, 8).toUpperCase()}</p>
+                                                                            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{new Date(order.created_at).toLocaleDateString()}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-6">
+                                                                        <div className="text-right">
+                                                                            <p className="text-sm font-black text-foreground">¥{Number(order.total_amount).toLocaleString()}</p>
+                                                                            <Badge className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md border-0 mt-1 ${
+                                                                                order.status === 'delivered' ? 'bg-emerald-500/10 text-emerald-500' : 
+                                                                                order.status === 'shipped' ? 'bg-blue-500/10 text-blue-500' : 
+                                                                                'bg-amber-500/10 text-amber-500'
+                                                                            }`}>
+                                                                                {order.status}
+                                                                            </Badge>
+                                                                        </div>
+                                                                        <Link href={`/merchandise`} className="p-2 rounded-xl bg-muted border border-border text-muted-foreground group-hover:text-primary group-hover:bg-primary/5 transition-all">
+                                                                            <ChevronRight className="w-5 h-5" />
+                                                                        </Link>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="mt-4 pt-4 border-t border-border/50 flex flex-wrap gap-2">
+                                                                    {order.items?.map((item: any, idx: number) => (
+                                                                        <div key={idx} className="flex items-center gap-2 bg-background/50 border border-border rounded-xl px-3 py-1.5">
+                                                                            <Package className="w-3 h-3 text-muted-foreground" />
+                                                                            <span className="text-[9px] font-bold uppercase truncate max-w-[150px]">{item.product?.name}</span>
+                                                                            <Badge variant="outline" className="h-4 px-1.5 text-[8px] font-black border-primary/20 text-primary">x{item.quantity}</Badge>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center py-20 bg-background/50 rounded-2xl border border-dashed border-border flex flex-col items-center">
+                                                        <ShoppingBag size={40} className="text-muted-foreground/10 mb-4" />
+                                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">No orders found in your history</p>
+                                                        <Link href="/merchandise" className="mt-6">
+                                                            <Button variant="outline" className="h-10 rounded-xl px-6 border-primary/20 text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary/5">
+                                                                Start Shopping
+                                                            </Button>
+                                                        </Link>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     )}
