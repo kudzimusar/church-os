@@ -1,6 +1,6 @@
 "use client";
 
-import { usePastorCtx } from "./layout";
+import { usePastorCtx } from "./pastor-context";
 import { useEffect, useState } from "react";
 import { 
     Users, TrendingUp, DollarSign, Activity, 

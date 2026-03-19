@@ -9,21 +9,7 @@ import { toast } from "sonner";
 import { ThemeProvider } from "next-themes";
 import { cn } from "@/lib/utils";
 
-// ─── Pastor Auth Context ───
-interface PastorCtx {
-    role: AdminRole;
-    userName: string;
-    userId: string;
-    orgId: string;
-    refreshDashboard: () => void;
-}
-
-const PastorContext = createContext<PastorCtx>({
-    role: 'super_admin', userName: 'Pastor', userId: '', orgId: '',
-    refreshDashboard: () => { }
-});
-
-export const usePastorCtx = () => useContext(PastorContext);
+import { PastorCtx, PastorContext } from "./pastor-context";
 
 export default function PastorHQLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
