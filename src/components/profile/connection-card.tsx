@@ -34,11 +34,11 @@ interface ProfileData {
     id: string;
     name: string;
     email: string;
-    date_of_birth?: string;
+    birthdate?: string;
     wedding_anniversary?: string;
-    full_address?: string;
-    phone?: string;
-    country_of_origin?: string;
+    physical_address?: string;
+    phone_number?: string;
+    nationality?: string;
     preferred_language?: string;
 }
 
@@ -98,18 +98,23 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                     id: targetId,
                     name: mapped.name || '',
                     email: authUser?.email || '',
-                    date_of_birth: mapped.date_of_birth,
+                    birthdate: mapped.birthdate,
                     wedding_anniversary: mapped.wedding_anniversary,
-                    full_address: mapped.full_address,
-                    phone: mapped.phone,
-                    country_of_origin: mapped.country_of_origin,
+                    physical_address: mapped.physical_address,
+                    phone_number: mapped.phone_number,
+                    nationality: mapped.nationality,
                     preferred_language: mapped.preferred_language || 'EN',
                 });
             } else if (authUser && !memberId) {
                 setProfile({
                     id: targetId,
-                    name: '',
+                    name: authUser?.user_metadata?.full_name || '',
                     email: authUser?.email || '',
+                    birthdate: '',
+                    physical_address: '',
+                    phone_number: '',
+                    nationality: '',
+                    preferred_language: 'EN',
                 });
             }
 
@@ -158,11 +163,11 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
             setSaving(true);
             const updatePayload = mapProfileToDB({
                 name: profile.name,
-                date_of_birth: profile.date_of_birth,
+                birthdate: profile.birthdate,
                 wedding_anniversary: profile.wedding_anniversary,
-                full_address: profile.full_address,
-                phone: profile.phone,
-                country_of_origin: profile.country_of_origin,
+                physical_address: profile.physical_address,
+                phone_number: profile.phone_number,
+                nationality: profile.nationality,
                 preferred_language: profile.preferred_language,
             });
 
@@ -263,10 +268,10 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                             </div>
                             <div>
                                 <CardTitle className="text-3xl font-black">{profile.name}</CardTitle>
-                                <CardDescription className="font-medium opacity-60">Member since 2026 • {profile.country_of_origin || 'International'}</CardDescription>
+                                <CardDescription className="font-medium opacity-60">Member since 2026 • {profile.nationality || 'International'}</CardDescription>
                                 <div className="flex gap-2 mt-3">
                                     <Badge className="bg-primary/20 text-primary border-primary/20">Active Member</Badge>
-                                    <Badge variant="outline" className="border-foreground/20">{profile.preferred_language === 'JP' ? '日本語' : 'English'}</Badge>
+                                    <Badge variant="outline" className="border-foreground/20">{(profile.preferred_language || 'EN') === 'JP' ? '日本語' : 'English'}</Badge>
                                 </div>
                             </div>
                         </div>
@@ -292,8 +297,8 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Phone Number</label>
                                         <Input
-                                            value={profile.phone || ''}
-                                            onChange={e => setProfile({ ...profile, phone: e.target.value })}
+                                            value={profile.phone_number || ''}
+                                            onChange={e => setProfile({ ...profile, phone_number: e.target.value })}
                                             className="glass border-foreground/10 rounded-2xl h-12"
                                             placeholder="+81 000-0000-0000"
                                         />
@@ -302,8 +307,8 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Birthdate</label>
                                         <Input
                                             type="date"
-                                            value={profile.date_of_birth || ''}
-                                            onChange={e => setProfile({ ...profile, date_of_birth: e.target.value })}
+                                            value={profile.birthdate || ''}
+                                            onChange={e => setProfile({ ...profile, birthdate: e.target.value })}
                                             className="glass border-foreground/10 rounded-2xl h-12 text-foreground/60"
                                         />
                                     </div>
@@ -319,8 +324,8 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                     <div className="space-y-2 md:col-span-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Physical Address</label>
                                         <Input
-                                            value={profile.full_address || ''}
-                                            onChange={e => setProfile({ ...profile, full_address: e.target.value })}
+                                            value={profile.physical_address || ''}
+                                            onChange={e => setProfile({ ...profile, physical_address: e.target.value })}
                                             className="glass border-foreground/10 rounded-2xl h-12"
                                             placeholder="1-2-3 Minato-ku, Tokyo, Japan"
                                         />
@@ -328,8 +333,8 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Country of Origin</label>
                                         <Input
-                                            value={profile.country_of_origin || ''}
-                                            onChange={e => setProfile({ ...profile, country_of_origin: e.target.value })}
+                                            value={profile.nationality || ''}
+                                            onChange={e => setProfile({ ...profile, nationality: e.target.value })}
                                             className="glass border-foreground/10 rounded-2xl h-12"
                                             placeholder="e.g. Zimbabwe, USA, Japan"
                                         />
