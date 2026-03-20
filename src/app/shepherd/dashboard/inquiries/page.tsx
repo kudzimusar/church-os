@@ -1,7 +1,8 @@
+import { supabase } from "@/lib/supabase";
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+
 import { format } from 'date-fns';
 import { Mail, ChevronDown, ChevronUp, User, AtSign, Clock } from 'lucide-react';
 import { useAdminCtx } from '../layout';
@@ -16,7 +17,7 @@ export default function InquiriesPage() {
     async function fetchInquiries() {
       if (!orgId) return;
       try {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await supabase
           .from('public_inquiries')
           .select('*')
           .eq('org_id', orgId)

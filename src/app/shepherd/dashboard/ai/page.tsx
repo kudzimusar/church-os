@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ChevronDown, CheckCircle2, RefreshCw, AlertTriangle, Info, Zap, XCircle, ThumbsUp, Brain, TrendingUp, ShieldAlert, Star, Link2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+
 import { PILEngine } from "@/lib/pil-engine";
 import { useAdminCtx } from "../layout";
 
@@ -62,7 +62,7 @@ export default function AICommandCenterPage() {
     const loadAiInsights = async () => {
         if (!orgId) return;
         setAiLoading(true);
-        const { data } = await supabaseAdmin
+        const { data } = await supabase
             .from('ai_ministry_insights')
             .select('*')
             .eq('org_id', orgId)
@@ -104,7 +104,7 @@ export default function AICommandCenterPage() {
         const { data: { user } } = await supabase.auth.getUser();
 
         // 1. Approve in ai_ministry_insights
-        await supabaseAdmin
+        await supabase
             .from('ai_ministry_insights')
             .update({
                 is_approved: true,
@@ -116,13 +116,13 @@ export default function AICommandCenterPage() {
 
         // 2. If type is 'opportunity', create a member_feed_items row
         if (insight.insight_type === 'opportunity' && insight.subject_id) {
-            const { data: ministry } = await supabaseAdmin
+            const { data: ministry } = await supabase
                 .from('ministries')
                 .select('id, name, slug')
                 .eq('id', insight.ministry_id)
                 .single();
 
-            await supabaseAdmin.from('member_feed_items').insert({
+            await supabase.from('member_feed_items').insert({
                 org_id: 'fa547adf-f820-412f-9458-d6bade11517d',
                 target_user_id: insight.subject_id,
                 feed_type: 'ministry_invitation',
@@ -146,7 +146,7 @@ export default function AICommandCenterPage() {
         setProcessing(insight.id);
         const { data: { user } } = await supabase.auth.getUser();
 
-        await supabaseAdmin
+        await supabase
             .from('ai_ministry_insights')
             .update({
                 is_approved: true,
@@ -167,7 +167,7 @@ export default function AICommandCenterPage() {
         setBroadcasting(true);
         const { data: { user } } = await supabase.auth.getUser();
 
-        await supabaseAdmin.from('member_feed_items').insert({
+        await supabase.from('member_feed_items').insert({
             org_id: 'fa547adf-f820-412f-9458-d6bade11517d',
             feed_type: 'church_announcement',
             title: broadcastTitle,

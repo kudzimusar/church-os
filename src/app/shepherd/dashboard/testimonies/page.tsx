@@ -1,8 +1,9 @@
+import { supabase } from "@/lib/supabase";
 
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+
 import { Play, Trash2, Plus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAdminCtx } from '../layout';
@@ -24,7 +25,7 @@ export default function TestimoniesManagement() {
 
   async function fetchTestimonies() {
     if (!orgId) return;
-    const { data } = await supabaseAdmin
+    const { data } = await supabase
       .from('public_testimonies')
       .select('*')
       .eq('org_id', orgId)
@@ -38,7 +39,7 @@ export default function TestimoniesManagement() {
     if (!orgId) return;
     setSubmitting(true);
 
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('public_testimonies')
       .insert([{ ...formData, org_id: orgId }]);
 
@@ -55,7 +56,7 @@ export default function TestimoniesManagement() {
   async function handleDelete(id: string) {
     if (!confirm('Are you sure?')) return;
     
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('public_testimonies')
       .delete()
       .eq('id', id);

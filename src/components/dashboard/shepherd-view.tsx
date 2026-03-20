@@ -12,7 +12,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { supabaseAdmin } from "@/lib/supabase-admin";
 import { startOfMonth, subDays, format, startOfWeek, endOfWeek, isAfter, isBefore } from "date-fns";
 import {
     BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip,
@@ -201,7 +200,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
     const handleMembershipAction = async (userId: string, status: string) => {
         try {
             // First, find the pending request for this user
-            const { data: req } = await supabaseAdmin
+            const { data: req } = await supabase
                 .from('membership_requests')
                 .select('id')
                 .eq('user_id', userId)
@@ -209,14 +208,14 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 .maybeSingle();
 
             if (req) {
-                const { error } = await supabaseAdmin
+                const { error } = await supabase
                     .from('membership_requests')
                     .update({ status: status === 'member' ? 'approved' : 'rejected' })
                     .eq('id', req.id);
                 if (error) throw error;
             } else {
                 // Fallback direct update if no request record found (legacy)
-                const { error } = await supabaseAdmin.from('profiles').update({ membership_status: status }).eq('id', userId);
+                const { error } = await supabase.from('profiles').update({ membership_status: status }).eq('id', userId);
                 if (error) throw error;
             }
 
@@ -231,7 +230,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
         if (!orgId) return;
         setLoading(true);
         try {
-            const db = supabaseAdmin;
+            const db = supabase;
 
             const startOfToday = new Date();
             startOfToday.setHours(0, 0, 0, 0);

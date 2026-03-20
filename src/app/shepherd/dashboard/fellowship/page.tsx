@@ -1,7 +1,8 @@
+import { supabase } from "@/lib/supabase";
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+
 import { motion } from "framer-motion";
 import { MessagesSquare, Users, MapPin, Calendar } from "lucide-react";
 import { useAdminCtx } from "../layout";
@@ -14,7 +15,7 @@ export default function FellowshipPage() {
 
     useEffect(() => {
         if (!orgId) return;
-        supabaseAdmin.from('fellowship_groups')
+        supabase.from('fellowship_groups')
             .select('*')
             .eq('org_id', orgId)
             .order('member_count', { ascending: false })

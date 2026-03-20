@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+
 import { toast } from "sonner";
 import {
     Users, Baby, Megaphone, Music,
@@ -24,7 +24,7 @@ export default function MinistryHub() {
         if (!orgId) return;
         setLoading(true);
         try {
-            const { data, error } = await supabaseAdmin
+            const { data, error } = await supabase
                 .from('vw_ministry_hub')
                 .select('*')
                 .eq('org_id', orgId)
@@ -45,7 +45,7 @@ export default function MinistryHub() {
             if (v) setStats(v);
 
             // Load equipment reports
-            const { data: equipData } = await supabaseAdmin
+            const { data: equipData } = await supabase
                 .from('vw_equipment_reports')
                 .select('*')
                 .eq('org_id', orgId)

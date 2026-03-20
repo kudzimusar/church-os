@@ -1,7 +1,8 @@
+import { supabase } from "@/lib/supabase";
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+
 import { Users, UserCheck, AlertCircle, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 
@@ -13,7 +14,7 @@ export function AttendanceReconciliationCard() {
         async function fetchStats() {
             setLoading(true);
             try {
-                const { data, error } = await supabaseAdmin
+                const { data, error } = await supabase
                     .from('vw_attendance_reconciliation_new')
                     .select('*')
                     .order('event_date', { ascending: false })

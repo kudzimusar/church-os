@@ -1,7 +1,8 @@
+import { supabase } from "@/lib/supabase";
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+
 import { motion } from "framer-motion";
 import { Heart, AlertTriangle, CheckCircle2, Clock, MessageSquare, Plus, Filter } from "lucide-react";
 import { useAdminCtx } from "../layout";
@@ -33,8 +34,8 @@ export default function CareAndPrayerPage() {
         if (!orgId) return;
         const load = async () => {
             const [prayersRes, alertsRes] = await Promise.all([
-                supabaseAdmin.from('prayer_requests').select('*').eq('org_id', orgId).order('created_at', { ascending: false }),
-                supabaseAdmin.from('member_alerts').select('*, member:profiles(name, org_id)').eq('is_resolved', false).order('created_at', { ascending: false })
+                supabase.from('prayer_requests').select('*').eq('org_id', orgId).order('created_at', { ascending: false }),
+                supabase.from('member_alerts').select('*, member:profiles(name, org_id)').eq('is_resolved', false).order('created_at', { ascending: false })
             ]);
             
             // Filter alerts where member is in the same org (if join doesn't filter enough)
@@ -54,7 +55,7 @@ export default function CareAndPrayerPage() {
     const filtered = prayers.filter(p => filter === 'all' || p.status === filter || p.urgency === filter);
 
     const markAnswered = async (id: string) => {
-        await supabaseAdmin.from('prayer_requests').update({ status: 'answered', answered_date: new Date().toISOString().split('T')[0] }).eq('id', id);
+        await supabase.from('prayer_requests').update({ status: 'answered', answered_date: new Date().toISOString().split('T')[0] }).eq('id', id);
         setPrayers(prev => prev.map(p => p.id === id ? { ...p, status: 'answered' } : p));
     };
 

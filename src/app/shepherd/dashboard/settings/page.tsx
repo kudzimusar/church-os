@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+
 import { useAdminCtx } from "../layout";
 import { AdminAuth, ADMIN_ROLES, ROLE_HIERARCHY, AdminRole } from "@/lib/admin-auth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -46,12 +46,12 @@ export default function SettingsPage() {
     async function loadData() {
         setLoading(true);
         const [teamRes, invRes, rolesRes] = await Promise.all([
-            supabaseAdmin.from('org_members').select('*, profiles(name, email, membership_status, growth_stage, created_at)').eq('org_id', orgId),
-            supabaseAdmin.from('org_members')
+            supabase.from('org_members').select('*, profiles(name, email, membership_status, growth_stage, created_at)').eq('org_id', orgId),
+            supabase.from('org_members')
                 .select('*, profiles(name, email), ministries:ministry_id(name)')
                 .not('invitation_token', 'is', null)
                 .eq('org_id', orgId),
-            supabaseAdmin.from('user_roles')
+            supabase.from('user_roles')
                 .select('*, roles(*)')
                 .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
                 .eq('org_id', orgId)
@@ -73,7 +73,7 @@ export default function SettingsPage() {
         setInviting(true);
 
         try {
-            const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(inviteEmail, {
+            const { data, error } = await supabase.auth.admin.inviteUserByEmail(inviteEmail, {
                 data: { role: inviteRole, invited_by: userName }
             });
 
@@ -101,7 +101,7 @@ export default function SettingsPage() {
             }
 
             if (data.user) {
-                await supabaseAdmin.from('org_members').upsert({
+                await supabase.from('org_members').upsert({
                     user_id: data.user.id,
                     role: inviteRole,
                     org_id: orgId,
@@ -121,7 +121,7 @@ export default function SettingsPage() {
 
     const handleRevoke = async (memberId: string, memberName: string) => {
         if (!confirm(`Remove ${memberName} from admin access?`)) return;
-        await supabaseAdmin.from('org_members').delete().eq('id', memberId);
+        await supabase.from('org_members').delete().eq('id', memberId);
         loadData();
         toast.success(`${memberName} access revoked`);
     };

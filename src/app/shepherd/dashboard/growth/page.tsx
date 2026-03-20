@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+
 import { motion } from "framer-motion";
 import { TrendingUp, Users, UserCheck, Globe, Plus, Save } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +17,7 @@ export default function GrowthPage() {
         if (!orgId) return;
         setLoading(true);
         try {
-            const { data, error } = await supabaseAdmin
+            const { data, error } = await supabase
                 .from('vw_growth_intelligence')
                 .select('*')
                 .eq('org_id', orgId)

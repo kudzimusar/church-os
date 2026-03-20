@@ -1,3 +1,4 @@
+import { supabase } from "@/lib/supabase";
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+
 import { useAdminCtx } from "../layout";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -31,7 +32,7 @@ export default function MembershipRequestsPage() {
         if (!orgId) return;
         setLoading(true);
         try {
-            const { data, error } = await supabaseAdmin
+            const { data, error } = await supabase
                 .from('membership_requests')
                 .select(`
                     *,
@@ -57,7 +58,7 @@ export default function MembershipRequestsPage() {
 
     async function handleAction(requestId: string, status: 'approved' | 'rejected') {
         try {
-            const { error } = await supabaseAdmin
+            const { error } = await supabase
                 .from('membership_requests')
                 .update({
                     status,

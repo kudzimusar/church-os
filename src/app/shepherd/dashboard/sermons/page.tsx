@@ -1,7 +1,8 @@
+import { supabase } from "@/lib/supabase";
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+
 import { toast } from 'sonner';
 import { Plus, Trash2, Youtube, Calendar, User, BookOpen, Link as LinkIcon, Star } from 'lucide-react';
 import { format } from 'date-fns';
@@ -37,7 +38,7 @@ export default function SermonManagementPage() {
   const fetchSermons = async () => {
     if (!orgId) return;
     try {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabase
         .from('public_sermons')
         .select('*')
         .eq('org_id', orgId)
@@ -67,7 +68,7 @@ export default function SermonManagementPage() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabaseAdmin
+      const { error } = await supabase
         .from('public_sermons')
         .insert({
           org_id: orgId,
@@ -101,7 +102,7 @@ export default function SermonManagementPage() {
     if (!confirm('Are you sure you want to delete this sermon?')) return;
 
     try {
-      const { error } = await supabaseAdmin
+      const { error } = await supabase
         .from('public_sermons')
         .delete()
         .eq('id', id);

@@ -1,7 +1,8 @@
+import { supabase } from "@/lib/supabase";
 "use client";
 
 import { useEffect, useState } from 'react';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+
 import { toast } from 'sonner';
 import { AlertCircle, ArrowDownCircle, ArrowUpCircle, Send, Paperclip, LayoutGrid, List, Eye } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -28,7 +29,7 @@ export default function MissionControlAnnouncementsPage() {
 
     const fetchAnnouncements = async (orgId: string) => {
         setLoading(true);
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await supabase
             .from('ministry_announcements')
             .select(`
                 *,
@@ -49,7 +50,7 @@ export default function MissionControlAnnouncementsPage() {
         const authorIds = [...new Set((data || []).map(a => a.author_id).filter(Boolean))];
         let authorMap: Record<string, string> = {};
         if (authorIds.length > 0) {
-            const { data: profiles } = await supabaseAdmin
+            const { data: profiles } = await supabase
                 .from('profiles')
                 .select('id, name')
                 .in('id', authorIds);
@@ -62,7 +63,7 @@ export default function MissionControlAnnouncementsPage() {
         })));
 
         // Fetch attachments
-        const { data: attachmentData } = await supabaseAdmin
+        const { data: attachmentData } = await supabase
             .from('message_attachments')
             .select('*')
             .in('announcement_id', (data || []).map(a => a.id));
@@ -103,7 +104,7 @@ export default function MissionControlAnnouncementsPage() {
         const { data: profile } = await supabase.from('profiles').select('org_id').eq('id', user.id).single();
         if (!profile?.org_id) return;
 
-        const { data: mData } = await supabaseAdmin.from('ministries').select('*').eq('org_id', profile.org_id);
+        const { data: mData } = await supabase.from('ministries').select('*').eq('org_id', profile.org_id);
         if (mData) setMinistries(mData);
 
         fetchAnnouncements(profile.org_id);
@@ -124,7 +125,7 @@ export default function MissionControlAnnouncementsPage() {
             
             if (selectedMinistryId) {
                 // Single ministry transmission
-                const { data: inserted, error } = await supabaseAdmin.from('ministry_announcements').insert({
+                const { data: inserted, error } = await supabase.from('ministry_announcements').insert({
                     org_id: profile?.org_id,
                     ministry_id: selectedMinistryId,
                     author_id: user?.id,
@@ -145,7 +146,7 @@ export default function MissionControlAnnouncementsPage() {
                             .upload(filePath, file);
                         
                         if (!uploadError) {
-                            await supabaseAdmin.from('message_attachments').insert({
+                            await supabase.from('message_attachments').insert({
                                 announcement_id: inserted.id,
                                 uploaded_by: user?.id,
                                 file_name: file.name,
@@ -168,7 +169,7 @@ export default function MissionControlAnnouncementsPage() {
                     priority: 'normal'
                 }));
 
-                const { data: insertedList, error } = await supabaseAdmin.from('ministry_announcements').insert(inserts).select('id');
+                const { data: insertedList, error } = await supabase.from('ministry_announcements').insert(inserts).select('id');
                 if (error) throw error;
 
                 // For broadcast, upload once and link to all inserted announcements
@@ -188,7 +189,7 @@ export default function MissionControlAnnouncementsPage() {
                                 file_size: file.size,
                                 mime_type: file.type
                             }));
-                            await supabaseAdmin.from('message_attachments').insert(attInserts);
+                            await supabase.from('message_attachments').insert(attInserts);
                         }
                     }
                 }

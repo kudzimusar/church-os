@@ -1,6 +1,7 @@
+import { supabase } from "@/lib/supabase";
 "use client";
 import { useEffect, useState } from "react";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+
 import { motion } from "framer-motion";
 import { Calendar, MapPin, Users, CheckCircle2, Clock } from "lucide-react";
 import { useAdminCtx } from "../layout";
@@ -13,7 +14,7 @@ export default function EventsPage() {
 
     useEffect(() => {
         if (!orgId) return;
-        supabaseAdmin.from('events')
+        supabase.from('events')
             .select('*')
             .eq('org_id', orgId)
             .order('event_date', { ascending: false })

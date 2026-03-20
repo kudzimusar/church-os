@@ -1,7 +1,8 @@
+import { supabase } from "@/lib/supabase";
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+
 import { toast } from 'sonner';
 import { Plus, DollarSign, Calendar, User, FileText, Loader2, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
@@ -33,7 +34,7 @@ export default function GivingLogPage() {
 
   const fetchRecords = async () => {
     try {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabase
         .from('financial_records')
         .select('*')
         .eq('org_id', ORG_ID)
@@ -63,7 +64,7 @@ export default function GivingLogPage() {
 
     setSubmitting(true);
     try {
-      const { error } = await supabaseAdmin.from('financial_records').insert({
+      const { error } = await supabase.from('financial_records').insert({
         user_id: null,
         amount: Number(amount),
         currency,

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { FileText, Download, BarChart2, Users, BookOpen, Heart, Sparkles, Clock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { exportToExcel, exportToPDF } from "@/lib/export-utils";
@@ -40,7 +40,7 @@ export default function ReportsPage() {
 
         try {
             if (name === 'Member Directory Export') {
-                const { data } = await supabaseAdmin
+                const { data } = await supabase
                     .from('profiles')
                     .select('*')
                     .eq('org_id', orgId)
@@ -56,7 +56,7 @@ export default function ReportsPage() {
                 exportToExcel(exportData, `JKC_Member_Directory_${timestamp}`, "Members");
             }
             else if (name === 'Attendance Summary') {
-                const { data } = await supabaseAdmin
+                const { data } = await supabase
                     .from('attendance_records')
                     .select('*')
                     .eq('org_id', orgId)
@@ -73,7 +73,7 @@ export default function ReportsPage() {
             }
             else if (name === 'Congregational Health Report') {
                 toast.info("Analyzing spiritual health metrics...");
-                const { data: profiles } = await supabaseAdmin
+                const { data: profiles } = await supabase
                     .from('profiles')
                     .select('name, email, membership_status, growth_stage')
                     .eq('org_id', orgId);
