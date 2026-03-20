@@ -12,36 +12,109 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getCurrencySymbol } from "@/lib/shop-service";
+import { Auth } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
+import { ShopService, getCurrencySymbol } from "@/lib/shop-service";
 
 export default function CartPage() {
     const [cart, setCart] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState<any>(null);
     const router = useRouter();
 
+    const ORG_ID = "fa547adf-f820-412f-9458-d6bade11517d";
+
     useEffect(() => {
-        const savedCart = JSON.parse(localStorage.getItem("merchandise_cart") || "[]");
-        setCart(savedCart);
-        setLoading(false);
+        const initCart = async () => {
+            const currentUser = await Auth.getCurrentUser();
+            setUser(currentUser);
+
+            if (currentUser) {
+                try {
+                    const dbCart = await ShopService.getCart(currentUser.id);
+                    // Map DB items to the flat structure expected by the UI
+                    const mappedCart = dbCart.map((item: any) => ({
+                        ...item.product,
+                        quantity: item.quantity,
+                        db_id: item.id // Keep DB id for reference
+                    }));
+                    setCart(mappedCart);
+                } catch (e) {
+                    console.error("Cart fetch error:", e);
+                    toast.error("Failed to load your kingdom cart");
+                }
+            } else {
+                const savedCart = JSON.parse(localStorage.getItem("merchandise_cart") || "[]");
+                setCart(savedCart);
+            }
+            setLoading(false);
+        };
+
+        initCart();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session?.user) {
+                const currentUser = await Auth.getCurrentUser();
+                setUser(currentUser);
+                const dbCart = await ShopService.getCart(session.user.id);
+                setCart(dbCart.map((item: any) => ({ ...item.product, quantity: item.quantity, db_id: item.id })));
+            } else {
+                setUser(null);
+                const savedCart = JSON.parse(localStorage.getItem("merchandise_cart") || "[]");
+                setCart(savedCart);
+            }
+        });
+
+        return () => subscription.unsubscribe();
     }, []);
 
-    const updateQuantity = (id: string, delta: number) => {
-        const newCart = cart.map(item => {
-            if (item.id === id) {
-                const newQty = Math.max(1, item.quantity + delta);
-                return { ...item, quantity: newQty };
+    const updateQuantity = async (id: string, delta: number) => {
+        const item = cart.find(i => i.id === id);
+        if (!item) return;
+
+        const newQty = Math.max(1, item.quantity + delta);
+        
+        if (user) {
+            try {
+                await ShopService.updateCartQuantity(user.id, id, newQty);
+                // Refresh data from DB to stay in sync
+                const dbCart = await ShopService.getCart(user.id);
+                setCart(dbCart.map((item: any) => ({ ...item.product, quantity: item.quantity, db_id: item.id })));
+                window.dispatchEvent(new CustomEvent('cart-updated'));
+            } catch (e) {
+                toast.error("Failed to update quantity");
             }
-            return item;
-        });
-        setCart(newCart);
-        localStorage.setItem("merchandise_cart", JSON.stringify(newCart));
+        } else {
+            const newCart = cart.map(item => {
+                if (item.id === id) {
+                    return { ...item, quantity: newQty };
+                }
+                return item;
+            });
+            setCart(newCart);
+            localStorage.setItem("merchandise_cart", JSON.stringify(newCart));
+            window.dispatchEvent(new CustomEvent('cart-updated'));
+        }
     };
 
-    const removeItem = (id: string) => {
-        const newCart = cart.filter(item => item.id !== id);
-        setCart(newCart);
-        localStorage.setItem("merchandise_cart", JSON.stringify(newCart));
-        toast.info("Item removed from cart");
+    const removeItem = async (id: string) => {
+        if (user) {
+            try {
+                await ShopService.updateCartQuantity(user.id, id, 0); // 0 quantity deletes
+                const dbCart = await ShopService.getCart(user.id);
+                setCart(dbCart.map((item: any) => ({ ...item.product, quantity: item.quantity, db_id: item.id })));
+                window.dispatchEvent(new CustomEvent('cart-updated'));
+                toast.info("Item removed from your cloud cart");
+            } catch (e) {
+                toast.error("Failed to remove item");
+            }
+        } else {
+            const newCart = cart.filter(item => item.id !== id);
+            setCart(newCart);
+            localStorage.setItem("merchandise_cart", JSON.stringify(newCart));
+            window.dispatchEvent(new CustomEvent('cart-updated'));
+            toast.info("Item removed from cart");
+        }
     };
 
     const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);

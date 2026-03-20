@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { 
     ShoppingBag, ShoppingCart, ArrowRight, 
     Package, Loader2, Sparkles, Filter,
@@ -188,13 +188,20 @@ export default function MerchandisePage() {
         }
     };
 
-    const filteredProducts = products.filter(p => 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    const filteredProducts = useMemo(() => products.filter(p => 
+        p.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        p.description?.toLowerCase().includes(debouncedSearch.toLowerCase())
+    ), [products, debouncedSearch]);
 
     // Dynamic Hero Product selection
-    const featuredProduct = products.find(p => (p as any).is_featured) || products[0];
+    const featuredProduct = useMemo(() => products.find(p => (p as any).is_featured) || products[0], [products]);
 
     return (
         <div className="min-h-screen bg-background text-foreground pt-16 md:pt-20">
@@ -409,13 +416,13 @@ export default function MerchandisePage() {
                                                 />
                                                 
                                                 {/* Overlays */}
-                                                <div className="absolute top-4 left-4 scale-0 group-hover:scale-100 opacity-0 group-hover:opacity-100 transition-all duration-300 origin-top-left z-10">
+                                                <div className="absolute top-4 left-4 transition-all duration-300 z-10">
                                                     <Button 
                                                         size="icon" 
                                                         onClick={(e) => toggleLike(product.id, product.name, e)}
-                                                        className={`h-8 w-8 rounded-full shadow-xl border-none transition-all ${wishlist.includes(product.id) ? 'bg-red-500 text-white' : 'bg-white text-black hover:bg-white/90'}`}
+                                                        className={`h-9 w-9 rounded-full shadow-xl border-none transition-all active:scale-90 ${wishlist.includes(product.id) ? 'bg-red-500 text-white' : 'bg-white/90 backdrop-blur-md text-black hover:bg-white'}`}
                                                     >
-                                                        <Heart size={14} fill={wishlist.includes(product.id) ? "currentColor" : "none"} />
+                                                        <Heart size={16} fill={wishlist.includes(product.id) ? "currentColor" : "none"} strokeWidth={2.5} />
                                                     </Button>
                                                 </div>
 
