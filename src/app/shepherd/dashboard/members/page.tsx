@@ -98,7 +98,7 @@ export default function MembersPage() {
     async function handlePromoteToMember(targetId: string) {
         setLoading(true);
         try {
-            const { error } = await supabaseAdmin
+            const { error } = await supabase
                 .from('profiles')
                 .update({
                     membership_status: 'member',
@@ -109,7 +109,7 @@ export default function MembersPage() {
             if (error) throw error;
 
             // Reconcile membership_requests table
-            await supabaseAdmin
+            await supabase
                 .from('membership_requests')
                 .update({ status: 'approved', reviewed_at: new Date().toISOString() })
                 .eq('user_id', targetId)
