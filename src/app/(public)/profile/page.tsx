@@ -47,7 +47,8 @@ const identitySchema = z.object({
     baptism_status: z.string().optional(),
     baptism_date: z.string().optional(),
     invited_by_name: z.string().optional(),
-    invite_method: z.string().optional()
+    invite_method: z.string().optional(),
+    household_type: z.string().optional()
 });
 
 type IdentityForm = z.infer<typeof identitySchema>;
@@ -188,8 +189,8 @@ export default function ProfileHub() {
                 idForm.reset(mappedData);
 
                 setGivingData({
-                    tithe_status: pData.tithe_status || false,
-                    preferred_giving_method: pData.preferred_giving_method || 'Cash'
+                    tithe_status: mappedData.tithe_status,
+                    preferred_giving_method: mappedData.preferred_giving_method
                 });
 
                 // Load dependent data using organization context
@@ -224,6 +225,21 @@ export default function ProfileHub() {
                     // Junior Church
                     supabase.from('guardian_links').select('*').eq('guardian_id', userId)
                         .then(({ data }) => setChildren(data || []));
+
+                    // Pastoral Care (Prayers)
+                    supabase.from('prayer_requests').select('*').eq('user_id', userId).order('created_at', { ascending: false })
+                        .then(({ data }) => setPrayers(data || []));
+
+                    // Circle Community (Groups)
+                    supabase.from('fellowship_groups').select('*').eq('org_id', currentOrgId).eq('is_active', true)
+                        .then(({ data }) => setFellowshipGroups(data || []));
+                    
+                    supabase.from('fellowship_members').select('group_id').eq('user_id', userId)
+                        .then(({ data }) => setUserGroups(data?.map(m => m.group_id) || []));
+
+                    // Giving History
+                    supabase.from('financial_records').select('*').eq('user_id', userId).order('date', { ascending: false })
+                        .then(({ data }) => setGivingHistory(data || []));
 
                     // Merchandise Orders
                     ShopService.getUserOrders(userId)
@@ -277,23 +293,17 @@ export default function ProfileHub() {
         try {
             // Predict household type based on existing local household data
             // (If we had a remote households table, we'd query there)
-            let household_type = 'Single';
-            if (household.some(h => h.relationship === 'Spouse')) household_type = 'Couple';
-            if (household.some(h => h.relationship === 'Child')) household_type = 'Family with Children';
-
             const cleanData = { ...data };
             if (cleanData.years_in_japan) {
                 cleanData.years_in_japan = parseInt(cleanData.years_in_japan.toString()) || 0;
             }
 
+            // Detect household type based on local state (to be saved to profile)
+            if (household.some(h => h.relationship === 'Spouse')) cleanData.household_type = 'Couple';
+            if (household.some(h => h.relationship === 'Child')) cleanData.household_type = 'Family with Children';
+
             // Use Centralized Mapping Layer to prepare payload
-            const dbPayload = {
-                ...mapProfileToDB(cleanData),
-                marital_status: cleanData.marital_status,
-                wedding_anniversary: cleanData.wedding_anniversary,
-                industry: cleanData.industry,
-                household_type,
-            };
+            const dbPayload = mapProfileToDB(cleanData);
 
             const { error } = await supabase.from('profiles').update(dbPayload).eq('id', user.id);
 
@@ -495,7 +505,8 @@ export default function ProfileHub() {
     const saveGiving = async () => {
         if (!user) return;
         try {
-            await supabase.from('profiles').update(givingData).eq('id', user.id);
+            const dbPayload = mapProfileToDB(givingData);
+            await supabase.from('profiles').update(dbPayload).eq('id', user.id);
             toast.success("Preferences saved");
         } catch (e) {
             toast.error("Save failed");

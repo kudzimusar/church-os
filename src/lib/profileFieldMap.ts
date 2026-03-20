@@ -56,6 +56,7 @@ export function mapProfileFromDB(dbData: any) {
         phone_number: dbData.phone_number || "",
         gender: dbData.gender || "",
         birthdate: dbData.birthdate || "",
+        marital_status: dbData.marital_status || "",
         wedding_anniversary: dbData.wedding_anniversary || "",
         physical_address: dbData.physical_address || "",
         city: dbData.city || "",
@@ -69,6 +70,10 @@ export function mapProfileFromDB(dbData: any) {
         industry: dbData.industry || "",
         education_level: dbData.education_level || "",
         
+        // Giving & Tithe
+        tithe_status: dbData.tithe_status || false,
+        preferred_giving_method: dbData.preferred_giving_method || "bank_transfer",
+
         // Spiritual
         church_background: dbData.church_background || "",
         salvation_date: dbData.salvation_date || "",
@@ -81,6 +86,7 @@ export function mapProfileFromDB(dbData: any) {
         
         // Household
         head_id: dbData.head_id || null,
+        household_type: dbData.household_type || "single",
         
         // Context
         org_id: dbData.org_id,
@@ -101,6 +107,7 @@ export function mapProfileToDB(formData: any) {
         phone_number: formData.phone_number || null,
         gender: formData.gender || null,
         birthdate: formData.birthdate || null,
+        marital_status: formData.marital_status || null,
         wedding_anniversary: formData.wedding_anniversary || null,
         physical_address: formData.physical_address || null,
         city: formData.city || null,
@@ -114,6 +121,10 @@ export function mapProfileToDB(formData: any) {
         industry: formData.industry || null,
         education_level: formData.education_level || null,
         
+        // Giving
+        tithe_status: formData.tithe_status ?? false,
+        preferred_giving_method: formData.preferred_giving_method || null,
+
         church_background: formData.church_background || null,
         salvation_date: formData.salvation_date || null,
         baptism_status: formData.baptism_status || null,
@@ -121,6 +132,7 @@ export function mapProfileToDB(formData: any) {
         
         invited_by: formData.invite_method || formData.invited_by_name || null,
         head_id: formData.head_id || null,
+        household_type: formData.household_type || null,
         
         updated_at: new Date().toISOString()
     };
