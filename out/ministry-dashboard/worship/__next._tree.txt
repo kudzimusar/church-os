@@ -1,5 +1,5 @@
 :HL["/jkc-devotion-app/_next/static/media/4cf2300e9c8272f7-s.p.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/jkc-devotion-app/_next/static/media/93f479601ee12b01-s.p.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/jkc-devotion-app/_next/static/css/d2e2a5a216999c49.css","style"]
-:HL["/jkc-devotion-app/_next/static/css/8690fefbfd3f6b40.css","style"]
-0:{"buildId":"piz4rfFm01Q4Jh5ddHfrz","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"ministry-dashboard","paramType":null,"paramKey":"ministry-dashboard","hasRuntimePrefetch":false,"slots":{"children":{"name":"slug","paramType":"d","paramKey":"worship","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"staleTime":300}
+:HL["/jkc-devotion-app/_next/static/css/0f7379a133f1a9c4.css","style"]
+0:{"buildId":"TuznLDoAsy9xSqQWTd7HI","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"ministry-dashboard","paramType":null,"paramKey":"ministry-dashboard","hasRuntimePrefetch":false,"slots":{"children":{"name":"slug","paramType":"d","paramKey":"worship","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"staleTime":300}

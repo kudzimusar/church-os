@@ -1,11 +1,10 @@
-import { supabase } from "@/lib/supabase";
 "use client";
+import { supabase } from "@/lib/supabase";
 
 import { useEffect, useState } from 'react';
 
 import { toast } from 'sonner';
 import { AlertCircle, ArrowDownCircle, ArrowUpCircle, Send, Paperclip, LayoutGrid, List, Eye } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 
 export default function MissionControlAnnouncementsPage() {
     const [announcements, setAnnouncements] = useState<any[]>([]);

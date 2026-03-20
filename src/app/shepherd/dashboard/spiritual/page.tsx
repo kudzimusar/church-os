@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { HeartPulse, Flame, TrendingUp, BookOpen, BarChart2 } from "lucide-react";

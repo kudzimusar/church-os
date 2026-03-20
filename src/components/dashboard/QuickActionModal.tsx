@@ -1,5 +1,4 @@
 "use client";
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { MemberForm } from "./forms/MemberForm";
 import { EventForm } from "./forms/EventForm";

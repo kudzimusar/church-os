@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { Auth } from "@/lib/auth";
 import { supabase, ExtendedProfileService, AnalyticsService } from "@/lib/supabase";

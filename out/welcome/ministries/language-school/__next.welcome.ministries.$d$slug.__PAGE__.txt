@@ -1,6 +1,0 @@
-1:"$Sreact.fragment"
-2:I[82426,["6228","static/chunks/6228-42b6a92cfc783b04.js","6609","static/chunks/6609-078a8cdc853f87c6.js","8500","static/chunks/8500-98e13bcce54aa7a0.js","7309","static/chunks/app/welcome/ministries/%5Bslug%5D/page-010a1ca0f98ff9b3.js"],"default"]
-3:I[90484,[],"OutletBoundary"]
-4:"$Sreact.suspense"
-0:{"buildId":"piz4rfFm01Q4Jh5ddHfrz","rsc":["$","$1","c",{"children":[["$","$L2",null,{"slug":"language-school"}],null,["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"loading":null,"isPartial":false}
-5:null
