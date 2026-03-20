@@ -6,7 +6,7 @@ import {
     Users, TrendingUp, Calendar, Heart, Share2,
     ArrowUpRight, ArrowDownRight, AlertCircle,
     BarChart3, PieChart as PieChartIcon, Activity,
-    RefreshCcw, ChevronRight
+    RefreshCcw, ChevronRight, ShieldCheck
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,8 @@ export default function PastorsDesk() {
             engagement: 0,
             growth: 0
         },
-        careAlerts: [] as any[]
+        careAlerts: [] as any[],
+        declarationsToday: 0
     });
 
     const fetchStats = async () => {
@@ -84,6 +85,14 @@ export default function PastorsDesk() {
                 .eq('is_acknowledged', false)
                 .limit(3);
 
+            // 5. Declarations Today
+            const startOfToday = new Date();
+            startOfToday.setHours(0, 0, 0, 0);
+            const { count: decCount } = await supabase
+                .from('user_declarations')
+                .select('*', { count: 'exact', head: true })
+                .gte('confirmed_at', startOfToday.toISOString());
+
             setStats({
                 totalMembers: total || 0,
                 memberGrowth: recent || 0,
@@ -97,11 +106,15 @@ export default function PastorsDesk() {
                     engagement: social?.[0]?.engagement || 0,
                     growth: social?.[0]?.followers || 0
                 },
-                careAlerts: alerts || []
+                careAlerts: alerts || [],
+                declarationsToday: decCount || 0
             });
         } catch (error) {
             console.error('Error fetching pastor stats:', error);
-            toast.error('Failed to load dashboard data');
+            // Don't show toast error if it's just the new table missing yet
+            if ((error as any).code !== 'PGRST116' && (error as any).code !== '42P01') {
+                toast.error('Failed to load dashboard data');
+            }
         } finally {
             setLoading(false);
         }
@@ -181,15 +194,16 @@ export default function PastorsDesk() {
                 <Card className="bg-card border-border rounded-3xl overflow-hidden group transition-colors">
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
-                            <Share2 className="w-5 h-5 text-pink-400" />
+                            <ShieldCheck className="w-5 h-5 text-emerald-400" />
                             <ArrowUpRight className="w-4 h-4 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                        <CardDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Social Reach</CardDescription>
-                        <CardTitle className="text-3xl font-black text-foreground">{stats.socialMetrics.reach.toLocaleString()}</CardTitle>
+                        <CardDescription className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Daily Affirmations</CardDescription>
+                        <CardTitle className="text-3xl font-black text-foreground">{stats.declarationsToday}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-xs font-bold text-muted-foreground opacity-60">
-                            {stats.socialMetrics.engagement} Total Engagement
+                        <div className="flex items-center gap-2 text-xs font-bold text-emerald-500">
+                            <Activity className="w-3 h-3" />
+                            {stats.declarationsToday > 0 ? 'Active participation' : 'Awaiting declarations'}
                         </div>
                     </CardContent>
                 </Card>

@@ -89,11 +89,45 @@ export default function PublicNav() {
     return name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   };
 
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = (label: string) => {
+    if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
+    setHoveredLink(label);
+  };
+
+  const handleMouseLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setHoveredLink(null);
+    }, 150);
+  };
+
   const navLinks = [
     { label: 'WATCH', href: '/welcome/watch' },
     { label: 'VISIT', href: '/welcome/visit' },
-    { label: 'ABOUT', href: '/welcome/about' },
-    { label: 'GIVE', href: '/welcome/give' },
+    { 
+      label: 'ABOUT', 
+      href: '/welcome/about',
+      subLinks: [
+        { label: 'OUR PASTOR', href: '/welcome/our-pastor' },
+        { label: 'STATEMENT OF FAITH', href: '/welcome/about#faith' },
+        { label: 'CHURCH HISTORY', href: '/welcome/about#history' },
+        { label: 'CHURCH STAFF', href: '/welcome/staff' },
+        { label: 'CHRISTIANITY IN JAPAN', href: '/welcome/about#japan' },
+        { label: 'BAPTISM IN JAPAN', href: '/welcome/about#baptism' },
+        { label: 'DIRECTIONS AND PARKING', href: '/welcome/visit#directions' },
+      ]
+    },
+    { 
+      label: 'GIVE', 
+      href: '/welcome/give',
+      subLinks: [
+        { label: 'GIVING OPTIONS', href: '/welcome/give' },
+        { label: 'OUTREACH DONATIONS', href: '/welcome/give#outreach' },
+        { label: 'MISSIONARY SUPPORT', href: '/welcome/give#missionary' },
+      ]
+    },
     { label: 'SHOP', href: '/merchandise' },
     { label: 'DEVOTION', href: '/welcome/devotion' },
   ];
@@ -133,12 +167,60 @@ export default function PublicNav() {
           {/* Desktop center links */}
           <div className="hidden md:flex items-center gap-10">
             {navLinks.map(link => (
-              <Link key={link.label} href={link.href}
-                className="text-[10px] font-black tracking-[0.3em] hover:text-[var(--jkc-navy)] transition-colors flex items-center gap-1.5"
-                style={{ color: link.label === 'DEVOTION' ? 'var(--jkc-gold)' : 'var(--foreground)' }}>
-                {link.label === 'DEVOTION' && <BookOpen className="w-3.5 h-3.5" />}
-                {link.label}
-              </Link>
+              <div 
+                key={link.label} 
+                className="relative h-16 flex items-center"
+                onMouseEnter={() => link.subLinks && handleMouseEnter(link.label)}
+                onMouseLeave={link.subLinks ? handleMouseLeave : undefined}
+              >
+                <Link href={link.href}
+                  className="text-[10px] font-black tracking-[0.3em] hover:text-[var(--jkc-navy)] transition-all flex items-center gap-1.5 py-2"
+                  style={{ color: link.label === 'DEVOTION' ? 'var(--jkc-gold)' : 'var(--foreground)' }}>
+                  {link.label === 'DEVOTION' && <BookOpen className="w-3.5 h-3.5" />}
+                  {link.label}
+                  {link.subLinks && (
+                    <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${hoveredLink === link.label ? 'rotate-180' : ''}`} />
+                  )}
+                </Link>
+
+                {/* Dropdown Panel */}
+                {link.subLinks && hoveredLink === link.label && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-[320px] pt-2 z-[100] animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="glass rounded-[2rem] border border-[var(--nav-border)] shadow-2xl overflow-hidden" 
+                         style={{ background: 'var(--card)' }}>
+                      <div className="px-8 py-5" style={{ background: 'var(--jkc-navy)' }}>
+                         <span className="text-[10px] font-black tracking-[0.4em] text-white uppercase italic">
+                           {link.label}
+                         </span>
+                      </div>
+                      <div className="p-4 flex flex-col gap-1">
+                        {link.subLinks.map((sub: any) => (
+                          <Link
+                            key={sub.label}
+                            href={sub.href}
+                            className="px-6 py-3.5 rounded-xl text-[10px] font-black tracking-widest transition-all uppercase hover:scale-[1.02] active:scale-95"
+                            style={{ 
+                              color: 'var(--foreground)',
+                              background: 'transparent'
+                            }}
+                            onMouseEnter={e => {
+                              (e.currentTarget as HTMLElement).style.background = 'var(--jkc-navy)';
+                              (e.currentTarget as HTMLElement).style.color = 'white';
+                            }}
+                            onMouseLeave={e => {
+                              (e.currentTarget as HTMLElement).style.background = 'transparent';
+                              (e.currentTarget as HTMLElement).style.color = 'var(--foreground)';
+                            }}
+                            onClick={() => setHoveredLink(null)}
+                          >
+                            {sub.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
 

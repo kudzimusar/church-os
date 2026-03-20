@@ -66,6 +66,7 @@ interface DashboardData {
         overdueMinistries: number;
         totalVolunteers: number;
     } | null;
+    declarationsToday: number;
 }
 
 interface AtRiskMember {
@@ -111,7 +112,8 @@ const INITIAL_DATA: DashboardData = {
     counselingQueue: [],
     staffingGaps: [],
     discipleshipData: [],
-    churchHealth: null
+    churchHealth: null,
+    declarationsToday: 0
 };
 
 /* ─── Sub-components ─── */
@@ -228,6 +230,9 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
         try {
             const db = supabaseAdmin;
 
+            const startOfToday = new Date();
+            startOfToday.setHours(0, 0, 0, 0);
+
             const [
                 profilesRes,
                 statsRes,
@@ -243,7 +248,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 soapRes,
                 sentimentRes,
                 evangelismRes,
-                ministryAnalyticsRes
+                ministryAnalyticsRes,
+                decCountRes
             ] = await Promise.all([
                 db.from('profiles').select('*'),
                 db.from('member_stats').select('*'),
@@ -259,7 +265,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 db.from('soap_entries').select('*'),
                 db.from('soap_sentiment_metrics').select('*'),
                 db.from('evangelism_pipeline').select('*'),
-                db.from('ministry_analytics').select('ministry_id, health_score, avg_attendance, total_reports, salvations').eq('period_type', 'monthly')
+                db.from('ministry_analytics').select('ministry_id, health_score, avg_attendance, total_reports, salvations').eq('period_type', 'monthly'),
+                db.from('user_declarations').select('*', { count: 'exact', head: true }).gte('confirmed_at', startOfToday.toISOString())
             ]);
 
             const profiles = profilesRes.data || [];
@@ -430,7 +437,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     totalSalvations,
                     overdueMinistries: 0,
                     totalVolunteers,
-                }
+                },
+                declarationsToday: (decCountRes as any)?.count || 0
             }));
         } catch (e) {
             console.error("Dashboard Load Error:", e);
@@ -552,6 +560,9 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     <MetricCard title="AI Alerts This Week" value={data.criticalAlerts}
                         sub={`${data.prayerActive} active prayer needs`} trend="down" trendVal="3 resolved"
                         icon={AlertTriangle} accentColor="red" />
+                    <MetricCard title="Daily Affirmations" value={data.declarationsToday}
+                        sub={`${data.activeToday} users active today`} trend="up" trendVal="+12%"
+                        icon={ShieldCheck} accentColor="emerald" />
                 </div>
             </section>
 

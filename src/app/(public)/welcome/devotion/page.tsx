@@ -70,10 +70,10 @@ const FloatingHearts = () => {
         <motion.div
           key={h.id} className="absolute bottom-[-10%]" style={{ left: `${h.left}%` }}
           initial={{ y: 0, opacity: 0, rotate: 0 }}
-          animate={{ y: "-120vh", opacity: [0, 0.4, 0], rotate: [0, 180, -180, 0], x: [0, 30, -30, 0] }}
+          animate={{ y: "-120vh", opacity: [0, 0.6, 0], rotate: [0, 180, -180, 0], x: [0, 40, -40, 0] }}
           transition={{ duration: h.duration, delay: h.delay, repeat: Infinity, ease: "linear" }}
         >
-          <Heart className="text-[var(--primary)] text-pink-500/30 drop-shadow-lg" size={h.size} strokeWidth={1} fill="currentColor" opacity={0.3} />
+          <Heart className="text-[var(--primary)] drop-shadow-xl" size={h.size} strokeWidth={1} fill="currentColor" opacity={0.4} />
         </motion.div>
       ))}
     </div>
@@ -254,6 +254,13 @@ export default function DevotionalApp() {
   const [shareProgress, setShareProgress] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
 
+  const [isDeclared, setIsDeclared] = useState(false);
+
+  useEffect(() => {
+    const dateKey = formatInTimeZone(currentDate, 'Asia/Tokyo', "yyyy-MM-dd");
+    setIsDeclared(localStorage.getItem(`declared-${dateKey}`) === "true");
+  }, [currentDate]);
+
   // Ask Bible Chat State
   const [askChatOpen, setAskChatOpen] = useState(false);
   const [chatQuestion, setChatQuestion] = useState("");
@@ -283,7 +290,10 @@ export default function DevotionalApp() {
   useEffect(() => {
     setMounted(true);
     loadStats();
-  }, [user]);
+    // Load local declaration status
+    const saved = localStorage.getItem(`declared-${format(currentDate, "yyyy-MM-dd")}`);
+    setIsDeclared(!!saved);
+  }, [user, currentDate]);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -321,38 +331,39 @@ export default function DevotionalApp() {
 
   useEffect(() => {
     const loadDayData = async () => {
-      const dateStr = format(currentDate, "yyyy-MM-dd");
-      const d = await getDevotionForDate(dateStr) || undefined;
-      setDevotion(d);
+      const dateStr = formatInTimeZone(currentDate, 'Asia/Tokyo', "yyyy-MM-dd");
+      setLoading(true);
+      try {
+        const d = await getDevotionForDate(dateStr);
+        setDevotion(d || undefined);
 
-      if (d) {
-        setLoading(true);
-        if (user) {
-          const entry = await SoapJournal.getEntry(d.id);
-          setSoapEntry(entry);
-          setNote(entry.observation || "");
-        } else {
-          setSoapEntry(SoapJournal.getDefaultEntry(d.id));
-          setNote("");
-        }
+        if (d) {
+          if (user) {
+            const entry = await SoapJournal.getEntry(d.id);
+            setSoapEntry(entry);
+            setNote(entry.observation || "");
+          } else {
+            setSoapEntry(SoapJournal.getDefaultEntry(d.id));
+            setNote("");
+          }
 
-        const refs = BibleApi.parseReferences(d.scripture);
-        if (refs.length > 0) {
-          try {
+          const refs = BibleApi.parseReferences(d.scripture);
+          if (refs.length > 0) {
             const [enArrays, jpArrays] = await Promise.all([
               Promise.all(refs.map(r => BibleApi.getPassage("NASB", r))),
               Promise.all(refs.map(r => BibleApi.getPassage("JBS", r)))
             ]);
             setVerses(enArrays.flat());
             setJpVerses(jpArrays.flat());
-          } catch (e) {
-            console.error(e);
-            toast.error("Failed to load scripture");
+          } else {
+            setVerses([]);
+            setJpVerses([]);
           }
-        } else {
-          setVerses([]);
-          setJpVerses([]);
         }
+      } catch (e) {
+        console.error(e);
+        toast.error("Failed to load today's data");
+      } finally {
         setLoading(false);
       }
     };
@@ -363,6 +374,33 @@ export default function DevotionalApp() {
 
   const handleLoginSuccess = (newUser: AuthUser) => {
     setUser(newUser);
+  };
+
+  const handleDeclare = async () => {
+    if (isDeclared || !devotion) return;
+    
+    try {
+      // 1. Pessimistic UI update for speed
+      setIsDeclared(true);
+      const dateKey = formatInTimeZone(currentDate, 'Asia/Tokyo', "yyyy-MM-dd");
+      localStorage.setItem(`declared-${dateKey}`, "true");
+
+      // 2. Persist to Backend
+      const { error } = await supabase.from('user_declarations').insert({
+        user_id: user?.id || null,
+        devotion_id: devotion.id.toString(),
+        declaration_text: devotion.declaration,
+        user_name: user?.name || "Guest",
+        user_type: user ? 'member' : 'guest'
+      });
+
+      if (error) throw error;
+      
+      toast.success("Affirmation Confirmed! You are one with the church.");
+    } catch (e) {
+      console.error("Declaration error:", e);
+      // We don't revert UI because we want it to feel fast, but we log the error
+    }
   };
 
   const saveSoap = async () => {
@@ -408,24 +446,24 @@ export default function DevotionalApp() {
       {/* Background Orbs */}
       <FloatingHearts />
 
-      <div className="max-w-screen-xl mx-auto px-4 py-8 relative z-10 transition-all duration-500">
+      <div className="max-w-screen-xl mx-auto px-4 py-8 relative z-[2] transition-all duration-500">
         <div className={`max-w-2xl mx-auto space-y-12 pb-32 transition-all duration-500`}>
 
           {/* Hero Section */}
-          <section className="text-center space-y-4 pt-4">
+          <section className="text-center space-y-4 pt-4 relative">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
+              className="relative z-10 space-y-4"
             >
               <h2 className="text-5xl md:text-7xl font-sans tracking-tight leading-none text-foreground/90">
-                <span className="font-serif italic font-medium pr-2">90 Days of </span><br className="md:hidden" />
-                <span className="font-black text-[var(--primary)] tracking-widest uppercase md:block mt-2">Transformation</span>
+                <span className="font-serif italic font-medium pr-2 text-[var(--primary)]">90 Days of </span><br className="md:hidden" />
+                <span className="font-black text-[var(--foreground)] tracking-widest uppercase md:block mt-2">Transformation</span>
               </h2>
-              <p className="text-xs md:text-sm font-bold uppercase tracking-[0.3em] opacity-30 pt-4">Building Healthy Habits & Holy Lives</p>
+              <p className="text-xs md:text-sm font-bold uppercase tracking-[0.3em] opacity-30 pt-4 text-[var(--foreground)]">Building Healthy Habits & Holy Lives</p>
 
               {mounted && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 inline-flex max-w-2xl mx-auto items-center p-4 px-6 rounded-[2rem] glass bg-[var(--primary)]/5 border border-[var(--primary)]/20 shadow-[0_10px_30px_rgba(var(--primary-rgb),0.1)] gap-4 text-left">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 inline-flex max-w-2xl mx-auto items-center p-4 px-6 rounded-[2rem] card-surface bg-[var(--primary)]/5 border border-[var(--primary)]/20 shadow-[0_10px_30px_rgba(var(--primary-rgb),0.1)] gap-4 text-left">
                   <Sparkles className="w-8 h-8 text-[var(--primary)] shrink-0" />
                   <p className="text-sm font-bold leading-relaxed text-foreground/90 italic tracking-wide">
                     "{AIService.generateHeroMessage(stats.streak, stats.completed, stats.total)}"
@@ -508,7 +546,7 @@ export default function DevotionalApp() {
                   })()}
                 </div>
                 <div className="space-y-0.5">
-                  <h3 className="font-black text-xl leading-none">Week {devotion?.week}: {devotion?.week_theme}</h3>
+                  <h3 className="font-black text-xl leading-none">Week {devotion?.week || '?'}: {devotion?.week_theme || '...'}</h3>
                   <p className="text-xs font-bold text-[var(--primary)] tracking-widest uppercase opacity-80" suppressHydrationWarning>{format(currentDate, "EEEE, MMMM d")}</p>
                 </div>
               </div>
@@ -529,10 +567,10 @@ export default function DevotionalApp() {
                   </Badge>
                   <div className="space-y-2">
                     <h4 className="text-[10px] font-black uppercase text-[var(--primary)] opacity-60 tracking-widest">
-                      {devotion?.theme}
+                      {devotion?.theme || 'Loading...'}
                     </h4>
                     <h3 className="text-3xl md:text-4xl font-black italic text-foreground/90 font-serif leading-tight">
-                      "{devotion?.title}"
+                      "{devotion?.title || 'Today\'s Message'}"
                     </h3>
                   </div>
                 </div>
@@ -542,7 +580,7 @@ export default function DevotionalApp() {
                   <div className="flex items-center justify-between border-b border-foreground/10 pb-4">
                     <div className="flex items-center gap-3">
                       <BookOpen className="w-5 h-5 text-[var(--primary)]" />
-                      <span className="font-black text-sm tracking-widest uppercase">{devotion?.scripture}</span>
+                      <span className="font-black text-sm tracking-widest uppercase">{devotion?.scripture || 'Scripture Reference'}</span>
                     </div>
                     <div className="flex gap-2">
                       <Button variant="ghost" size="sm" className="rounded-full h-8 text-[10px] font-black gap-2 px-4 glass hover:bg-[var(--primary)]/10 border border-[var(--primary)]/30 text-[var(--primary)]" onClick={() => setAskChatOpen(true)}>
@@ -564,7 +602,7 @@ export default function DevotionalApp() {
                       </div>
                     ) : (
                       <div className="text-xl md:text-2xl font-serif leading-relaxed text-foreground/80 font-medium">
-                        {activeVerses.map((v, i) => (
+                        {activeVerses.length > 0 ? activeVerses.map((v, i) => (
                           <span key={i} className={lang === "BOTH" ? "block mb-8" : "inline"}>
                             <sup className="text-[var(--primary)] font-black text-xs mr-2">{v.verse}</sup>
                             {v.text}{" "}
@@ -574,7 +612,9 @@ export default function DevotionalApp() {
                               </span>
                             )}
                           </span>
-                        ))}
+                        )) : (
+                          <p className="italic opacity-50 text-sm">Loading scripture passages...</p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -582,14 +622,39 @@ export default function DevotionalApp() {
 
                 {/* Declaration Section */}
                 <div className="pt-6">
-                  <Button variant="outline" className="w-full h-auto py-12 rounded-[2.5rem] border-dashed border-2 border-[var(--primary)]/30 bg-[var(--primary)]/5 hover:bg-[var(--primary)]/10 transition-all flex flex-col gap-6" onClick={() => setDeclarationMode(true)}>
-                    <div className="w-14 h-14 rounded-full bg-[var(--primary)] text-white flex items-center justify-center shadow-xl shadow-primary/20 scale-110">
-                      <Send className="w-6 h-6 rotate-[-20deg]" />
+                  <Button 
+                    variant="outline" 
+                    className={`w-full h-auto py-12 rounded-[2.5rem] border-dashed border-2 transition-all flex flex-col gap-6 group/btn ${
+                      isDeclared 
+                        ? 'border-green-500/50 bg-green-500/5 cursor-default' 
+                        : 'border-[var(--primary)]/30 bg-[var(--primary)]/5 hover:bg-[var(--primary)]/10'
+                    }`}
+                    onClick={handleDeclare}
+                  >
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all scale-110 ${
+                      isDeclared 
+                        ? 'bg-green-500 text-white shadow-green-500/20 rotate-0' 
+                        : 'bg-[var(--primary)] text-white shadow-primary/20 rotate-[-20deg] group-hover/btn:rotate-0'
+                    }`}>
+                      {isDeclared ? <CheckCircle2 className="w-6 h-6" /> : <Send className="w-6 h-6" />}
                     </div>
-                    <div className="space-y-2 px-6">
-                      <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Today's Declaration</span>
-                      <p className="text-2xl md:text-3xl font-black italic tracking-tight underline decoration-[var(--primary)]/30 underline-offset-8">"{devotion?.declaration}"</p>
+                    <div className="space-y-3 px-6 w-full max-w-full overflow-hidden">
+                      <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${isDeclared ? 'text-green-500' : 'opacity-40'}`}>
+                        {isDeclared ? 'Affirmation Confirmed' : "Today's Declaration"}
+                      </span>
+                      <div className="max-w-[calc(100vw-4rem)] md:max-w-lg mx-auto">
+                        <p className={`text-xl md:text-2xl lg:text-3xl font-black italic tracking-tight break-words whitespace-normal px-4 leading-tight ${
+                          isDeclared ? 'text-green-600' : 'text-[var(--foreground)] underline decoration-[var(--primary)]/30 underline-offset-8'
+                        }`}>
+                          "{devotion?.declaration || 'Declaring His Goodness Today'}"
+                        </p>
+                      </div>
                     </div>
+                    {isDeclared && (
+                      <span className="text-[9px] font-black uppercase tracking-widest text-green-500/60 mt-2">
+                        I am one with the church
+                      </span>
+                    )}
                   </Button>
                 </div>
 
