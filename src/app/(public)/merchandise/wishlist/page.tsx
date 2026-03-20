@@ -30,7 +30,7 @@ export default function WishlistPage() {
                 try {
                     const wishlistIds = await ShopService.getWishlist(currentUser.id);
                     if (wishlistIds.length > 0) {
-                        const allProducts = await ShopService.getMerchandise(ORG_ID);
+                        const allProducts = await ShopService.getProducts(ORG_ID);
                         setProducts(allProducts.filter(p => wishlistIds.includes(p.id)));
                     }
                 } catch (e) {
@@ -39,7 +39,7 @@ export default function WishlistPage() {
             } else {
                 const stored = JSON.parse(localStorage.getItem("merchandise_wishlist") || "[]");
                 if (stored.length > 0) {
-                    const allProducts = await ShopService.getMerchandise(ORG_ID);
+                    const allProducts = await ShopService.getProducts(ORG_ID);
                     setProducts(allProducts.filter(p => stored.includes(p.id)));
                 }
             }
@@ -133,7 +133,7 @@ export default function WishlistPage() {
                                     </div>
                                     <div className="flex-1 min-w-0 text-center sm:text-left">
                                         <h4 className="text-sm font-black uppercase tracking-tight truncate">{product.name}</h4>
-                                        <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest italic">{product.category}</p>
+                                        <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1 tracking-widest italic">{product.category?.name || "Uncategorized"}</p>
                                         <div className="text-lg font-black text-primary mt-2">
                                             {getCurrencySymbol(ORG_ID)}{product.price.toLocaleString()}
                                         </div>

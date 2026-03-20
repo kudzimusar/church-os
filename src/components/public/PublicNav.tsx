@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Menu, X, User, Settings, LogOut, BookOpen,
-         ChevronDown, ShoppingCart } from 'lucide-react';
+         ChevronDown, ShoppingCart, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Auth } from '@/lib/auth';
 import { AuthModal } from '@/components/auth/AuthModal';
@@ -293,6 +293,20 @@ export default function PublicNav() {
                       style={{ color: 'var(--foreground)' }}>
                       <BookOpen className="w-4 h-4" style={{ color: 'var(--jkc-gold)' }} />
                       Devotion App
+                    </Link>
+                    <Link href="/merchandise/wishlist"
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-xs font-bold hover:bg-[var(--muted)] transition-all"
+                      style={{ color: 'var(--foreground)' }}>
+                      <Heart className="w-4 h-4" style={{ color: 'var(--jkc-gold)' }} />
+                      Liked Products
+                    </Link>
+                    <Link href="/merchandise/orders"
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-xs font-bold hover:bg-[var(--muted)] transition-all"
+                      style={{ color: 'var(--foreground)' }}>
+                      <ShoppingCart className="w-4 h-4" style={{ color: 'var(--jkc-gold)' }} />
+                      Purchase History
                     </Link>
                     <Link href="/profile"
                       onClick={() => setIsDropdownOpen(false)}

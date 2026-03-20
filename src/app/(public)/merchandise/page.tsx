@@ -393,77 +393,77 @@ export default function MerchandisePage() {
                     </div>
                 ) : (
                     <div className={viewMode === "grid" 
-                        ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-8" 
-                        : "flex flex-col gap-6"
+                        ? "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 md:gap-4" 
+                        : "flex flex-col gap-4"
                     }>
                         {filteredProducts.map((product, idx) => (
                             <motion.div
                                 key={product.id}
-                                initial={{ opacity: 0, y: 30 }}
+                                initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.6, delay: idx * 0.05 }}
+                                transition={{ duration: 0.4, delay: idx * 0.03 }}
                             >
-                                <Card className={`group relative overflow-hidden bg-white border-2 border-transparent hover:border-primary/20 transition-all duration-500 rounded-[1.5rem] md:rounded-[2rem] shadow-sm hover:shadow-xl ${viewMode === "list" ? "flex flex-row h-48" : "flex flex-col"}`}>
+                                <Card className={`group relative overflow-hidden bg-white border border-border/50 hover:border-primary/30 transition-all duration-300 rounded-xl md:rounded-2xl shadow-sm hover:shadow-md ${viewMode === "list" ? "flex flex-row h-32 md:h-40" : "flex flex-col"}`}>
                                     {/* Link covers the image and title area but not the CTA button */}
-                                    <div className="relative h-full flex flex-col">
+                                    <div className="relative h-full flex flex-col flex-1">
                                         <Link href={`/merchandise/${product.slug}`} className="block relative overflow-hidden flex-1">
                                             {/* Product Image */}
-                                            <div className={`${viewMode === "list" ? "w-32 md:w-48 h-full flex-shrink-0" : "aspect-[4/5]"} relative overflow-hidden`}>
+                                            <div className={`${viewMode === "list" ? "w-24 md:w-32 h-full flex-shrink-0" : "aspect-[4/5]"} relative overflow-hidden bg-muted/30`}>
                                                 <img 
                                                     src={product.images?.[0] || 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&q=80&w=800'} 
                                                     alt={product.name} 
-                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                                                 />
                                                 
                                                 {/* Overlays */}
-                                                <div className="absolute top-4 left-4 transition-all duration-300 z-10">
+                                                <div className="absolute top-2 left-2 transition-all duration-300 z-10">
                                                     <Button 
                                                         size="icon" 
                                                         onClick={(e) => toggleLike(product.id, product.name, e)}
-                                                        className={`h-9 w-9 rounded-full shadow-xl border-none transition-all active:scale-90 ${wishlist.includes(product.id) ? 'bg-red-500 text-white' : 'bg-white/90 backdrop-blur-md text-black hover:bg-white'}`}
+                                                        className={`h-7 w-7 rounded-full shadow-lg border-none transition-all active:scale-90 ${wishlist.includes(product.id) ? 'bg-red-500 text-white' : 'bg-white/90 backdrop-blur-md text-black hover:bg-white'}`}
                                                     >
-                                                        <Heart size={16} fill={wishlist.includes(product.id) ? "currentColor" : "none"} strokeWidth={2.5} />
+                                                        <Heart size={12} fill={wishlist.includes(product.id) ? "currentColor" : "none"} strokeWidth={3} />
                                                     </Button>
                                                 </div>
 
                                                 {product.stock_quantity < 10 && product.stock_quantity > 0 && (
-                                                    <div className="absolute top-4 right-4 z-10">
+                                                    <div className="absolute top-2 right-2 z-10">
                                                         <Badge className="bg-red-500 text-white font-black text-[7px] px-2 py-1 rounded-full uppercase tracking-widest border-none">LOW STOCK</Badge>
                                                     </div>
                                                 )}
                                             </div>
                                         </Link>
 
-                                        <CardContent className={`p-5 flex flex-col ${viewMode === "list" ? "flex-1 justify-center" : ""}`}>
-                                            <div className="space-y-2">
+                                        <CardContent className={`p-3 md:p-4 flex flex-col ${viewMode === "list" ? "flex-1 justify-center" : ""}`}>
+                                            <div className="space-y-1.5">
                                                 <Link href={`/merchandise/${product.slug}`} className="block group/title">
                                                     <div className="flex flex-col">
-                                                        <span className="text-[7px] md:text-[8px] font-black text-primary uppercase tracking-[0.2em] mb-1">{product.category?.name || 'Publication'}</span>
-                                                        <h3 className="text-sm md:text-lg font-black text-foreground uppercase tracking-tight group-hover/title:text-primary transition-colors leading-snug line-clamp-1">
+                                                        <span className="text-[7px] font-black text-primary/80 uppercase tracking-widest mb-0.5">{product.category?.name || 'Publication'}</span>
+                                                        <h3 className="text-[11px] md:text-[13px] font-black text-foreground uppercase tracking-tight group-hover/title:text-primary transition-colors leading-tight line-clamp-1">
                                                             {product.name}
                                                         </h3>
                                                     </div>
                                                 </Link>
                                                 
-                                                <div className="flex items-center justify-between">
-                                                    <div className="text-base md:text-xl font-black text-foreground">{getCurrencySymbol(ORG_ID, "Japan")}{product.price.toLocaleString()}</div>
-                                                    <div className="flex items-center gap-1 text-amber-500">
-                                                        <Star size={10} fill="currentColor" />
-                                                        <span className="text-[8px] font-black tracking-widest mt-0.5">4.9</span>
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <div className="text-sm md:text-base font-black text-foreground">{getCurrencySymbol(ORG_ID, "Japan")}{product.price.toLocaleString()}</div>
+                                                    <div className="flex items-center gap-0.5 text-amber-500">
+                                                        <Star size={8} fill="currentColor" />
+                                                        <span className="text-[7px] font-black tracking-widest mt-0.5">4.9</span>
                                                     </div>
                                                 </div>
                                                 
-                                                <p className="text-[9px] md:text-[10px] text-muted-foreground font-medium line-clamp-2 md:line-clamp-1 leading-relaxed">
+                                                <p className="text-[9px] text-muted-foreground font-medium line-clamp-1 leading-relaxed hidden sm:block">
                                                     {product.description}
                                                 </p>
                                                 
-                                                <div className="pt-2">
+                                                <div className="pt-1.5">
                                                     <Button 
                                                         onClick={() => addToCart(product)}
                                                         disabled={product.stock_quantity === 0}
-                                                        className="w-full h-10 rounded-lg bg-foreground hover:bg-black text-background font-black text-[8px] uppercase tracking-widest active:scale-95 transition-all"
+                                                        className="w-full h-8 rounded-lg bg-foreground hover:bg-black text-background font-black text-[8px] uppercase tracking-widest active:scale-95 transition-all"
                                                     >
-                                                        <ShoppingBag className="mr-2" size={12} />
+                                                        <ShoppingCart className="mr-1.5" size={10} />
                                                         Add to Cart
                                                     </Button>
                                                 </div>
