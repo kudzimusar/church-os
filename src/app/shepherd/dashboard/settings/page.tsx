@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { supabaseAdmin } from "@/lib/supabase-admin";
 import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { useAdminCtx } from "../layout";
 import { AdminAuth, ADMIN_ROLES, ROLE_HIERARCHY, AdminRole } from "@/lib/admin-auth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -83,7 +83,7 @@ export default function SettingsPage() {
                     const { data: existingProfile } = await supabase.from('profiles').select('id').eq('email', inviteEmail).single();
                     if (existingProfile) {
                         const token = crypto.randomUUID();
-                        await supabaseAdmin.from('org_members').upsert({
+                        await supabase.from('org_members').upsert({
                             user_id: existingProfile.id,
                             role: inviteRole,
                             org_id: orgId,

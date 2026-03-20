@@ -37,8 +37,8 @@ export default function MembershipRequestsPage() {
                     *,
                     profiles:user_id(
                         name, email, city, ward, 
-                        phone, growth_stage, 
-                        referral_source, church_background,
+                        phone_number, growth_stage, 
+                        invite_method, church_background,
                         created_at, org_id
                     )
                 `)
@@ -230,8 +230,8 @@ export default function MembershipRequestsPage() {
                                                         </div>
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <p className="text-[10px] text-muted-foreground uppercase font-black">Referral Source</p>
-                                                        <p className="font-bold text-sm italic">"{selectedRequest.profiles?.referral_source || 'Direct Discovery'}"</p>
+                                                        <p className="text-[10px] text-muted-foreground uppercase font-black">Invite Method</p>
+                                                        <p className="font-bold text-sm italic">"{selectedRequest.profiles?.invite_method || 'Direct Discovery'}"</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -254,7 +254,7 @@ export default function MembershipRequestsPage() {
                                                     </div>
                                                     <div className="space-y-1">
                                                         <p className="text-[10px] text-muted-foreground uppercase font-black">Phone</p>
-                                                        <p className="font-bold text-sm">{selectedRequest.profiles?.phone || 'Not provided'}</p>
+                                                        <p className="font-bold text-sm">{selectedRequest.profiles?.phone_number || 'Not provided'}</p>
                                                     </div>
                                                     <div className="space-y-1">
                                                         <p className="text-[10px] text-muted-foreground uppercase font-black">Notes from Applicant</p>

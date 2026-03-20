@@ -5,14 +5,26 @@
 -- Add missing fields for Giving and UI state tracking
 DO $$ 
 BEGIN
+    IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'marital_status') THEN
+        ALTER TABLE public.profiles ADD COLUMN marital_status text;
+    END IF;
+    IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'wedding_anniversary') THEN
+        ALTER TABLE public.profiles ADD COLUMN wedding_anniversary date;
+    END IF;
     IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'tithe_status') THEN
         ALTER TABLE public.profiles ADD COLUMN tithe_status boolean DEFAULT false;
     END IF;
     IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'preferred_giving_method') THEN
         ALTER TABLE public.profiles ADD COLUMN preferred_giving_method text;
     END IF;
-    IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'household_type') THEN
+    IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'household_type') THEN
         ALTER TABLE public.profiles ADD COLUMN household_type text;
+    END IF;
+    IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'invite_method') THEN
+        ALTER TABLE public.profiles ADD COLUMN invite_method text;
+    END IF;
+    IF NOT EXISTS (SELECT FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'invited_by_name') THEN
+        ALTER TABLE public.profiles ADD COLUMN invited_by_name text;
     END IF;
 END $$;
 

@@ -306,9 +306,16 @@ export default function ProfileHub() {
             const dbPayload = mapProfileToDB(cleanData);
 
             const { error } = await supabase.from('profiles').update(dbPayload).eq('id', user.id);
-
             if (error) throw error;
+
+            // NEW: Synchronize with Auth metadata to prevent reverts
+            await supabase.auth.updateUser({
+                data: { full_name: data.name }
+            });
+
             toast.success("Identity updated successfully!");
+            // Refresh local state to update Header and Profile Card immediately
+            await loadData(user.id);
         } catch (e: any) {
             console.error("Profile Save Error:", e);
             toast.error(e.message || "Failed to update profile");

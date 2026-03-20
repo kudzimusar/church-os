@@ -24,6 +24,8 @@ export const PROFILE_FIELD_MAP = {
         nationality: 'nationality',
         industry: 'industry',
         preferred_communication: 'preferred_communication',
+        invite_method: 'invite_method',
+        invited_by_name: 'invited_by_name',
     },
     // Spiritual Section
     spiritual: {
@@ -34,7 +36,8 @@ export const PROFILE_FIELD_MAP = {
     },
     // Referral Section
     referral: {
-        invite_method: 'invited_by', 
+        invite_method: 'invite_method',
+        invited_by_name: 'invited_by_name',
     },
     // Household Section
     household: {
@@ -81,8 +84,8 @@ export function mapProfileFromDB(dbData: any) {
         baptism_date: dbData.baptism_date || "",
         
         // Referral
-        invited_by_name: dbData.invited_by || "",
-        invite_method: dbData.invited_by || "",
+        invited_by_name: dbData.invited_by_name || "",
+        invite_method: dbData.invite_method || "",
         
         // Household
         head_id: dbData.head_id || null,
@@ -130,7 +133,8 @@ export function mapProfileToDB(formData: any) {
         baptism_status: formData.baptism_status || null,
         baptism_date: formData.baptism_date || null,
         
-        invited_by: formData.invite_method || formData.invited_by_name || null,
+        invite_method: formData.invite_method || null,
+        invited_by_name: formData.invited_by_name || null,
         head_id: formData.head_id || null,
         household_type: formData.household_type || null,
         

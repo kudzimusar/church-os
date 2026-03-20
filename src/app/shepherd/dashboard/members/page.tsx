@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
-import { supabaseAdmin } from "@/lib/supabase-admin";
 import { toast } from "sonner";
 import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export-utils";
 import { Download, ChevronDown } from "lucide-react";
@@ -58,12 +57,12 @@ export default function MembersPage() {
     async function fetchMembers() {
         if (!orgId) return;
         setLoading(true);
-        // Using supabaseAdmin to ensure access to all member data regardless of RLS
-        const { data, error } = await supabaseAdmin
+        // Using standard supabase client (RLS enforced for org_id)
+        const { data, error } = await supabase
             .from('profiles')
             .select(`
                 *,
-                milestones:spiritual_milestones(*),
+                milestones:member_milestones(*),
                 ministry_members(*),
                 member_skills(*),
                 org_members(role, stage, discipleship_score, joined_at)
@@ -86,7 +85,7 @@ export default function MembersPage() {
             setMembers(processed);
 
             // Fetch pending requests
-            const { data: requests } = await supabaseAdmin
+            const { data: requests } = await supabase
                 .from('membership_requests')
                 .select('*, profiles(name, email)')
                 .eq('org_id', orgId)
