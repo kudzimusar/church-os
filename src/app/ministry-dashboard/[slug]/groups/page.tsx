@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { MinistryAuth, MinistrySession } from '@/lib/ministry-auth';
 import Link from 'next/link';
-import { ChevronLeft, MessagesSquare, Users, MapPin, Calendar, Plus, Globe, Link as LinkIcon, BookOpen } from 'lucide-react';
+import { ChevronLeft, MessagesSquare, Users, MapPin, Calendar, Plus, Globe, Link as LinkIcon, BookOpen, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';

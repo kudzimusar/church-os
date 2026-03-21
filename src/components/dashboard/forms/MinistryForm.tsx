@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { assignMinistryRoleAction } from "@/app/actions/admin";
 import { BookOpen, UserPlus, ShieldCheck, Sparkles } from "lucide-react";
-import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
+import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
 import { MINISTRIES } from "@/lib/constants";
 
 export function MinistryForm({ onSuccess }: { onSuccess: () => void }) {

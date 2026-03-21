@@ -22,7 +22,7 @@ import { AttendanceReconciliationCard } from "./AttendanceReconciliationCard";
 import { MinistryOnboarding } from "./MinistryOnboarding";
 import { toast } from "sonner";
 import { CRITICAL_MINISTRIES, MINISTRY_OPTIONS } from "@/lib/constants";
-import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
+import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
 
 /* ─── Types ─── */
 interface DashboardData {

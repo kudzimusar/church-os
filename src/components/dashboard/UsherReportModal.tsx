@@ -20,7 +20,7 @@ export function UsherReportModal({ registeredCount, onReportSubmitted }: UsherRe
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
     
-    const { values: formData, handleChange: handleStickyChange, clear } = useStickyForm({
+    const { values: formData, handleChange: handleStickyChange, setValues: setFormData, clear } = useStickyForm({
         service_type: "Sunday Service",
         adults_count: 0,
         children_count: 0,
@@ -29,16 +29,6 @@ export function UsherReportModal({ registeredCount, onReportSubmitted }: UsherRe
         notes: ""
     }, "usher-report-modal");
 
-    const setFormData = (updater: any) => {
-        if (typeof updater === 'function') {
-            const next = updater(formData);
-            Object.keys(next).forEach(key => {
-                if (next[key] !== formData[key as keyof typeof formData]) {
-                    handleStickyChange(key, next[key]);
-                }
-            });
-        }
-    };
 
     const totalManual = formData.adults_count + formData.children_count;
     const gap = totalManual - registeredCount;

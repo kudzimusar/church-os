@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { createEventAction } from "@/app/actions/admin";
 import { AlignLeft, Calendar, MapPin } from "lucide-react";
-import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
+import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
 import { useStickyForm } from "@/hooks/useStickyForm";
 
 export function EventForm({ onSuccess }: { onSuccess: () => void }) {

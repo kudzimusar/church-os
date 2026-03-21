@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
+import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
 import { useStickyForm } from "@/hooks/useStickyForm";
 
 export function MinistryOnboarding() {

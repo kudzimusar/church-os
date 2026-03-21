@@ -1,4 +1,4 @@
-"use server";
+// This file was converted to a client-side utility to support Next.js static export.
 import { supabase } from "@/lib/supabase";
 
 /**

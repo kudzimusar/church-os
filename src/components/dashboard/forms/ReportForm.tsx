@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { generateReportAction } from "@/app/actions/admin";
 import { FileText, Sparkles, TrendingUp, Users, Heart, BarChart } from "lucide-react";
-import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
+import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
 import { useStickyState } from "@/hooks/useStickyState";
 
 export function ReportForm({ onSuccess }: { onSuccess: () => void }) {

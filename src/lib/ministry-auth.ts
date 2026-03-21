@@ -16,6 +16,7 @@ export interface MinistrySession {
     userId: string;
     ministryRole: MinistryRole;
     ministryId: string;
+    orgId: string;
     ministryName: string;
     slug: string;
     color: string;
@@ -35,7 +36,7 @@ export const MinistryAuth = {
                 .select(`
                     ministry_role,
                     ministry_id,
-                    ministries!inner(name, slug, color, icon, description, is_active)
+                    ministries!inner(name, slug, color, icon, description, is_active, org_id)
                 `)
                 .eq('user_id', session.user.id)
                 .eq('is_active', true)
@@ -45,18 +46,20 @@ export const MinistryAuth = {
 
             if (error || !data) return null;
 
-            const ministry = Array.isArray(data.ministries) ? data.ministries[0] : data.ministries;
+            const ministry = Array.isArray(data.ministries) ? data.ministries[0] : (data.ministries as any);
 
             return {
                 userId: session.user.id,
                 ministryRole: data.ministry_role as MinistryRole,
                 ministryId: data.ministry_id as string,
+                orgId: ministry.org_id,
                 ministryName: ministry.name,
                 slug: ministry.slug,
                 color: ministry.color,
                 icon: ministry.icon,
                 description: ministry.description,
             };
+
         } catch {
             return null;
         }

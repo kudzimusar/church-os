@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { addPrayerRequestAction } from "@/app/actions/admin";
 import { Heart, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
+import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
 import { useStickyForm } from "@/hooks/useStickyForm";
 
 export function PrayerForm({ onSuccess }: { onSuccess: () => void }) {

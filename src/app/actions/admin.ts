@@ -1,4 +1,4 @@
-"use server";
+// Converted to client-side functions for output: export compatibility
 import { supabase } from "@/lib/supabase";
 
 export async function addMemberAction(formData: any) {

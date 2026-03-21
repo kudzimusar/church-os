@@ -38,15 +38,21 @@ export function useStickyForm<T extends Record<string, any>>(
         if (typeof nameOrEvent === 'string') {
             setValues(prev => ({ ...prev, [nameOrEvent]: value }));
         } else {
-            const { name, value: newValue, type, checked } = nameOrEvent.target;
+            const target = nameOrEvent.target as HTMLInputElement;
+            const { name, value: newValue, type, checked } = target;
             const finalValue = type === 'checkbox' ? checked : newValue;
             setValues(prev => ({ ...prev, [name]: finalValue }));
         }
     }, []);
 
-    const setAllValues = useCallback((newValues: Partial<T>) => {
-        setValues(prev => ({ ...prev, ...newValues }));
-    }, []);
+    const setAllValues = useCallback((newValues: Partial<T> | ((prev: T) => T)) => {
+        if (typeof newValues === 'function') {
+            // @ts-ignore - for functional updates
+            setValues(prev => newValues(prev));
+        } else {
+            setValues(prev => ({ ...prev, ...newValues }));
+        }
+    }, [setValues]);
 
     const clear = useCallback(() => {
         if (typeof window === 'undefined') return;
@@ -56,8 +62,9 @@ export function useStickyForm<T extends Record<string, any>>(
 
     return {
         values,
-        setValues: setAllValues,
+        setValues: setAllValues as (vals: Partial<T> | ((prev: T) => T)) => void,
         handleChange,
         clear
     };
 }
+

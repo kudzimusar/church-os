@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { addMemberAction } from "@/app/actions/admin";
 import { Users } from "lucide-react";
-import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
+import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
 
 export function MemberForm({ onSuccess }: { onSuccess: () => void }) {
     const { orgId } = useAdminCtx();

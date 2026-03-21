@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { handleJoinRequestAction } from "@/app/actions/bible-study";
 import { supabase } from "@/lib/supabase";
-import { Check, X, Clock, User, Mail, MessageSquare } from "lucide-react";
+import { Check, X, Clock, User, Mail, MessageSquare, MessageCircle } from "lucide-react";
 
 export function BibleStudyRequestsPanel({ groupId }: { groupId?: string }) {
     const [requests, setRequests] = useState<any[]>([]);

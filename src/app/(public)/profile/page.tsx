@@ -7,7 +7,7 @@ import {
     User as UserIcon, Users, Heart, Trophy, Shield,
     MessageCircle, AlertCircle, Plus, Save, Clock,
     Camera, MapPin, Globe, Milestone, Copy, LayoutDashboard, Settings, CheckCircle2, LogOut,
-    Briefcase, Music, CalendarCheck, Coins, Activity, ChevronRight, Sparkles, XCircle,
+    Briefcase, Music, Calendar, CalendarCheck, Coins, Activity, ChevronRight, Sparkles, XCircle,
     TrendingUp, Newspaper, ArrowUpRight, Landmark, Smartphone, ShoppingBag, Package
 } from "lucide-react";
 import { ShopService } from "@/lib/shop-service";
@@ -96,7 +96,7 @@ export default function ProfileHub() {
     const [newHouseholdName, setNewHouseholdName, clearHh] = useStickyState("", "profile-new-household-name");
     const [newHouseholdRel, setNewHouseholdRel] = useStickyState("Spouse", "profile-new-household-rel");
 
-    const { values: milestones, handleChange: handleMilestoneChange, setValues: setMilestones, clear: clearMilestones } = useStickyForm({}, "profile-milestones");
+    const { values: milestones, handleChange: handleMilestoneChange, setValues: setMilestones, clear: clearMilestones } = useStickyForm<Record<string, any>>({}, "profile-milestones");
 
     const [prayers, setPrayers] = useState<any[]>([]);
     const [newPrayerText, setNewPrayerText, clearPrayer] = useStickyState("", "profile-new-prayer-text");
@@ -117,7 +117,7 @@ export default function ProfileHub() {
     const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
     const [children, setChildren] = useState<any[]>([]);
     const [givingHistory, setGivingHistory] = useState<any[]>([]);
-    const [bibleStudyGroups, setBibleStudyGroups] = useState<any[]>([]);
+    const [bibleStudyGroups, setBibleStudyGroups] = useState<Record<string, any>[]>([]);
     const [userGroups, setUserGroups] = useState<any[]>([]);
     const [merchandiseOrders, setMerchandiseOrders] = useState<any[]>([]);
     const [givingData, setGivingData] = useState({ tithe_status: false, preferred_giving_method: 'Cash' });
@@ -204,7 +204,7 @@ export default function ProfileHub() {
                 idForm.reset({ ...mappedData, ...stickyDraft });
                 
                 const stickyMilestones = JSON.parse(localStorage.getItem('sticky_form:profile-milestones') || '{}');
-                setMilestones(prev => ({ ...prev, ...stickyMilestones }));
+                setMilestones(stickyMilestones);
 
                 setGivingData({
                     tithe_status: mappedData.tithe_status,
@@ -1533,7 +1533,7 @@ export default function ProfileHub() {
                                                 </div>
 
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                    {bibleStudyGroups.length > 0 ? bibleStudyGroups.map(g => {
+                                                    {bibleStudyGroups.length > 0 ? bibleStudyGroups.map((g: any) => {
                                                         const joined = userGroups.includes(g.id);
                                                         return (
                                                             <div key={g.id} className="bg-muted/40 border-border border-2 rounded-[32px] p-8 flex flex-col justify-between transition-all group hover:border-primary/30 relative overflow-hidden">
@@ -1547,15 +1547,15 @@ export default function ProfileHub() {
                                                                         </div>
                                                                         {joined && <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/10 hover:bg-emerald-500/20 shadow-none px-3 font-black text-[9px] uppercase tracking-widest">ENROLLED</Badge>}
                                                                     </div>
-                                                                    
-                                                                    <h5 className="font-black text-xl mb-2 text-foreground group-hover:text-primary transition-colors">{g.name}</h5>
+                                                                                                                                        <h5 className="font-black text-xl mb-2 text-foreground group-hover:text-primary transition-colors">{(g as any).name}</h5>
                                                                     <div className="space-y-2 mb-8">
                                                                         <p className="text-[11px] text-muted-foreground flex items-center gap-2 font-bold">
-                                                                            <Calendar className="w-3.5 h-3.5 opacity-40" /> {g.meeting_day ? `${g.meeting_day}s` : 'Flexible'} · {g.meeting_time || 'TBD'}
+                                                                            <Calendar className="w-3.5 h-3.5 opacity-40" /> {(g as any).meeting_day ? `${(g as any).meeting_day}s` : 'Flexible'} · {(g as any).meeting_time || 'TBD'}
                                                                         </p>
                                                                         <p className="text-[11px] text-muted-foreground flex items-center gap-2 font-bold truncate">
-                                                                            <MapPin className="w-3.5 h-3.5 opacity-40" /> {g.location || 'Online Community'}
+                                                                            <MapPin className="w-3.5 h-3.5 opacity-40" /> {(g as any).location || 'Online Community'}
                                                                         </p>
+
                                                                     </div>
                                                                 </div>
 

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { createBibleStudyGroupAction, updateBibleStudyGroupAction } from "@/app/actions/admin";
 import { MessagesSquare, Link, Clock, Calendar, BookOpen, User } from "lucide-react";
-import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
+import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
 import { useStickyForm } from "@/hooks/useStickyForm";
 import { supabase } from "@/lib/supabase";
 

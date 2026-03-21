@@ -12,7 +12,7 @@ import { Auth } from "@/lib/auth";
 import { AdminAuth } from "@/lib/admin-auth";
 import { basePath as BP, cn } from "@/lib/utils";
 import Link from "next/link";
-import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
+import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
 import { useTheme } from "@/components/theme-provider";
 
 import { QuickActionModal, QuickActionType } from "./QuickActionModal";
