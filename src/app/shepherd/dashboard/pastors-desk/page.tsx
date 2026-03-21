@@ -339,7 +339,7 @@ export default function PastorsDesk() {
             </div>
 
             {/* Outreach & Social Strategy (NEW) */}
-            <div className="pt-8 border-t border-border dark:border-white/5 transition-colors">
+            <div className="pt-8 border-t border-border transition-colors">
                 <SocialAnalytics />
             </div>
         </div>

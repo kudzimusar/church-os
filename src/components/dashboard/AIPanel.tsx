@@ -55,9 +55,9 @@ const MOCK_INSIGHTS: AiInsight[] = [
 ];
 
 const PRIORITY_CONFIG = {
-    critical: { color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20', icon: AlertTriangle, dot: 'bg-red-500', label: 'CRITICAL' },
-    warning: { color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', icon: TrendingUp, dot: 'bg-amber-500', label: 'ATTENTION' },
-    info: { color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', icon: Zap, dot: 'bg-emerald-500', label: 'INSIGHT' },
+    critical: { color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/5 dark:bg-red-500/10 border-red-500/10 dark:border-red-500/20', icon: AlertTriangle, dot: 'bg-red-500', label: 'CRITICAL' },
+    warning: { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/10 dark:border-amber-500/20', icon: TrendingUp, dot: 'bg-amber-500', label: 'ATTENTION' },
+    info: { color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/10 dark:border-emerald-500/20', icon: Zap, dot: 'bg-emerald-500', label: 'INSIGHT' },
 };
 
 export function AIPanel() {
@@ -135,8 +135,8 @@ export function AIPanel() {
                     <div className="px-5 py-4 border-b border-border flex-shrink-0">
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-lg bg-violet-500/20 flex items-center justify-center">
-                                    <Sparkles className="w-4 h-4 text-violet-400" />
+                                <div className="w-7 h-7 rounded-lg bg-violet-500/10 dark:bg-violet-500/20 flex items-center justify-center">
+                                    <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                                 </div>
                                 <div>
                                     <p className="text-xs font-black text-foreground uppercase tracking-wide">AI Shepherd</p>

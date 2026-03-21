@@ -59,7 +59,7 @@ export const PILEngine = {
                         category: 'geo',
                         insight_title: `Expansion Alert: ${gap.ward}`,
                         insight_description: `Concentrated cluster of ${gap.member_count} members in ${gap.ward}.`,
-                        recommended_action: `Evaluate for new fellowship circle.`,
+                        recommended_action: `Evaluate for new Bible study group.`,
                         probability_score: 85,
                         risk_level: 'medium',
                         metadata: { member_count: gap.member_count, ward: gap.ward }

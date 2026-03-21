@@ -24,7 +24,7 @@ export default function SettingsHub() {
     const [theme, setTheme] = useState('system');
     const [fontSize, setFontSize] = useState('medium');
     const [language, setLanguage] = useState('en');
-    const [circlesVisibility, setCirclesVisibility] = useState(true);
+    const [groupsVisibility, setGroupsVisibility] = useState(true);
 
     useEffect(() => {
         const init = async () => {
@@ -212,11 +212,11 @@ export default function SettingsHub() {
                                     <div className="bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8 space-y-6">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <h4 className="font-black text-lg">Fellowship Circles Visibility</h4>
-                                                <p className="text-sm text-foreground/50 mt-1 max-w-sm">Allow other church members to find your basic profile when creating fellowship groups.</p>
+                                                <h4 className="font-black text-lg">Bible Study Groups Visibility</h4>
+                                                <p className="text-sm text-foreground/50 mt-1 max-w-sm">Allow other church members to find your basic profile when creating Bible study groups.</p>
                                             </div>
-                                            <button onClick={() => setCirclesVisibility(!circlesVisibility)} className={`w-14 h-8 rounded-full transition-colors relative ${circlesVisibility ? 'bg-[var(--primary)]' : 'bg-foreground/20'}`}>
-                                                <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-all ${circlesVisibility ? 'left-7' : 'left-1'}`} />
+                                            <button onClick={() => setGroupsVisibility(!groupsVisibility)} className={`w-14 h-8 rounded-full transition-colors relative ${groupsVisibility ? 'bg-[var(--primary)]' : 'bg-foreground/20'}`}>
+                                                <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-all ${groupsVisibility ? 'left-7' : 'left-1'}`} />
                                             </button>
                                         </div>
                                     </div>

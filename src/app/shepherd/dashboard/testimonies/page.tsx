@@ -73,59 +73,59 @@ export default function TestimoniesManagement() {
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black italic">Testimony Management</h1>
-          <p className="text-white/40 text-sm">Post member stories to the public website.</p>
+          <h1 className="text-3xl font-black text-foreground italic">Testimony Management</h1>
+          <p className="text-muted-foreground text-sm">Post member stories to the public website.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left: Form */}
         <div className="lg:col-span-1">
-          <div className="glass rounded-[2rem] p-8 border border-white/10 space-y-6">
+          <div className="bg-card rounded-[2rem] p-8 border border-border space-y-6 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)]">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                 <Plus className="w-5 h-5" />
               </div>
-              <h2 className="text-xl font-black">Add New</h2>
+              <h2 className="text-xl font-black text-foreground">Add New</h2>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black tracking-widest text-white/40 uppercase ml-1">Title / Name</label>
+                <label className="text-[10px] font-black tracking-widest text-muted-foreground uppercase ml-1">Title / Name</label>
                 <input 
                   required
                   value={formData.name}
                   onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-white/10 focus:border-[var(--primary)]/50 transition-all outline-none"
+                  className="w-full bg-muted/50 border border-border rounded-2xl px-6 py-4 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 transition-all outline-none"
                   placeholder="e.g. Testimony — New Life"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black tracking-widest text-white/40 uppercase ml-1">YouTube URL</label>
+                <label className="text-[10px] font-black tracking-widest text-muted-foreground uppercase ml-1">YouTube URL</label>
                 <input 
                   required
                   value={formData.youtube_url}
                   onChange={e => setFormData({...formData, youtube_url: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-white/10 focus:border-[var(--primary)]/50 transition-all outline-none"
+                  className="w-full bg-muted/50 border border-border rounded-2xl px-6 py-4 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 transition-all outline-none"
                   placeholder="https://youtube.com/..."
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black tracking-widest text-white/40 uppercase ml-1">Description (Optional)</label>
+                <label className="text-[10px] font-black tracking-widest text-muted-foreground uppercase ml-1">Description (Optional)</label>
                 <textarea 
                   value={formData.description}
                   onChange={e => setFormData({...formData, description: e.target.value})}
                   rows={3}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-white/10 focus:border-[var(--primary)]/50 transition-all outline-none resize-none"
+                  className="w-full bg-muted/50 border border-border rounded-2xl px-6 py-4 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/50 transition-all outline-none resize-none"
                   placeholder="A short summary..."
                 />
               </div>
 
               <button 
                 disabled={submitting}
-                className="w-full bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-white font-black py-4 rounded-2xl transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-black py-4 rounded-2xl transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
               >
                 {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'POST TO WEBSITE'}
               </button>
@@ -135,38 +135,38 @@ export default function TestimoniesManagement() {
 
         {/* Right: List */}
         <div className="lg:col-span-2">
-          <div className="glass rounded-[2rem] p-8 border border-white/10 space-y-6">
+          <div className="bg-card rounded-[2rem] p-8 border border-border space-y-6 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/40">
+              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground/40 border border-border">
                 <Play className="w-5 h-5" />
               </div>
-              <h2 className="text-xl font-black">Current Feed</h2>
+              <h2 className="text-xl font-black text-foreground">Current Feed</h2>
             </div>
 
             {loading ? (
               <div className="py-20 flex justify-center">
-                 <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
+                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
             ) : testimonies.length === 0 ? (
-              <div className="py-20 text-center text-white/20 italic">
+              <div className="py-20 text-center text-muted-foreground/20 italic font-medium">
                  No testimonies posted yet.
               </div>
             ) : (
               <div className="space-y-4">
                 {testimonies.map(t => (
-                  <div key={t.id} className="group bg-white/5 border border-white/10 rounded-2xl p-6 flex items-center justify-between hover:border-white/20 transition-all">
+                  <div key={t.id} className="group bg-muted/30 border border-border rounded-2xl p-6 flex items-center justify-between hover:border-primary/20 transition-all">
                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-black/40 flex items-center justify-center text-white/20">
+                        <div className="w-12 h-12 rounded-xl bg-background border border-border flex items-center justify-center text-muted-foreground/20">
                            <Play className="w-6 h-6" />
                         </div>
                         <div>
-                           <h3 className="font-black text-white">{t.name}</h3>
-                           <p className="text-xs text-white/30 truncate max-w-[300px]">{t.youtube_url}</p>
+                           <h3 className="font-black text-foreground">{t.name}</h3>
+                           <p className="text-xs text-muted-foreground/60 truncate max-w-[300px]">{t.youtube_url}</p>
                         </div>
                      </div>
                      <button 
                        onClick={() => handleDelete(t.id)}
-                       className="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-all opacity-0 group-hover:opacity-100"
+                       className="p-3 bg-red-500/10 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-500/20 transition-all opacity-0 group-hover:opacity-100"
                      >
                        <Trash2 className="w-5 h-5" />
                      </button>

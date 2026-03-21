@@ -1,9 +1,8 @@
-"use client";
-
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useStickyForm } from '@/hooks/useStickyForm';
 
 export interface FormTemplate {
     id: string;
@@ -33,13 +32,17 @@ interface DynamicFormRendererProps {
 }
 
 export default function DynamicFormRenderer({ template, ministryId, onSuccess }: DynamicFormRendererProps) {
-    const [formData, setFormData] = useState<Record<string, any>>({});
+    const { 
+        values: formData, 
+        handleChange, 
+        setValues: setFormData,
+        clear: clearStickyData 
+    } = useStickyForm<Record<string, any>>({}, template.id);
+    
     const [isSubmitting, setIsSubmitting] = useState(false);
     const router = useRouter();
 
-    const handleChange = (name: string, value: any) => {
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
+    // handleChange is now provided by useStickyForm
 
     const handleChildrenTableChange = (name: string, index: number, field: string, value: any) => {
         setFormData(prev => {
@@ -102,6 +105,7 @@ export default function DynamicFormRenderer({ template, ministryId, onSuccess }:
             if (error) throw error;
             
             toast.success('Report saved and sent to Mission Control! Your leadership contribution score and ministry analytics have been updated in real time.');
+            clearStickyData();
             if (onSuccess) onSuccess();
             else router.refresh();
         } catch (error: any) {

@@ -5,11 +5,12 @@ import { toast } from "sonner";
 import { generateReportAction } from "@/app/actions/admin";
 import { FileText, Sparkles, TrendingUp, Users, Heart, BarChart } from "lucide-react";
 import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
+import { useStickyState } from "@/hooks/useStickyState";
 
 export function ReportForm({ onSuccess }: { onSuccess: () => void }) {
     const { userId, orgId } = useAdminCtx();
     const [loading, setLoading] = useState(false);
-    const [selectedType, setSelectedType] = useState<string | null>(null);
+    const [selectedType, setSelectedType, clearSelectedType] = useStickyState<string | null>(null, "admin-report-type");
 
     const REPORT_TYPES = [
         { id: 'health', name: 'Shepherd Health', icon: Heart, color: 'text-violet-400', desc: 'Devotions & SOAP analytics' },
@@ -25,6 +26,7 @@ export function ReportForm({ onSuccess }: { onSuccess: () => void }) {
 
         if (result.success) {
             toast.success(`${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} Intelligence generated!`);
+            clearSelectedType();
             onSuccess();
         } else {
             toast.error("Error: " + result.error);

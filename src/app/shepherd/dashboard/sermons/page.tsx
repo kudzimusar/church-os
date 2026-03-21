@@ -118,7 +118,7 @@ export default function SermonManagementPage() {
   return (
     <div className="space-y-8 p-6 max-w-6xl mx-auto">
       <div>
-        <h1 className="text-xl font-black">Sermon Management</h1>
+        <h1 className="text-xl font-black text-foreground">Sermon Management</h1>
         <p className="text-[11px] text-muted-foreground uppercase tracking-widest">
           Post sermons — updates the public website automatically
         </p>
@@ -126,12 +126,12 @@ export default function SermonManagementPage() {
 
       <div className="grid lg:grid-cols-2 gap-8 items-start">
         {/* Left: Add Form */}
-        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 space-y-6">
+        <div className="bg-card border border-border rounded-3xl p-8 space-y-6 shadow-sm transition-colors">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)]">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
               <Plus className="w-4 h-4" />
             </div>
-            <h2 className="text-sm font-black uppercase tracking-widest">Add New Sermon</h2>
+            <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Add New Sermon</h2>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -141,7 +141,7 @@ export default function SermonManagementPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. A Genuine Believer"
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] outline-none transition-colors"
+                className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground outline-none transition-colors"
               />
             </div>
 
@@ -151,7 +151,7 @@ export default function SermonManagementPage() {
                 value={speaker}
                 onChange={(e) => setSpeaker(e.target.value)}
                 placeholder="e.g. Pastor Marcel Jonte"
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] outline-none transition-colors"
+                className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground outline-none transition-colors"
               />
             </div>
 
@@ -162,19 +162,19 @@ export default function SermonManagementPage() {
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] outline-none transition-colors"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground outline-none transition-colors"
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-muted-foreground tracking-widest uppercase ml-1">Featured</label>
-                <div className="flex items-center h-[46px] px-4 bg-black/40 border border-white/10 rounded-xl">
+                <div className="flex items-center h-[46px] px-4 bg-muted border border-border rounded-xl">
                     <input 
                       type="checkbox"
                       checked={featured}
                       onChange={(e) => setFeatured(e.target.checked)}
-                      className="w-4 h-4 accent-[var(--primary)]"
+                      className="w-4 h-4 accent-primary"
                     />
-                    <span className="ml-3 text-xs font-bold text-white/60">Mark as Featured</span>
+                    <span className="ml-3 text-xs font-bold text-muted-foreground">Mark as Featured</span>
                 </div>
               </div>
             </div>
@@ -182,12 +182,12 @@ export default function SermonManagementPage() {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-muted-foreground tracking-widest uppercase ml-1">YouTube URL</label>
               <div className="relative">
-                <Youtube className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                <Youtube className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
                 <input 
                   value={youtubeUrl}
                   onChange={(e) => setYoutubeUrl(e.target.value)}
                   placeholder="https://youtube.com/..."
-                  className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm focus:border-[var(--primary)] outline-none transition-colors"
+                  className="w-full bg-muted border border-border rounded-xl pl-11 pr-4 py-3 text-sm focus:border-primary text-foreground outline-none transition-colors"
                 />
               </div>
             </div>
@@ -199,7 +199,7 @@ export default function SermonManagementPage() {
                   value={series}
                   onChange={(e) => setSeries(e.target.value)}
                   placeholder="e.g. Identity"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] outline-none transition-colors"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground outline-none transition-colors"
                 />
               </div>
               <div className="space-y-2">
@@ -208,14 +208,14 @@ export default function SermonManagementPage() {
                   value={scripture}
                   onChange={(e) => setScripture(e.target.value)}
                   placeholder="e.g. Psalms 23:1"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] outline-none transition-colors"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground outline-none transition-colors"
                 />
               </div>
             </div>
 
             <button 
               disabled={issubmitting}
-              className="w-full bg-[var(--primary)] text-white font-black py-4 rounded-xl text-xs tracking-[0.2em] shadow-lg shadow-[var(--primary)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 mt-6"
+              className="w-full bg-primary text-white font-black py-4 rounded-xl text-xs tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 mt-6"
             >
               {issubmitting ? 'POSTING...' : 'POST SERMON'}
             </button>
@@ -223,37 +223,37 @@ export default function SermonManagementPage() {
         </div>
 
         {/* Right: Recent List */}
-        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 space-y-6">
+        <div className="bg-card border border-border rounded-3xl p-8 space-y-6 shadow-sm transition-colors">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500">
               <BookOpen className="w-4 h-4" />
             </div>
-            <h2 className="text-sm font-black uppercase tracking-widest">Recent Sermons</h2>
+            <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Recent Sermons</h2>
           </div>
 
           <div className="space-y-3">
             {loading ? (
-              <div className="py-20 text-center animate-pulse text-white/20 font-black text-xs tracking-widest">LOADING...</div>
+              <div className="py-20 text-center animate-pulse text-muted-foreground/20 font-black text-xs tracking-widest">LOADING...</div>
             ) : sermons.length === 0 ? (
-              <div className="py-20 text-center text-white/20 font-black text-xs tracking-widest">NO SERMONS POSTED</div>
+              <div className="py-20 text-center text-muted-foreground/20 font-black text-xs tracking-widest uppercase">No sermons posted yet</div>
             ) : (
               sermons.map((sermon) => (
-                <div key={sermon.id} className="group bg-black/40 border border-white/5 p-4 rounded-2xl flex items-center justify-between hover:border-white/20 transition-all">
+                <div key={sermon.id} className="group bg-muted border border-border p-4 rounded-2xl flex items-center justify-between hover:border-primary/20 transition-all shadow-sm">
                   <div className="flex gap-4 items-center">
-                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/20 group-hover:text-[var(--primary)] transition-colors">
+                    <div className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center text-muted-foreground/30 group-hover:text-primary group-hover:bg-primary/5 transition-colors">
                       <Youtube className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-black text-white/90">{sermon.title}</h3>
+                      <h3 className="text-sm font-black text-foreground/90">{sermon.title}</h3>
                       <div className="flex items-center gap-3 mt-1">
-                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter flex items-center gap-1">
+                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter flex items-center gap-1">
                           <User className="w-2.5 h-2.5" /> {sermon.speaker}
                         </span>
-                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter flex items-center gap-1">
+                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter flex items-center gap-1">
                           <Calendar className="w-2.5 h-2.5" /> {format(new Date(sermon.date), 'MMM dd, yyyy')}
                         </span>
                         {sermon.featured && (
-                          <span className="bg-[var(--primary)]/10 text-[var(--primary)] text-[8px] font-black px-1.5 py-0.5 rounded tracking-widest uppercase flex items-center gap-1">
+                          <span className="bg-primary/10 text-primary text-[8px] font-black px-1.5 py-0.5 rounded tracking-widest uppercase flex items-center gap-1">
                             <Star className="w-2 h-2" /> Featured
                           </span>
                         )}
@@ -262,7 +262,7 @@ export default function SermonManagementPage() {
                   </div>
                   <button 
                     onClick={() => handleDelete(sermon.id)}
-                    className="p-3 text-white/20 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                    className="p-3 text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

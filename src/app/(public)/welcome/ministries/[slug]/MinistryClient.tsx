@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ChevronLeft, Loader2, Send } from 'lucide-react';
+import { ChevronLeft, Loader2, Send, Users, MapPin, Calendar, Globe, BookOpen, MessagesSquare } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -27,7 +27,7 @@ const fallbacks: Ministry[] = [
   { name: "Men's Ministry", slug: "mens-ministry",
     description: "Building men of faith, character, and vision." },
   { name: "Language School", slug: "language-school",
-    description: "Kingdom Language School — bridging cultures." },
+    description: "Kingdom Language School - bridging cultures." },
   { name: "Pastoral Care", slug: "pastoral",
     description: "Spiritual support, counseling, and guidance for our church family." }
 ];
@@ -42,6 +42,8 @@ export default function MinistryClient({ slug }: { slug: string }) {
     message: ''
   });
 
+  const [groups, setGroups] = useState<any[]>([]);
+
   useEffect(() => {
     async function fetchMinistry() {
       const { data } = await supabase
@@ -52,6 +54,14 @@ export default function MinistryClient({ slug }: { slug: string }) {
       
       if (data) {
         setMinistry(data);
+        if (slug === 'bible-study' || slug === 'bible-study-groups') {
+            const { data: groupData } = await supabase
+                .from('bible_study_groups')
+                .select('*')
+                .eq('is_active', true)
+                .order('name');
+            setGroups(groupData || []);
+        }
       } else {
         const fallback = fallbacks.find(f => f.slug === slug);
         setMinistry(fallback || null);
@@ -71,7 +81,7 @@ export default function MinistryClient({ slug }: { slug: string }) {
         first_name: formData.name,
         last_name: '',
         email: formData.email,
-        message: `Ministry Interest: ${ministry?.name} — ${formData.message}`
+        message: `Ministry Interest: ${ministry?.name} - ${formData.message}`
       }]);
 
     if (error) {
@@ -140,15 +150,65 @@ export default function MinistryClient({ slug }: { slug: string }) {
                   We believe in building a strong foundation of faith and providing a space where 
                   everyone can grow together, worship, and serve Japan according to their unique divine gifts.
                </p>
-               {ministry.description?.includes('Led by') || (ministry as any).leader_name ? (
+               {(ministry.description?.includes('Led by') || (ministry as any).leader_name) && (
                  <div className="pt-8 p-8 rounded-3xl border border-dashed border-[var(--border)]" style={{ background: 'var(--section-alt)' }}>
                     <p className="text-[10px] font-black tracking-widest text-[var(--jkc-gold)] uppercase mb-2">MINISTRY VISION</p>
                     <p className="text-xl font-bold italic" style={{ color: 'var(--foreground)' }}>
                       "To represent Christ to Japanese society through excellence and love."
                     </p>
                  </div>
-               ) : null}
+               )}
             </div>
+
+            {/* Bible Study Groups Section */}
+            {(slug === 'bible-study' || slug === 'bible-study-groups') && groups.length > 0 && (
+              <div className="pt-16 space-y-8">
+                <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
+                  <h2 className="text-2xl font-black uppercase tracking-tight" style={{ color: 'var(--foreground)' }}>Available Groups</h2>
+                  <span className="text-[10px] font-black text-[var(--muted-foreground)] uppercase tracking-widest">{groups.length} active groups</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {groups.map((g) => (
+                    <div key={g.id} className="p-6 rounded-[2rem] border transition-all hover:border-[var(--jkc-gold)] group" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-[var(--section-alt)] flex items-center justify-center border border-[var(--border)] group-hover:border-[var(--jkc-gold)]/30 transition-colors">
+                          <MessagesSquare className="w-6 h-6 text-[var(--jkc-gold)]" />
+                        </div>
+                        <span className="text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full bg-[var(--section-alt)] border border-[var(--border)]" style={{ color: 'var(--muted-foreground)' }}>
+                          {g.meeting_type}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-black mb-1" style={{ color: 'var(--foreground)' }}>{g.name}</h3>
+                      <p className="text-xs mb-4 line-clamp-2" style={{ color: 'var(--muted-foreground)' }}>{g.description}</p>
+                      
+                      <div className="space-y-2 mb-6">
+                        {(g.meeting_type === 'online' || g.meeting_type === 'hybrid') ? (
+                          <div className="flex items-center gap-2 text-[10px] font-medium" style={{ color: 'var(--jkc-gold)' }}>
+                            <Globe className="w-3.5 h-3.5" /> <span>Online Meeting Link Available</span>
+                          </div>
+                        ) : (
+                          g.location && (
+                            <div className="flex items-center gap-2 text-[10px] font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                              <MapPin className="w-3.5 h-3.5" /> <span>{g.location}</span>
+                            </div>
+                          )
+                        )}
+                        <div className="flex items-center gap-2 text-[10px] font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                          <Calendar className="w-3.5 h-3.5" /> <span>{g.meeting_day}s {g.meeting_time ? `@ ${g.meeting_time}` : ''}</span>
+                        </div>
+                      </div>
+
+                      <Link 
+                        href={`/groups/${g.id}`} 
+                        className="w-full py-4 rounded-2xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest border border-primary/20"
+                      >
+                        Explore & Join Circle
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-6">
                <div className="rounded-3xl p-8 space-y-2 border" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>

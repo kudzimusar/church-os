@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthGuard } from "@/components/auth-guard";
+import { StickyAutoRestorer } from "@/components/utils/StickyAutoRestorer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default function RootLayout({
           <AuthGuard>
             {children}
           </AuthGuard>
+          <StickyAutoRestorer />
           <Toaster position="top-center" />
         </ThemeProvider>
       </body>

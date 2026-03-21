@@ -9,9 +9,9 @@ import { exportToExcel, exportToPDF } from "@/lib/export-utils";
 import { useAdminCtx } from "../layout";
 
 const STATIC_REPORTS = [
-    { name: 'Congregational Health Report', desc: 'Devotion streaks, engagement scores, SOAP analytics', icon: Heart, color: 'text-violet-400', bg: 'bg-violet-500/10' },
-    { name: 'Member Directory Export', desc: 'Full member list with status, city, and contact info (CSV)', icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { name: 'Attendance Summary', desc: 'Sunday service + events attendance for the last 6 months', icon: BarChart2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { name: 'Congregational Health Report', desc: 'Devotion streaks, engagement scores, SOAP analytics', icon: Heart, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-500/10' },
+    { name: 'Member Directory Export', desc: 'Full member list with status, city, and contact info (CSV)', icon: Users, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10' },
+    { name: 'Attendance Summary', desc: 'Sunday service + events attendance for the last 6 months', icon: BarChart2, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10' },
 ];
 
 export default function ReportsPage() {
@@ -99,43 +99,43 @@ export default function ReportsPage() {
     return (
         <div className="p-6 xl:p-8">
             <div className="mb-6">
-                <h1 className="text-xl font-black text-white">Prophetic Intelligence & Reports</h1>
-                <p className="text-[11px] text-white/30 mt-0.5">Access AI-generated briefings and standardized church analytics</p>
+                <h1 className="text-xl font-black text-foreground">Prophetic Intelligence & Reports</h1>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Access AI-generated briefings and standardized church analytics</p>
             </div>
 
             {/* AI BRIEFINGS SECTION */}
             <div className="mb-10">
                 <div className="flex items-center gap-2 mb-4">
-                    <Sparkles className="w-4 h-4 text-violet-400" />
-                    <h2 className="text-xs font-black uppercase tracking-widest text-white/60">Recent AI Briefings</h2>
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">Recent AI Briefings</h2>
                 </div>
 
                 {loading ? (
-                    <div className="flex items-center gap-2 text-white/20">
+                    <div className="flex items-center gap-2 text-muted-foreground/20">
                         <Clock className="w-4 h-4 animate-spin" />
                         <span className="text-[10px] font-bold">Loading intelligence...</span>
                     </div>
                 ) : dbReports.length === 0 ? (
-                    <div className="p-8 rounded-2xl border border-dashed border-white/5 bg-white/2 text-center">
-                        <p className="text-xs font-bold text-white/20">No generated briefings yet. Use "Quick Actions" to generate one.</p>
+                    <div className="p-8 rounded-2xl border border-dashed border-border bg-muted/20 text-center">
+                        <p className="text-xs font-bold text-muted-foreground/30 uppercase tracking-widest">No generated briefings yet. Use "Quick Actions" to generate one.</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {dbReports.map((report) => (
-                            <div key={report.id} className="bg-violet-500/5 border border-violet-500/10 rounded-2xl p-5 hover:border-violet-500/30 transition-all cursor-pointer group">
+                            <div key={report.id} className="bg-card border border-border shadow-sm rounded-2xl p-5 hover:border-primary/30 transition-all cursor-pointer group">
                                 <div className="flex items-start justify-between mb-3">
-                                    <Badge className="bg-violet-500/20 text-violet-300 border-0 text-[8px] font-black uppercase">
+                                    <Badge className="bg-primary/10 text-primary border-0 text-[8px] font-black uppercase tracking-tighter">
                                         {report.report_type?.replace('_', ' ') || 'INTEL'}
                                     </Badge>
-                                    <span className="text-[9px] text-white/20 font-bold">{format(new Date(report.created_at), 'MMM d, yyyy')}</span>
+                                    <span className="text-[9px] text-muted-foreground font-black uppercase tracking-tight">{format(new Date(report.created_at), 'MMM d, yyyy')}</span>
                                 </div>
-                                <h3 className="text-sm font-black text-white group-hover:text-violet-400 transition-colors">{report.title}</h3>
-                                <p className="text-[10px] text-white/40 mt-2 line-clamp-3 leading-relaxed">
+                                <h3 className="text-sm font-black text-foreground group-hover:text-primary transition-colors">{report.title}</h3>
+                                <p className="text-[10px] text-muted-foreground mt-2 line-clamp-3 leading-relaxed">
                                     {report.content_json?.summary || "Narrative intelligence briefing for leadership review."}
                                 </p>
-                                <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
-                                    <span className="text-[9px] font-black text-violet-500/60 uppercase">Vision Ready</span>
-                                    <button className="text-[9px] font-bold text-white/40 hover:text-white transition-colors">View Briefing →</button>
+                                <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
+                                    <span className="text-[9px] font-black text-primary/60 uppercase tracking-widest">Vision Ready</span>
+                                    <button className="text-[9px] font-bold text-muted-foreground hover:text-primary transition-colors">View Briefing →</button>
                                 </div>
                             </div>
                         ))}
@@ -146,22 +146,22 @@ export default function ReportsPage() {
             {/* STANDARDIZED EXPORTS */}
             <div>
                 <div className="flex items-center gap-2 mb-4">
-                    <FileText className="w-4 h-4 text-blue-400" />
-                    <h2 className="text-xs font-black uppercase tracking-widest text-white/60">Data Exports</h2>
+                    <FileText className="w-4 h-4 text-blue-500" />
+                    <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">Data Exports</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {STATIC_REPORTS.map((report) => (
-                        <div key={report.name} className="bg-[#111827] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-all flex items-start gap-4">
+                        <div key={report.name} className="bg-card border border-border shadow-sm rounded-2xl p-5 hover:border-primary/10 transition-all flex items-start gap-4">
                             <div className={`w-10 h-10 rounded-xl ${report.bg} flex items-center justify-center flex-shrink-0`}>
                                 <report.icon className={`w-5 h-5 ${report.color}`} />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-black text-white">{report.name}</p>
-                                <p className="text-[10px] text-white/35 mt-1 leading-relaxed">{report.desc}</p>
+                                <p className="text-sm font-black text-foreground">{report.name}</p>
+                                <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{report.desc}</p>
                             </div>
                             <button
                                 onClick={() => handleExport(report.name)}
-                                className="flex items-center gap-1 text-[9px] font-black text-violet-400 hover:text-violet-300 transition-colors flex-shrink-0 mt-1"
+                                className="flex items-center gap-1 text-[9px] font-black text-primary hover:text-primary/70 transition-colors flex-shrink-0 mt-1"
                             >
                                 <Download className="w-3 h-3" /> Export
                             </button>

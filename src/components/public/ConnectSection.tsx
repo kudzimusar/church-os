@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useStickyForm } from '@/hooks/useStickyForm';
+import { useStickyState } from '@/hooks/useStickyState';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
@@ -12,12 +14,12 @@ import { usePublicTheme } from './PublicThemeWrapper';
 export default function ConnectSection() {
   const { isDark } = usePublicTheme();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const { values: formData, handleChange: handleFormChange, setValues: setFormData, clear: clearForm } = useStickyForm({
     first_name: '',
     last_name: '',
     email: '',
     message: ''
-  });
+  }, "public-connect");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +37,7 @@ export default function ConnectSection() {
       if (error) throw error;
 
       toast.success("Thanks for submitting! We'll be in touch.");
-      setFormData({ first_name: '', last_name: '', email: '', message: '' });
+      clearForm();
     } catch (error: any) {
       console.error(error);
       toast.error("Failed to send — please try again.");
@@ -95,7 +97,7 @@ export default function ConnectSection() {
                   className="rounded-xl h-12 px-4 border transition-all focus-visible:ring-2"
                   style={{ ...inputStyle, '--tw-ring-color': 'var(--jkc-gold)' } as React.CSSProperties}
                   value={formData.first_name}
-                  onChange={e => setFormData({ ...formData, first_name: e.target.value })}
+                  onChange={e => handleFormChange('first_name', e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -108,7 +110,7 @@ export default function ConnectSection() {
                   className="rounded-xl h-12 px-4 border transition-all"
                   style={inputStyle}
                   value={formData.last_name}
-                  onChange={e => setFormData({ ...formData, last_name: e.target.value })}
+                  onChange={e => handleFormChange('last_name', e.target.value)}
                 />
               </div>
             </div>
@@ -125,7 +127,7 @@ export default function ConnectSection() {
                 className="rounded-xl h-12 px-4 border transition-all"
                 style={inputStyle}
                 value={formData.email}
-                onChange={e => setFormData({ ...formData, email: e.target.value })}
+                onChange={e => handleFormChange('email', e.target.value)}
               />
             </div>
 
@@ -139,7 +141,7 @@ export default function ConnectSection() {
                 className="rounded-xl min-h-[140px] p-4 border transition-all resize-none"
                 style={inputStyle}
                 value={formData.message}
-                onChange={e => setFormData({ ...formData, message: e.target.value })}
+                onChange={e => handleFormChange('message', e.target.value)}
               />
             </div>
 

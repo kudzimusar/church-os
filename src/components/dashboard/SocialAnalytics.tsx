@@ -62,7 +62,7 @@ export function SocialAnalytics() {
 
     if (loading) return (
         <div className="flex items-center justify-center p-12">
-            <Loader2 className="w-6 h-6 animate-spin text-violet-500 opacity-20" />
+            <Loader2 className="w-6 h-6 animate-spin text-primary opacity-50" />
         </div>
     );
 

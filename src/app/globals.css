@@ -46,46 +46,46 @@
     --jkc-navy-dark: #122a52;   /* deeper navy for hovers */
     --jkc-gold-light: #f7b84b;  /* lighter gold for hover states */
 
-    /* ─── Light Theme ──────────────────────────────────────────── */
-    /* 3-level background hierarchy so cards are always visible:
-       page bg (#fff) → card (#fff + shadow) → section-alt (#f1f5f9) */
-    --background:      #ffffff;
-    --foreground:      #0f172a;   /* Slate-900 — rich, readable black */
-    --section-alt:     #f1f5f9;   /* Slate-100 — clearly different from white */
-    --section-deep:    #e8edf4;   /* Slightly deeper for nested highlights */
+    /* ─── Light Theme (True Light Refinement) ───────────────────── */
+    /* Page Background (off-white) → Card (pure white) → Nested (#f3f4f6) */
+    --background:      #f9fafb;   /* Gray-50 — clean base */
+    --foreground:      #111827;   /* Gray-900 — high contrast */
+    --section-alt:     #f4f7fa;   /* Subtle blue-tinted gray */
+    --section-deep:    #eff3f7;
 
     --card:            #ffffff;
-    --card-foreground: #0f172a;
+    --card-foreground: #111827;
     --popover:         #ffffff;
-    --popover-foreground: #0f172a;
+    --popover-foreground: #111827;
 
     --primary:           #1b3a6b;
+    --primary-rgb:       27, 58, 107;
     --primary-foreground: #ffffff;
     --secondary:          #f5a623;
     --secondary-foreground: #1b3a6b;
 
-    --muted:            #e2e8f0;   /* Slate-200 — visible input/badge bg */
-    --muted-foreground: #4b5563;   /* Gray-600 — crisp muted text */
+    --muted:            #f1f5f9;
+    --muted-foreground: #64748b;   /* Slate-500 — clear but secondary */
 
     --accent:           #f5a623;
     --accent-foreground: #1b3a6b;
 
-    --destructive:           #dc2626;
+    --destructive:           #ef4444;
     --destructive-foreground: #ffffff;
 
-    --border: #cbd5e1;   /* Slate-300 — visible card/input edges */
-    --input:  #f1f5f9;   /* Off-white — inputs visible on white cards */
+    --border: #e5e7eb;   /* Gray-200 — visible edges */
+    --input:  #ffffff;
     --ring:   #1b3a6b;
 
     --radius: 0.75rem;
 
     /* ─── Shadow System ─────────────────────────────────────────── */
     /* Cards need shadow to lift off the page in light mode          */
-    --shadow-sm:   0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.05);
-    --shadow-md:   0 4px 12px -2px rgb(0 0 0 / 0.10), 0 2px 6px -2px rgb(0 0 0 / 0.07);
-    --shadow-lg:   0 10px 24px -4px rgb(0 0 0 / 0.11), 0 4px 10px -4px rgb(0 0 0 / 0.07);
-    --shadow-xl:   0 20px 40px -8px rgb(0 0 0 / 0.13), 0 8px 16px -6px rgb(0 0 0 / 0.07);
-    --card-shadow: 0 2px 8px 0 rgb(0 0 0 / 0.08), 0 0 0 1px var(--border);
+    /* ─── Shadow System (Surface Elevation) ─────────────────────── */
+    --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 
     /* ─── Footer / Dark Island (always dark) ───────────────────── */
     --footer-bg:    #0f172a;
@@ -112,28 +112,29 @@
     --week-5-accent:  oklch(0.2  0.1  25);
   }
 
-  /* ─── Dark Theme ─────────────────────────────────────────────── */
+  /* ─── Dark Theme (Legacy) ─────────────────────────────────────── */
   .dark {
-    --background:   #020617;
-    --foreground:   #f1f5f9;
-    --section-alt:  #0d1526;
+    --background:   #080c14;   /* Deep Legacy Blue-Black */
+    --foreground:   #ffffff;
+    --section-alt:  #0d1421;
     --section-deep: #0a1120;
 
-    --card:            #0f172a;
-    --card-foreground: #f1f5f9;
-    --popover:            #020617;
-    --popover-foreground: #f1f5f9;
+    --card:            #0d1421;
+    --card-foreground: #ffffff;
+    --popover:            #080c14;
+    --popover-foreground: #ffffff;
 
     --primary:           #f5a623;
-    --primary-foreground: #1b3a6b;
+    --primary-rgb:       245, 166, 35;
+    --primary-foreground: #080c14;
     --secondary:           #1b3a6b;
     --secondary-foreground: #ffffff;
 
-    --muted:            #1e293b;
+    --muted:            #1a2333;
     --muted-foreground: #94a3b8;
 
     --accent:           #f5a623;
-    --accent-foreground: #1b3a6b;
+    --accent-foreground: #080c14;
 
     --border: #1e293b;
     --input:  #1e293b;

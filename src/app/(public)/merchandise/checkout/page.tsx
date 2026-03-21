@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Auth } from "@/lib/auth";
 import { ShopService, getCurrencySymbol } from "@/lib/shop-service";
+import { useStickyForm } from "@/hooks/useStickyForm";
 
 export default function CheckoutPage() {
     const router = useRouter();
@@ -26,7 +27,8 @@ export default function CheckoutPage() {
     
     const ORG_ID = "fa547adf-f820-412f-9458-d6bade11517d";
     const [isSuccess, setIsSuccess] = useState(false);
-    const [formData, setFormData] = useState({
+    
+    const { values: formData, handleChange: handleInputChange, clear: clearForm } = useStickyForm({
         email: "",
         phone: "",
         firstName: "",
@@ -34,7 +36,7 @@ export default function CheckoutPage() {
         address: "",
         city: "",
         postalCode: "",
-    });
+    }, "checkout-form");
 
     useEffect(() => {
         const initCheckout = async () => {
@@ -80,10 +82,7 @@ export default function CheckoutPage() {
     const shipping = subtotal > 10000 ? 0 : 500;
     const total = subtotal + taxAmount + shipping; // FIX: Included tax in total
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
+    // handleInputChange is now provided by useStickyForm
 
     const handleCheckout = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -93,6 +92,7 @@ export default function CheckoutPage() {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         localStorage.removeItem("merchandise_cart");
+        clearForm();
         setIsSuccess(true);
         setSubmitting(false);
         toast.success("Divine Transaction Complete!");

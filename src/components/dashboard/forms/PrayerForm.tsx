@@ -7,11 +7,16 @@ import { addPrayerRequestAction } from "@/app/actions/admin";
 import { Heart, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
+import { useStickyForm } from "@/hooks/useStickyForm";
 
 export function PrayerForm({ onSuccess }: { onSuccess: () => void }) {
     const { userId, orgId } = useAdminCtx();
     const [loading, setLoading] = useState(false);
-    const [text, setText] = useState("");
+    const { values, handleChange, clear } = useStickyForm({
+        text: ""
+    }, "prayer-request-form");
+    const text = values.text;
+    const setText = (val: string) => handleChange("text", val);
     const [aiInsight, setAiInsight] = useState<string | null>(null);
 
     // AI Prediction Simulation
@@ -37,6 +42,7 @@ export function PrayerForm({ onSuccess }: { onSuccess: () => void }) {
 
         if (result.success) {
             toast.success("Prayer request added to the Intercessory list!");
+            clear();
             onSuccess();
         } else {
             toast.error("Error: " + result.error);

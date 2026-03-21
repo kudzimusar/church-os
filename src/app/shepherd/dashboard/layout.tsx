@@ -72,10 +72,10 @@ export default function ShepherdDashboardLayout({ children }: { children: React.
 
     if (state.loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-[#080c14]">
+            <div className="flex items-center justify-center min-h-screen bg-background transition-colors duration-500">
                 <div className="text-center space-y-3">
-                    <Loader2 className="w-7 h-7 text-violet-400 animate-spin mx-auto" />
-                    <p className="text-[10px] font-black text-white/25 uppercase tracking-widest">
+                    <Loader2 className="w-7 h-7 text-[var(--primary)] animate-spin mx-auto" />
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                         Initializing Mission Control
                     </p>
                 </div>

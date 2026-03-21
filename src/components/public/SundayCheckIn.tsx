@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from 'next/link';
 import { usePublicTheme } from "./PublicThemeWrapper";
+import { useStickyState } from "@/hooks/useStickyState";
 
 export default function SundayCheckIn({ user, currentDate }: { user: any, currentDate: Date }) {
   const { isDark } = usePublicTheme();
@@ -34,7 +35,7 @@ export default function SundayCheckIn({ user, currentDate }: { user: any, curren
   }, [user, todayStr, isSunday]);
 
   const [children, setChildren] = useState<any[]>([]);
-  const [selectedKids, setSelectedKids] = useState<string[]>([]);
+  const [selectedKids, setSelectedKids, clearSelectedKids] = useStickyState<string[]>([], "sunday-checkin-kids");
 
   useEffect(() => {
     if (user && isSunday) {
@@ -82,6 +83,7 @@ export default function SundayCheckIn({ user, currentDate }: { user: any, curren
       }
 
       setCheckedIn(true);
+      clearSelectedKids();
       toast.success(type === 'Not Attending' ? "Message sent to leadership." : "Checked in! Have a blessed service.");
     } catch (e) {
       console.error(e);

@@ -1,8 +1,8 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import {
-    Search, Bell, Plus, ChevronDown, User, LogOut, RefreshCw,
-    BookOpen, Calendar, Heart, Users, FileText, Sun, Moon
+    BookOpen, Calendar, Heart, Users, FileText, Sun, Moon, MessageSquare,
+    Search as SearchIcon, RefreshCw, Bell, Plus, ChevronDown, User, LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Auth } from "@/lib/auth";
 import { AdminAuth } from "@/lib/admin-auth";
-import { basePath as BP } from "@/lib/utils";
+import { basePath as BP, cn } from "@/lib/utils";
 import Link from "next/link";
 import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
 import { useTheme } from "@/components/theme-provider";
@@ -51,6 +51,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
         { icon: Calendar, label: "Create Event", type: "event" as QuickActionType },
         { icon: Heart, label: "Add Prayer Request", type: "prayer" as QuickActionType },
         { icon: BookOpen, label: "Assign Ministry Role", type: "ministry" as QuickActionType },
+        { icon: MessageSquare, label: "Create Bible Study Group", type: "bible_study" as QuickActionType },
         { icon: FileText, label: "Generate Report", type: "report" as QuickActionType },
     ];
 
@@ -89,7 +90,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
             {/* Center: Search */}
             <div className="hidden md:flex flex-1 max-w-xs mx-8">
                 <div className="relative w-full">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                     <input
                         placeholder="Search members, ministries, requests..."
                         className="w-full h-9 bg-foreground/5 border border-border rounded-xl pl-9 pr-4 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-violet-500/50 transition-all"
@@ -149,7 +150,12 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                                         { text: "Financial stress prayers up 40%", level: "warning" },
                                         { text: "Youth attendance grew 24% this month", level: "info" },
                                     ].map((n, i) => (
-                                        <div key={i} className={`p-3 rounded-xl text-xs font-medium space-x-2 ${n.level === 'critical' ? 'bg-red-500/10 text-red-300' : n.level === 'warning' ? 'bg-amber-500/10 text-amber-300' : 'bg-emerald-500/10 text-emerald-300'}`}>
+                                        <div key={i} className={cn(
+                                            "p-3 rounded-xl text-xs font-semibold space-x-2 transition-colors",
+                                            n.level === 'critical' ? 'bg-red-500/10 text-red-600 dark:text-red-400' : 
+                                            n.level === 'warning' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 
+                                            'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                        )}>
                                             {n.text}
                                         </div>
                                     ))}
@@ -184,7 +190,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                                         return (
                                             <button key={qa.label} onClick={() => openAction(qa.type)}
                                                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-all text-left font-medium">
-                                                <Icon className="w-4 h-4 text-violet-400" />
+                                                <Icon className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                                                 {qa.label}
                                             </button>
                                         );

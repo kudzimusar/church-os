@@ -23,6 +23,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { basePath as BP } from "@/lib/utils";
 import { MINISTRY_OPTIONS, SKILL_OPTIONS, PRAYER_CATEGORIES } from "@/lib/constants";
 import { mapProfileFromDB, mapProfileToDB } from "@/lib/profileFieldMap";
+import { useStickyForm } from "@/hooks/useStickyForm";
+import { useStickyState } from "@/hooks/useStickyState";
+import { joinBibleStudyGroupAction, leaveGroupAction } from "@/app/actions/bible-study";
 
 const identitySchema = z.object({
     name: z.string().min(2, "Name is required"),
@@ -61,7 +64,7 @@ const SIDEBAR_NAV = [
     { id: 'care', label: 'Pastoral Care', icon: MessageCircle },
     { id: 'attendance', label: 'Attendance', icon: CalendarCheck },
     { id: 'skills', label: 'Skills & Talents', icon: Briefcase },
-    { id: 'community', label: 'Circle Community', icon: Globe },
+    { id: 'community', label: 'Bible Study Groups', icon: Globe },
     { id: 'giving', label: 'Giving & Tithe', icon: Coins },
     { id: 'orders', label: 'Merchandise Orders', icon: ShoppingBag }
 ];
@@ -88,33 +91,33 @@ export default function ProfileHub() {
     });
     const [isSaving, setIsSaving] = useState(false);
 
-    // Dynamic state
+    // Dynamic state with stickiness
     const [household, setHousehold] = useState<any[]>([]);
-    const [newHouseholdName, setNewHouseholdName] = useState("");
-    const [newHouseholdRel, setNewHouseholdRel] = useState("Spouse");
+    const [newHouseholdName, setNewHouseholdName, clearHh] = useStickyState("", "profile-new-household-name");
+    const [newHouseholdRel, setNewHouseholdRel] = useStickyState("Spouse", "profile-new-household-rel");
 
-    const [milestones, setMilestones] = useState<any>({});
+    const { values: milestones, handleChange: handleMilestoneChange, setValues: setMilestones, clear: clearMilestones } = useStickyForm({}, "profile-milestones");
 
     const [prayers, setPrayers] = useState<any[]>([]);
-    const [newPrayerText, setNewPrayerText] = useState("");
-    const [newPrayerCategory, setNewPrayerCategory] = useState("Health");
-    const [newPrayerUrgency, setNewPrayerUrgency] = useState("normal");
+    const [newPrayerText, setNewPrayerText, clearPrayer] = useStickyState("", "profile-new-prayer-text");
+    const [newPrayerCategory, setNewPrayerCategory] = useStickyState("Health", "profile-new-prayer-cat");
+    const [newPrayerUrgency, setNewPrayerUrgency] = useStickyState("normal", "profile-new-prayer-urgency");
     const [pastoralContact, setPastoralContact] = useState(false);
 
     const [ministryRoles, setMinistryRoles] = useState<any[]>([]);
-    const [newMinistry, setNewMinistry] = useState(MINISTRY_OPTIONS[0]);
-    const [newMinistryRoleTitle, setNewMinistryRoleTitle] = useState("");
+    const [newMinistry, setNewMinistry] = useStickyState(MINISTRY_OPTIONS[0], "profile-new-ministry");
+    const [newMinistryRoleTitle, setNewMinistryRoleTitle, clearMin] = useStickyState("", "profile-new-min-role");
 
     const [skills, setSkills] = useState<any[]>([]);
-    const [newSkill, setNewSkill] = useState(SKILL_OPTIONS[0]);
-    const [newSkillLevel, setNewSkillLevel] = useState("Intermediate");
-    const [newSkillExp, setNewSkillExp] = useState(1);
-    const [newSkillCat, setNewSkillCat] = useState("Technology");
+    const [newSkill, setNewSkill] = useStickyState(SKILL_OPTIONS[0], "profile-new-skill");
+    const [newSkillLevel, setNewSkillLevel] = useStickyState("Intermediate", "profile-new-skill-level");
+    const [newSkillExp, setNewSkillExp] = useStickyState(1, "profile-new-skill-exp");
+    const [newSkillCat, setNewSkillCat] = useStickyState("Technology", "profile-new-skill-cat");
 
     const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
     const [children, setChildren] = useState<any[]>([]);
     const [givingHistory, setGivingHistory] = useState<any[]>([]);
-    const [fellowshipGroups, setFellowshipGroups] = useState<any[]>([]);
+    const [bibleStudyGroups, setBibleStudyGroups] = useState<any[]>([]);
     const [userGroups, setUserGroups] = useState<any[]>([]);
     const [merchandiseOrders, setMerchandiseOrders] = useState<any[]>([]);
     const [givingData, setGivingData] = useState({ tithe_status: false, preferred_giving_method: 'Cash' });
@@ -130,8 +133,8 @@ export default function ProfileHub() {
     const [userRole, setUserRole] = useState<string | null>(null);
     const [membershipRequest, setMembershipRequest] = useState<any>(null);
     const [isAddingChild, setIsAddingChild] = useState(false);
-    const [newChildName, setNewChildName] = useState("");
-    const [newChildBirthdate, setNewChildBirthdate] = useState("");
+    const [newChildName, setNewChildName, clearChildName] = useStickyState("", "profile-new-child-name");
+    const [newChildBirthdate, setNewChildBirthdate, clearChildBday] = useStickyState("", "profile-new-child-bday");
 
     const handleAcceptInvitation = async (notif: any) => {
         if (!user) return;
@@ -166,6 +169,14 @@ export default function ProfileHub() {
         init();
     }, []);
 
+    // Persist Identity form (react-hook-form) to localStorage
+    useEffect(() => {
+        const subscription = idForm.watch((value) => {
+            localStorage.setItem('sticky_form:profile-identity', JSON.stringify(value));
+        });
+        return () => subscription.unsubscribe();
+    }, [idForm.watch]);
+
     async function loadData(userId: string) {
         try {
             // Profiles and Organization Context
@@ -185,7 +196,15 @@ export default function ProfileHub() {
                 
                 // Use Centralized Mapping Layer to initialize form
                 const mappedData = mapProfileFromDB(pData);
-                idForm.reset(mappedData);
+                
+                // Only reset form if it's currently empty/pristine to avoid overwriting a fresh sticky draft
+                // Actually, loading from DB is usually higher priority, but if we have a draft, we might want to warn.
+                // For simplicity, we merge: DB values + Sticky Draft (Draft wins)
+                const stickyDraft = JSON.parse(localStorage.getItem('sticky_form:profile-identity') || '{}');
+                idForm.reset({ ...mappedData, ...stickyDraft });
+                
+                const stickyMilestones = JSON.parse(localStorage.getItem('sticky_form:profile-milestones') || '{}');
+                setMilestones(prev => ({ ...prev, ...stickyMilestones }));
 
                 setGivingData({
                     tithe_status: mappedData.tithe_status,
@@ -229,11 +248,11 @@ export default function ProfileHub() {
                     supabase.from('prayer_requests').select('*').eq('user_id', userId).order('created_at', { ascending: false })
                         .then(({ data }) => setPrayers(data || []));
 
-                    // Circle Community (Groups)
-                    supabase.from('fellowship_groups').select('*').eq('org_id', currentOrgId).eq('is_active', true)
-                        .then(({ data }) => setFellowshipGroups(data || []));
+                    // Bible Study Groups
+                    supabase.from('bible_study_groups').select('*').eq('org_id', currentOrgId).eq('is_active', true)
+                        .then(({ data }) => setBibleStudyGroups(data || []));
                     
-                    supabase.from('fellowship_members').select('group_id').eq('user_id', userId)
+                    supabase.from('bible_study_group_members').select('group_id').eq('user_id', userId)
                         .then(({ data }) => setUserGroups(data?.map(m => m.group_id) || []));
 
                     // Giving History
@@ -313,6 +332,8 @@ export default function ProfileHub() {
             });
 
             toast.success("Identity updated successfully!");
+            // Clear sticky draft on success
+            localStorage.removeItem('sticky_form:profile-identity');
             // Refresh local state to update Header and Profile Card immediately
             await loadData(user.id);
         } catch (e: any) {
@@ -351,7 +372,7 @@ export default function ProfileHub() {
 
                 if (error) throw error;
                 setHousehold([...household, data]);
-                setNewHouseholdName("");
+                clearHh();
                 toast.success("Family member linked!");
             }
         } catch (e: any) {
@@ -376,8 +397,8 @@ export default function ProfileHub() {
 
             if (error) throw error;
             setChildren([...children, data]);
-            setNewChildName("");
-            setNewChildBirthdate("");
+            clearChildName();
+            clearChildBday();
             setIsAddingChild(false);
             toast.success("Child enrollment confirmed!");
         } catch (e: any) {
@@ -402,6 +423,7 @@ export default function ProfileHub() {
         } catch (e: any) {
             toast.error("Failed to sync milestones.");
         } finally {
+            clearMilestones();
             setIsSaving(false);
         }
     };
@@ -421,7 +443,7 @@ export default function ProfileHub() {
             }]).select().single();
             if (error) throw error;
             setPrayers([data, ...prayers]);
-            setNewPrayerText("");
+            clearPrayer();
             setPastoralContact(false);
             toast.success("Prayer submitted to leadership.");
         } catch (e: any) {
@@ -456,7 +478,7 @@ export default function ProfileHub() {
             }]).select().single();
             if (error) throw error;
             setMinistryRoles([...ministryRoles, data]);
-            setNewMinistryRoleTitle("");
+            clearMin();
             toast.success("Ministry application sent!");
         } catch (e: any) {
             toast.error(e.message || "Error linking role");
@@ -491,18 +513,29 @@ export default function ProfileHub() {
         if (!user || !profile?.org_id) return;
         setIsSaving(true);
         try {
-            const isJoined = userGroups.includes(groupId);
-            if (isJoined) {
-                await supabase.from('fellowship_members').delete().eq('user_id', user.id).eq('group_id', groupId);
-                setUserGroups(userGroups.filter(id => id !== groupId));
-                toast.success("Left group");
+            if (userGroups.includes(groupId)) {
+                const res = await leaveGroupAction(groupId, user.id);
+                if (res.success) {
+                    setUserGroups(prev => prev.filter(id => id !== groupId));
+                    toast.success("Left group successfully");
+                } else {
+                    throw new Error(res.error);
+                }
             } else {
-                await supabase.from('fellowship_members').insert([{ user_id: user.id, group_id: groupId, org_id: profile.org_id }]);
-                setUserGroups([...userGroups, groupId]);
-                toast.success("Welcome to the Circle!");
+                const res = await joinBibleStudyGroupAction({ groupId, userId: user.id });
+                if (res.success) {
+                    if (res.status === 'joined') {
+                        setUserGroups(prev => [...prev, groupId]);
+                        toast.success("Joined circle successfully!");
+                    } else {
+                        toast.success("Join request sent to leader!");
+                    }
+                } else {
+                    throw new Error(res.error);
+                }
             }
         } catch (e: any) {
-            toast.error("Action failed");
+            toast.error(e.message || "Action failed");
         } finally {
             setIsSaving(false);
         }
@@ -985,31 +1018,31 @@ export default function ProfileHub() {
                                             <div className="grid md:grid-cols-2 gap-6 bg-foreground/5 border border-foreground/10 rounded-3xl p-6 md:p-8">
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">First Visit Date</label>
-                                                    <Input type="date" value={milestones.first_visit_date || ''} onChange={e => setMilestones({ ...milestones, first_visit_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                    <Input type="date" value={milestones.first_visit_date || ''} onChange={e => handleMilestoneChange('first_visit_date', e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Salvation Decision Date</label>
-                                                    <Input type="date" value={milestones.salvation_date || ''} onChange={e => setMilestones({ ...milestones, salvation_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                    <Input type="date" value={milestones.salvation_date || ''} onChange={e => handleMilestoneChange('salvation_date', e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Baptism Date</label>
-                                                    <Input type="date" value={milestones.baptism_date || ''} onChange={e => setMilestones({ ...milestones, baptism_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                    <Input type="date" value={milestones.baptism_date || ''} onChange={e => handleMilestoneChange('baptism_date', e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Membership Date</label>
-                                                    <Input type="date" value={milestones.membership_date || ''} onChange={e => setMilestones({ ...milestones, membership_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                    <Input type="date" value={milestones.membership_date || ''} onChange={e => handleMilestoneChange('membership_date', e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Foundation Class Completed</label>
-                                                    <Input type="date" value={milestones.foundation_class_date || ''} onChange={e => setMilestones({ ...milestones, foundation_class_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                    <Input type="date" value={milestones.foundation_class_date || ''} onChange={e => handleMilestoneChange('foundation_class_date', e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Leadership Training</label>
-                                                    <Input type="date" value={milestones.leadership_training_date || ''} onChange={e => setMilestones({ ...milestones, leadership_training_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                    <Input type="date" value={milestones.leadership_training_date || ''} onChange={e => handleMilestoneChange('leadership_training_date', e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground pl-1">Ordnained / Commissioned</label>
-                                                    <Input type="date" value={milestones.ordained_date || ''} onChange={e => setMilestones({ ...milestones, ordained_date: e.target.value })} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
+                                                    <Input type="date" value={milestones.ordained_date || ''} onChange={e => handleMilestoneChange('ordained_date', e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4" />
                                                 </div>
                                                 <div className="col-span-full pt-4">
                                                     <Button onClick={saveMilestones} className="px-8 h-12 rounded-xl bg-emerald-500 text-white font-black shadow-lg">Save Milestones</Button>
@@ -1144,6 +1177,7 @@ export default function ProfileHub() {
                                                 ) : (
                                                     <div className="text-center py-20 bg-background/50 rounded-2xl border border-dashed border-foreground/10">
                                                         <Sparkles className="w-10 h-10 text-foreground/10 mx-auto mb-4" />
+                                                        <h3 className="text-sm font-black text-foreground uppercase tracking-wider">Bible Study Groups</h3>
                                                         <p className="text-xs font-black text-foreground/30 uppercase tracking-widest">No children linked yet</p>
                                                     </div>
                                                 )}
@@ -1490,35 +1524,58 @@ export default function ProfileHub() {
                                     {/* COMMUNITY TAB */}
                                     {activeTab === 'community' && (
                                         <div className="space-y-8 animate-in fade-in duration-300">
-                                            <div className="bg-card border border-border rounded-3xl p-6 md:p-8 space-y-6 transition-colors">
-                                                <h4 className="font-black text-lg pb-4 border-b border-border text-foreground">Fellowship Circles</h4>
-                                                <div className="grid md:grid-cols-2 gap-4">
-                                                    {fellowshipGroups.length > 0 ? fellowshipGroups.map(g => {
+                                            <div className="bg-card border border-border rounded-4xl p-8 md:p-12 space-y-8 transition-colors shadow-2xl shadow-primary/5">
+                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/50 pb-8">
+                                                    <div>
+                                                        <h4 className="font-black text-3xl tracking-tight text-foreground">Bible Study Groups</h4>
+                                                        <p className="text-sm text-muted-foreground mt-1">Join a circle for weekly growth and community.</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                    {bibleStudyGroups.length > 0 ? bibleStudyGroups.map(g => {
                                                         const joined = userGroups.includes(g.id);
                                                         return (
-                                                            <div key={g.id} className="bg-muted border border-border rounded-2xl p-5 flex flex-col justify-between transition-colors">
-                                                                <div>
-                                                                    <div className="flex items-center justify-between mb-2">
-                                                                        <span className="text-[10px] font-black bg-[var(--primary)]/10 text-[var(--primary)] px-2 py-0.5 rounded-md uppercase tracking-widest">{g.meeting_frequency}</span>
-                                                                        {joined && <Badge className="bg-emerald-500 text-white border-0">Joined</Badge>}
+                                                            <div key={g.id} className="bg-muted/40 border-border border-2 rounded-[32px] p-8 flex flex-col justify-between transition-all group hover:border-primary/30 relative overflow-hidden">
+                                                                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 group-hover:scale-125 transition-transform" />
+                                                                
+                                                                <div className="relative">
+                                                                    <div className="flex items-center justify-between mb-4">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="text-[10px] font-black bg-primary/10 text-primary px-3 py-1 rounded-full uppercase tracking-widest">{g.meeting_type}</span>
+                                                                            {g.requires_approval && <span className="text-[9px] font-black bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-md uppercase tracking-tighter">APPROVAL NEEDED</span>}
+                                                                        </div>
+                                                                        {joined && <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/10 hover:bg-emerald-500/20 shadow-none px-3 font-black text-[9px] uppercase tracking-widest">ENROLLED</Badge>}
                                                                     </div>
-                                                                    <h5 className="font-bold text-lg mb-1 text-foreground">{g.name}</h5>
-                                                                    <p className="text-xs text-muted-foreground flex items-center gap-1 mb-4">
-                                                                        <MapPin className="w-3 h-3" /> {g.location || 'Online / Various'}
-                                                                    </p>
+                                                                    
+                                                                    <h5 className="font-black text-xl mb-2 text-foreground group-hover:text-primary transition-colors">{g.name}</h5>
+                                                                    <div className="space-y-2 mb-8">
+                                                                        <p className="text-[11px] text-muted-foreground flex items-center gap-2 font-bold">
+                                                                            <Calendar className="w-3.5 h-3.5 opacity-40" /> {g.meeting_day ? `${g.meeting_day}s` : 'Flexible'} · {g.meeting_time || 'TBD'}
+                                                                        </p>
+                                                                        <p className="text-[11px] text-muted-foreground flex items-center gap-2 font-bold truncate">
+                                                                            <MapPin className="w-3.5 h-3.5 opacity-40" /> {g.location || 'Online Community'}
+                                                                        </p>
+                                                                    </div>
                                                                 </div>
+
                                                                 <Button
                                                                     onClick={() => handleJoinGroup(g.id)}
+                                                                    disabled={isSaving}
                                                                     variant={joined ? "outline" : "default"}
-                                                                    className={`w-full font-bold rounded-xl ${joined ? 'border-destructive/20 text-destructive hover:bg-destructive/5' : 'bg-[var(--primary)] text-white'}`}
+                                                                    className={`w-full font-black rounded-2xl h-11 uppercase text-[10px] tracking-widest transition-all ${joined 
+                                                                        ? 'border-red-500/20 text-red-500 hover:bg-red-500/10 hover:border-red-500/40' 
+                                                                        : 'bg-primary text-white hover:scale-[1.02] shadow-lg shadow-primary/20'}`}
                                                                 >
-                                                                    {joined ? 'Leave Group' : 'Join Circle'}
+                                                                    {joined ? 'Exit Circle' : 'Enroll in Group'}
                                                                 </Button>
                                                             </div>
                                                         );
                                                     }) : (
-                                                        <div className="col-span-full py-12 text-center text-muted-foreground font-bold uppercase tracking-widest text-xs">
-                                                            No active fellowship groups available to join.
+                                                        <div className="col-span-full py-20 text-center border-2 border-dashed border-border rounded-[40px] bg-muted/20">
+                                                            <Users size={40} className="mx-auto mb-4 text-muted-foreground/20" />
+                                                            <p className="text-sm font-black text-muted-foreground/40 uppercase tracking-[0.2em]">No Groups Established in Your Area</p>
+                                                            <Link href="/welcome/bible-study" className="text-primary mt-3 inline-block font-black text-[10px] uppercase tracking-widest hover:underline">Explore Public Groups</Link>
                                                         </div>
                                                     )}
                                                 </div>

@@ -13,15 +13,24 @@ type ThemeContextType = {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ 
-  children,
-  ...props 
-}: { 
-  children: React.ReactNode
-} & React.ComponentProps<typeof NextThemesProvider>) {
-    const [week, setWeek] = useState(1);
+/**
+ * Custom hook to access JKC theme state (week, mode, toggle)
+ */
+export const useTheme = () => {
+    const context = useContext(ThemeContext);
+    if (!context) throw new Error("useTheme must be used within a ThemeProvider");
+    return context;
+}
+
+/**
+ * Inner component that can safely use useNextTheme() because it's
+ * rendered safely inside the NextThemesProvider tree.
+ */
+function ThemeContent({ children }: { children: React.ReactNode }) {
     const { theme, setTheme, resolvedTheme } = useNextTheme();
     const pathname = usePathname();
+    
+    const [week, setWeek] = useState(1);
     const [mounted, setMounted] = useState(false);
     
     // Bridge next-themes 'theme' to internal 'mode'
@@ -66,21 +75,31 @@ export function ThemeProvider({
     };
 
     return (
+        <ThemeContext.Provider value={{ week, mode, setWeek, toggleMode }}>
+            {children}
+        </ThemeContext.Provider>
+    );
+}
+
+/**
+ * Root Theme Provider wrapper
+ */
+export function ThemeProvider({ 
+  children,
+  ...props 
+}: { 
+  children: React.ReactNode
+} & React.ComponentProps<typeof NextThemesProvider>) {
+    return (
         <NextThemesProvider 
           attribute="class" 
           defaultTheme="light" 
           enableSystem={false}
           {...props}
         >
-            <ThemeContext.Provider value={{ week, mode, setWeek, toggleMode }}>
+            <ThemeContent>
                 {children}
-            </ThemeContext.Provider>
+            </ThemeContent>
         </NextThemesProvider>
     );
-}
-
-export const useTheme = () => {
-    const context = useContext(ThemeContext);
-    if (!context) throw new Error("useTheme must be used within a ThemeProvider");
-    return context;
 }

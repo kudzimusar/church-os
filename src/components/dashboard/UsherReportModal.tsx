@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useStickyForm } from "@/hooks/useStickyForm";
 
 interface UsherReportModalProps {
     registeredCount: number;
@@ -18,14 +19,26 @@ interface UsherReportModalProps {
 export function UsherReportModal({ registeredCount, onReportSubmitted }: UsherReportModalProps) {
     const [loading, setLoading] = useState(false);
     const [open, setOpen] = useState(false);
-    const [formData, setFormData] = useState({
+    
+    const { values: formData, handleChange: handleStickyChange, clear } = useStickyForm({
         service_type: "Sunday Service",
         adults_count: 0,
         children_count: 0,
         first_timers_count: 0,
         returning_visitors_count: 0,
         notes: ""
-    });
+    }, "usher-report-modal");
+
+    const setFormData = (updater: any) => {
+        if (typeof updater === 'function') {
+            const next = updater(formData);
+            Object.keys(next).forEach(key => {
+                if (next[key] !== formData[key as keyof typeof formData]) {
+                    handleStickyChange(key, next[key]);
+                }
+            });
+        }
+    };
 
     const totalManual = formData.adults_count + formData.children_count;
     const gap = totalManual - registeredCount;
@@ -61,6 +74,7 @@ export function UsherReportModal({ registeredCount, onReportSubmitted }: UsherRe
             if (error) throw error;
 
             toast.success("Ministry report submitted successfully!");
+            clear();
             setOpen(false);
             onReportSubmitted?.();
         } catch (error: any) {

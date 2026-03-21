@@ -31,11 +31,11 @@ interface Member {
 }
 
 const BADGE_COLORS: Record<string, string> = {
-    member: 'bg-emerald-500/20 text-emerald-400',
-    visitor: 'bg-blue-500/20 text-blue-400',
-    leader: 'bg-violet-500/20 text-violet-400',
-    'not_baptized': 'bg-white/10 text-white/40',
-    'baptized': 'bg-cyan-500/20 text-cyan-400',
+    member: 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+    visitor: 'bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
+    leader: 'bg-violet-500/10 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400',
+    'not_baptized': 'bg-muted text-muted-foreground',
+    'baptized': 'bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400',
 };
 
 export default function MembersPage() {
@@ -180,29 +180,29 @@ export default function MembersPage() {
         <div className="p-6 xl:p-8">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-xl font-black text-white">Member Directory</h1>
+                    <h1 className="text-xl font-black text-foreground">Member Directory</h1>
                     <div className="flex items-center gap-2 mt-0.5">
-                        <p className="text-[11px] text-white/30">{members.length} registered members</p>
+                        <p className="text-[11px] text-muted-foreground">{members.length} registered members</p>
                         {membershipRequests.length > 0 && (
                             <>
-                                <span className="text-[10px] text-white/10">•</span>
-                                <p className="text-[11px] text-amber-500 font-bold">{membershipRequests.length} pending requests</p>
+                                <span className="text-[10px] text-border">•</span>
+                                <p className="text-[11px] text-amber-600 dark:text-amber-500 font-bold">{membershipRequests.length} pending requests</p>
                             </>
                         )}
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50" />
                         <input
                             value={search} onChange={e => setSearch(e.target.value)}
                             placeholder="Search members..."
-                            className="h-9 pl-8 pr-4 bg-white/5 border border-white/10 rounded-xl text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-violet-500/40 w-52"
+                            className="h-9 pl-8 pr-4 bg-muted border border-border rounded-xl text-xs text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/40 w-52"
                         />
                     </div>
                     <select
                         value={filter} onChange={e => setFilter(e.target.value)}
-                        className="h-9 px-3 bg-white/5 border border-white/10 rounded-xl text-xs text-white/60 focus:outline-none"
+                        className="h-9 px-3 bg-muted border border-border rounded-xl text-xs text-muted-foreground focus:outline-none"
                     >
                         <option value="all">All Status</option>
                         <option value="pending_request">Pending Approval</option>
@@ -214,7 +214,7 @@ export default function MembersPage() {
                         <Button
                             onClick={() => setShowExport(!showExport)}
                             variant="outline"
-                            className="h-9 px-4 bg-white/5 border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white flex items-center gap-2"
+                            className="h-9 px-4 bg-muted border-border rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground flex items-center gap-2"
                         >
                             <Download className="w-3.5 h-3.5" />
                             EXPORT
@@ -222,10 +222,10 @@ export default function MembersPage() {
                         </Button>
 
                         {showExport && (
-                            <div className="absolute top-full right-0 mt-2 w-36 bg-[#1a1f2e] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
-                                <button onClick={() => exportDirectory('xlsx')} className="w-full px-4 py-2.5 text-[10px] font-black uppercase text-white/60 hover:text-white hover:bg-white/5 text-left transition-colors border-b border-white/5">Excel (.xlsx)</button>
-                                <button onClick={() => exportDirectory('csv')} className="w-full px-4 py-2.5 text-[10px] font-black uppercase text-white/60 hover:text-white hover:bg-white/5 text-left transition-colors border-b border-white/5">CSV Table</button>
-                                <button onClick={() => exportDirectory('pdf')} className="w-full px-4 py-2.5 text-[10px] font-black uppercase text-white/60 hover:text-white hover:bg-white/5 text-left transition-colors">PDF Report</button>
+                            <div className="absolute top-full right-0 mt-2 w-36 bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden">
+                                <button onClick={() => exportDirectory('xlsx')} className="w-full px-4 py-2.5 text-[10px] font-black uppercase text-muted-foreground hover:text-foreground hover:bg-muted text-left transition-colors border-b border-border">Excel (.xlsx)</button>
+                                <button onClick={() => exportDirectory('csv')} className="w-full px-4 py-2.5 text-[10px] font-black uppercase text-muted-foreground hover:text-foreground hover:bg-muted text-left transition-colors border-b border-border">CSV Table</button>
+                                <button onClick={() => exportDirectory('pdf')} className="w-full px-4 py-2.5 text-[10px] font-black uppercase text-muted-foreground hover:text-foreground hover:bg-muted text-left transition-colors">PDF Report</button>
                             </div>
                         )}
                     </div>
@@ -235,78 +235,78 @@ export default function MembersPage() {
             {/* Stats row */}
             <div className="grid grid-cols-4 gap-3 mb-6">
                 {[
-                    { label: 'Total Members', val: members.length, icon: Users, color: 'text-blue-400' },
-                    { label: 'Active Members', val: members.filter(m => m.membership_status === 'member').length, icon: UserCheck, color: 'text-emerald-400' },
-                    { label: 'Visitors', val: members.filter(m => m.membership_status === 'visitor' || !m.membership_status).length, icon: UserX, color: 'text-amber-400' },
-                    { label: 'Baptized', val: members.filter(m => m.baptism_status === 'baptized').length, icon: UserCheck, color: 'text-cyan-400' },
+                    { label: 'Total Members', val: members.length, icon: Users, color: 'text-blue-600 dark:text-blue-400' },
+                    { label: 'Active Members', val: members.filter(m => m.membership_status === 'member').length, icon: UserCheck, color: 'text-emerald-600 dark:text-emerald-400' },
+                    { label: 'Visitors', val: members.filter(m => m.membership_status === 'visitor' || !m.membership_status).length, icon: UserX, color: 'text-amber-600 dark:text-amber-400' },
+                    { label: 'Baptized', val: members.filter(m => m.baptism_status === 'baptized').length, icon: UserCheck, color: 'text-cyan-600 dark:text-cyan-400' },
                 ].map(s => (
-                    <div key={s.label} className="bg-[#111827] border border-white/5 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0">
+                    <div key={s.label} className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3 shadow-sm transition-colors">
+                        <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
                             <s.icon className={`w-4 h-4 ${s.color}`} />
                         </div>
                         <div>
-                            <p className="text-xl font-black text-white">{s.val}</p>
-                            <p className="text-[9px] text-white/30 font-bold uppercase tracking-wide">{s.label}</p>
+                            <p className="text-xl font-black text-foreground">{s.val}</p>
+                            <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wide">{s.label}</p>
                         </div>
                     </div>
                 ))}
             </div>
 
             {/* Member table */}
-            <div className="bg-[#111827] border border-white/5 rounded-2xl overflow-hidden">
-                <div className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 border-b border-white/5">
+            <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm transition-colors">
+                <div className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 border-b border-border">
                     {['Name', 'Email', 'Status', 'City', 'Joined', ''].map(h => (
-                        <p key={h} className="text-[9px] font-black text-white/30 uppercase tracking-widest">{h}</p>
+                        <p key={h} className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest">{h}</p>
                     ))}
                 </div>
 
                 {loading ? (
-                    <div className="p-12 text-center text-white/30 text-xs">Loading members...</div>
+                    <div className="p-12 text-center text-muted-foreground/30 text-xs uppercase font-black tracking-widest">Loading members...</div>
                 ) : filtered.length === 0 ? (
-                    <div className="p-12 text-center text-white/30 text-xs">No members found</div>
+                    <div className="p-12 text-center text-muted-foreground/30 text-xs uppercase font-black tracking-widest">No members found</div>
                 ) : (
-                    <div className="divide-y divide-white/3">
+                    <div className="divide-y divide-border/50">
                         {filtered.map((m, i) => (
                             <motion.div
                                 key={m.id}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: i * 0.02 }}
-                                className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3.5 hover:bg-white/3 transition-colors items-center"
+                                className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3.5 hover:bg-muted/50 transition-colors items-center"
                             >
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center text-xs font-black text-violet-400 flex-shrink-0">
+                                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-black text-primary flex-shrink-0">
                                         {m.name?.[0]?.toUpperCase() || '?'}
                                     </div>
-                                    <p className="text-xs font-bold text-white truncate">{m.name || 'Unknown'}</p>
+                                    <p className="text-xs font-bold text-foreground truncate">{m.name || 'Unknown'}</p>
                                 </div>
                                 <div className="flex items-center gap-1.5 min-w-0">
-                                    <Mail className="w-3 h-3 text-white/20 flex-shrink-0" />
-                                    <p className="text-xs text-white/40 truncate">{m.email}</p>
+                                    <Mail className="w-3 h-3 text-muted-foreground/30 flex-shrink-0" />
+                                    <p className="text-xs text-muted-foreground/70 truncate">{m.email}</p>
                                 </div>
                                 <div className="flex items-center gap-1.5 min-w-0">
-                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg capitalize ${BADGE_COLORS[m.growth_stage || 'visitor'] || 'bg-white/10 text-white/40'}`}>
+                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg capitalize ${BADGE_COLORS[m.growth_stage || 'visitor'] || 'bg-muted text-muted-foreground'}`}>
                                         {m.growth_stage || 'visitor'}
                                     </span>
                                     {membershipRequests.some(r => r.user_id === m.id) && (
-                                        <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded text-[8px] font-bold text-amber-500 animate-pulse">
+                                        <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded text-[8px] font-bold text-amber-600 dark:text-amber-500 animate-pulse">
                                             PENDING
                                         </div>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <MapPin className="w-3 h-3 text-white/20" />
-                                    <p className="text-xs text-white/40 truncate">{m.city || '—'}</p>
+                                    <MapPin className="w-3 h-3 text-muted-foreground/30" />
+                                    <p className="text-xs text-muted-foreground/70 truncate">{m.city || '—'}</p>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <Calendar className="w-3 h-3 text-white/20" />
-                                    <p className="text-[10px] text-white/40">
+                                    <Calendar className="w-3 h-3 text-muted-foreground/30" />
+                                    <p className="text-[10px] text-muted-foreground/70">
                                         {m.date_joined_church ? new Date(m.date_joined_church).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}
                                     </p>
                                 </div>
                                 <button
                                     onClick={() => setSelectedMember(m)}
-                                    className="text-[9px] font-black text-violet-400 hover:text-violet-300 transition-colors flex items-center gap-0.5"
+                                    className="text-[9px] font-black text-primary hover:text-primary/80 dark:text-violet-400 dark:hover:text-violet-300 transition-colors flex items-center gap-0.5"
                                 >
                                     View <ChevronRight className="w-3 h-3" />
                                 </button>
@@ -322,31 +322,31 @@ export default function MembersPage() {
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="bg-[#0f172a] border border-white/10 rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+                        className="bg-card border border-border rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl transition-colors"
                     >
-                        <div className="p-8 border-b border-white/5 flex items-start justify-between bg-gradient-to-br from-violet-600/10 to-transparent">
+                        <div className="p-8 border-b border-border flex items-start justify-between bg-gradient-to-br from-primary/5 dark:from-violet-600/10 to-transparent">
                             <div className="flex items-center gap-6">
-                                <div className="w-20 h-20 rounded-3xl bg-violet-500/20 flex items-center justify-center text-3xl font-black text-violet-400 border border-violet-500/20">
+                                <div className="w-20 h-20 rounded-3xl bg-primary/10 dark:bg-violet-500/20 flex items-center justify-center text-3xl font-black text-primary dark:text-violet-400 border border-primary/20 dark:border-violet-500/20">
                                     {selectedMember.name?.[0]?.toUpperCase()}
                                 </div>
                                 <div>
-                                    <h2 className="text-3xl font-black text-white tracking-tighter">{selectedMember.name}</h2>
+                                    <h2 className="text-3xl font-black text-foreground tracking-tighter">{selectedMember.name}</h2>
                                     <div className="flex flex-wrap gap-2 mt-2">
-                                        <Badge className={`${BADGE_COLORS[selectedMember.membership_status || 'visitor'] || 'bg-white/10 text-white/40'} border-0 font-black px-3 py-1`}>
+                                        <Badge className={`${BADGE_COLORS[selectedMember.membership_status || 'visitor'] || 'bg-muted text-muted-foreground'} border-0 font-black px-3 py-1 shadow-sm`}>
                                             {selectedMember.membership_status?.toUpperCase() || 'VISITOR'}
                                         </Badge>
                                         {membershipRequests.some(r => r.user_id === selectedMember.id) && (
-                                            <Badge className="bg-amber-500 text-white border-0 font-black px-3 py-1 animate-pulse">
+                                            <Badge className="bg-amber-600 dark:bg-amber-500 text-white border-0 font-black px-3 py-1 animate-pulse shadow-sm">
                                                 PENDING APPROVAL
                                             </Badge>
                                         )}
-                                        <Badge className="bg-white/5 text-white/40 border-0 font-black px-3 py-1">
+                                        <Badge className="bg-muted text-muted-foreground border-0 font-black px-3 py-1">
                                             {selectedMember.city || 'LOCATION UNKNOWN'}
                                         </Badge>
                                     </div>
                                 </div>
                             </div>
-                            <button onClick={() => setSelectedMember(null)} className="p-2 hover:bg-white/5 rounded-full text-white/20 hover:text-white transition-colors">
+                            <button onClick={() => setSelectedMember(null)} className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors">
                                 <UserX className="w-6 h-6" />
                             </button>
                         </div>
@@ -354,17 +354,17 @@ export default function MembersPage() {
                         <div className="flex-1 overflow-y-auto p-8 space-y-8">
                             <div className="grid grid-cols-2 gap-8">
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-white/20 uppercase tracking-widest flex items-center gap-1.5"><Mail className="w-3 h-3" /> Email Address</p>
-                                    <p className="text-sm font-bold text-white/80">{selectedMember.email}</p>
+                                    <p className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest flex items-center gap-1.5"><Mail className="w-3 h-3" /> Email Address</p>
+                                    <p className="text-sm font-bold text-foreground/80">{selectedMember.email}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-white/20 uppercase tracking-widest flex items-center gap-1.5"><Phone className="w-3 h-3" /> Phone Number</p>
-                                    <p className="text-sm font-bold text-white/80">{selectedMember.phone || 'Not provided'}</p>
+                                    <p className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest flex items-center gap-1.5"><Phone className="w-3 h-3" /> Phone Number</p>
+                                    <p className="text-sm font-bold text-foreground/80">{selectedMember.phone || 'Not provided'}</p>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
-                                <h4 className="text-xs font-black text-white/20 uppercase tracking-[0.2em]">Spiritual Milestones</h4>
+                                <h4 className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">Spiritual Milestones</h4>
                                 <div className="grid grid-cols-2 gap-3">
                                     {[
                                         { label: 'Salvation', val: selectedMember.milestones?.salvation_date },
@@ -372,9 +372,9 @@ export default function MembersPage() {
                                         { label: 'Membership', val: selectedMember.milestones?.membership_date },
                                         { label: 'Foundation', val: selectedMember.milestones?.foundation_class_date }
                                     ].map(m => (
-                                        <div key={m.label} className={`p-4 rounded-2xl border ${m.val ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-white/2 border-white/5 opacity-50'}`}>
-                                            <p className="text-[10px] font-black uppercase text-white/30">{m.label}</p>
-                                            <p className={`text-sm font-bold mt-0.5 ${m.val ? 'text-emerald-400' : 'text-white/20'}`}>
+                                        <div key={m.label} className={`p-4 rounded-2xl border ${m.val ? 'bg-emerald-500/[0.03] dark:bg-emerald-500/5 border-emerald-500/20' : 'bg-muted/30 border-border opacity-50'}`}>
+                                            <p className="text-[10px] font-black uppercase text-muted-foreground/50">{m.label}</p>
+                                            <p className={`text-sm font-bold mt-0.5 ${m.val ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground/20'}`}>
                                                 {m.val ? new Date(m.val).toLocaleDateString() : 'Pending'}
                                             </p>
                                         </div>
@@ -384,10 +384,10 @@ export default function MembersPage() {
 
                             {selectedMember.ministry_members && selectedMember.ministry_members.length > 0 && (
                                 <div className="space-y-4">
-                                    <h4 className="text-xs font-black text-white/20 uppercase tracking-[0.2em]">Ministry Involvement</h4>
+                                    <h4 className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">Ministry Involvement</h4>
                                     <div className="flex flex-wrap gap-2">
                                         {selectedMember.ministry_members.map(m => (
-                                            <Badge key={m.id} className="bg-violet-500/10 text-violet-400 border border-violet-500/20 px-4 py-1.5 rounded-xl font-bold">
+                                            <Badge key={m.id} className="bg-primary/10 text-primary dark:bg-violet-500/10 dark:text-violet-400 border border-border dark:border-violet-500/20 px-4 py-1.5 rounded-xl font-bold shadow-sm transition-colors">
                                                 {m.ministry_name} • {m.ministry_role}
                                             </Badge>
                                         ))}
@@ -397,10 +397,10 @@ export default function MembersPage() {
 
                             {(selectedMember.member_skills?.length || 0) > 0 && (
                                 <div className="space-y-4">
-                                    <h4 className="text-xs font-black text-white/20 uppercase tracking-[0.2em]">Skills & Assets</h4>
+                                    <h4 className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">Skills & Assets</h4>
                                     <div className="flex flex-wrap gap-2">
                                         {selectedMember.member_skills?.map(s => (
-                                            <Badge key={s.id} className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-4 py-1.5 rounded-xl font-bold">
+                                            <Badge key={s.id} className="bg-cyan-500/5 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-border dark:border-cyan-500/20 px-4 py-1.5 rounded-xl font-bold transition-colors">
                                                 {s.skill_name}
                                             </Badge>
                                         ))}
@@ -444,7 +444,7 @@ export default function MembersPage() {
                             </div>
                         </div>
 
-                        <div className="p-8 border-t border-white/5 bg-white/2 flex flex-wrap gap-3">
+                        <div className="p-8 border-t border-border bg-muted/30 flex flex-wrap gap-3">
                             {selectedMember.membership_status !== 'member' && (
                                 <Button
                                     onClick={() => handlePromoteToMember(selectedMember.id)}
@@ -455,14 +455,14 @@ export default function MembersPage() {
                             )}
                             <Button
                                 onClick={() => window.print()}
-                                className="flex-1 h-14 bg-white/10 hover:bg-white/20 text-white font-black rounded-2xl border-white/10 shadow-lg"
+                                className="flex-1 h-14 bg-muted text-foreground hover:bg-muted/80 font-black rounded-2xl border-border shadow-md"
                             >
                                 Print Profile
                             </Button>
-                            <Button className="flex-1 h-14 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-2xl border-0 shadow-lg shadow-violet-600/20">
+                            <Button className="flex-1 h-14 bg-primary text-white hover:bg-primary/90 font-black rounded-2xl border-0 shadow-lg shadow-primary/20 transition-all">
                                 Send Message
                             </Button>
-                            <Button variant="outline" className="flex-1 h-14 border-white/10 bg-white/5 hover:bg-white/10 text-white font-black rounded-2xl">
+                            <Button variant="outline" className="flex-1 h-14 border-border bg-background hover:bg-muted text-foreground font-black rounded-2xl shadow-sm transition-all">
                                 Assign to Ministry
                             </Button>
                         </div>
@@ -480,7 +480,7 @@ export default function MembersPage() {
                     header, aside, .p-8.border-t, button, .flex.items-center.justify-between.mb-6, .grid.grid-cols-4.gap-3.mb-6, .mb-6 {
                         display: none !important;
                     }
-                    .bg-[#0f172a] {
+                    .bg-card {
                         background: white !important;
                         color: black !important;
                         border: none !important;
@@ -490,13 +490,13 @@ export default function MembersPage() {
                         max-height: none !important;
                         overflow: visible !important;
                     }
-                    .text-white { color: black !important; }
-                    .text-white\/20, .text-white\/30, .text-white\/40 { color: #666 !important; }
-                    .bg-white\/5, .bg-white\/2, .bg-black\/20 { background: #f5f5f5 !important; }
-                    .border-white\/5, .border-white\/10 { border-color: #eee !important; }
+                    .text-foreground { color: black !important; }
+                    .text-muted-foreground { color: #666 !important; }
+                    .bg-muted { background: #f5f5f5 !important; }
+                    .border-border { border-color: #eee !important; }
                     h2, h3, h4 { color: black !important; }
-                    .text-violet-400 { color: #7c3aed !important; }
-                    .bg-violet-600\/10 { background: #f5f3ff !important; }
+                    .text-primary, .text-violet-400 { color: #7c3aed !important; }
+                    .bg-primary\/10, .bg-violet-600\/10 { background: #f5f3ff !important; }
                 }
             `}</style>
         </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { MinistryAuth, MinistrySession } from '@/lib/ministry-auth';
 import Link from 'next/link';
-import { ChevronLeft, BarChart3, Users, CalendarDays, FileText, Bell, ClipboardList, TrendingUp, AlertCircle, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, BarChart3, Users, CalendarDays, FileText, Bell, ClipboardList, TrendingUp, AlertCircle, Sparkles, CheckCircle2, MessagesSquare } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function MinistryOverviewClient({ slug }: { slug: string }) {
@@ -151,6 +151,15 @@ export default function MinistryOverviewClient({ slug }: { slug: string }) {
                                     <p className="text-white/40 text-xs mt-1.5 font-medium">View performance metrics</p>
                                 </Link>
                             </>
+                        )}
+                        {slug === 'bible-study' && (
+                            <Link href={`/ministry-dashboard/${slug}/groups`} className="bg-[#0d1421] border border-white/10 p-6 rounded-3xl hover:border-amber-500/50 hover:bg-amber-500/5 transition-all shadow-xl group">
+                                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4 group-hover:bg-amber-500/20 transition-colors">
+                                    <MessagesSquare className="w-5 h-5 text-amber-400" />
+                                </div>
+                                <h3 className="font-bold text-white group-hover:text-amber-400 transition-colors">Manage Groups</h3>
+                                <p className="text-white/40 text-xs mt-1.5 font-medium">Coordinate your Bible Study groups</p>
+                            </Link>
                         )}
                         <Link href={`/ministry-dashboard/${slug}/announcements`} className="bg-[#0d1421] border border-white/10 p-6 rounded-3xl hover:border-pink-500/50 hover:bg-pink-500/5 transition-all shadow-xl group">
                             <div className="w-10 h-10 rounded-2xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center mb-4 group-hover:bg-pink-500/20 transition-colors">

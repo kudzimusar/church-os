@@ -207,31 +207,31 @@ export default function MissionControlAnnouncementsPage() {
     };
 
     if (loading && announcements.length === 0) {
-        return <div className="p-8 text-neutral-400">Loading Intelligence Comms...</div>;
+        return <div className="p-8 text-muted-foreground animate-pulse font-black text-xs tracking-widest uppercase">Loading Intelligence Comms...</div>;
     }
 
     return (
-        <div className="p-8 space-y-8 max-w-6xl mx-auto min-h-screen">
+        <div className="p-8 space-y-8 max-w-6xl mx-auto min-h-screen text-foreground transition-colors duration-500">
             <header>
-                <h1 className="text-3xl font-black text-white tracking-tighter uppercase">Ministry Comm Lines</h1>
-                <p className="text-[11px] font-black text-white/40 uppercase tracking-widest mt-2">Mission Control &harr; Distributed Ministries</p>
+                <h1 className="text-3xl font-black text-foreground tracking-tighter uppercase">Ministry Comm Lines</h1>
+                <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mt-2">Mission Control &harr; Distributed Ministries</p>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Inbox */}
                 <div className="col-span-1 md:col-span-2 space-y-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-black text-white tracking-tighter uppercase">Comm Feed</h2>
-                        <div className="flex bg-[#111827] p-1 rounded-xl border border-white/5">
+                        <h2 className="text-xl font-black text-foreground tracking-tighter uppercase">Comm Feed</h2>
+                        <div className="flex bg-card p-1 rounded-xl border border-border shadow-sm transition-colors">
                             <button 
                                 onClick={() => setViewMode('card')}
-                                className={`p-2 rounded-lg transition-all ${viewMode === 'card' ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white'}`}
+                                className={`p-2 rounded-lg transition-all ${viewMode === 'card' ? 'bg-primary text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}
                             >
                                 <LayoutGrid className="w-4 h-4" />
                             </button>
                             <button 
                                 onClick={() => setViewMode('list')}
-                                className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white'}`}
+                                className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-primary text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}
                             >
                                 <List className="w-4 h-4" />
                             </button>
@@ -239,7 +239,7 @@ export default function MissionControlAnnouncementsPage() {
                     </div>
                     
                     {announcements.length === 0 && !loading && (
-                        <div className="bg-[#111827] border border-white/5 rounded-2xl p-8 text-center text-white/30 text-xs uppercase tracking-widest font-black">
+                        <div className="bg-card border border-border rounded-2xl p-8 text-center text-muted-foreground/40 text-xs uppercase tracking-widest font-black shadow-sm">
                             No active comms.
                         </div>
                     )}
@@ -247,43 +247,43 @@ export default function MissionControlAnnouncementsPage() {
                     {viewMode === 'card' ? (
                         <div className="space-y-4">
                             {announcements.map(a => (
-                                <div key={a.id} className={`p-6 rounded-2xl border ${
+                                <div key={a.id} className={`p-6 rounded-2xl border transition-colors ${
                                     a.direction === 'upward' 
-                                        ? 'bg-emerald-950/10 border-emerald-500/20' 
-                                        : 'bg-[#111827] border-white/5'
+                                        ? 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 shadow-sm' 
+                                        : 'bg-card border-border shadow-sm'
                                 }`}>
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-2">
                                             {a.direction === 'upward' ? (
-                                                <ArrowUpCircle className="w-5 h-5 text-emerald-400" />
+                                                <ArrowUpCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                                             ) : (
-                                                <ArrowDownCircle className="w-5 h-5 text-indigo-400" />
+                                                <ArrowDownCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                                             )}
                                             <span className={`text-[10px] font-black uppercase tracking-widest ${
-                                                a.direction === 'upward' ? 'text-emerald-400' : 'text-indigo-400'
+                                                a.direction === 'upward' ? 'text-emerald-600 dark:text-emerald-400' : 'text-primary'
                                             }`}>
                                                 {a.direction === 'upward' ? 'INCOMING UPDATE' : 'OUTBOUND COMM'}
                                             </span>
-                                            <span className="text-[10px] font-black text-white/30 uppercase tracking-widest ml-2 px-2 py-0.5 rounded bg-white/5">
+                                            <span className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest ml-2 px-2 py-0.5 rounded bg-muted/50 border border-border/50">
                                                 {a.ministries ? a.ministries.name : 'BROADCAST TO ALL'}
                                             </span>
                                         </div>
-                                        <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">
+                                        <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest">
                                             {new Date(a.created_at).toLocaleDateString()}
                                         </span>
                                     </div>
-                                    <h3 className="text-lg font-black text-white mb-2">{a.title}</h3>
-                                    <p className="text-white/60 text-sm leading-relaxed whitespace-pre-wrap">{a.body}</p>
+                                    <h3 className="text-lg font-black text-foreground mb-2">{a.title}</h3>
+                                    <p className="text-foreground/70 text-sm leading-relaxed whitespace-pre-wrap">{a.body}</p>
                                     
                                     {announcementAttachments[a.id] && (
-                                        <div className="mt-4 flex flex-wrap gap-2 pt-4 border-t border-white/5">
+                                        <div className="mt-4 flex flex-wrap gap-2 pt-4 border-t border-border/50">
                                             {announcementAttachments[a.id].map(att => (
                                                 <button 
                                                     key={att.id}
                                                     onClick={() => downloadAttachment(att.file_path, att.file_name)}
-                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[10px] font-bold text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50 border border-border text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
                                                 >
-                                                    <Paperclip className="w-3 h-3 text-indigo-400" />
+                                                    <Paperclip className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
                                                     {att.file_name}
                                                 </button>
                                             ))}
@@ -291,12 +291,12 @@ export default function MissionControlAnnouncementsPage() {
                                     )}
 
                                     {a.authorName && (
-                                        <p className="text-[10px] font-black text-white/30 uppercase tracking-widest mt-4">Transmitted by {a.authorName}</p>
+                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-4">Transmitted by {a.authorName}</p>
                                     )}
                                     {a.direction === 'upward' && (
                                         <button 
                                             onClick={() => replyTo(a)}
-                                            className="mt-4 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors"
+                                            className="mt-4 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors"
                                         >
                                             <Send className="w-3 h-3" /> Reply Downward
                                         </button>
@@ -305,54 +305,54 @@ export default function MissionControlAnnouncementsPage() {
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-[#111827] border border-white/5 rounded-[2rem] overflow-hidden">
+                        <div className="bg-card border border-border rounded-[2rem] overflow-hidden shadow-sm transition-colors">
                             {announcements.map((a, idx) => (
-                                <div key={a.id} className="border-b border-white/5 last:border-0">
+                                <div key={a.id} className="border-b border-border/50 last:border-0 hover:bg-muted/50 transition-colors">
                                     <div 
                                         onClick={() => setExpandedId(expandedId === a.id ? null : a.id)}
-                                        className="flex items-center gap-4 px-6 py-4 hover:bg-white/5 cursor-pointer transition-colors"
+                                        className="flex items-center gap-4 px-6 py-4 cursor-pointer"
                                     >
-                                        <div className={`w-2 h-2 rounded-full ${a.direction === 'upward' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]'}`} />
+                                        <div className={`w-2 h-2 rounded-full ${a.direction === 'upward' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' : 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.3)]'}`} />
                                         <div className="flex-2 w-32 shrink-0">
-                                             <p className="text-[10px] font-black text-white/40 uppercase tracking-widest truncate">
+                                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate">
                                                 {a.ministries?.name || 'BROADCAST'}
                                              </p>
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-bold text-white truncate">{a.title}</p>
+                                            <p className="text-sm font-bold text-foreground truncate">{a.title}</p>
                                         </div>
                                         <div className="w-24 text-right">
-                                            <p className="text-[10px] font-medium text-white/20">
+                                            <p className="text-[10px] font-medium text-muted-foreground/40">
                                                 {new Date(a.created_at).toLocaleDateString()}
                                             </p>
                                         </div>
-                                        <Eye className={`w-4 h-4 transition-all ${expandedId === a.id ? 'text-indigo-400' : 'text-white/10'}`} />
+                                        <Eye className={`w-4 h-4 transition-all ${expandedId === a.id ? 'text-primary' : 'text-muted-foreground/20'}`} />
                                     </div>
                                     {expandedId === a.id && (
-                                        <div className="px-6 pb-6 pt-2 bg-white/[0.02] border-t border-white/5">
-                                            <p className="text-sm text-white/60 leading-relaxed whitespace-pre-wrap">{a.body}</p>
+                                        <div className="px-6 pb-6 pt-2 bg-muted/20 border-t border-border/50 transition-all">
+                                            <p className="text-sm text-foreground/70 leading-relaxed whitespace-pre-wrap">{a.body}</p>
                                             {announcementAttachments[a.id] && (
-                                                <div className="mt-4 flex flex-wrap gap-2 pt-4 border-t border-white/5">
+                                                <div className="mt-4 flex flex-wrap gap-2 pt-4 border-t border-border/50">
                                                     {announcementAttachments[a.id].map(att => (
                                                         <button 
                                                             key={att.id}
                                                             onClick={() => downloadAttachment(att.file_path, att.file_name)}
-                                                            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[10px] font-bold text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                                                            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card border border-border text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
                                                         >
-                                                            <Paperclip className="w-3 h-3 text-indigo-400" />
+                                                            <Paperclip className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
                                                             {att.file_name}
                                                         </button>
                                                     ))}
                                                 </div>
                                             )}
                                             <div className="mt-4 flex items-center justify-between">
-                                                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">
+                                                <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">
                                                     BY {a.authorName} • {a.direction === 'upward' ? 'INCOMING' : 'OUTBOUND'}
                                                 </p>
                                                 {a.direction === 'upward' && (
                                                     <button 
                                                         onClick={(e) => { e.stopPropagation(); replyTo(a); }}
-                                                        className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors"
+                                                        className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors"
                                                     >
                                                         <Send className="w-3 h-3" /> Reply
                                                     </button>
@@ -368,59 +368,58 @@ export default function MissionControlAnnouncementsPage() {
 
                 {/* Compose Downward */}
                 <div className="col-span-1">
-                    <form onSubmit={handleSendDownward} className="bg-[#111827] border border-white/5 rounded-3xl p-6 sticky top-8">
-                        <h2 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
-                            <Send className="w-4 h-4 text-indigo-400" /> Transmit Comm
+                    <form onSubmit={handleSendDownward} className="bg-card border border-border rounded-3xl p-6 sticky top-8 shadow-sm transition-colors">
+                        <h2 className="text-sm font-black text-foreground uppercase tracking-widest mb-6 flex items-center gap-2">
+                            <Send className="w-4 h-4 text-primary" /> Transmit Comm
                         </h2>
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Target Ministry</label>
+                                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Target Ministry</label>
                                 <select
                                     value={selectedMinistryId || ''}
                                     onChange={(e) => setSelectedMinistryId(e.target.value || null)}
-                                    className="w-full h-12 bg-white/5 border border-white/5 rounded-xl px-4 text-sm text-white focus:border-indigo-500/50 focus:outline-none appearance-none"
+                                    className="w-full h-12 bg-muted/50 border border-border rounded-xl px-4 text-sm text-foreground focus:border-primary/50 focus:outline-none appearance-none transition-colors"
                                 >
-                                    <option value="" className="bg-[#111827]">ALL MINISTRIES (BROADCAST)</option>
+                                    <option value="" className="bg-card">ALL MINISTRIES (BROADCAST)</option>
                                     {ministries.map(m => (
-                                        <option key={m.id} value={m.id} className="bg-[#111827]">{m.name}</option>
+                                        <option key={m.id} value={m.id} className="bg-card">{m.name}</option>
                                     ))}
                                 </select>
                             </div>
-                            
+
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Subject</label>
+                                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Subject</label>
                                 <input
                                     type="text"
                                     required
                                     placeholder="Brief subject line"
                                     value={composeTitle}
                                     onChange={e => setComposeTitle(e.target.value)}
-                                    className="w-full h-12 bg-white/5 border border-white/5 rounded-xl px-4 text-sm text-white focus:border-indigo-500/50 focus:outline-none"
+                                    className="w-full h-12 bg-muted/50 border border-border rounded-xl px-4 text-sm text-foreground focus:border-primary/50 focus:outline-none transition-colors"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Message Body</label>
+                                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Message Body</label>
                                 <textarea
                                     required
                                     placeholder="Type your message..."
                                     rows={4}
                                     value={composeBody}
                                     onChange={e => setComposeBody(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/5 rounded-xl p-4 text-sm text-white focus:border-indigo-500/50 focus:outline-none resize-none"
+                                    className="w-full bg-muted/50 border border-border rounded-xl p-4 text-sm text-foreground focus:border-primary/50 focus:outline-none resize-none transition-colors"
                                 />
                             </div>
-
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between px-1">
-                                    <label className="text-[10px] font-black text-white/40 uppercase tracking-widest flex items-center gap-1.5">
+                                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
                                         <Paperclip className="w-3 h-3" /> Attachments
                                     </label>
                                     {attachments.length > 0 && (
                                         <button 
                                             type="button" 
                                             onClick={() => setAttachments([])}
-                                            className="text-[9px] font-bold text-red-400/50 hover:text-red-400 uppercase tracking-tighter"
+                                            className="text-[9px] font-bold text-red-600 dark:text-red-400 hover:text-red-500 uppercase tracking-tighter"
                                         >
                                             Clear
                                         </button>
@@ -434,8 +433,8 @@ export default function MissionControlAnnouncementsPage() {
                                         onChange={(e) => setAttachments(Array.from(e.target.files || []))}
                                         className="absolute inset-0 opacity-0 cursor-pointer z-10"
                                     />
-                                    <div className="w-full bg-white/5 border border-white/5 border-dashed rounded-xl px-4 py-4 text-center group-hover:border-indigo-500/50 transition-all">
-                                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">
+                                    <div className="w-full bg-muted/50 border border-border border-dashed rounded-xl px-4 py-4 text-center group-hover:border-primary/50 transition-all">
+                                        <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">
                                             {attachments.length > 0 
                                                 ? `${attachments.length} selected` 
                                                 : 'Click or drag files'}
@@ -447,7 +446,7 @@ export default function MissionControlAnnouncementsPage() {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="w-full h-12 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 mt-2"
+                                className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-md shadow-primary/20 disabled:opacity-50 mt-2"
                             >
                                 {isSubmitting ? 'TRANSMITTING...' : 'INITIATE TRANSMISSION'}
                             </button>

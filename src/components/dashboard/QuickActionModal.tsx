@@ -5,25 +5,28 @@ import { EventForm } from "./forms/EventForm";
 import { PrayerForm } from "./forms/PrayerForm";
 import { MinistryForm } from "./forms/MinistryForm";
 import { ReportForm } from "./forms/ReportForm";
-import { Users, Calendar, Heart, BookOpen, FileText } from "lucide-react";
+import { BibleStudyGroupForm } from "./forms/BibleStudyGroupForm";
+import { Users, Calendar, Heart, BookOpen, FileText, MessagesSquare } from "lucide-react";
 
-export type QuickActionType = "member" | "event" | "prayer" | "ministry" | "report";
+export type QuickActionType = "member" | "event" | "prayer" | "ministry" | "report" | "bible_study";
 
 interface QuickActionModalProps {
     isOpen: boolean;
     onClose: () => void;
     type: QuickActionType | null;
+    initialData?: any;
 }
 
 const ACTION_CONFIG = {
-    member: { title: "Add New Member", icon: Users, color: "text-violet-400", desc: "Integrate a new member into the church ecosystem.", component: MemberForm },
-    event: { title: "Create Church Event", icon: Calendar, color: "text-blue-400", desc: "Schedule services, fellowships, or special events.", component: EventForm },
-    prayer: { title: "Add Prayer Request", icon: Heart, color: "text-red-400", desc: "Submit a request for intercessory tracking.", component: PrayerForm },
-    ministry: { title: "Assign Ministry Role", icon: BookOpen, color: "text-emerald-400", desc: "Recruit members into specialized ministry teams.", component: MinistryForm },
-    report: { title: "Generate AI Report", icon: FileText, color: "text-indigo-400", desc: "Synthesize current data into an intelligence briefing.", component: ReportForm },
+    member: { title: "New Member", icon: Users, color: "text-violet-400", desc: "Integrate a new member into the church ecosystem.", component: MemberForm },
+    event: { title: "Church Event", icon: Calendar, color: "text-blue-400", desc: "Schedule services, Bible studies, or special events.", component: EventForm },
+    prayer: { title: "Prayer Request", icon: Heart, color: "text-red-400", desc: "Submit a request for intercessory tracking.", component: PrayerForm },
+    ministry: { title: "Ministry Role", icon: BookOpen, color: "text-emerald-400", desc: "Recruit members into specialized ministry teams.", component: MinistryForm },
+    report: { title: "AI Report", icon: FileText, color: "text-indigo-400", desc: "Synthesize current data into an intelligence briefing.", component: ReportForm },
+    bible_study: { title: "Bible Study Group", icon: MessagesSquare, color: "text-amber-400", desc: "Manage spiritual growth and Bible study circles.", component: BibleStudyGroupForm },
 };
 
-export function QuickActionModal({ isOpen, onClose, type }: QuickActionModalProps) {
+export function QuickActionModal({ isOpen, onClose, type, initialData }: QuickActionModalProps) {
     if (!type) return null;
     const config = ACTION_CONFIG[type];
     const FormComponent = config.component;
@@ -38,7 +41,9 @@ export function QuickActionModal({ isOpen, onClose, type }: QuickActionModalProp
                             <Icon className="w-5 h-5" />
                         </div>
                         <div>
-                            <DialogTitle className="text-xl font-black text-foreground">{config.title}</DialogTitle>
+                            <DialogTitle className="text-xl font-black text-foreground">
+                                {initialData ? `Edit ${config.title}` : `Create ${config.title}`}
+                            </DialogTitle>
                             <DialogDescription className="text-muted-foreground text-xs font-medium">
                                 {config.desc}
                             </DialogDescription>
@@ -46,7 +51,7 @@ export function QuickActionModal({ isOpen, onClose, type }: QuickActionModalProp
                     </div>
                 </DialogHeader>
 
-                <FormComponent onSuccess={onClose} />
+                <FormComponent onSuccess={onClose} initialData={initialData} />
             </DialogContent>
         </Dialog>
     );

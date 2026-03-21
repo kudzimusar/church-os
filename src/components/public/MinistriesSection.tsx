@@ -39,6 +39,8 @@ const MINISTRY_IMAGES: Record<string, string> = {
   'hospitality-ministry': '/jkc-devotion-app/images/ministry_hospitality_card.png',
   'fellowship': '/jkc-devotion-app/images/ministry_fellowship_card.png',
   'fellowship-circles': '/jkc-devotion-app/images/ministry_fellowship_card.png',
+  'bible-study': '/jkc-devotion-app/images/ministry_fellowship_card.png',
+  'bible-study-groups': '/jkc-devotion-app/images/ministry_fellowship_card.png',
   'akiramenai': '/jkc-devotion-app/images/outreach_akiramenai.png',
   'food-pantry': '/jkc-devotion-app/images/ministry_foodpantry_card.png',
   'media': '/jkc-devotion-app/images/hero-background.jpg',

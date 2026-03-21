@@ -1,28 +1,32 @@
 "use client";
 import { useState } from "react";
+import { useStickyForm } from "@/hooks/useStickyForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { assignMinistryRoleAction } from "@/app/actions/admin";
 import { BookOpen, UserPlus, ShieldCheck, Sparkles } from "lucide-react";
 import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
+import { MINISTRIES } from "@/lib/constants";
 
 export function MinistryForm({ onSuccess }: { onSuccess: () => void }) {
     const { userId: adminId } = useAdminCtx();
     const [loading, setLoading] = useState(false);
+    const { values, handleChange, clear } = useStickyForm({
+        memberId: "",
+        ministry: MINISTRIES.worship,
+        role: "member"
+    }, "admin-assign-ministry");
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setLoading(true);
-        const formData = new FormData(e.currentTarget);
-        const memberId = formData.get('memberId') as string;
-        const role = formData.get('role') as string;
-        const ministry = formData.get('ministry') as string;
 
-        const result = await assignMinistryRoleAction(memberId, role, ministry, adminId);
+        const result = await assignMinistryRoleAction(values.memberId, values.role, values.ministry, adminId);
 
         if (result.success) {
             toast.success("Ministry invitation sent successfully!");
+            clear();
             onSuccess();
         } else {
             toast.error("Error: " + result.error);
@@ -44,7 +48,7 @@ export function MinistryForm({ onSuccess }: { onSuccess: () => void }) {
                 <label className="text-[10px] font-black uppercase text-muted-foreground">Select Member</label>
                 <div className="relative">
                     <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30" />
-                    <Input name="memberId" placeholder="Search by name or email..." className="bg-muted border-border text-foreground text-xs pl-9 placeholder:text-muted-foreground/40" required />
+                    <Input name="memberId" value={values.memberId} onChange={e => handleChange('memberId', e.target.value)} placeholder="Search by name or email..." className="bg-muted border-border text-foreground text-xs pl-9 placeholder:text-muted-foreground/40" required />
                 </div>
             </div>
 
@@ -53,12 +57,10 @@ export function MinistryForm({ onSuccess }: { onSuccess: () => void }) {
                     <label className="text-[10px] font-black uppercase text-muted-foreground">Ministry</label>
                     <div className="relative">
                         <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30" />
-                        <select name="ministry" className="w-full h-9 bg-muted border border-border rounded-xl pl-9 pr-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all">
-                            <option value="Worship" className="bg-card">Worship</option>
-                            <option value="Media" className="bg-card">Media</option>
-                            <option value="Intercessory" className="bg-card">Intercessory</option>
-                            <option value="Youth" className="bg-card">Youth</option>
-                            <option value="Hospitality" className="bg-card">Hospitality</option>
+                        <select name="ministry" value={values.ministry} onChange={e => handleChange('ministry', e.target.value)} className="w-full h-9 bg-muted border border-border rounded-xl pl-9 pr-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all">
+                            {Object.entries(MINISTRIES).map(([key, name]) => (
+                                <option key={key} value={name} className="bg-card">{name}</option>
+                            ))}
                         </select>
                     </div>
                 </div>
@@ -66,7 +68,7 @@ export function MinistryForm({ onSuccess }: { onSuccess: () => void }) {
                     <label className="text-[10px] font-black uppercase text-muted-foreground">Role</label>
                     <div className="relative">
                         <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30" />
-                        <select name="role" className="w-full h-9 bg-muted border border-border rounded-xl pl-9 pr-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all">
+                        <select name="role" value={values.role} onChange={e => handleChange('role', e.target.value)} className="w-full h-9 bg-muted border border-border rounded-xl pl-9 pr-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all">
                             <option value="member" className="bg-card">Member</option>
                             <option value="leader" className="bg-card">Leader</option>
                             <option value="coordinator" className="bg-card">Coordinator</option>

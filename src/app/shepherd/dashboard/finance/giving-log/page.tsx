@@ -91,7 +91,7 @@ export default function GivingLogPage() {
   return (
     <div className="space-y-8 p-6 max-w-6xl mx-auto">
       <div>
-        <h1 className="text-xl font-black">Donation Log</h1>
+        <h1 className="text-xl font-black text-foreground">Donation Log</h1>
         <p className="text-[11px] text-muted-foreground uppercase tracking-widest">
           Record offline donations — cash, transfers, and manual gifts
         </p>
@@ -99,12 +99,12 @@ export default function GivingLogPage() {
 
       <div className="grid lg:grid-cols-2 gap-8 items-start">
         {/* Left: Form */}
-        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 space-y-6">
+        <div className="bg-card border border-border rounded-3xl p-8 space-y-6 shadow-sm transition-colors">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)]">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
               <Plus className="w-4 h-4" />
             </div>
-            <h2 className="text-sm font-black uppercase tracking-widest">Log a Donation</h2>
+            <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Log a Donation</h2>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -114,7 +114,7 @@ export default function GivingLogPage() {
                 value={donorName}
                 onChange={(e) => setDonorName(e.target.value)}
                 placeholder="Full Name"
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] outline-none transition-colors"
+                className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground placeholder-muted-foreground/50 outline-none transition-colors"
                 required
               />
             </div>
@@ -127,7 +127,7 @@ export default function GivingLogPage() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] outline-none transition-colors"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground placeholder-muted-foreground/50 outline-none transition-colors"
                   required
                 />
               </div>
@@ -136,10 +136,10 @@ export default function GivingLogPage() {
                 <select 
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] outline-none transition-colors appearance-none"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground outline-none transition-colors appearance-none"
                 >
-                  <option value="JPY">JPY (¥)</option>
-                  <option value="USD">USD ($)</option>
+                  <option value="JPY" className="bg-card text-foreground">JPY (¥)</option>
+                  <option value="USD" className="bg-card text-foreground">USD ($)</option>
                 </select>
               </div>
             </div>
@@ -150,13 +150,13 @@ export default function GivingLogPage() {
                 <select 
                   value={type}
                   onChange={(e) => setType(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] outline-none transition-colors appearance-none"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground outline-none transition-colors appearance-none"
                 >
-                  <option value="tithe">Tithe</option>
-                  <option value="offering">Offering</option>
-                  <option value="love_offering">Love Offering</option>
-                  <option value="building_fund">Building Fund</option>
-                  <option value="outreach">Outreach</option>
+                  <option value="tithe" className="bg-card text-foreground">Tithe</option>
+                  <option value="offering" className="bg-card text-foreground">Offering</option>
+                  <option value="love_offering" className="bg-card text-foreground">Love Offering</option>
+                  <option value="building_fund" className="bg-card text-foreground">Building Fund</option>
+                  <option value="outreach" className="bg-card text-foreground">Outreach</option>
                 </select>
               </div>
               <div className="space-y-2">
@@ -164,14 +164,14 @@ export default function GivingLogPage() {
                 <select 
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] outline-none transition-colors appearance-none"
+                  className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground outline-none transition-colors appearance-none"
                 >
-                  <option value="cash">Cash</option>
-                  <option value="zelle">Zelle</option>
-                  <option value="bank_transfer">Bank Transfer</option>
-                  <option value="cash_app">Cash App</option>
-                  <option value="paypal">PayPal</option>
-                  <option value="wire">Wire</option>
+                  <option value="cash" className="bg-card text-foreground">Cash</option>
+                  <option value="zelle" className="bg-card text-foreground">Zelle</option>
+                  <option value="bank_transfer" className="bg-card text-foreground">Bank Transfer</option>
+                  <option value="cash_app" className="bg-card text-foreground">Cash App</option>
+                  <option value="paypal" className="bg-card text-foreground">PayPal</option>
+                  <option value="wire" className="bg-card text-foreground">Wire</option>
                 </select>
               </div>
             </div>
@@ -182,7 +182,7 @@ export default function GivingLogPage() {
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] outline-none transition-colors"
+                className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground outline-none transition-colors"
               />
             </div>
 
@@ -193,13 +193,13 @@ export default function GivingLogPage() {
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Additional details..."
                 rows={3}
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[var(--primary)] outline-none transition-colors resize-none"
+                className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground placeholder-muted-foreground/50 outline-none transition-colors resize-none"
               />
             </div>
 
             <button 
               disabled={submitting}
-              className="w-full bg-[var(--primary)] text-white font-black py-4 rounded-xl text-xs tracking-[0.2em] shadow-lg shadow-[var(--primary)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 mt-6"
+              className="w-full bg-primary text-white font-black py-4 rounded-xl text-xs tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 mt-6"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'LOG DONATION'}
             </button>
@@ -207,38 +207,38 @@ export default function GivingLogPage() {
         </div>
 
         {/* Right: List */}
-        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 space-y-6">
+        <div className="bg-card border border-border rounded-3xl p-8 space-y-6 shadow-sm transition-colors">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
               <DollarSign className="w-4 h-4" />
             </div>
-            <h2 className="text-sm font-black uppercase tracking-widest">Recent Donations</h2>
+            <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Recent Donations</h2>
           </div>
 
           <div className="space-y-3">
             {loading ? (
-              <div className="py-20 text-center animate-pulse text-white/20 font-black text-xs tracking-widest">LOADING...</div>
+              <div className="py-20 text-center animate-pulse text-muted-foreground font-black text-xs tracking-widest">LOADING...</div>
             ) : records.length === 0 ? (
-              <div className="py-20 text-center text-white/20 font-black text-xs tracking-widest uppercase">No records found</div>
+              <div className="py-20 text-center text-muted-foreground font-black text-xs tracking-widest uppercase">No records found</div>
             ) : (
               records.map((record) => (
-                <div key={record.id} className="bg-black/40 border border-white/5 p-4 rounded-2xl space-y-3">
+                <div key={record.id} className="bg-muted border border-border p-4 rounded-2xl space-y-3 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-lg font-black text-white">
+                      <span className="text-lg font-black text-foreground">
                         {record.currency === 'JPY' ? '¥' : '$'}{record.amount.toLocaleString()}
                       </span>
-                      <span className="bg-white/10 text-[8px] font-black px-2 py-0.5 rounded tracking-widest uppercase">
+                      <span className="bg-card border border-border text-[8px] font-black px-2 py-0.5 rounded tracking-widest uppercase text-muted-foreground">
                         {record.record_type}
                       </span>
                     </div>
-                    <span className="text-[10px] font-bold text-white/30 uppercase tracking-tighter flex items-center gap-1">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter flex items-center gap-1">
                       <Calendar className="w-2.5 h-2.5" /> {format(new Date(record.given_date), 'MMM dd, yyyy')}
                     </span>
                   </div>
                   <div className="flex gap-2 items-start">
-                    <FileText className="w-3 h-3 text-white/20 mt-1 flex-shrink-0" />
-                    <p className="text-[11px] text-white/50 leading-relaxed italic truncate">
+                    <FileText className="w-3 h-3 text-muted-foreground/30 mt-1 flex-shrink-0" />
+                    <p className="text-[11px] text-muted-foreground/70 leading-relaxed italic truncate">
                       {record.notes}
                     </p>
                   </div>

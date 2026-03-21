@@ -9,26 +9,26 @@ import { PILEngine } from "@/lib/pil-engine";
 import { useAdminCtx } from "../layout";
 
 const PRIORITY_CONFIG = {
-    critical: { color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20', dot: 'bg-red-400', badge: 'bg-red-500/20 text-red-400' },
-    high: { color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20', dot: 'bg-orange-400', badge: 'bg-orange-500/20 text-orange-400' },
-    warning: { color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', dot: 'bg-amber-400', badge: 'bg-amber-500/20 text-amber-400' },
-    info: { color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/10', dot: 'bg-blue-400', badge: 'bg-blue-500/20 text-blue-400' },
+    critical: { color: 'text-red-700 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20', dot: 'bg-red-600 dark:bg-red-400', badge: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400' },
+    high: { color: 'text-orange-700 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/20', dot: 'bg-orange-600 dark:bg-orange-400', badge: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400' },
+    warning: { color: 'text-amber-700 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20', dot: 'bg-amber-600 dark:bg-amber-400', badge: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400' },
+    info: { color: 'text-blue-700 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/10', dot: 'bg-blue-600 dark:bg-blue-400', badge: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400' },
 };
 
 // Insight type → visual config
 const INSIGHT_TYPE_CONFIG: Record<string, { color: string; bg: string; border: string; icon: any; label: string }> = {
-    growth:       { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', icon: TrendingUp, label: 'Growth' },
-    risk:         { color: 'text-red-400',     bg: 'bg-red-500/10',     border: 'border-red-500/30',     icon: ShieldAlert, label: 'Risk' },
-    opportunity:  { color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/30',    icon: Sparkles,    label: 'Opportunity' },
-    commendation: { color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/30',   icon: Star,        label: 'Commendation' },
-    correlation:  { color: 'text-violet-400',  bg: 'bg-violet-500/10',  border: 'border-violet-500/30',  icon: Link2,       label: 'Correlation' },
+    growth:       { color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/10', border: 'border-emerald-200 dark:border-emerald-500/30', icon: TrendingUp, label: 'Growth' },
+    risk:         { color: 'text-red-700 dark:text-red-400',     bg: 'bg-red-50 dark:bg-red-500/10',     border: 'border-red-200 dark:border-red-500/30',     icon: ShieldAlert, label: 'Risk' },
+    opportunity:  { color: 'text-blue-700 dark:text-blue-400',    bg: 'bg-blue-50 dark:bg-blue-500/10',    border: 'border-blue-200 dark:border-blue-500/30',    icon: Sparkles,    label: 'Opportunity' },
+    commendation: { color: 'text-amber-700 dark:text-amber-400',   bg: 'bg-amber-50 dark:bg-amber-500/10',   border: 'border-amber-200 dark:border-amber-500/30',   icon: Star,        label: 'Commendation' },
+    correlation:  { color: 'text-violet-700 dark:text-violet-400',  bg: 'bg-violet-50 dark:bg-violet-500/10',  border: 'border-violet-200 dark:border-violet-500/30',  icon: Link2,       label: 'Correlation' },
 };
 
 const URGENCY_CONFIG: Record<string, string> = {
-    immediate:  'text-red-400 bg-red-500/10 border-red-500/20',
-    this_week:  'text-amber-400 bg-amber-500/10 border-amber-500/20',
-    this_month: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-    monitor:    'text-white/30 bg-white/5 border-white/10',
+    immediate:  'text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-500/10 border-red-200 dark:border-red-500/20',
+    this_week:  'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20',
+    this_month: 'text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/20',
+    monitor:    'text-muted-foreground/30 bg-muted/50 border-border',
 };
 
 export default function AICommandCenterPage() {
@@ -192,21 +192,21 @@ export default function AICommandCenterPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-black text-white flex items-center gap-2">
-                        <Brain className="w-5 h-5 text-violet-400" />
+                    <h1 className="text-xl font-black text-foreground flex items-center gap-2">
+                        <Brain className="w-5 h-5 text-primary" />
                         Prophetic Intelligence Layer
-                        <Badge className="bg-violet-500/20 text-violet-400 border-0 text-[10px] font-black uppercase tracking-tighter">BETA</Badge>
+                        <Badge className="bg-primary/20 text-primary border-0 text-[10px] font-black uppercase tracking-tighter">BETA</Badge>
                     </h1>
-                    <p className="text-[11px] text-white/30 mt-0.5">{unacknowledged.length} rule-based forecasts · {pendingAi.length} AI insights pending review</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{unacknowledged.length} rule-based forecasts · {pendingAi.length} AI insights pending review</p>
                 </div>
                 <div className="flex gap-2">
                     <button onClick={runSweep} disabled={runningSweep}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-xs text-violet-400 hover:bg-violet-500/20 transition-all font-bold">
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary hover:bg-primary/20 transition-all font-bold">
                         <Zap className={`w-3.5 h-3.5 ${runningSweep ? 'animate-pulse' : ''}`} />
                         {runningSweep ? 'Scanning...' : 'Run Full Sweep'}
                     </button>
                     <button onClick={() => { loadInsights(); loadAiInsights(); }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white/50 hover:text-white transition-all">
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted border border-border text-xs text-muted-foreground hover:text-foreground transition-all">
                         <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                         Refresh
                     </button>
@@ -216,17 +216,17 @@ export default function AICommandCenterPage() {
             {/* === AI MINISTRY INSIGHTS PANEL (Phase 3) === */}
             <div>
                 <div className="flex items-center gap-2 mb-3">
-                    <Brain className="w-3.5 h-3.5 text-violet-400" />
-                    <p className="text-[9px] font-black text-violet-400/70 uppercase tracking-widest">Gemini AI Ministry Insights</p>
-                    <span className="text-[9px] text-white/20 font-medium">— Approve or Dismiss each insight before it reaches ministry leaders</span>
+                    <Brain className="w-3.5 h-3.5 text-primary" />
+                    <p className="text-[9px] font-black text-primary uppercase tracking-widest">Gemini AI Ministry Insights</p>
+                    <span className="text-[9px] text-muted-foreground/40 font-medium">— Approve or Dismiss each insight before it reaches ministry leaders</span>
                 </div>
 
                 {aiLoading ? (
-                    <div className="bg-[#111827] border border-white/5 rounded-3xl p-8 text-center text-white/30 text-xs">Loading AI insights...</div>
+                    <div className="bg-card border border-border rounded-3xl p-8 text-center text-muted-foreground text-xs shadow-sm transition-colors">Loading AI insights...</div>
                 ) : pendingAi.length === 0 ? (
-                    <div className="bg-[#111827] border border-white/5 rounded-3xl p-8 text-center">
-                        <Brain className="w-8 h-8 text-violet-400/30 mx-auto mb-2" />
-                        <p className="text-white/30 text-xs">No pending AI insights. Run a sweep to generate new ones.</p>
+                    <div className="bg-card border border-border rounded-3xl p-8 text-center shadow-sm transition-colors">
+                        <Brain className="w-8 h-8 text-primary/30 mx-auto mb-2" />
+                        <p className="text-muted-foreground text-xs">No pending AI insights. Run a sweep to generate new ones.</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -245,24 +245,24 @@ export default function AICommandCenterPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <p className="text-xs font-bold text-white">{insight.summary}</p>
+                                                <p className="text-xs font-bold text-foreground">{insight.summary}</p>
                                                 <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${urgencyCfg} uppercase tracking-widest`}>{insight.urgency?.replace('_', ' ')}</span>
                                             </div>
-                                            <p className="text-[9px] text-white/30 mt-0.5 capitalize">{cfg.label} · {insight.subject} · {new Date(insight.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                                            <p className="text-[9px] text-muted-foreground mt-0.5 capitalize">{cfg.label} · {insight.subject} · {new Date(insight.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
                                         </div>
-                                        <ChevronDown className={`w-3.5 h-3.5 text-white/30 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                        <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground/30 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                                     </button>
                                     <AnimatePresence>
                                         {isOpen && (
                                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                                                 className="px-4 pb-4 space-y-3">
                                                 {insight.detail && (
-                                                    <p className="text-xs text-white/50 leading-relaxed">{insight.detail}</p>
+                                                    <p className="text-xs text-muted-foreground leading-relaxed">{insight.detail}</p>
                                                 )}
                                                 {insight.recommended_action && (
                                                     <div className={`p-3 ${cfg.bg} rounded-xl border ${cfg.border}`}>
                                                         <p className={`text-[8px] font-black ${cfg.color} uppercase tracking-wider mb-1`}>Recommended Action</p>
-                                                        <p className="text-xs text-white/70">{insight.recommended_action}</p>
+                                                        <p className="text-xs text-foreground/80">{insight.recommended_action}</p>
                                                     </div>
                                                 )}
                                                 <div className="flex gap-2 pt-1">
@@ -272,7 +272,7 @@ export default function AICommandCenterPage() {
                                                         {isProcessing ? 'Processing...' : 'Approve'}
                                                     </button>
                                                     <button onClick={() => dismissAiInsight(insight)} disabled={isProcessing}
-                                                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black text-white/40 hover:text-white hover:border-white/20 transition-colors disabled:opacity-50">
+                                                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-muted border border-border text-[10px] font-black text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50">
                                                         <XCircle className="w-3.5 h-3.5" />
                                                         Dismiss
                                                     </button>
@@ -290,25 +290,25 @@ export default function AICommandCenterPage() {
             {/* Stats row */}
             <div className="grid grid-cols-4 gap-3">
                 {[
-                    { label: 'Rule-Based Forecasts', val: insights.length, color: 'text-violet-400' },
-                    { label: 'Critical Risk', val: insights.filter(i => i.risk_level === 'critical').length, color: 'text-red-400' },
-                    { label: 'AI Pending Review', val: pendingAi.length, color: 'text-amber-400' },
-                    { label: 'Resolved', val: acknowledged.length, color: 'text-emerald-400' },
+                    { label: 'Rule-Based Forecasts', val: insights.length, color: 'text-primary' },
+                    { label: 'Critical Risk', val: insights.filter(i => i.risk_level === 'critical').length, color: 'text-red-600 dark:text-red-400' },
+                    { label: 'AI Pending Review', val: pendingAi.length, color: 'text-amber-600 dark:text-amber-400' },
+                    { label: 'Resolved', val: acknowledged.length, color: 'text-emerald-600 dark:text-emerald-400' },
                 ].map(s => (
-                    <div key={s.label} className="bg-[#111827] border border-white/5 rounded-2xl p-4">
+                    <div key={s.label} className="bg-card border border-border rounded-2xl p-4 shadow-sm transition-colors">
                         <p className={`text-2xl font-black ${s.color}`}>{loading ? '—' : s.val}</p>
-                        <p className="text-[9px] font-black text-white/30 uppercase tracking-wide mt-1">{s.label}</p>
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wide mt-1">{s.label}</p>
                     </div>
                 ))}
             </div>
 
             {/* === BROADCAST PANEL (Phase 3) === */}
-            <div className="bg-[#111827] border border-white/5 rounded-3xl p-6">
+            <div className="bg-card border border-border rounded-3xl p-6 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
                     <Zap className="w-4 h-4 text-emerald-400" />
-                    <h2 className="text-xs font-black text-white uppercase tracking-widest">Member Feed Broadcast</h2>
+                    <h2 className="text-xs font-black text-foreground uppercase tracking-widest">Member Feed Broadcast</h2>
                 </div>
-                <p className="text-[10px] text-white/50 mb-4 pb-4 border-b border-white/5">Send manual nudges and announcements directly to member home feeds alongside automated AI insights.</p>
+                <p className="text-[10px] text-muted-foreground mb-4 pb-4 border-b border-border">Send manual nudges and announcements directly to member home feeds alongside automated AI insights.</p>
                 
                 <form onSubmit={sendBroadcast} className="space-y-4">
                     <div>
@@ -317,7 +317,7 @@ export default function AICommandCenterPage() {
                             placeholder="Announcement Title" 
                             value={broadcastTitle}
                             onChange={e => setBroadcastTitle(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-white placeholder-white/20 focus:outline-none focus:border-emerald-500/50"
+                            className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-emerald-500/50"
                             required
                         />
                     </div>
@@ -326,7 +326,7 @@ export default function AICommandCenterPage() {
                             placeholder="Announcement message body..." 
                             value={broadcastBody}
                             onChange={e => setBroadcastBody(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-white placeholder-white/20 focus:outline-none focus:border-emerald-500/50 min-h-[100px]"
+                            className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-emerald-500/50 min-h-[100px]"
                             required
                         />
                     </div>
@@ -345,7 +345,7 @@ export default function AICommandCenterPage() {
 
             {/* === LEGACY: Rule-based Prophetic Insights === */}
             <div>
-                <p className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-3">Rule-Based Leadership Forecasts</p>
+                <p className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest mb-3">Rule-Based Leadership Forecasts</p>
                 <div className="space-y-2 mb-6">
                     {loading ? <div className="text-center py-12 text-white/30 text-xs">Loading PIL forecasts...</div> :
                         unacknowledged.map(insight => {
@@ -357,25 +357,25 @@ export default function AICommandCenterPage() {
                                         <div className={`w-2 h-2 rounded-full flex-shrink-0 animate-pulse ${cfg.dot}`} />
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <p className="text-xs font-bold text-white">{insight.insight_title}</p>
+                                                <p className="text-xs font-bold text-foreground">{insight.insight_title}</p>
                                                 {insight.probability_score && (
-                                                    <span className="text-[9px] font-black text-white/40">{insight.probability_score}% Prob.</span>
+                                                    <span className="text-[9px] font-black text-muted-foreground/60">{insight.probability_score}% Prob.</span>
                                                 )}
                                             </div>
-                                            <p className="text-[9px] text-white/30 mt-0.5 capitalize">{insight.category} · {new Date(insight.generated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                                            <p className="text-[9px] text-muted-foreground mt-0.5 capitalize">{insight.category} · {new Date(insight.generated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
                                         </div>
                                         <span className={`text-[7px] font-black px-1.5 py-0.5 rounded-md uppercase flex-shrink-0 ${cfg.badge}`}>{insight.risk_level}</span>
-                                        <ChevronDown className={`w-3.5 h-3.5 text-white/30 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                                        <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground/30 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                                     </button>
                                     <AnimatePresence>
                                         {isOpen && (
                                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                                                 className="px-4 pb-4 space-y-3">
-                                                <p className="text-xs text-white/50 leading-relaxed">{insight.insight_description}</p>
+                                                <p className="text-xs text-muted-foreground leading-relaxed">{insight.insight_description}</p>
                                                 {insight.recommended_action && (
-                                                    <div className="p-3 bg-violet-500/5 rounded-xl border border-violet-500/10">
-                                                        <p className="text-[8px] font-black text-violet-400/50 uppercase tracking-wider mb-1">Shepherd Strategy</p>
-                                                        <p className="text-xs text-violet-200">{insight.recommended_action}</p>
+                                                    <div className="p-3 bg-primary/5 rounded-xl border border-primary/10">
+                                                        <p className="text-[8px] font-black text-primary/50 uppercase tracking-wider mb-1">Shepherd Strategy</p>
+                                                        <p className="text-xs text-foreground/80">{insight.recommended_action}</p>
                                                     </div>
                                                 )}
                                                 <div className="flex gap-3 pt-2">

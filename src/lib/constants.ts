@@ -29,7 +29,7 @@ export const MINISTRY_OPTIONS = [
     "Health & Wellness",
     "Benevolence & Welfare",
     "Prison Ministry",
-    "Campus Fellowship"
+    "Bible Study Groups"
 ];
 
 export const MINISTRIES: Record<string, string> = {
@@ -41,7 +41,7 @@ export const MINISTRIES: Record<string, string> = {
     "prayer": "Prayer Ministry",
     "media": "Media Ministry",
     "hospitality": "Hospitality Ministry",
-    "fellowship": "Fellowship Circles",
+    "bible_study": "Bible Study Groups",
     "finance": "Finance Ministry",
     "missions": "Missions Ministry",
     "pastoral": "Pastoral Care"

@@ -10,6 +10,7 @@ import { Trash2, ShieldCheck, Mail, Key } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Auth } from "@/lib/auth";
 import { basePath as BP } from "@/lib/utils";
+import { useStickyForm } from "@/hooks/useStickyForm";
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -21,10 +22,21 @@ interface AuthModalProps {
 export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: AuthModalProps) {
     const [authMode, setAuthMode] = useState<"login" | "register" | "forgot" | "magic">("login");
     const [loading, setLoading] = useState(false);
-    const [email, setEmail] = useState("");
+    
+    const { values, handleChange: handleStickyChange, clear } = useStickyForm({
+        email: "",
+        name: "",
+        isMemberRequest: false
+    }, "auth-modal");
+
+    const email = values.email;
+    const setEmail = (val: string) => handleStickyChange("email", val);
+    const name = values.name;
+    const setName = (val: string) => handleStickyChange("name", val);
+    const isMemberRequest = values.isMemberRequest;
+    const setIsMemberRequest = (val: boolean) => handleStickyChange("isMemberRequest", val);
+
     const [password, setPassword] = useState("");
-    const [name, setName] = useState("");
-    const [isMemberRequest, setIsMemberRequest] = useState(false);
     const [isMagicLinkSent, setIsMagicLinkSent] = useState(false);
     const [isResetSent, setIsResetSent] = useState(false);
 
@@ -37,6 +49,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
         const res = await Auth.login(email, password);
         if (res.success) {
             toast.success("Welcome back!");
+            clear();
             onSuccess(res.user || null);
             onClose();
         } else if (res.error === 'Email not confirmed') {
@@ -62,6 +75,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
         if (res.success) {
             setShowVerificationMessage(true);
             toast.success("Account created!");
+            clear();
         } else {
             toast.error(res.error || "Signup failed");
         }

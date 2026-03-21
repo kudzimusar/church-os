@@ -118,12 +118,12 @@ const INITIAL_DATA: DashboardData = {
 /* ─── Sub-components ─── */
 function MetricCard({ title, value, sub, trend, trendVal, icon: Icon, accentColor = 'violet' }: any) {
     const colorMap: Record<string, string> = {
-        violet: 'text-violet-500 bg-violet-500/10',
-        blue: 'text-blue-500 bg-blue-500/10',
-        emerald: 'text-emerald-500 bg-emerald-500/10',
-        amber: 'text-amber-500 bg-amber-500/10',
-        red: 'text-red-500 bg-red-500/10',
-        cyan: 'text-cyan-500 bg-cyan-500/10',
+        violet: 'text-violet-600 dark:text-violet-400 bg-violet-500/10 dark:bg-violet-500/20',
+        blue: 'text-blue-600 dark:text-blue-400 bg-blue-500/10 dark:bg-blue-500/20',
+        emerald: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20',
+        amber: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/20',
+        red: 'text-red-600 dark:text-red-400 bg-red-500/10 dark:bg-red-500/20',
+        cyan: 'text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 dark:bg-cyan-500/20',
     };
     const colors = colorMap[accentColor] || colorMap.violet;
     const [iconColor, iconBg] = colors.split(' ');
@@ -500,9 +500,9 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
 
                 <div className="flex flex-col xl:flex-row gap-4 mb-10">
                     {membershipRequests.length > 0 && (
-                        <Card className="bg-card border-primary/30 flex-1 overflow-hidden">
-                            <CardHeader className="bg-primary/10 border-b border-border py-3">
-                                <CardTitle className="text-xs font-black uppercase tracking-widest text-primary flex items-center justify-between">
+                        <Card className="bg-card border-border dark:border-primary/30 flex-1 overflow-hidden shadow-sm">
+                            <CardHeader className="bg-muted dark:bg-primary/10 border-b border-border py-3">
+                                <CardTitle className="text-xs font-black uppercase tracking-widest text-foreground dark:text-primary flex items-center justify-between">
                                     <span>New Membership Pipeline</span>
                                     <Badge className="bg-primary text-primary-foreground border-0">{membershipRequests.length} PENDING</Badge>
                                 </CardTitle>
@@ -634,7 +634,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                             transition={{ delay: i * 0.03, duration: 0.6 }}
                                             className="h-full rounded-sm"
                                             style={{
-                                                background: d.pct > 70 ? '#8b5cf6' : d.pct > 50 ? '#6d28d9' : '#4c1d95',
+                                                background: d.pct > 70 ? 'var(--primary)' : d.pct > 50 ? 'rgba(var(--primary-rgb), 0.7)' : 'rgba(var(--primary-rgb), 0.4)',
                                                 opacity: 0.3 + (d.pct / 100) * 0.7
                                             }}
                                         />
@@ -650,7 +650,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                         <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3">Daily Completion Rate</p>
                         <ResponsiveContainer width="100%" height={200}>
                             <BarChart data={data.devotionTrend} barSize={12}>
-                                <XAxis dataKey="day" tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 8 }} axisLine={false} tickLine={false} />
+                                <XAxis dataKey="day" tick={{ fill: 'var(--muted-foreground)', fontSize: 8, fontWeight: 600 }} axisLine={false} tickLine={false} opacity={0.5} />
                                 <YAxis hide />
                                 <Tooltip {...CUSTOM_TOOLTIP_STYLE} />
                                 <Bar dataKey="completions" name="Completions" radius={[4, 4, 0, 0]} fill="url(#devGrad)">
@@ -779,9 +779,9 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                         </div>
                         <div className="space-y-2">
                             {data.alertMembers.map(m => (
-                                <div key={m.id} className="flex items-center justify-between p-3 bg-red-500/5 border border-red-500/10 rounded-xl">
+                                <div key={m.id} className="flex items-center justify-between p-3 bg-red-500/10 dark:bg-red-500/5 border border-red-500/10 rounded-xl">
                                     <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-xs font-black text-red-400 flex-shrink-0">
+                                        <div className="w-8 h-8 rounded-lg bg-red-500/10 dark:bg-red-500/20 flex items-center justify-center text-xs font-black text-red-600 dark:text-red-400 flex-shrink-0">
                                             {m.name[0]}
                                         </div>
                                         <div>
@@ -791,7 +791,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase ${m.risk_level === 'critical' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                                    <div className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase ${m.risk_level === 'critical' ? 'bg-red-500/20 text-red-600 dark:text-red-400' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'}`}>
                                         {m.risk_level}
                                     </div>
                                 </div>
@@ -866,7 +866,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                         <ResponsiveContainer width="100%" height={240}>
                             <BarChart data={data.ministryData} layout="vertical" barSize={10}>
                                 <XAxis type="number" hide />
-                                <YAxis type="category" dataKey="name" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} width={90} />
+                                <YAxis type="category" dataKey="name" tick={{ fill: 'var(--muted-foreground)', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} width={90} />
                                 <Tooltip {...CUSTOM_TOOLTIP_STYLE} />
                                 <Bar dataKey="count" name="Members" radius={[0, 4, 4, 0]} fill="url(#minGrad)">
                                     <defs>
@@ -961,7 +961,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                         <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Household Growth (6 Months)</p>
                         <ResponsiveContainer width="100%" height={200}>
                             <BarChart data={data.householdData} barSize={14}>
-                                <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                                <XAxis dataKey="month" tick={{ fill: 'var(--muted-foreground)', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} />
                                 <YAxis hide />
                                 <Tooltip {...CUSTOM_TOOLTIP_STYLE} />
                                 <Bar dataKey="families" name="Families" stackId="a" fill="#8b5cf6" radius={[0, 0, 0, 0]} />
@@ -1027,8 +1027,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             {/* ─── BOTTOM: GROWTH STATS + AI SUMMARY ─── */}
             <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Church Growth Summary */}
-                <div className="bg-gradient-to-br from-violet-900/30 to-indigo-900/20 border border-violet-500/20 rounded-2xl p-6">
-                    <p className="text-xs font-black text-violet-300 uppercase tracking-widest mb-4">Church Health Score Breakdown</p>
+                <div className="bg-gradient-to-br from-violet-100 to-indigo-50 dark:from-violet-900/30 dark:to-indigo-900/20 border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6">
+                    <p className="text-xs font-black text-violet-600 dark:text-violet-300 uppercase tracking-widest mb-4">Church Health Score Breakdown</p>
                     <div className="space-y-3">
                         {[
                             { label: 'Spiritual Engagement', score: 74, max: 100 },
@@ -1105,7 +1105,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                                             <stop offset="100%" stopColor="#064e3b" />
                                         </linearGradient>
                                     </defs>
-                                    <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                                    <XAxis dataKey="month" tick={{ fill: 'var(--muted-foreground)', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} />
                                     <YAxis hide />
                                     <Tooltip {...CUSTOM_TOOLTIP_STYLE} />
                                     <Bar dataKey="amount" name="Giving (JPY)" radius={[8, 8, 0, 0]} fill="url(#giveGrad)" />

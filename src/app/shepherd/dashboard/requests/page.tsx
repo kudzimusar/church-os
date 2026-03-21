@@ -93,7 +93,7 @@ export default function MembershipRequestsPage() {
                     <p className="text-sm text-muted-foreground font-medium">Review and approve new member applications</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 px-4 py-2 text-xs font-black">
+                    <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 px-4 py-2 text-xs font-black">
                         {pendingCount} PENDING ACTION
                     </Badge>
                 </div>
@@ -120,7 +120,7 @@ export default function MembershipRequestsPage() {
                                         <button
                                             key={s}
                                             onClick={() => setFilter(s)}
-                                            className={`flex-1 text-[10px] font-black uppercase py-2 rounded-md transition-all ${filter === s ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:bg-background/50'}`}
+                                            className={`flex-1 text-[10px] font-black uppercase py-2 rounded-md transition-all ${filter === s ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:bg-background/80 hover:text-foreground'}`}
                                         >
                                             {s}
                                         </button>
@@ -156,7 +156,11 @@ export default function MembershipRequestsPage() {
                                                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{format(new Date(req.created_at), 'MMM d, yyyy')}</p>
                                                 </div>
                                             </div>
-                                            <Badge className={`text-[9px] font-black uppercase ${req.status === 'pending' ? 'bg-amber-500' : req.status === 'approved' ? 'bg-emerald-500' : 'bg-red-500'}`}>
+                                            <Badge className={`text-[9px] font-black uppercase ${
+                                                req.status === 'pending' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 
+                                                req.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 
+                                                'bg-red-500/10 text-red-600 dark:text-red-400'
+                                            }`}>
                                                 {req.status}
                                             </Badge>
                                         </button>

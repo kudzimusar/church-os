@@ -140,3 +140,84 @@ export async function generateReportAction(reportType: string, orgId: string, us
         return { success: false, error: error.message };
     }
 }
+
+export async function createBibleStudyGroupAction(groupData: any) {
+    try {
+        const { 
+            name, description, meeting_link, meeting_time, 
+            meeting_day, meeting_type, curriculum, orgId, leader_id,
+            assistant_leader_id, is_private = false, requires_approval = false, 
+            max_members = 50, location
+        } = groupData;
+
+        const shareToken = Math.random().toString(36).substring(2, 14);
+
+        const { data, error } = await supabase
+            .from('bible_study_groups')
+            .insert([{
+                name,
+                description,
+                meeting_link,
+                meeting_time,
+                meeting_day,
+                meeting_type,
+                curriculum,
+                org_id: orgId,
+                leader_id,
+                assistant_leader_id,
+                is_private,
+                requires_approval,
+                max_members,
+                location,
+                share_token: shareToken,
+                is_active: true
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return { success: true, data };
+    } catch (error: any) {
+        console.error("Create Bible Study Group Error:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function updateBibleStudyGroupAction(groupId: string, groupData: any) {
+    try {
+        const { 
+            name, description, meeting_link, meeting_time, 
+            meeting_day, meeting_type, curriculum, leader_id,
+            assistant_leader_id, is_private, requires_approval, 
+            max_members, location, is_active
+        } = groupData;
+
+        const { data, error } = await supabase
+            .from('bible_study_groups')
+            .update({
+                name,
+                description,
+                meeting_link,
+                meeting_time,
+                meeting_day,
+                meeting_type,
+                curriculum,
+                leader_id,
+                assistant_leader_id,
+                is_private,
+                requires_approval,
+                max_members,
+                location,
+                is_active
+            })
+            .eq('id', groupId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return { success: true, data };
+    } catch (error: any) {
+        console.error("Update Bible Study Group Error:", error);
+        return { success: false, error: error.message };
+    }
+}

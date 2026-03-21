@@ -19,7 +19,7 @@ const NAV_ITEMS = [
     { label: "Members", icon: Users, path: "/members" },
     { label: "Membership Requests", icon: ShieldCheck, path: "/requests" },
     { label: "Ministries", icon: Music, path: "/ministries" },
-    { label: "Fellowship Circles", icon: MessagesSquare, path: "/fellowship" },
+    { label: "Bible Study Groups", icon: MessagesSquare, path: "/bible-study" },
     { label: "Events", icon: Calendar, path: "/events" },
     { label: "Giving & Finance", icon: DollarSign, path: "/finance" },
     { label: "Donation Log", icon: DollarSign, path: "/finance/giving-log" },
@@ -96,7 +96,7 @@ export function Sidebar() {
                                 className={cn(
                                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 group",
                                     isActive
-                                        ? "bg-violet-500/20 text-violet-600 dark:text-violet-400"
+                                        ? "bg-violet-500/10 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400 shadow-sm"
                                         : "text-muted-foreground hover:text-foreground hover:bg-muted",
                                     collapsed && "justify-center px-0"
                                 )}

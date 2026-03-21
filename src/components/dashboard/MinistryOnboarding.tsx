@@ -11,16 +11,28 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAdminCtx } from "@/app/shepherd/dashboard/layout";
+import { useStickyForm } from "@/hooks/useStickyForm";
 
 export function MinistryOnboarding() {
     const { orgId } = useAdminCtx();
-    const [searchQuery, setSearchQuery] = useState("");
+    
+    const { values, handleChange: handleStickyChange, clear } = useStickyForm({
+        searchQuery: "",
+        selectedRole: "ministry_leader",
+        selectedMinistryId: ""
+    }, "ministry-onboarding");
+
+    const searchQuery = values.searchQuery;
+    const setSearchQuery = (val: string) => handleStickyChange("searchQuery", val);
+    const selectedRole = values.selectedRole;
+    const setSelectedRole = (val: string) => handleStickyChange("selectedRole", val);
+    const selectedMinistryId = values.selectedMinistryId;
+    const setSelectedMinistryId = (val: string) => handleStickyChange("selectedMinistryId", val);
+
     const [members, setMembers] = useState<any[]>([]);
     const [ministries, setMinistries] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [selectedMember, setSelectedMember] = useState<any>(null);
-    const [selectedRole, setSelectedRole] = useState("ministry_leader");
-    const [selectedMinistryId, setSelectedMinistryId] = useState("");
     const [generatedToken, setGeneratedToken] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
 
@@ -69,6 +81,7 @@ export function MinistryOnboarding() {
 
             setGeneratedToken(token);
             setShowSuccess(true);
+            clear();
             toast.success(`Invitation generated for ${selectedMember.name}!`);
         } catch (e: any) {
             toast.error(e.message || "Failed to assign role");

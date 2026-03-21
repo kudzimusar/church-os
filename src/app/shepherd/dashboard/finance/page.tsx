@@ -9,11 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useStickyForm } from "@/hooks/useStickyForm";
 
 const TOOLTIP_STYLE = {
-    contentStyle: { background: '#1a2236', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10 },
-    itemStyle: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
-    labelStyle: { color: 'rgba(255,255,255,0.3)', fontSize: 9 },
+    contentStyle: { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10 },
+    itemStyle: { color: 'var(--foreground)', fontSize: 11 },
+    labelStyle: { color: 'var(--muted-foreground)', fontSize: 9 },
 };
 
 const RECORD_TYPES = ['offering', 'tithe', 'thanksgiving', 'mission', 'building_fund'];
@@ -23,7 +24,11 @@ export default function FinancePage() {
     const [records, setRecords] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isTrackerOpen, setIsTrackerOpen] = useState(false);
-    const [formData, setFormData] = useState({ amount: '', record_type: 'offering', notes: '' });
+    const { values, handleChange, clear } = useStickyForm({
+        amount: '',
+        record_type: 'offering',
+        notes: ''
+    }, 'finance-log-form');
     const [submitting, setSubmitting] = useState(false);
     const { orgId } = useAdminCtx();
 
@@ -42,7 +47,7 @@ export default function FinancePage() {
     useEffect(() => { loadRecords(); }, [orgId]);
 
     const handleAddRecord = async () => {
-        if (!formData.amount) return toast.error("Amount is required");
+        if (!values.amount) return toast.error("Amount is required");
         if (!orgId) return toast.error("Organization context missing");
         setSubmitting(true);
         try {
@@ -52,9 +57,9 @@ export default function FinancePage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    amount: Number(formData.amount),
-                    record_type: formData.record_type,
-                    notes: formData.notes,
+                    amount: Number(values.amount),
+                    record_type: values.record_type,
+                    notes: values.notes,
                     user_id: user?.id,
                     org_id: orgId
                 })
@@ -64,7 +69,7 @@ export default function FinancePage() {
             
             toast.success("Transaction recorded");
             setIsTrackerOpen(false);
-            setFormData({ amount: '', record_type: 'offering', notes: '' });
+            clear();
             loadRecords();
         } catch (error: any) {
             toast.error(error.message || "Failed to add record");
@@ -82,8 +87,8 @@ export default function FinancePage() {
         <div className="p-6 xl:p-8">
             <div className="flex items-start justify-between mb-6">
                 <div>
-                    <h1 className="text-xl font-black text-white">Giving & Finance</h1>
-                    <p className="text-[11px] text-white/30 mt-0.5">Anonymous giving analytics — stewardship overview</p>
+                    <h1 className="text-xl font-black text-foreground">Giving & Finance</h1>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Anonymous giving analytics — stewardship overview</p>
                 </div>
 
                 <Dialog open={isTrackerOpen} onOpenChange={setIsTrackerOpen}>
@@ -92,34 +97,34 @@ export default function FinancePage() {
                             <Plus className="w-4 h-4 mr-2" /> LOG TRANSACTION
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-[#0f172a] border-white/10 text-white max-w-sm rounded-3xl p-6">
+                    <DialogContent className="bg-card border border-border text-foreground max-w-sm rounded-3xl p-6 shadow-2xl">
                         <DialogHeader>
-                            <DialogTitle className="text-lg font-black tracking-tight">Proxy Giving Record</DialogTitle>
-                            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1">Manual Finance Entry</p>
+                            <DialogTitle className="text-lg font-black tracking-tight text-foreground">Proxy Giving Record</DialogTitle>
+                            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Manual Finance Entry</p>
                         </DialogHeader>
                         
                         <div className="space-y-4 mt-6">
                             <div className="space-y-2">
-                                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">Amount (¥)</p>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Amount (¥)</p>
                                 <Input 
                                     type="number"
                                     placeholder="e.g. 10000" 
-                                    className="bg-white/5 border-white/10 text-sm h-12 rounded-xl text-white"
-                                    value={formData.amount}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                                    className="bg-muted border border-border text-sm h-12 rounded-xl text-foreground"
+                                    value={values.amount}
+                                    onChange={(e) => handleChange("amount", e.target.value)}
                                 />
                             </div>
                             
                             <div className="space-y-2">
-                                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest ml-1">Type</p>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">Type</p>
                                 <select 
-                                    value={formData.record_type} 
-                                    onChange={(e) => setFormData(prev => ({ ...prev, record_type: e.target.value }))}
-                                    className="bg-white/5 border border-white/10 w-full h-12 rounded-xl text-sm px-4 text-white appearance-none focus:outline-none focus:border-white/20"
+                                    value={values.record_type} 
+                                    onChange={(e) => handleChange("record_type", e.target.value)}
+                                    className="bg-muted border border-border w-full h-12 rounded-xl text-sm px-4 text-foreground appearance-none focus:outline-none focus:border-border/60"
                                 >
-                                    <option value="" disabled className="bg-[#0f172a]">Select Record Type</option>
+                                    <option value="" disabled className="bg-card">Select Record Type</option>
                                     {RECORD_TYPES.map(s => (
-                                        <option key={s} value={s} className="bg-[#0f172a] capitalize">
+                                        <option key={s} value={s} className="bg-card capitalize">
                                             {s.replace(/_/g, ' ')}
                                         </option>
                                     ))}
@@ -141,25 +146,25 @@ export default function FinancePage() {
 
             <div className="grid grid-cols-4 gap-3 mb-6">
                 {[
-                    { label: 'Total Giving (¥)', val: total.toLocaleString(), color: 'text-emerald-400' },
-                    { label: 'Transactions', val: records.length, color: 'text-violet-400' },
-                    { label: 'This Month', val: records.filter(r => new Date(r.given_date).getMonth() === new Date().getMonth()).length, color: 'text-blue-400' },
-                    { label: 'Avg Gift (¥)', val: records.length ? Math.round(total / records.length).toLocaleString() : 0, color: 'text-amber-400' },
+                    { label: 'Total Giving (¥)', val: total.toLocaleString(), color: 'text-emerald-600 dark:text-emerald-400' },
+                    { label: 'Transactions', val: records.length, color: 'text-primary' },
+                    { label: 'This Month', val: records.filter(r => new Date(r.given_date).getMonth() === new Date().getMonth()).length, color: 'text-blue-600 dark:text-blue-400' },
+                    { label: 'Avg Gift (¥)', val: records.length ? Math.round(total / records.length).toLocaleString() : 0, color: 'text-amber-600 dark:text-amber-400' },
                 ].map(s => (
-                    <div key={s.label} className="bg-[#111827] border border-white/5 rounded-2xl p-4">
+                    <div key={s.label} className="bg-card border border-border rounded-2xl p-4 shadow-sm">
                         <p className={`text-2xl font-black ${s.color}`}>{loading ? '—' : s.val}</p>
-                        <p className="text-[9px] font-black text-white/30 uppercase tracking-wide mt-1">{s.label}</p>
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wide mt-1">{s.label}</p>
                     </div>
                 ))}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
-                    <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Giving by Category</p>
+                <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Giving by Category</p>
                     {byType.length > 0 ? (
                         <ResponsiveContainer width="100%" height={200}>
                             <BarChart data={byType}>
-                                <XAxis dataKey="type" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9 }} axisLine={false} tickLine={false} />
+                                <XAxis dataKey="type" tick={{ fill: 'var(--muted-foreground)', fontSize: 9, opacity: 0.5 }} axisLine={false} tickLine={false} />
                                 <YAxis hide />
                                 <Tooltip {...TOOLTIP_STYLE} />
                                 <Bar dataKey="amount" name="Amount (¥)" radius={[4, 4, 0, 0]}>
@@ -168,23 +173,23 @@ export default function FinancePage() {
                             </BarChart>
                         </ResponsiveContainer>
                     ) : (
-                        <div className="flex items-center justify-center h-48 text-white/20 text-xs">No financial records yet</div>
+                        <div className="flex items-center justify-center h-48 text-muted-foreground/20 text-xs uppercase font-black tracking-widest">No financial records yet</div>
                     )}
                 </div>
 
-                <div className="bg-[#111827] border border-white/5 rounded-2xl p-5">
-                    <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-4">Recent Transactions</p>
+                <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Recent Transactions</p>
                     <div className="space-y-2">
                         {records.slice(0, 8).map((r, i) => (
-                            <div key={r.id} className="flex items-center justify-between py-2 border-b border-white/5">
+                            <div key={r.id} className="flex items-center justify-between py-2 border-b border-border/50">
                                 <div>
-                                    <p className="text-xs font-bold text-white capitalize">{r.record_type}</p>
-                                    <p className="text-[9px] text-white/30">{r.given_date} {r.is_anonymous ? '· Anonymous' : ''}</p>
+                                    <p className="text-xs font-bold text-foreground capitalize">{r.record_type}</p>
+                                    <p className="text-[9px] text-muted-foreground">{r.given_date} {r.is_anonymous ? '· Anonymous' : ''}</p>
                                 </div>
-                                <p className="text-xs font-black text-emerald-400">¥{Number(r.amount).toLocaleString()}</p>
+                                <p className="text-xs font-black text-emerald-600 dark:text-emerald-400">¥{Number(r.amount).toLocaleString()}</p>
                             </div>
                         ))}
-                        {records.length === 0 && !loading && <p className="text-center text-white/20 text-xs py-8">No records yet</p>}
+                        {records.length === 0 && !loading && <p className="text-center text-muted-foreground/20 text-xs py-8 uppercase font-black tracking-widest">No records yet</p>}
                     </div>
                 </div>
             </div>
