@@ -10,7 +10,7 @@ import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
 import { MINISTRIES } from "@/lib/constants";
 
 export function MinistryForm({ onSuccess, initialMemberId }: { onSuccess: () => void, initialMemberId?: string }) {
-    const { userId: adminId } = useAdminCtx();
+    const { userId: adminId, orgId } = useAdminCtx();
     const [loading, setLoading] = useState(false);
     const { values, handleChange, clear } = useStickyForm({
         memberId: initialMemberId || "",
@@ -22,7 +22,7 @@ export function MinistryForm({ onSuccess, initialMemberId }: { onSuccess: () => 
         e.preventDefault();
         setLoading(true);
 
-        const result = await assignMinistryRoleAction(values.memberId, values.role, values.ministry, adminId);
+        const result = await assignMinistryRoleAction(values.memberId, values.role, values.ministry, adminId, orgId || "");
 
         if (result.success) {
             toast.success("Ministry invitation sent successfully!");

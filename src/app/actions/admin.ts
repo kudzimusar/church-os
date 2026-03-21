@@ -87,7 +87,7 @@ export async function addPrayerRequestAction(requestData: any) {
     }
 }
 
-export async function assignMinistryRoleAction(memberId: string, role: string, ministry: string, adminId: string) {
+export async function assignMinistryRoleAction(memberId: string, role: string, ministry: string, adminId: string, orgId?: string) {
     try {
         const { data, error } = await supabase
             .from('ministry_members')
@@ -96,7 +96,8 @@ export async function assignMinistryRoleAction(memberId: string, role: string, m
                 ministry_name: ministry,
                 ministry_role: role,
                 invited_by: adminId,
-                status: 'pending_invitation'
+                org_id: orgId,
+                is_active: true
             }])
             .select()
             .single();

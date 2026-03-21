@@ -511,7 +511,10 @@ export default function MembersPage() {
                             >
                                 Print Profile
                             </Button>
-                            <Button className="flex-1 h-14 bg-primary text-white hover:bg-primary/90 font-black rounded-2xl border-0 shadow-lg shadow-primary/20 transition-all">
+                             <Button 
+                                onClick={() => toast.success(`Preparing secure channel for messenger to ${selectedMember.name}...`)}
+                                className="flex-1 h-14 bg-primary text-white hover:bg-primary/90 font-black rounded-2xl border-0 shadow-lg shadow-primary/20 transition-all"
+                            >
                                 Send Message
                             </Button>
                             {!showMinistryAssign && (
