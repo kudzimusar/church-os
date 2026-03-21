@@ -32,6 +32,7 @@ const NAV_ITEMS = [
     { label: "Testimonies", icon: Play, path: "/testimonies" },
     { label: "Merchandise", icon: ShoppingBag, path: "/merchandise" },
     { label: "Website Inquiries", icon: Mail, path: "/inquiries" },
+    { label: "Communications Log", icon: MessagesSquare, path: "/communications" },
     { label: "Reports & Data", icon: FileText, path: "/reports" },
     { label: "Settings", icon: Settings, path: "/settings" },
 ];
