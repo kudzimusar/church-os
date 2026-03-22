@@ -36,6 +36,12 @@ export default function SettingsPage() {
     const searchParams = useSearchParams();
     const mfaRequired = searchParams.get('mfa_required') === 'true';
 
+    // MFA Enrollment State
+    const [mfaEnrollment, setMfaEnrollment] = useState<any>(null);
+    const [mfaCode, setMfaCode] = useState("");
+    const [isEnrollingMFA, setIsEnrollingMFA] = useState(false);
+    const [isMFAVerified, setIsMFAVerified] = useState(false);
+
     const isSuperAdmin = AdminAuth.can(myRole, 'owner');
 
     useEffect(() => {
@@ -63,6 +69,13 @@ export default function SettingsPage() {
         setTeam(teamRes.data || []);
         setInvitations(invRes.data || []);
         setMyRoles(rolesRes.data || []);
+        
+        // Check MFA Status
+        const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (mfaData?.currentLevel === 'aal2') {
+            setIsMFAVerified(true);
+        }
+
         setLoading(false);
     }
 
@@ -137,6 +150,57 @@ export default function SettingsPage() {
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     };
 
+    const startMFAEnrollment = async () => {
+        setIsEnrollingMFA(true);
+        try {
+            const { data, error } = await supabase.auth.mfa.enroll({
+                factorType: 'totp',
+                issuer: 'Church OS',
+                friendlyName: userName
+            });
+
+            if (error) throw error;
+            setMfaEnrollment(data);
+            toast.success("Ready to scan!");
+        } catch (err: any) {
+            toast.error(err.message || "Failed to start enrollment");
+        } finally {
+            setIsEnrollingMFA(false);
+        }
+    };
+
+    const verifyMFA = async () => {
+        if (mfaCode.length !== 6) return;
+        setIsEnrollingMFA(true);
+        try {
+            const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+                factorId: mfaEnrollment.id
+            });
+
+            if (challengeError) throw challengeError;
+
+            const { data: verify, error: verifyError } = await supabase.auth.mfa.verify({
+                factorId: mfaEnrollment.id,
+                challengeId: challenge.id,
+                code: mfaCode
+            });
+
+            if (verifyError) throw verifyError;
+
+            setIsMFAVerified(true);
+            toast.success("MFA Successfully Enrolled!");
+            
+            // Refresh the page to clear the mfa_required flag and update session
+            setTimeout(() => {
+                window.location.href = window.location.pathname;
+            }, 1500);
+        } catch (err: any) {
+            toast.error(err.message || "Verification failed");
+        } finally {
+            setIsEnrollingMFA(false);
+        }
+    };
+
     return (
         <div className="p-6 xl:p-8">
             <div className="mb-6 text-center md:text-left">
@@ -162,22 +226,74 @@ export default function SettingsPage() {
                     {tab === 'profile' && (
                         <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8 max-w-4xl">
                             {/* MFA Alert Block */}
-                            {mfaRequired && (
-                                <div className="bg-primary/10 border border-primary/30 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-primary/5">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shrink-0">
-                                            <ShieldCheck className="w-6 h-6 text-primary-foreground" />
+                            {mfaRequired && !isMFAVerified && (
+                                <div className="bg-primary/10 border border-primary/30 rounded-3xl p-6 flex flex-col items-center justify-between gap-6 shadow-xl shadow-primary/5">
+                                    <div className="flex flex-col md:flex-row items-center gap-6 w-full">
+                                        <div className="flex items-center gap-4 flex-1">
+                                            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shrink-0">
+                                                <ShieldCheck className="w-6 h-6 text-primary-foreground" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-black text-foreground uppercase tracking-tight">Multi-Factor Authentication Required</h3>
+                                                <p className="text-[10px] text-muted-foreground/60 mt-0.5 font-medium leading-relaxed">
+                                                    Your role requires an extra layer of security. Please enroll in MFA to access Pastor HQ.
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h3 className="text-sm font-black text-foreground uppercase tracking-tight">Multi-Factor Authentication Required</h3>
-                                            <p className="text-[10px] text-muted-foreground/60 mt-0.5 font-medium leading-relaxed">
-                                                Your role requires an extra layer of security. Please enroll in MFA to access Pastor HQ.
-                                            </p>
-                                        </div>
+
+                                        {!mfaEnrollment ? (
+                                            <Button 
+                                                onClick={startMFAEnrollment} 
+                                                disabled={isEnrollingMFA}
+                                                className="bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase text-[10px] tracking-widest px-8 h-12 rounded-xl shrink-0"
+                                            >
+                                                {isEnrollingMFA ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                                                Enroll Now
+                                            </Button>
+                                        ) : (
+                                            <div className="flex flex-col md:flex-row items-center gap-6 bg-card/50 p-6 rounded-2xl border border-border w-full md:w-auto animate-in zoom-in-95 duration-300">
+                                                <div className="bg-white p-2 rounded-xl shadow-inner shrink-0 border-4 border-primary/20">
+                                                    <img src={mfaEnrollment.totp.qr_code} alt="QR Code" className="w-32 h-32" />
+                                                </div>
+                                                <div className="space-y-4 flex-1 min-w-[200px]">
+                                                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Enter 6-Digit Code</p>
+                                                    <div className="flex gap-2">
+                                                        <Input 
+                                                            value={mfaCode} 
+                                                            onChange={e => setMfaCode(e.target.value)}
+                                                            placeholder="000 000"
+                                                            maxLength={6}
+                                                            className="h-12 bg-muted/50 border-border rounded-xl px-4 font-black text-center tracking-[0.5em] text-lg"
+                                                        />
+                                                        <Button 
+                                                            onClick={verifyMFA} 
+                                                            disabled={isEnrollingMFA || mfaCode.length !== 6}
+                                                            className="h-12 px-6 bg-primary font-black rounded-xl uppercase tracking-widest text-[10px]"
+                                                        >
+                                                            {isEnrollingMFA ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
+                                                        </Button>
+                                                    </div>
+                                                    <p className="text-[9px] text-muted-foreground/40 leading-tight">
+                                                        Scan with Google Authenticator or Authy, then enter the code above.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase text-[10px] tracking-widest px-8 h-12 rounded-xl">
-                                        Enroll Now
-                                    </Button>
+                                </div>
+                            )}
+
+                            {isMFAVerified && (
+                                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-3xl p-6 flex items-center gap-6 shadow-xl shadow-emerald-500/5 animate-in slide-in-from-top-4 duration-500">
+                                    <div className="w-12 h-12 rounded-2xl bg-emerald-500 flex items-center justify-center shrink-0">
+                                        <CheckCircle2 className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-tight">Account Secured</h3>
+                                        <p className="text-[10px] text-emerald-600/60 mt-0.5 font-medium leading-relaxed">
+                                            MFA enrollment complete. Redirecting you to Mission Control...
+                                        </p>
+                                    </div>
                                 </div>
                             )}
 
@@ -197,9 +313,14 @@ export default function SettingsPage() {
                                             <Badge className="bg-primary/10 text-primary border-primary/20 px-3 py-1 font-black uppercase tracking-widest text-[9px]">
                                                 {team.find(m => m.profiles?.email === myEmail)?.profiles?.growth_stage?.toUpperCase() || 'VISITOR'}
                                             </Badge>
-                                            <Badge className="bg-muted text-muted-foreground/40 border-border px-3 py-1 font-black uppercase tracking-widest text-[9px]">
+                                             <Badge className="bg-muted text-muted-foreground/40 border-border px-3 py-1 font-black uppercase tracking-widest text-[9px]">
                                                 JOINED {new Date(team.find(m => m.profiles?.email === myEmail)?.profiles?.created_at).toLocaleDateString()}
                                             </Badge>
+                                            {isMFAVerified && (
+                                                <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30 px-3 py-1 font-black uppercase tracking-widest text-[9px]">
+                                                    <ShieldCheck className="w-3 h-3 mr-1" /> Verified
+                                                </Badge>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
