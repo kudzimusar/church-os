@@ -1,3 +1,4 @@
+"use client";
 import { useCallback, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Plus, Trash2, Youtube, Calendar, User, BookOpen, Link as LinkIcon, Star, PlayCircle, Activity, RefreshCw, ShieldAlert, X, Share2, Clock, Edit3, Save, CheckCircle } from 'lucide-react';
@@ -269,7 +270,8 @@ export default function SermonManagementPage() {
   };
 
   return (
-    <div className="space-y-8 p-6 max-w-6xl mx-auto">
+    <>
+      <div className="space-y-8 p-6 max-w-6xl mx-auto">
       <div className="mb-6">
         <div className="flex items-center gap-3">
             <h1 className="text-xl font-black text-foreground">Sermon Management</h1>
@@ -608,51 +610,53 @@ export default function SermonManagementPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
 
-    {/* Edit AI Dialog */}
-    {editingSermon && (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
-        <div className="bg-card border border-border w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 flex flex-col max-h-[90vh]">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-xl font-black uppercase text-foreground">{editingSermon.title}</h3>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Human-in-the-loop: Edit AI Outputs</p>
-            </div>
-            <button onClick={() => setEditingSermon(null)} className="p-2 hover:bg-muted rounded-full transition-colors">
-              <X size={20} className="text-foreground" />
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto space-y-6 pr-2 no-scrollbar">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-muted-foreground tracking-widest uppercase">Transcript (Auto-Synced to Search)</label>
-              <textarea 
-                value={editTranscript}
-                onChange={(e) => setEditTranscript(e.target.value)}
-                className="w-full h-48 bg-muted border border-border rounded-2xl p-4 text-xs font-medium focus:border-primary outline-none transition-all text-foreground"
-              />
+      {/* Edit AI Dialog */}
+      {editingSermon && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+          <div className="bg-card border border-border w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-black uppercase text-foreground">{editingSermon.title}</h3>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Human-in-the-loop: Edit AI Outputs</p>
+              </div>
+              <button onClick={() => setEditingSermon(null)} className="p-2 hover:bg-muted rounded-full transition-colors">
+                <X size={20} className="text-foreground" />
+              </button>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-muted-foreground tracking-widest uppercase">AI Summary Override</label>
-              <textarea 
-                value={editSummary}
-                onChange={(e) => setEditSummary(e.target.value)}
-                className="w-full h-24 bg-muted border border-border rounded-2xl p-4 text-xs font-medium focus:border-primary outline-none transition-all text-foreground"
-              />
-            </div>
-          </div>
+            <div className="flex-1 overflow-y-auto space-y-6 pr-2 no-scrollbar">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-muted-foreground tracking-widest uppercase">Transcript (Auto-Synced to Search)</label>
+                <textarea 
+                  value={editTranscript}
+                  onChange={(e) => setEditTranscript(e.target.value)}
+                  className="w-full h-48 bg-muted border border-border rounded-2xl p-4 text-xs font-medium focus:border-primary outline-none transition-all text-foreground"
+                />
+              </div>
 
-          <div className="mt-8 pt-6 border-t border-border/40 flex justify-end">
-            <button 
-              onClick={handleUpdateAISentiments}
-              className="bg-primary text-white px-8 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase flex items-center gap-2 hover:scale-[1.02] active:scale-[0.95] transition-all"
-            >
-              <Save size={14} /> Update Assets
-            </button>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-muted-foreground tracking-widest uppercase">AI Summary Override</label>
+                <textarea 
+                  value={editSummary}
+                  onChange={(e) => setEditSummary(e.target.value)}
+                  className="w-full h-24 bg-muted border border-border rounded-2xl p-4 text-xs font-medium focus:border-primary outline-none transition-all text-foreground"
+                />
+              </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-border/40 flex justify-end">
+              <button 
+                onClick={handleUpdateAISentiments}
+                className="bg-primary text-white px-8 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase flex items-center gap-2 hover:scale-[1.02] active:scale-[0.95] transition-all"
+              >
+                <Save size={14} /> Update Assets
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    )}
-  </div>
+      )}
+    </>
+  );
+}
