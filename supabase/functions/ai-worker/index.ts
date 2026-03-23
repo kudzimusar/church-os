@@ -53,7 +53,17 @@ serve(async (req) => {
 
       if (assetError) throw assetError;
 
-      // Step D: MARK JOB AS COMPLETED
+      // Step D: LOG USAGE
+      const estimatedTokens = transcriptMock.split(' ').length * 1.5; // Simple heuristic
+      await supabaseClient.from('ai_usage').insert({
+          org_id: job.org_id,
+          job_id: job_id,
+          job_type: 'ai_transcription',
+          tokens_used: Math.round(estimatedTokens),
+          cost_amount: (estimatedTokens / 1000) * 0.01 // $0.01 per 1k tokens
+      });
+
+      // Step E: MARK JOB AS COMPLETED
       await supabaseClient.from('job_queue').update({ 
           status: 'completed', 
           finished_at: new Date().toISOString() 
@@ -65,7 +75,7 @@ serve(async (req) => {
         // Fetch Transcript first (Wait for Step 1)
         const { data: transcriptAsset } = await supabaseClient
             .from('media_assets')
-            .select('metadata')
+            .select('metadata, status')
             .eq('sermon_id', sermon_id)
             .eq('type', 'transcript')
             .single();
@@ -83,6 +93,16 @@ serve(async (req) => {
             metadata: { summary: summaryMock, key_points: ['Faith', 'Community', 'Resilience'] },
             status: 'active'
         }).eq('sermon_id', sermon_id).eq('type', 'notes');
+
+        // Step D: LOG USAGE
+        const estimatedTokens = summaryMock.split(' ').length * 2.0; 
+        await supabaseClient.from('ai_usage').insert({
+            org_id: job.org_id,
+            job_id: job_id,
+            job_type: 'ai_summary',
+            tokens_used: Math.round(estimatedTokens),
+            cost_amount: (estimatedTokens / 1000) * 0.03 // Summarization often costs more
+        });
 
         await supabaseClient.from('job_queue').update({ 
             status: 'completed', 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Youtube, Search, LucideIcon, FileText, Download, PlayCircle, Star, BookOpen, User } from 'lucide-react';
+import { Youtube, Search, LucideIcon, FileText, Download, PlayCircle, Star, BookOpen, User, Activity } from 'lucide-react';
 import TestimoniesSection from '@/components/public/TestimoniesSection';
 
 declare global {
@@ -24,6 +24,7 @@ interface Sermon {
   speaker: string;
   youtube_url: string;
   scripture: string;
+  transcript_text?: string;
   assets?: any[];
 }
 
@@ -33,6 +34,7 @@ export default function WatchClient() {
   const [search, setSearch] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [liveStream, setLiveStream] = useState<any>(null);
+  const [activeSermon, setActiveSermon] = useState<Sermon | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
   const playerRef = useRef<any>(null);
   const watchTimerRef = useRef<any>(null);
@@ -59,6 +61,8 @@ export default function WatchClient() {
         .order('date', { ascending: false });
 
       setSermons(data || []);
+      const feat = data?.find((s: any) => s.is_featured);
+      if (feat) setActiveSermon(feat);
       setLoading(false);
     };
 
@@ -143,30 +147,32 @@ export default function WatchClient() {
   };
 
   const featured = sermons.find(s => s.is_featured);
+  const currentSermon = activeSermon || featured;
   const uniqueSeries = Array.from(new Set(sermons.map(s => s.series).filter(Boolean)));
 
-  // Re-init player when featured changes
+  // Re-init player when activeSermon changes
   useEffect(() => {
-    if (featured && !loading && !liveStream) {
-        const vidId = featured.youtube_url.split('v=')[1] || featured.youtube_url.split('/').pop();
+    if (activeSermon && !loading && !liveStream) {
+        const vidId = activeSermon.youtube_url.split('v=')[1] || activeSermon.youtube_url.split('/').pop();
         if (vidId) {
             // Give API time to load
             const check = setInterval(() => {
                 if (window.YT && window.YT.Player) {
-                    initPlayer(vidId, featured.id);
+                    initPlayer(vidId, activeSermon.id);
                     clearInterval(check);
                 }
             }, 500);
         }
     }
-  }, [featured, loading, liveStream]);
+  }, [activeSermon, loading, liveStream]);
   const filteredSermons = sermons
-    .filter(s => s.id !== featured?.id)
+    .filter(s => s.id !== currentSermon?.id)
     .filter(s => filter === 'all' || s.series === filter)
     .filter(s => 
       s.title.toLowerCase().includes(search.toLowerCase()) || 
       s.speaker.toLowerCase().includes(search.toLowerCase()) ||
-      s.series.toLowerCase().includes(search.toLowerCase())
+      s.series.toLowerCase().includes(search.toLowerCase()) ||
+      (s.transcript_text && s.transcript_text.toLowerCase().includes(search.toLowerCase()))
     );
 
   return (
@@ -219,12 +225,16 @@ export default function WatchClient() {
              </div>
            </section>
         ) : (
-          sermons.length > 0 && featured && (
+          sermons.length > 0 && currentSermon && (
             <section className="space-y-12">
               <div className="space-y-4 text-center">
+                 <p className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">
+                   {currentSermon.series || 'SPECIAL FEATURE'}
+                 </p>
                 <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase leading-[0.9]">
-                  LATEST SERMON
+                  {currentSermon.title}
                 </h2>
+                <p className="text-sm font-medium text-white/40 italic">With {currentSermon.speaker}</p>
               </div>
               
               <div className="glass rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl">
@@ -234,7 +244,7 @@ export default function WatchClient() {
               </div>
 
               {/* Media Assets Actions */}
-              {featured.assets && featured.assets.length > 0 && (
+              {currentSermon.assets && currentSermon.assets.length > 0 && (
                 <div className="flex flex-wrap gap-3 justify-center">
                   {featured.assets.map((asset: any) => (
                     <button 
@@ -255,7 +265,7 @@ export default function WatchClient() {
               )}
 
               {/* AI Intelligence Panel */}
-              {showTranscript && featured.assets?.some(a => (a.type === 'transcript' || a.type === 'notes') && a.status === 'active') && (
+              {showTranscript && currentSermon.assets?.some(a => (a.type === 'transcript' || a.type === 'notes') && a.status === 'active') && (
                 <div className="glass rounded-[2rem] border border-white/10 p-8 md:p-12 animate-in fade-in slide-in-from-top-4 duration-500 overflow-hidden relative group">
                   <div className="absolute top-0 right-0 p-8 opacity-[0.02] scale-150 pointer-events-none group-hover:scale-110 transition-transform duration-1000">
                     <Activity size={320} />
@@ -267,7 +277,7 @@ export default function WatchClient() {
                         <FileText className="text-primary" /> Full Transcript
                       </h3>
                       <div className="max-h-[400px] overflow-y-auto pr-6 font-medium leading-relaxed text-white/60 text-sm space-y-8 font-serif">
-                        {(featured.assets.find(a => a.type === 'transcript')?.metadata as any)?.full_text}
+                        {currentSermon.transcript_text || (currentSermon.assets.find(a => a.type === 'transcript')?.metadata as any)?.full_text}
                       </div>
                     </div>
                     
@@ -275,14 +285,14 @@ export default function WatchClient() {
                        <div className="space-y-4">
                         <h3 className="text-xs font-black tracking-widest uppercase text-primary">Summary</h3>
                         <p className="text-sm font-medium leading-relaxed italic text-white/80">
-                           {(featured.assets.find(a => a.type === 'notes')?.metadata as any)?.summary}
+                           {(currentSermon.assets.find(a => a.type === 'notes')?.metadata as any)?.summary}
                         </p>
                       </div>
                       
                       <div className="space-y-4">
                         <h3 className="text-xs font-black tracking-widest uppercase text-primary">Key Points</h3>
                         <div className="space-y-2">
-                          {(featured.assets.find(a => a.type === 'notes')?.metadata as any)?.key_points?.map((point: string, idx: number) => (
+                          {(currentSermon.assets.find(a => a.type === 'notes')?.metadata as any)?.key_points?.map((point: string, idx: number) => (
                             <div key={idx} className="flex items-center gap-2 group/item">
                               <div className="w-1 h-1 rounded-full bg-primary" />
                               <span className="text-[11px] font-black uppercase text-white/40 group-hover/item:text-primary transition-colors">{point}</span>
@@ -296,6 +306,52 @@ export default function WatchClient() {
               )}
             </section>
           )
+        )}
+        {/* RELATED CONTENT / WATCH NEXT RAIL */}
+        {currentSermon && !liveStream && (
+          <section className="space-y-8 py-12 border-y border-white/5">
+             <div className="flex items-center justify-between">
+                <h3 className="text-xs font-black tracking-[0.3em] text-white/40 uppercase">Recommended For You</h3>
+                {currentSermon.series && <span className="text-[10px] font-black text-primary uppercase">MORE FROM {currentSermon.series}</span>}
+             </div>
+             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+               {sermons
+                 .filter(s => s.id !== currentSermon.id)
+                 .sort((a, b) => {
+                    // Prioritize same series
+                    if (a.series === currentSermon.series && b.series !== currentSermon.series) return -1;
+                    if (a.series !== currentSermon.series && b.series === currentSermon.series) return 1;
+                    return 0;
+                 })
+                 .slice(0, 4)
+                 .map((s) => (
+                   <button 
+                    key={s.id} 
+                    onClick={() => {
+                      setActiveSermon(s);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="group flex flex-col gap-4 text-left transition-all hover:-translate-y-1"
+                   >
+                     <div className="aspect-video rounded-3xl bg-white/5 border border-white/10 overflow-hidden relative">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                           <PlayCircle className="text-white" size={32} />
+                        </div>
+                        <img 
+                          src={`https://img.youtube.com/vi/${s.youtube_url.split('v=')[1] || s.youtube_url.split('/').pop()}/mqdefault.jpg`} 
+                          alt={s.title}
+                          className="w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity"
+                        />
+                     </div>
+                     <div>
+                        <p className="text-[8px] font-black tracking-widest text-primary uppercase mb-1">{s.series || 'Series'}</p>
+                        <h4 className="text-xs font-black text-white/80 group-hover:text-primary transition-colors line-clamp-2">{s.title}</h4>
+                     </div>
+                   </button>
+                 ))
+               }
+             </div>
+          </section>
         )}
 
         <section className="space-y-16">
@@ -362,7 +418,17 @@ export default function WatchClient() {
                   <h3 className="text-xl font-black leading-snug group-hover:text-[var(--primary)] transition-colors">{s.title}</h3>
                   <p className="text-sm text-white/40 font-medium italic">{s.speaker}</p>
                 </div>
-                <div className="pt-8"><a href={s.youtube_url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black tracking-widest text-white/30 group-hover:text-white transition-colors flex items-center gap-2">WATCH SERMON <span className="group-hover:translate-x-1 transition-transform">→</span></a></div>
+                <div className="pt-8">
+                  <button 
+                    onClick={() => {
+                      setActiveSermon(s);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="text-[10px] font-black tracking-widest text-white/30 group-hover:text-white transition-colors flex items-center gap-2"
+                  >
+                    WATCH SERMON <span className="group-hover:translate-x-1 transition-transform">→</span>
+                  </button>
+                </div>
               </div>
             ))}
           </div>

@@ -1,10 +1,6 @@
-"use client";
-import { supabase } from "@/lib/supabase";
-
-import { useState, useEffect } from 'react';
-
+import { useCallback, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Plus, Trash2, Youtube, Calendar, User, BookOpen, Link as LinkIcon, Star, PlayCircle, Activity, RefreshCw, ShieldAlert, X } from 'lucide-react';
+import { Plus, Trash2, Youtube, Calendar, User, BookOpen, Link as LinkIcon, Star, PlayCircle, Activity, RefreshCw, ShieldAlert, X, Share2, Clock, Edit3, Save, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
 type Sermon = {
@@ -22,11 +18,16 @@ type Sermon = {
 };
 
 import { useAdminCtx } from '../Context';
+import { ROLE_HIERARCHY, AdminRole } from '@/lib/admin-auth';
+import { supabase } from '@/lib/supabase';
 
 export default function SermonManagementPage() {
   const [sermons, setSermons] = useState<Sermon[]>([]);
   const [loading, setLoading] = useState(true);
-  const { orgId } = useAdminCtx();
+  const { orgId, role } = useAdminCtx();
+  const [editingSermon, setEditingSermon] = useState<Sermon | null>(null);
+  const [editTranscript, setEditTranscript] = useState('');
+  const [editSummary, setEditSummary] = useState('');
 
   // Form state
   const [title, setTitle] = useState('');
@@ -236,9 +237,34 @@ export default function SermonManagementPage() {
 
       if (error) throw error;
       toast.success('Sermon deleted');
-      fetchSermons();
     } catch (error: any) {
       toast.error('Failed to delete sermon');
+    }
+  };
+
+  const handleUpdateAISentiments = async () => {
+    if (!editingSermon) return;
+    try {
+      const { error: sError } = await supabase
+        .from('public_sermons')
+        .update({ transcript_text: editTranscript })
+        .eq('id', editingSermon.id);
+
+      if (sError) throw sError;
+
+      const { error: aError } = await supabase
+        .from('media_assets')
+        .update({ metadata: { ...editingSermon.assets?.find(a => a.type === 'notes')?.metadata, summary: editSummary } })
+        .eq('sermon_id', editingSermon.id)
+        .eq('type', 'notes');
+
+      if (aError) throw aError;
+
+      toast.success("AI Content updated and synchronized");
+      setEditingSermon(null);
+      fetchSermons();
+    } catch (err: any) {
+      toast.error("Failed to update content: " + err.message);
     }
   };
 
@@ -515,6 +541,20 @@ export default function SermonManagementPage() {
                         </button>
                       )}
 
+                      {/* Admin Controls */}
+                      <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border/40">
+                        <button 
+                          onClick={() => {
+                            setEditingSermon(sermon);
+                            setEditTranscript(sermon.transcript_text || '');
+                            setEditSummary(sermon.assets?.find(a => a.type === 'notes')?.metadata?.summary || '');
+                          }}
+                          className="text-[9px] font-black tracking-widest uppercase text-primary hover:text-primary/70 transition-colors flex items-center gap-1.5"
+                        >
+                          <Edit3 size={10} /> Edit AI Insights
+                        </button>
+                      </div>
+
                       {/* Assets Management */}
                       <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-1 no-scrollbar max-w-[200px] md:max-w-xs">
                         {sermon.assets?.map((asset: any) => (
@@ -569,5 +609,50 @@ export default function SermonManagementPage() {
         </div>
       </div>
     </div>
-  );
-}
+
+    {/* Edit AI Dialog */}
+    {editingSermon && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+        <div className="bg-card border border-border w-full max-w-2xl rounded-[2.5rem] shadow-2xl p-8 flex flex-col max-h-[90vh]">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-xl font-black uppercase text-foreground">{editingSermon.title}</h3>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Human-in-the-loop: Edit AI Outputs</p>
+            </div>
+            <button onClick={() => setEditingSermon(null)} className="p-2 hover:bg-muted rounded-full transition-colors">
+              <X size={20} className="text-foreground" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-6 pr-2 no-scrollbar">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-muted-foreground tracking-widest uppercase">Transcript (Auto-Synced to Search)</label>
+              <textarea 
+                value={editTranscript}
+                onChange={(e) => setEditTranscript(e.target.value)}
+                className="w-full h-48 bg-muted border border-border rounded-2xl p-4 text-xs font-medium focus:border-primary outline-none transition-all text-foreground"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-muted-foreground tracking-widest uppercase">AI Summary Override</label>
+              <textarea 
+                value={editSummary}
+                onChange={(e) => setEditSummary(e.target.value)}
+                className="w-full h-24 bg-muted border border-border rounded-2xl p-4 text-xs font-medium focus:border-primary outline-none transition-all text-foreground"
+              />
+            </div>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-border/40 flex justify-end">
+            <button 
+              onClick={handleUpdateAISentiments}
+              className="bg-primary text-white px-8 py-3 rounded-xl text-[10px] font-black tracking-widest uppercase flex items-center gap-2 hover:scale-[1.02] active:scale-[0.95] transition-all"
+            >
+              <Save size={14} /> Update Assets
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
