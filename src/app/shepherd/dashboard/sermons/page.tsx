@@ -1,7 +1,8 @@
 "use client";
 import { useCallback, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Plus, Trash2, Youtube, Calendar, User, BookOpen, Link as LinkIcon, Star, PlayCircle, Activity, RefreshCw, ShieldAlert, X, Share2, Clock, Edit3, Save, CheckCircle, BarChart3, Target } from 'lucide-react';
+import { Plus, Trash2, Youtube, Calendar, User, BookOpen, Link as LinkIcon, Star, PlayCircle, Activity, RefreshCw, ShieldAlert, X, Share2, Clock, Edit3, Save, CheckCircle, BarChart3, Target, Upload, Paperclip, ShieldCheck } from 'lucide-react';
 import { format } from 'date-fns';
 
 type Sermon = {
@@ -27,6 +28,7 @@ export default function SermonManagementPage() {
   const [sermons, setSermons] = useState<Sermon[]>([]);
   const [loading, setLoading] = useState(true);
   const { orgId, role } = useAdminCtx();
+  const router = useRouter();
   const [editingSermon, setEditingSermon] = useState<Sermon | null>(null);
   const [editTranscript, setEditTranscript] = useState('');
   const [editSummary, setEditSummary] = useState('');
@@ -42,6 +44,10 @@ export default function SermonManagementPage() {
   const [issubmitting, setIsSubmitting] = useState(false);
   const [liveStream, setLiveStream] = useState<any>(null);
   const [newLiveUrl, setNewLiveUrl] = useState('');
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [jobQueue, setJobQueue] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
   const [usage, setUsage] = useState<{current: number, quota: number}>({current: 0, quota: 0});
@@ -211,36 +217,84 @@ export default function SermonManagementPage() {
     }
 
     setIsSubmitting(true);
+    setIsUploading(true);
     try {
-      const { error } = await supabase
+      // 1. Insert Sermon
+      const { data: sermonData, error: sermonError } = await supabase
         .from('public_sermons')
         .insert({
           org_id: orgId,
           title,
           speaker,
-          youtube_url: youtubeUrl,
+          youtube_url: youtubeUrl || null,
           series: series || null,
           scripture: scripture || null,
           date,
           is_featured: featured,
           status: 'published',
-          video_source_type: 'youtube'
+          video_source_type: youtubeUrl ? 'youtube' : (videoFile ? 'storage' : null)
+        })
+        .select()
+        .single();
+
+      if (sermonError) throw sermonError;
+
+      // 2. Upload Files to Storage
+      const uploadFile = async (file: File, type: string) => {
+        const filePath = `${orgId}/sermons/${sermonData.id}/${Date.now()}-${file.name}`;
+        const { error: uploadError } = await supabase.storage
+            .from('sermons')
+            .upload(filePath, file);
+        
+        if (uploadError) {
+          toast.error(`Failed to upload ${type}`);
+          return;
+        }
+
+        const { data: { publicUrl } } = supabase.storage.from('sermons').getPublicUrl(filePath);
+        
+        await supabase.from('media_assets').insert({
+          sermon_id: sermonData.id,
+          org_id: orgId,
+          type,
+          url: publicUrl
         });
+      };
 
-      if (error) throw error;
+      if (videoFile) await uploadFile(videoFile, 'video');
+      if (audioFile) await uploadFile(audioFile, 'audio');
+      if (thumbnailFile) await uploadFile(thumbnailFile, 'thumbnail');
 
-      toast.success('Sermon posted — homepage updated.');
+      // 3. Trigger System Event (Outbox Pattern)
+      await supabase.from('system_event_outbox').insert({
+        org_id: orgId,
+        event_type: 'sermon_created',
+        payload: {
+          sermon_id: sermonData.id,
+          title,
+          speaker,
+          has_video: !!(youtubeUrl || videoFile),
+          has_audio: !!audioFile
+        },
+        status: 'pending'
+      });
+
+      toast.success('Sermon posted — Automation pipeline triggered.');
       setTitle('');
       setSpeaker('');
       setYoutubeUrl('');
       setSeries('');
       setScripture('');
       setFeatured(true);
+      setVideoFile(null);
+      setAudioFile(null);
+      setThumbnailFile(null);
       fetchSermons();
     } catch (error: any) {
       toast.error(error.message || 'Failed to post sermon');
     } finally {
       setIsSubmitting(false);
+      setIsUploading(false);
     }
   };
 
@@ -297,6 +351,13 @@ export default function SermonManagementPage() {
                     Pastor's HQ Override
                 </span>
             )}
+            <button 
+                onClick={() => router.push('/manual/media-ministry')}
+                className="ml-auto flex items-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 px-4 py-1.5 rounded-full transition-all group"
+            >
+                <BookOpen size={12} className="text-primary group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Open Manual</span>
+            </button>
         </div>
         <p className="text-[11px] text-muted-foreground mt-0.5">
           Broadcast your message globally and archive history.
@@ -551,6 +612,34 @@ export default function SermonManagementPage() {
                   className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground outline-none transition-colors"
                 />
               </div>
+            </div>
+
+            {/* Media Uploads */}
+            <div className="space-y-4 pt-4 border-t border-border/40">
+                <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Media Assets (Storage)</h3>
+                <div className="grid grid-cols-3 gap-3">
+                    <div className="relative group">
+                        <input type="file" onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                        <div className={`p-4 rounded-2xl border border-dashed text-center transition-all ${thumbnailFile ? 'bg-primary/5 border-primary/50' : 'bg-muted border-border hover:border-primary/30'}`}>
+                            <Upload size={12} className={`mx-auto mb-2 ${thumbnailFile ? 'text-primary' : 'text-muted-foreground/30'}`} />
+                            <p className="text-[8px] font-black uppercase truncate">{thumbnailFile ? thumbnailFile.name : 'Thumbnail'}</p>
+                        </div>
+                    </div>
+                    <div className="relative group">
+                        <input type="file" onChange={(e) => setAudioFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                        <div className={`p-4 rounded-2xl border border-dashed text-center transition-all ${audioFile ? 'bg-indigo-500/5 border-indigo-500/50' : 'bg-muted border-border hover:border-indigo-500/30'}`}>
+                            <Upload size={12} className={`mx-auto mb-2 ${audioFile ? 'text-indigo-500' : 'text-muted-foreground/30'}`} />
+                            <p className="text-[8px] font-black uppercase truncate">{audioFile ? audioFile.name : 'Audio'}</p>
+                        </div>
+                    </div>
+                    <div className="relative group">
+                        <input type="file" onChange={(e) => setVideoFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                        <div className={`p-4 rounded-2xl border border-dashed text-center transition-all ${videoFile ? 'bg-emerald-500/5 border-emerald-500/50' : 'bg-muted border-border hover:border-emerald-500/30'}`}>
+                            <Upload size={12} className={`mx-auto mb-2 ${videoFile ? 'text-emerald-500' : 'text-muted-foreground/30'}`} />
+                            <p className="text-[8px] font-black uppercase truncate">{videoFile ? videoFile.name : 'Video'}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <button 

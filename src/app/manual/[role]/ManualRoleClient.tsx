@@ -33,6 +33,7 @@ export default function ManualRoleClient({ role }: { role: string }) {
                         <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">
                             {role === 'super-admin' && 'Global Control Center'}
                             {role === 'pastor-hq' && 'Shepherding Intelligence'}
+                            {role === 'media-ministry' && 'Media Ministry Operations'}
                             {role === 'ministry-leader' && 'Operational Automation'}
                             {role === 'member' && 'Spiritual Growth'}
                         </h1>

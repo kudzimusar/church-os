@@ -3,7 +3,7 @@ import { MANUAL_CONTENT, ManualRole } from '@/lib/manual-config';
 import ManualRoleClient from './ManualRoleClient';
 
 export function generateStaticParams() {
-  const roles: ManualRole[] = ['super-admin', 'pastor-hq', 'ministry-leader', 'member'];
+  const roles: ManualRole[] = ['super-admin', 'pastor-hq', 'media-ministry', 'ministry-leader', 'member'];
   return roles.map((role) => ({
     role: role,
   }));
