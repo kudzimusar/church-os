@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Youtube, Search, LucideIcon, FileText, Download, PlayCircle, Star, BookOpen, User, Activity } from 'lucide-react';
+import { Youtube, Search, LucideIcon, FileText, Download, PlayCircle, Star, BookOpen, User, Activity, Heart, Bookmark, Share2, X, ArrowRight } from 'lucide-react';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 import TestimoniesSection from '@/components/public/TestimoniesSection';
 
 declare global {
@@ -316,7 +318,6 @@ export default function WatchClient() {
         ) : (
           sermons.length > 0 && currentSermon && (
             <section className="space-y-12">
-            <section className="space-y-8">
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="space-y-2 text-center md:text-left">
                   <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
