@@ -36,6 +36,12 @@ export default function WatchClient() {
   const [liveStream, setLiveStream] = useState<any>(null);
   const [activeSermon, setActiveSermon] = useState<Sermon | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showResponseModal, setShowResponseModal] = useState(false);
+  const [responseType, setResponseType] = useState<'salvation_decision' | 'prayer_request' | 'testimony' | 'membership_interest' | null>(null);
+  const [responseMessage, setResponseMessage] = useState('');
+  const [isSubmittingResponse, setIsSubmittingResponse] = useState(false);
   const playerRef = useRef<any>(null);
   const watchTimerRef = useRef<any>(null);
 
@@ -146,8 +152,90 @@ export default function WatchClient() {
     });
   };
 
+  const handleShare = () => {
+    const url = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}?sermon=${currentSermon?.id}` : '';
+    navigator.clipboard.writeText(url);
+    toast.success("Link copied! Share with your community.");
+  };
+
+  const toggleInteraction = async (type: 'like' | 'bookmark') => {
+    if (!currentSermon) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        toast.error("Please sign in to interact.");
+        return;
+    }
+
+    const { data: orgData } = await supabase.from('organizations').select('id').limit(1);
+    const orgId = orgData?.[0]?.id;
+    if (!orgId) return;
+
+    if (type === 'like' ? isLiked : isBookmarked) {
+        await supabase.from('sermon_interactions').delete().eq('sermon_id', currentSermon.id).eq('user_id', user.id).eq('type', type);
+        type === 'like' ? setIsLiked(false) : setIsBookmarked(false);
+    } else {
+        await supabase.from('sermon_interactions').insert({
+            org_id: orgId,
+            sermon_id: currentSermon.id,
+            user_id: user.id,
+            type: type
+        });
+        type === 'like' ? setIsLiked(true) : setIsBookmarked(true);
+        toast.success(type === 'like' ? "Message liked" : "Saved to library");
+    }
+  };
+
+  const submitSpiritualResponse = async () => {
+    if (!responseType || !currentSermon) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        toast.error("Please sign in to respond.");
+        return;
+    }
+
+    setIsSubmittingResponse(true);
+    const { data: orgData } = await supabase.from('organizations').select('id').limit(1);
+    const orgId = orgData?.[0]?.id;
+
+    const { error } = await supabase.from('spiritual_responses').insert({
+        org_id: orgId,
+        sermon_id: currentSermon.id,
+        user_id: user.id,
+        type: responseType,
+        message: responseMessage
+    });
+
+    if (error) {
+        toast.error("Failed to send response.");
+    } else {
+        toast.success("Your response has been received. Our leadership will follow up.");
+        setShowResponseModal(false);
+        setResponseMessage('');
+        setResponseType(null);
+    }
+    setIsSubmittingResponse(false);
+  };
+
   const featured = sermons.find(s => s.is_featured);
   const currentSermon = activeSermon || featured;
+
+  // Sync interactions on sermon change
+  useEffect(() => {
+    const syncInts = async () => {
+        if (!currentSermon) return;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase.from('sermon_interactions').select('type').eq('sermon_id', currentSermon.id).eq('user_id', user.id);
+        setIsLiked(data?.some(d => d.type === 'like') || false);
+        setIsBookmarked(data?.some(d => d.type === 'bookmark') || false);
+    };
+    syncInts();
+  }, [currentSermon]);
+
+  // Watch Next Logic
+  const upNextSermon = sermons
+    .filter(s => s.id !== currentSermon?.id)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
   const uniqueSeries = Array.from(new Set(sermons.map(s => s.series).filter(Boolean)));
 
   // Re-init player when activeSermon changes
@@ -156,9 +244,10 @@ export default function WatchClient() {
         const vidId = activeSermon.youtube_url.split('v=')[1] || activeSermon.youtube_url.split('/').pop();
         if (vidId) {
             // Give API time to load
+            const sermonId = activeSermon.id;
             const check = setInterval(() => {
                 if (window.YT && window.YT.Player) {
-                    initPlayer(vidId, activeSermon.id);
+                    initPlayer(vidId, sermonId);
                     clearInterval(check);
                 }
             }, 500);
@@ -227,26 +316,91 @@ export default function WatchClient() {
         ) : (
           sermons.length > 0 && currentSermon && (
             <section className="space-y-12">
-              <div className="space-y-4 text-center">
-                 <p className="text-[10px] font-black tracking-[0.4em] text-primary uppercase">
-                   {currentSermon.series || 'SPECIAL FEATURE'}
-                 </p>
-                <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase leading-[0.9]">
-                  {currentSermon.title}
-                </h2>
-                <p className="text-sm font-medium text-white/40 italic">With {currentSermon.speaker}</p>
-              </div>
-              
-              <div className="glass rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl">
-                <div className="aspect-video w-full bg-black relative" id="featured-player">
-                  {/* YouTube Player will be injected here */}
+            <section className="space-y-8">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="space-y-2 text-center md:text-left">
+                  <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+                    <span className="bg-primary/10 text-primary text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-primary/20 flex items-center gap-2">
+                         <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                         NOW STREAMING
+                    </span>
+                    {currentSermon.series && (
+                        <span className="text-[10px] font-black text-white/30 uppercase tracking-widest flex items-center gap-2">
+                            / SERIES / <span className="text-white/60">{currentSermon.series}</span>
+                        </span>
+                    )}
+                  </div>
+                  <h2 className="text-4xl md:text-8xl font-black text-white italic tracking-tighter uppercase leading-[0.85]">
+                    {currentSermon.title}
+                  </h2>
+                </div>
+                <div className="flex items-center gap-4">
+                     <button 
+                        onClick={() => toggleInteraction('like')} 
+                        className={`p-4 rounded-2xl hover:bg-white/10 transition-all border ${isLiked ? 'bg-red-500/20 border-red-500/30' : 'bg-white/5 border-white/10'} group`}
+                     >
+                        <Heart size={24} className={`${isLiked ? 'text-red-500 scale-110' : 'text-white/40 group-hover:text-red-500'} transition-all`} fill={isLiked ? 'currentColor' : 'none'} />
+                     </button>
+                     <button 
+                        onClick={() => toggleInteraction('bookmark')} 
+                        className={`p-4 rounded-2xl hover:bg-white/10 transition-all border ${isBookmarked ? 'bg-primary/20 border-primary/30' : 'bg-white/5 border-white/10'} group`}
+                     >
+                        <Bookmark size={24} className={`${isBookmarked ? 'text-primary scale-110' : 'text-white/40 group-hover:text-primary'} transition-all`} fill={isBookmarked ? 'currentColor' : 'none'} />
+                     </button>
+                     <button onClick={handleShare} className="bg-white/5 p-4 rounded-2xl hover:bg-white/10 transition-all border border-white/10 group">
+                        <Share2 size={24} className="text-white/40 group-hover:text-primary transition-colors" />
+                     </button>
                 </div>
               </div>
 
+              <div className="flex justify-center md:justify-start">
+                    <button 
+                        onClick={() => setShowResponseModal(true)}
+                        className="bg-primary hover:bg-primary/90 text-white px-12 py-5 rounded-[2rem] text-xs font-black tracking-[0.3em] uppercase transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_20px_50px_rgba(var(--primary-rgb),0.3)] flex items-center gap-3 group"
+                    >
+                        <Star size={16} className="group-hover:rotate-45 transition-transform" />
+                        Respond to the Word
+                    </button>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div className="lg:col-span-3 glass rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl relative">
+                  <div className="aspect-video w-full bg-black relative" id="featured-player">
+                    {/* YouTube Player will be injected here */}
+                  </div>
+                </div>
+
+                {/* Watch Next Sidebar */}
+                {upNextSermon && (
+                    <div className="hidden lg:flex flex-col gap-6">
+                        <h3 className="text-[10px] font-black tracking-[0.3em] text-white/30 uppercase">Up Next</h3>
+                        <div 
+                            onClick={() => {
+                                setActiveSermon(upNextSermon);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className="glass group cursor-pointer rounded-[2rem] border border-white/5 p-6 hover:border-primary/30 transition-all space-y-4"
+                        >
+                            <div className="aspect-video w-full bg-white/5 rounded-2xl flex items-center justify-center relative overflow-hidden">
+                                <Activity size={80} className="text-white/5 group-hover:scale-110 transition-transform duration-1000" />
+                                <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <PlayCircle size={40} className="text-white" />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <p className="text-[8px] font-black text-primary uppercase tracking-widest">{format(new Date(upNextSermon.date), 'MMM dd, yyyy')}</p>
+                                <h4 className="text-sm font-black text-white/90 leading-tight uppercase line-clamp-2">{upNextSermon.title}</h4>
+                                <p className="text-[9px] font-medium text-white/30 uppercase italic">{upNextSermon.speaker}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+              </div>
+
               {/* Media Assets Actions */}
-              {currentSermon.assets && currentSermon.assets.length > 0 && (
+              {currentSermon?.assets && currentSermon.assets.length > 0 && (
                 <div className="flex flex-wrap gap-3 justify-center">
-                  {featured.assets.map((asset: any) => (
+                  {currentSermon.assets.map((asset: any) => (
                     <button 
                       key={asset.id} 
                       onClick={() => (asset.type === 'transcript' || asset.type === 'notes') ? setShowTranscript(!showTranscript) : window.open(asset.url, '_blank')}
@@ -308,52 +462,51 @@ export default function WatchClient() {
           )
         )}
         {/* RELATED CONTENT / WATCH NEXT RAIL */}
-        {currentSermon && !liveStream && (
-          <section className="space-y-8 py-12 border-y border-white/5">
-             <div className="flex items-center justify-between">
-                <h3 className="text-xs font-black tracking-[0.3em] text-white/40 uppercase">Recommended For You</h3>
-                {currentSermon.series && <span className="text-[10px] font-black text-primary uppercase">MORE FROM {currentSermon.series}</span>}
-             </div>
-             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-               {sermons
-                 .filter(s => s.id !== currentSermon.id)
-                 .sort((a, b) => {
+        {currentSermon && !liveStream && (         <section className="space-y-8 py-12 border-y border-white/5">
+              <div className="flex items-center justify-between">
+                 <h3 className="text-xs font-black tracking-[0.3em] text-white/40 uppercase">Recommended For You</h3>
+                 {currentSermon.series && <span className="text-[10px] font-black text-primary uppercase">MORE FROM {currentSermon.series}</span>}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {sermons
+                  .filter(s => s.id !== currentSermon.id)
+                  .sort((a, b) => {
                     // Prioritize same series
                     if (a.series === currentSermon.series && b.series !== currentSermon.series) return -1;
                     if (a.series !== currentSermon.series && b.series === currentSermon.series) return 1;
-                    return 0;
-                 })
-                 .slice(0, 4)
-                 .map((s) => (
-                   <button 
-                    key={s.id} 
-                    onClick={() => {
-                      setActiveSermon(s);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className="group flex flex-col gap-4 text-left transition-all hover:-translate-y-1"
-                   >
-                     <div className="aspect-video rounded-3xl bg-white/5 border border-white/10 overflow-hidden relative">
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                           <PlayCircle className="text-white" size={32} />
-                        </div>
-                        <img 
-                          src={`https://img.youtube.com/vi/${s.youtube_url.split('v=')[1] || s.youtube_url.split('/').pop()}/mqdefault.jpg`} 
-                          alt={s.title}
-                          className="w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity"
-                        />
-                     </div>
-                     <div>
-                        <p className="text-[8px] font-black tracking-widest text-primary uppercase mb-1">{s.series || 'Series'}</p>
-                        <h4 className="text-xs font-black text-white/80 group-hover:text-primary transition-colors line-clamp-2">{s.title}</h4>
-                     </div>
-                   </button>
-                 ))
-               }
-             </div>
-          </section>
+                    return new Date(b.date).getTime() - new Date(a.date).getTime();
+                  })
+                  .slice(0, 4)
+                  .map((s) => (
+                    <div 
+                      key={s.id} 
+                      onClick={() => {
+                        setActiveSermon(s);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="group flex flex-col gap-4 text-left transition-all hover:-translate-y-1"
+                    >
+                      <div className="aspect-video rounded-3xl bg-white/5 border border-white/10 overflow-hidden relative">
+                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <PlayCircle className="text-white" size={32} />
+                         </div>
+                         <img 
+                           src={`https://img.youtube.com/vi/${s.youtube_url.split('v=')[1] || s.youtube_url.split('/').pop()}/mqdefault.jpg`} 
+                           alt={s.title}
+                           className="w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity"
+                         />
+                      </div>
+                      <div>
+                         <p className="text-[8px] font-black tracking-widest text-primary uppercase mb-1">{s.series || 'Series'}</p>
+                         <h4 className="text-xs font-black text-white/80 group-hover:text-primary transition-colors line-clamp-2">{s.title}</h4>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+           </section>
         )}
 
+        {/* Global Footer Components */}
         <section className="space-y-16">
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="space-y-2">
@@ -435,6 +588,70 @@ export default function WatchClient() {
         </section>
         <TestimoniesSection />
       </div>
+
+      {/* Spiritual Response Modal */}
+      {showResponseModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
+            <div className="bg-card glass border border-white/10 w-full max-w-xl rounded-[3rem] shadow-2xl p-10 relative">
+                <button onClick={() => {setShowResponseModal(false); setResponseType(null); setResponseMessage('');}} className="absolute top-8 right-8 text-white/40 hover:text-white">
+                    <X size={24} />
+                </button>
+                
+                <div className="text-center mb-10 space-y-2">
+                    <h3 className="text-3xl font-black italic tracking-tighter uppercase text-white">Respond to the Word</h3>
+                    <p className="text-xs font-black tracking-widest text-primary uppercase">Your spiritual journey matters to us.</p>
+                </div>
+
+                {!responseType ? (
+                    <div className="grid grid-cols-1 gap-4">
+                        {[
+                            { id: 'salvation_decision', label: 'I GAVE MY LIFE TO CHRIST', icon: Star },
+                            { id: 'prayer_request', label: 'I NEED PRAYER', icon: Activity },
+                            { id: 'testimony', label: 'I HAVE A TESTIMONY', icon: FileText },
+                            { id: 'membership_interest', label: 'I WANT TO JOIN THIS CHURCH', icon: User }
+                        ].map((btn) => (
+                            <button 
+                                key={btn.id}
+                                onClick={() => setResponseType(btn.id as any)}
+                                className="glass hover:bg-white/10 border border-white/5 p-6 rounded-2xl flex items-center justify-between group transition-all"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+                                        <btn.icon size={20} />
+                                    </div>
+                                    <span className="text-[10px] font-black tracking-widest text-white/60 group-hover:text-white uppercase">{btn.label}</span>
+                                </div>
+                                <ArrowRight size={16} className="text-white/20 group-hover:text-primary transition-all group-hover:translate-x-1" />
+                            </button>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                        <div className="bg-primary/5 border border-primary/20 p-4 rounded-2xl flex items-center gap-3">
+                            <span className="text-[10px] font-black text-primary uppercase tracking-widest">SELECTED: {responseType?.replace(/_/g, ' ')}</span>
+                            <button onClick={() => setResponseType(null)} className="ml-auto text-[9px] font-black text-white/20 hover:text-white uppercase">Change</button>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-white/40 tracking-widest uppercase">Add a message (Optional)</label>
+                            <textarea 
+                                value={responseMessage}
+                                onChange={(e) => setResponseMessage(e.target.value)}
+                                placeholder="Type your message here..."
+                                className="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-4 text-xs font-medium text-white focus:border-primary outline-none transition-all placeholder:text-white/10"
+                            />
+                        </div>
+                        <button 
+                            onClick={submitSpiritualResponse}
+                            disabled={isSubmittingResponse}
+                            className="w-full bg-primary text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                        >
+                            {isSubmittingResponse ? 'SENDING...' : 'CONFIRM RESPONSE'}
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+      )}
     </div>
   );
 }

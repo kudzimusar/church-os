@@ -14,6 +14,7 @@ type Sermon = {
   date: string;
   is_featured: boolean;
   status: string;
+  transcript_text?: string;
   assets?: any[];
   metrics?: any;
 };
@@ -43,6 +44,10 @@ export default function SermonManagementPage() {
   const [newLiveUrl, setNewLiveUrl] = useState('');
   const [jobQueue, setJobQueue] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
+  const [usage, setUsage] = useState<{current: number, quota: number}>({current: 0, quota: 0});
+  const [dlqCount, setDlqCount] = useState(0);
+  const [impactStats, setImpactStats] = useState<any[]>([]);
+  const [spiritualFeed, setSpiritualFeed] = useState<any[]>([]);
 
   const isPastor = role === 'pastor';
   const canDelete = role && ROLE_HIERARCHY[role as AdminRole] >= 70;
@@ -97,8 +102,20 @@ export default function SermonManagementPage() {
     if (!orgId) return;
     const { data: jobs } = await supabase.from('job_queue').select('*').eq('org_id', orgId).order('created_at', { ascending: false }).limit(5);
     const { data: logEntries } = await supabase.from('system_logs').select('*').order('created_at', { ascending: false }).limit(5);
+    const { data: orgData } = await supabase.from('organizations').select('ai_current_month_tokens, ai_monthly_token_quota').eq('id', orgId).single();
+    const { count } = await supabase.from('job_queue').select('*', { count: 'exact', head: true }).eq('org_id', orgId).eq('status', 'failed_permanent');
+    const { data: stats } = await supabase.from('sermon_impact_stats').select('*').order('date', { ascending: false }).limit(5);
+    const { data: responses } = await supabase.from('spiritual_responses').select('*, user_id').order('created_at', { ascending: false }).limit(3);
+    
     setJobQueue(jobs || []);
     setLogs(logEntries || []);
+    setUsage({ 
+        current: orgData?.ai_current_month_tokens || 0, 
+        quota: orgData?.ai_monthly_token_quota || 1000000 
+    });
+    setDlqCount(count || 0);
+    setImpactStats(stats || []);
+    setSpiritualFeed(responses || []);
   }, [orgId]);
 
   useEffect(() => {
@@ -290,12 +307,18 @@ export default function SermonManagementPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-card/50 border border-border p-4 rounded-3xl flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${dlqCount > 0 ? 'bg-red-500/10 text-red-500' : 'bg-primary/10 text-primary'}`}>
               <Activity size={16} />
             </div>
             <div>
               <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest leading-none">AI Pipeline</p>
-              <h3 className="text-xl font-black">{jobQueue.filter(j => j.status === 'pending').length} <span className="text-[9px] text-muted-foreground font-bold">Jobs Pending</span></h3>
+              <h3 className="text-xl font-black">
+                {dlqCount > 0 ? (
+                    <span className="text-red-500">{dlqCount} <span className="text-[9px] font-bold">In DLQ</span></span>
+                ) : (
+                    <>{jobQueue.filter(j => j.status === 'pending').length} <span className="text-[9px] text-muted-foreground font-bold">Jobs Pending</span></>
+                )}
+              </h3>
             </div>
           </div>
           <button onClick={fetchHealthData} className="p-2 hover:bg-muted rounded-xl transition-colors">
@@ -303,22 +326,86 @@ export default function SermonManagementPage() {
           </button>
         </div>
 
-        <div className="bg-card/50 border border-border p-4 rounded-3xl col-span-2 overflow-hidden relative">
-           <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1 group">
-             <ShieldAlert size={10} /> Latest Automation Results 
-             <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">View Full Logs →</span>
+        <div className="bg-card/50 border border-border p-4 rounded-3xl relative overflow-hidden group">
+            <div className="flex items-center justify-between mb-2">
+                <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">AI Intelligence Budget</p>
+                <div className="text-[9px] font-black text-foreground">{(usage.current / usage.quota * 100).toFixed(1)}%</div>
+            </div>
+            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                <div 
+                    className={`h-full transition-all duration-1000 ${usage.current / usage.quota > 0.8 ? 'bg-red-500' : 'bg-primary'}`}
+                    style={{ width: `${Math.min(100, (usage.current / usage.quota) * 100)}%` }}
+                />
+            </div>
+            <p className="text-[7px] text-muted-foreground font-bold mt-2 uppercase tracking-tighter">
+                {usage.current.toLocaleString()} / {usage.quota.toLocaleString()} Tokens Used
+            </p>
+        </div>
+
+        <div className="bg-card/50 border border-border p-4 rounded-3xl col-span-1 overflow-hidden relative group">
+           <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1">
+             <Star size={10} className="text-primary" /> Decision Feed 
+             <span className="ml-auto text-primary animate-pulse">Live</span>
            </p>
-           <div className="flex items-center gap-3 overflow-x-auto no-scrollbar">
-              {logs.map(log => (
-                <div key={log.id} className="flex-shrink-0 bg-muted/50 border border-border px-3 py-1.5 rounded-xl flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${log.level === 'error' ? 'bg-red-500' : 'bg-emerald-500'}`} />
-                  <span className="text-[8px] font-black uppercase text-foreground/80 truncate max-w-[120px]">{log.event_type.replace(/_/g, ' ')}</span>
-                  <span className="text-[7px] text-muted-foreground font-bold">{new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+           <div className="space-y-2">
+              {spiritualFeed.map(resp => (
+                <div key={resp.id} className="bg-muted/30 border border-border/40 p-2.5 rounded-2xl flex items-center justify-between group/item">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    <div>
+                        <p className="text-[9px] font-black text-foreground uppercase tracking-tighter leading-none">{resp.type.replace(/_/g, ' ')}</p>
+                        <p className="text-[7px] text-muted-foreground font-bold mt-0.5">{new Date(resp.created_at).toLocaleDateString()} {new Date(resp.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                  </div>
+                  <button className="bg-primary/10 text-primary px-2 py-0.5 rounded-lg text-[7px] font-black opacity-0 group-hover/item:opacity-100 transition-opacity uppercase tracking-widest">Assign</button>
                 </div>
               ))}
-              {logs.length === 0 && <span className="text-[8px] font-bold text-muted-foreground/30 uppercase tracking-widest pl-1">No recent events recorded</span>}
+              {spiritualFeed.length === 0 && <span className="text-[8px] font-bold text-muted-foreground/30 uppercase tracking-widest block py-2">No responses received yet</span>}
            </div>
         </div>
+      </div>
+
+      {/* Impact Heatmap (Priority 7 Preview) */}
+      <div className="bg-card glass border border-border p-8 rounded-[3rem] mb-12 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-8 opacity-[0.03] scale-150 pointer-events-none group-hover:scale-110 transition-transform duration-1000">
+             <BarChart3 size={240} />
+          </div>
+          
+          <div className="flex items-center justify-between mb-8">
+             <div>
+                <h3 className="text-xl font-black uppercase tracking-tighter italic">Ministry <span className="text-primary">Impact</span> Heatmap</h3>
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Efficiency: Decisions per 1k views</p>
+             </div>
+             <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                   <Target size={16} />
+                </div>
+                <div className="text-right">
+                   <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest leading-none">Global Impact Score</p>
+                   <p className="text-xl font-black">{(impactStats.reduce((acc, s) => acc + s.impact_efficiency, 0) / (impactStats.length || 1)).toFixed(1)}%</p>
+                </div>
+             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+             {impactStats.map((s, idx) => (
+               <div key={idx} className="space-y-3 p-4 bg-muted/20 border border-border/40 rounded-3xl group/bar relative overflow-hidden">
+                  <div className="flex items-center justify-between">
+                     <p className="text-[9px] font-black text-foreground uppercase truncate max-w-[80%]">{s.title}</p>
+                     <p className="text-[8px] font-bold text-primary">{s.spiritual_decisions} 🙏</p>
+                  </div>
+                  <div className="h-12 flex items-end gap-1">
+                      <div className="flex-1 bg-primary/30 rounded-full group-hover/bar:bg-primary transition-all overflow-hidden relative">
+                         <div 
+                           className="absolute bottom-0 w-full bg-primary" 
+                           style={{ height: `${Math.min(100, s.impact_efficiency * 10)}%` }}
+                         />
+                      </div>
+                  </div>
+                  <p className="text-[7px] font-medium text-muted-foreground uppercase tracking-widest text-center">{s.total_views} Views</p>
+               </div>
+             ))}
+          </div>
       </div>
 
       {/* Live Management Panel */}

@@ -28,7 +28,20 @@ serve(async (req) => {
 
     if (jobError || !job) throw new Error(`Job not found: ${job_id}`)
 
-    // 2. Dispatch based on type
+    // 2. QUOTA GUARD (Phase 4.4)
+    const { data: org, error: orgError } = await supabaseClient
+      .from('organizations')
+      .select('ai_current_month_tokens, ai_monthly_token_quota')
+      .eq('id', job.org_id)
+      .single()
+
+    if (orgError || !org) throw new Error(`Organization quota check failed: ${job.org_id}`)
+    
+    if (org.ai_current_month_tokens >= org.ai_monthly_token_quota) {
+        throw new Error(`AI Quota Exceeded for this month. Please upgrade your plan.`)
+    }
+
+    // 3. Dispatch based on type
     if (job.type === 'ai_transcription') {
       const { sermon_id, youtube_url } = job.payload
       
@@ -53,14 +66,19 @@ serve(async (req) => {
 
       if (assetError) throw assetError;
 
-      // Step D: LOG USAGE
-      const estimatedTokens = transcriptMock.split(' ').length * 1.5; // Simple heuristic
+      // Step D: LOG USAGE & INCREMENT QUOTA
+      const estimatedTokens = Math.round(transcriptMock.split(' ').length * 1.5);
       await supabaseClient.from('ai_usage').insert({
           org_id: job.org_id,
           job_id: job_id,
           job_type: 'ai_transcription',
-          tokens_used: Math.round(estimatedTokens),
-          cost_amount: (estimatedTokens / 1000) * 0.01 // $0.01 per 1k tokens
+          tokens_used: estimatedTokens,
+          cost_amount: (estimatedTokens / 1000) * 0.01 
+      });
+
+      await supabaseClient.rpc('increment_org_ai_tokens', { 
+          org_id_param: job.org_id, 
+          token_count: estimatedTokens 
       });
 
       // Step E: MARK JOB AS COMPLETED
