@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Plus, Trash2, Youtube, Calendar, User, BookOpen, Link as LinkIcon, Star, PlayCircle, Activity, RefreshCw, ShieldAlert, X, Share2, Clock, Edit3, Save, CheckCircle } from 'lucide-react';
+import { Plus, Trash2, Youtube, Calendar, User, BookOpen, Link as LinkIcon, Star, PlayCircle, Activity, RefreshCw, ShieldAlert, X, Share2, Clock, Edit3, Save, CheckCircle, BarChart3, Target } from 'lucide-react';
 import { format } from 'date-fns';
 
 type Sermon = {

@@ -3,7 +3,19 @@
 import React, { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { MANUAL_CONTENT, ManualRole } from '@/lib/manual-config';
-import { ArrowLeft, CheckCircle2, AlertTriangle, Terminal, Database, ShieldAlert, Cpu, Heart, Activity, ArrowRight, Zap, Target } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertTriangle, Terminal, Database, ShieldAlert, Cpu, Heart, Activity, ArrowRight, Zap, Target, Building2, Flame, Video, BookOpen } from 'lucide-react';
+
+const ICON_MAP: Record<string, any> = {
+    Building2,
+    Flame,
+    Video,
+    BookOpen,
+    Activity,
+    Terminal,
+    ShieldAlert,
+    Cpu,
+    Zap
+};
 
 export default function RoleManualPage({ params }: { params: Promise<{ role: string }> }) {
   const router = useRouter();
@@ -39,7 +51,10 @@ export default function RoleManualPage({ params }: { params: Promise<{ role: str
                     {content.map((section, idx) => (
                         <div key={idx} className="glass rounded-[3rem] border border-white/10 p-10 md:p-16 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 p-8 opacity-[0.03] scale-150 rotate-12 pointer-events-none group-hover:scale-110 transition-transform duration-1000">
-                                <section.icon size={320} />
+                                {(() => {
+                                    const IconComponent = ICON_MAP[section.icon] || Target;
+                                    return <IconComponent size={320} />;
+                                })()}
                             </div>
                             
                             <div className="space-y-8 relative z-10">
