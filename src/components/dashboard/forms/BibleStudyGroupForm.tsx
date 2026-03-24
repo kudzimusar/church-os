@@ -10,6 +10,8 @@ import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
 import { useStickyForm } from "@/hooks/useStickyForm";
 import { supabase } from "@/lib/supabase";
 
+import { MemberSearchSelect } from "../MemberSearchSelect";
+
 export function BibleStudyGroupForm({ onSuccess, initialData }: { onSuccess: () => void, initialData?: any }) {
     const { orgId } = useAdminCtx();
     const [loading, setLoading] = useState(false);
@@ -33,16 +35,7 @@ export function BibleStudyGroupForm({ onSuccess, initialData }: { onSuccess: () 
     const meetingType = values.meeting_type;
     const setMeetingType = (val: string) => handleChange("meeting_type", val);
     
-    const [members, setMembers] = useState<any[]>([]);
-
-    useEffect(() => {
-        if (!orgId) return;
-        supabase.from('profiles')
-            .select('id, name, email')
-            .eq('org_id', orgId)
-            .limit(50)
-            .then(({ data }) => setMembers(data || []));
-    }, [orgId]);
+    // Member fetching logic removed as it's now handled by the searchable component
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -187,32 +180,21 @@ export function BibleStudyGroupForm({ onSuccess, initialData }: { onSuccess: () 
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-muted-foreground">Primary Leader</label>
-                    <select 
-                        name="leader_id" 
-                        value={values.leader_id || ''}
-                        onChange={(e) => handleChange("leader_id", e.target.value)}
-                        className="w-full h-9 bg-muted border border-border rounded-xl px-3 text-xs text-foreground"
-                        required
-                    >
-                        <option value="">Select a Leader</option>
-                        {members.map(m => (
-                            <option key={m.id} value={m.id}>{m.name}</option>
-                        ))}
-                    </select>
+                    <MemberSearchSelect 
+                        onSelect={(id) => handleChange("leader_id", id)}
+                        selectedId={values.leader_id}
+                        placeholder="Select a Leader"
+                        showSkills={true}
+                    />
                 </div>
                 <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-muted-foreground">Assistant (Optional)</label>
-                    <select 
-                        name="assistant_leader_id" 
-                        value={values.assistant_leader_id || ''}
-                        onChange={(e) => handleChange("assistant_leader_id", e.target.value)}
-                        className="w-full h-9 bg-muted border border-border rounded-xl px-3 text-xs text-foreground"
-                    >
-                        <option value="">None</option>
-                        {members.map(m => (
-                            <option key={m.id} value={m.id}>{m.name}</option>
-                        ))}
-                    </select>
+                    <MemberSearchSelect 
+                        onSelect={(id) => handleChange("assistant_leader_id", id)}
+                        selectedId={values.assistant_leader_id}
+                        placeholder="None"
+                        showSkills={true}
+                    />
                 </div>
             </div>
 

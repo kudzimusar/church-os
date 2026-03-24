@@ -109,7 +109,7 @@ export default function ProfileHub() {
     const [newMinistryRoleTitle, setNewMinistryRoleTitle, clearMin] = useStickyState("", "profile-new-min-role");
 
     const [skills, setSkills] = useState<any[]>([]);
-    const [newSkill, setNewSkill] = useStickyState(SKILL_OPTIONS[0], "profile-new-skill");
+    const [newSkill, setNewSkill] = useStickyState("", "profile-new-skill");
     const [newSkillLevel, setNewSkillLevel] = useStickyState("Intermediate", "profile-new-skill-level");
     const [newSkillExp, setNewSkillExp] = useStickyState(1, "profile-new-skill-exp");
     const [newSkillCat, setNewSkillCat] = useStickyState("Technology", "profile-new-skill-cat");
@@ -528,6 +528,7 @@ export default function ProfileHub() {
             }]).select().single();
             if (error) throw error;
             setSkills([...skills, data]);
+            setNewSkill(""); // Clear for inexhaustive addition
             toast.success("Skill added!");
         } catch (e: any) {
             toast.error("Error adding skill");
@@ -1407,9 +1408,12 @@ export default function ProfileHub() {
                                                     </div>
                                                     <div className="space-y-1">
                                                         <label className="text-[10px] font-black text-muted-foreground uppercase pl-1 tracking-widest">Specific Talent</label>
-                                                        <select value={newSkill} onChange={e => setNewSkill(e.target.value)} className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-black outline-none text-foreground appearance-none hover:bg-muted/80 transition-all cursor-pointer">
-                                                            {SKILL_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                                                        </select>
+                                                        <Input 
+                                                            value={newSkill} 
+                                                            onChange={e => setNewSkill(e.target.value)} 
+                                                            placeholder="e.g. Video Editing, Piano, Coding"
+                                                            className="h-14 w-full rounded-2xl bg-muted border border-border px-4 text-sm font-black outline-none text-foreground placeholder:text-muted-foreground/30"
+                                                        />
                                                     </div>
                                                     <div className="space-y-1">
                                                         <label className="text-[10px] font-black text-muted-foreground uppercase pl-1 tracking-widest">Mastery Level</label>

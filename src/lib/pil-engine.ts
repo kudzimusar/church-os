@@ -82,6 +82,18 @@ export const PILEngine = {
                 .select('id, discipleship_score')
                 .eq('org_id', orgId);
 
+            // NEW: Fetch Skill Gaps and Talent Pool for AI matching
+            const { data: skillGaps } = await supabase
+                .from('vw_ministry_skill_gaps')
+                .select('*')
+                .eq('org_id', orgId);
+
+            const { data: talentPool } = await supabase
+                .from('vw_member_talent_pool')
+                .select('name, email, skills, current_ministries')
+                .eq('org_id', orgId)
+                .limit(15);
+
             const avgDiscipleship = memberSummary?.length
                 ? Math.round(memberSummary.reduce((s, m) => s + (m.discipleship_score || 0), 0) / memberSummary.length)
                 : 0;
@@ -89,6 +101,14 @@ export const PILEngine = {
             const ministryContext = (ministryData || []).map((m: any) => {
               return `Ministry: ${m.name || 'Unknown'} | Health: ${m.health_score ?? 0}/100`;
             }).join('\n');
+
+            const skillGapContext = (skillGaps || []).map(g => 
+                `Ministry: ${g.ministry_name} | Volunteers: ${g.volunteer_count} | Skilled: ${g.skilled_volunteers_count}`
+            ).join('\n');
+
+            const talentContext = (talentPool || []).map(t => 
+                `Member: ${t.name} | Skills: ${JSON.stringify(t.skills)} | In: ${JSON.stringify(t.current_ministries)}`
+            ).join('\n');
 
             const memberDataSummary = `Total Members: ${memberSummary?.length || 0} | Avg Discipleship: ${avgDiscipleship}/100`;
 
@@ -98,12 +118,18 @@ export const PILEngine = {
                 return results;
             }
 
-            const fullPrompt = `Analyze this church growth data. Respond in JSON with "insights" array.
+            const fullPrompt = `Analyze church growth data. Generate 3-5 high-impact insights for the Pastor.
 Member Summary: ${memberDataSummary}
 Ministry Status:
 ${ministryContext}
 
-Output JSON: { "insights": [{ "title": string, "summary": string, "priority": "high"|"low", "theme": "growth"|"risk" }] }`;
+Ministry Skill Gaps (Low 'Skilled' count means recruitment need):
+${skillGapContext}
+
+Available Talent Pool (Members with skills not in matching ministries):
+${talentContext}
+
+Output JSON: { "insights": [{ "title": string, "summary": string, "priority": "high"|"low", "theme": "recruitment"|"growth"|"risk" }] }`;
 
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                 method: "POST",

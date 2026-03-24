@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { assignMinistryRoleAction } from "@/app/actions/admin";
-import { BookOpen, UserPlus, ShieldCheck, Sparkles } from "lucide-react";
+import { BookOpen, ShieldCheck, Sparkles } from "lucide-react";
 import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
 import { MINISTRIES } from "@/lib/constants";
+
+import { MemberSearchSelect } from "../MemberSearchSelect";
 
 export function MinistryForm({ onSuccess, initialMemberId }: { onSuccess: () => void, initialMemberId?: string }) {
     const { userId: adminId, orgId } = useAdminCtx();
@@ -20,6 +22,12 @@ export function MinistryForm({ onSuccess, initialMemberId }: { onSuccess: () => 
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+        
+        if (!values.memberId) {
+            toast.error("Please select a member first");
+            return;
+        }
+
         setLoading(true);
 
         const result = await assignMinistryRoleAction(values.memberId, values.role, values.ministry, adminId, orgId || "");
@@ -46,10 +54,12 @@ export function MinistryForm({ onSuccess, initialMemberId }: { onSuccess: () => 
 
             <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase text-muted-foreground">Select Member</label>
-                <div className="relative">
-                    <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30" />
-                    <Input name="memberId" value={values.memberId} onChange={e => handleChange('memberId', e.target.value)} placeholder="Search by name or email..." className="bg-muted border-border text-foreground text-xs pl-9 placeholder:text-muted-foreground/40" required />
-                </div>
+                <MemberSearchSelect 
+                    onSelect={(id) => handleChange('memberId', id)} 
+                    selectedId={values.memberId}
+                    showSkills={true}
+                    placeholder="Search by name or email..."
+                />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
