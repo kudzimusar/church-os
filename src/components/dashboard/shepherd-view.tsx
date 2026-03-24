@@ -218,6 +218,23 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
         }
     };
 
+    const handleMembershipAction = async (profileId: string, status: 'member' | 'visitor') => {
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ 
+                    membership_status: status,
+                    membership_date: status === 'member' ? new Date().toISOString() : null
+                })
+                .eq('id', profileId);
+            if (error) throw error;
+            toast.success(status === 'member' ? "Member Approved!" : "Member Reverted to Visitor");
+            loadData();
+        } catch (e) {
+            toast.error("Action failed");
+        }
+    };
+
     const loadData = useCallback(async () => {
         if (!orgId) return;
         setLoading(true);
