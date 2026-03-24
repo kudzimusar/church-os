@@ -148,8 +148,8 @@ Output JSON: { "insights": [{ "subject": "e.g., Media Ministry", "summary": "Sho
                         const cleaned = aiText.replace(/```json|```/g, '').trim();
                         const parsed = JSON.parse(cleaned);
                         
-                        for (const insight of parsed.insights || []) {
-                            await supabase.from('ai_ministry_insights').insert({
+                        for (const insight of parsed.insights) {
+                            const { error: insertErr } = await supabase.from('ai_ministry_insights').insert({
                                 org_id: orgId,
                                 insight_type: insight.insight_type || 'growth',
                                 subject: insight.subject || 'Church Wide',
@@ -159,7 +159,12 @@ Output JSON: { "insights": [{ "subject": "e.g., Media Ministry", "summary": "Sho
                                 urgency: insight.urgency || 'this_week',
                                 is_approved: false
                             });
-                            results.ai_insights++;
+                            if (insertErr) {
+                                console.error("❌ PI Engine: Insert failure on insight:", insertErr);
+                            } else {
+                                results.ai_insights++;
+                                console.log("✨ PI Engine: Saved new insight:", insight.summary);
+                            }
                         }
                     } catch (parseErr) {
                         console.error("❌ Gemini Parse failure:", parseErr);

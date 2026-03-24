@@ -1153,7 +1153,13 @@ export default function ProfileHub() {
                                                         {MINISTRY_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                                                     </select>
                                                     <Input placeholder="Role Title (e.g. Lead, Usher)" value={newMinistryRoleTitle} onChange={e => setNewMinistryRoleTitle(e.target.value)} className="h-14 rounded-2xl bg-background border-foreground/10 px-4 w-full sm:w-1/3" />
-                                                    <Button onClick={handleAddMinistry} className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black">Add</Button>
+                                                    <Button 
+                                                        disabled={isSaving} 
+                                                        onClick={handleAddMinistry} 
+                                                        className="h-14 px-8 rounded-2xl bg-[var(--primary)] text-white font-black"
+                                                    >
+                                                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add"}
+                                                    </Button>
                                                 </div>
                                                 <div className="grid gap-3">
                                                     {ministryRoles.map(m => (
@@ -1497,7 +1503,7 @@ export default function ProfileHub() {
                                                                 if (name.includes('counsel')) return 'Counseling Ministry';
                                                                 if (name.includes('finance') || name.includes('admin')) return 'Finance Team';
                                                                 return 'General Service';
-                                                            }))].map(rec => (
+                                                            }))].filter(rec => !ministryRoles.some(mr => mr.ministry_name === rec)).map(rec => (
                                                                 <div key={rec} className="flex items-center justify-between p-4 bg-[var(--primary)]/5 border border-[var(--primary)]/10 rounded-2xl group hover:bg-[var(--primary)]/10 transition-colors">
                                                                     <div className="flex items-center gap-3">
                                                                         <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center">
