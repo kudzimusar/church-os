@@ -23,7 +23,7 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export default function SettingsPage() {
-    const { role: myRole, userName, email: myEmail, orgId } = useAdminCtx() as any;
+    const { role: myRole, userName, userId, orgId } = useAdminCtx() as any;
     const [team, setTeam] = useState<any[]>([]);
     const [invitations, setInvitations] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -305,16 +305,15 @@ export default function SettingsPage() {
                                     </div>
                                     <div className="text-center md:text-left space-y-2">
                                         <h2 className="text-3xl font-black text-foreground tracking-tight">{userName}</h2>
-                                        <p className="text-muted-foreground/60 font-medium">{myEmail}</p>
-                                        <div className="flex flex-wrap justify-center md:justify-start gap-2 pt-2">
-                                            <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 px-3 py-1 font-black uppercase tracking-widest text-[9px]">
-                                                {team.find(m => m.profiles?.email === myEmail)?.profiles?.membership_status?.toUpperCase() || 'VISITOR'}
+                                        <p className="text-muted-foreground/60 font-medium">{team.find(m => m.user_id === userId)?.profiles?.email || 'Admin User'}</p>                                        <div className="flex flex-wrap gap-2 mt-3">
+                                            <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                                                {team.find(m => m.user_id === userId)?.profiles?.membership_status?.toUpperCase() || 'VISITOR'}
                                             </Badge>
-                                            <Badge className="bg-primary/10 text-primary border-primary/20 px-3 py-1 font-black uppercase tracking-widest text-[9px]">
-                                                {team.find(m => m.profiles?.email === myEmail)?.profiles?.growth_stage?.toUpperCase() || 'VISITOR'}
+                                            <Badge className="bg-primary/10 text-primary border-primary/20 bg-clip-text text-transparent bg-gradient-to-r from-primary to-violet-500">
+                                                {team.find(m => m.user_id === userId)?.profiles?.growth_stage?.toUpperCase() || 'VISITOR'}
                                             </Badge>
                                              <Badge className="bg-muted text-muted-foreground/40 border-border px-3 py-1 font-black uppercase tracking-widest text-[9px]">
-                                                JOINED {new Date(team.find(m => m.profiles?.email === myEmail)?.profiles?.created_at).toLocaleDateString()}
+                                                JOINED {new Date(team.find(m => m.user_id === userId)?.profiles?.created_at).toLocaleDateString()}
                                             </Badge>
                                             {isMFAVerified && (
                                                 <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30 px-3 py-1 font-black uppercase tracking-widest text-[9px]">

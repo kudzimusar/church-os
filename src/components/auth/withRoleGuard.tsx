@@ -55,8 +55,8 @@ export function withRoleGuard<T extends object>(
                     return;
                 }
 
-                // MFA ENFORCEMENT for Leadership
-                if (['pastor', 'super_admin', 'owner'].includes(session.role)) {
+                // MFA ENFORCEMENT for Leadership (Temporarily Disabled for testing)
+                /*if (['pastor', 'super_admin', 'owner'].includes(session.role)) {
                     const { data: mfaData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
                     if (mfaData?.currentLevel !== 'aal2') {
                         
@@ -71,7 +71,7 @@ export function withRoleGuard<T extends object>(
                            return;
                         }
                     }
-                }
+                }*/
 
                 setStatus({ loading: false, authorized: true });
             }

@@ -90,6 +90,7 @@ export default function ProfileHub() {
         resolver: zodResolver(identitySchema) as any
     });
     const [isSaving, setIsSaving] = useState(false);
+    const [joining, setJoining] = useState<string | null>(null);
 
     // Dynamic state with stickiness
     const [household, setHousehold] = useState<any[]>([]);
@@ -516,7 +517,7 @@ export default function ProfileHub() {
 
     const handleJoinMinistry = async (mName: string) => {
         if (!user || !profile?.org_id) return;
-        setIsSaving(true);
+        setJoining(mName);
         try {
             const { data, error } = await supabase.from('ministry_members').insert([{
                 user_id: user.id,
@@ -532,7 +533,7 @@ export default function ProfileHub() {
         } catch (e: any) {
             toast.error(e.message || "Error joining team");
         } finally {
-            setIsSaving(false);
+            setJoining(null);
         }
     };
 
@@ -1506,11 +1507,11 @@ export default function ProfileHub() {
                                                                     </div>
                                                                     <Button 
                                                                         variant="ghost" 
-                                                                        disabled={isSaving}
+                                                                        disabled={joining === rec}
                                                                         onClick={() => handleJoinMinistry(rec)}
                                                                         className="text-[10px] font-black text-[var(--primary)] uppercase tracking-widest hover:bg-transparent"
                                                                     >
-                                                                        {isSaving ? "Joining..." : "Join Team"} <ChevronRight className="w-4 h-4 ml-1" />
+                                                                        {joining === rec ? "Joining..." : "Join Team"} <ChevronRight className="w-4 h-4 ml-1" />
                                                                     </Button>
                                                                 </div>
                                                             ))

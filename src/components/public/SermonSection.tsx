@@ -8,7 +8,7 @@ export default function SermonSection() {
     supabase
       .from('public_sermons')
       .select('*')
-      .eq('featured', true)
+      .eq('is_featured', true)
       .order('date', { ascending: false })
       .limit(1)
       .single()

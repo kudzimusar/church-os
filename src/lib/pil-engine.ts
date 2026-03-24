@@ -129,7 +129,7 @@ ${skillGapContext}
 Available Talent Pool (Members with skills not in matching ministries):
 ${talentContext}
 
-Output JSON: { "insights": [{ "title": string, "summary": string, "priority": "high"|"low", "theme": "recruitment"|"growth"|"risk" }] }`;
+Output JSON: { "insights": [{ "subject": "e.g., Media Ministry", "summary": "Short title", "detail": "Description", "recommended_action": "Action to take", "insight_type": "opportunity", "urgency": "this_week" }] }`;
 
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                 method: "POST",
@@ -151,10 +151,12 @@ Output JSON: { "insights": [{ "title": string, "summary": string, "priority": "h
                         for (const insight of parsed.insights || []) {
                             await supabase.from('ai_ministry_insights').insert({
                                 org_id: orgId,
-                                title: insight.title,
-                                description: insight.summary,
-                                priority: insight.priority || 'medium',
-                                category: insight.theme || 'growth',
+                                insight_type: insight.insight_type || 'growth',
+                                subject: insight.subject || 'Church Wide',
+                                summary: insight.summary || 'General Insight',
+                                detail: insight.detail || '',
+                                recommended_action: insight.recommended_action || '',
+                                urgency: insight.urgency || 'this_week',
                                 is_approved: false
                             });
                             results.ai_insights++;
