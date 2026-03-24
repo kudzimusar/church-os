@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
-import { Calendar, Tag } from 'lucide-react';
+import { Calendar, Tag, Users } from 'lucide-react';
 
 export default function SermonSection() {
   const [sermon, setSermon] = useState<any>(null);
