@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ChevronDown, Calendar, MapPin, Clock, BookOpen, User, Languages, FileText, Download, CheckCircle2, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronDown, Calendar, MapPin, Clock, BookOpen, User, Users, Languages, FileText, Download, CheckCircle2, ChevronRight, Loader2, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
