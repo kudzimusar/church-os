@@ -87,17 +87,26 @@ export async function addPrayerRequestAction(requestData: any) {
     }
 }
 
-export async function assignMinistryRoleAction(memberId: string, role: string, ministry: string, adminId: string, orgId?: string) {
+export async function assignMinistryRoleAction(memberId: string, role: string, ministryName: string, adminId: string, orgId?: string) {
     try {
+        // Find ministry ID for consistency
+        const { data: minData } = await supabase
+            .from('ministries')
+            .select('id')
+            .eq('name', ministryName)
+            .maybeSingle();
+
         const { data, error } = await supabase
             .from('ministry_members')
             .insert([{
                 user_id: memberId,
-                ministry_name: ministry,
+                ministry_name: ministryName,
+                ministry_id: minData?.id || null,
                 ministry_role: role,
                 invited_by: adminId,
                 org_id: orgId,
-                is_active: true
+                is_active: true,
+                status: 'active'
             }])
             .select()
             .single();

@@ -1,0 +1,526 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.plan{padding:1rem 0}
+.phase-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1.5rem}
+.pnav{padding:6px 14px;border-radius:20px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);font-size:12px;cursor:pointer;color:var(--color-text-secondary);transition:all .15s}
+.pnav.active,.pnav:hover{background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info)}
+.phase{display:none}
+.phase.active{display:block}
+.section-title{font-size:18px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.section-sub{font-size:13px;color:var(--color-text-secondary);margin-bottom:1.25rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.25rem}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1.25rem}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px}
+.card.accent{border-color:var(--color-border-info);border-width:1.5px}
+.card-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.card-title{font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.card-body{font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.badge-info{background:var(--color-background-info);color:var(--color-text-info)}
+.badge-success{background:var(--color-background-success);color:var(--color-text-success)}
+.badge-warning{background:var(--color-background-warning);color:var(--color-text-warning)}
+.badge-danger{background:var(--color-background-danger);color:var(--color-text-danger)}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:1.25rem}
+.tbl th{text-align:left;padding:8px 10px;background:var(--color-background-secondary);color:var(--color-text-secondary);font-weight:500;border-bottom:0.5px solid var(--color-border-tertiary)}
+.tbl td{padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl td.muted{color:var(--color-text-secondary)}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem}
+.fstep{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--color-text-primary)}
+.farrow{color:var(--color-text-tertiary);font-size:14px}
+.ai-block{background:var(--color-background-info);border:0.5px solid var(--color-border-info);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:1.25rem}
+.ai-block-title{font-size:13px;font-weight:500;color:var(--color-text-info);margin-bottom:6px}
+.ai-block-body{font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+.warn-block{background:var(--color-background-warning);border:0.5px solid var(--color-border-warning);border-radius:var(--border-radius-lg);padding:12px 16px;margin-bottom:1.25rem;font-size:12px;color:var(--color-text-secondary)}
+.warn-block strong{color:var(--color-text-warning)}
+.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:1.25rem 0}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
+.stat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
+.stat-num{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.stat-lbl{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.cta-btn{display:inline-block;padding:8px 18px;border-radius:8px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);font-size:13px;cursor:pointer;color:var(--color-text-primary)}
+.cta-btn:hover{background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info)}
+</style>
+
+<div class="plan">
+<div class="phase-nav">
+  <div class="pnav active" onclick="showPhase('overview')">Overview</div>
+  <div class="pnav" onclick="showPhase('visitor')">A · Visitor + AI</div>
+  <div class="pnav" onclick="showPhase('qr')">B · QR + Connect</div>
+  <div class="pnav" onclick="showPhase('class')">C · Kingdom class</div>
+  <div class="pnav" onclick="showPhase('events')">D · Events + flyer</div>
+  <div class="pnav" onclick="showPhase('sermon')">E · Sermon notes</div>
+  <div class="pnav" onclick="showPhase('analytics')">F · Analytics + AI</div>
+  <div class="pnav" onclick="showPhase('schema')">Schema</div>
+</div>
+
+<!-- OVERVIEW -->
+<div class="phase active" id="phase-overview">
+  <div class="section-title">JKC Church OS — digital transformation master plan</div>
+  <div class="section-sub">6 physical assets → 6 digital systems, unified under one SaaS-ready platform</div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="stat-num">6</div><div class="stat-lbl">Physical assets to digitalize</div></div>
+    <div class="stat"><div class="stat-num">5</div><div class="stat-lbl">Existing components to upgrade</div></div>
+    <div class="stat"><div class="stat-num">8</div><div class="stat-lbl">New DB tables needed</div></div>
+    <div class="stat"><div class="stat-num">4</div><div class="stat-lbl">AI integration points</div></div>
+  </div>
+
+  <table class="tbl">
+    <tr><th>Image</th><th>Physical asset</th><th>Target component</th><th>Current state</th><th>Priority</th></tr>
+    <tr>
+      <td><span class="badge badge-info">Img 1</span></td>
+      <td class="muted">QR seat cards → mypurposejapan.com</td>
+      <td>New <code>/connect</code> digital bulletin page</td>
+      <td>Dead URL, no tracking</td>
+      <td><span class="badge badge-warning">Phase B</span></td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-info">Img 2+3</span></td>
+      <td class="muted">Paper visitor form (EN + JP)</td>
+      <td><code>ConnectSection.tsx</code> → <code>VisitorConnect</code> + Brevo</td>
+      <td><code>public_inquiries</code> table exists, no AI</td>
+      <td><span class="badge badge-danger">Phase A — now</span></td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-info">Img 4</span></td>
+      <td class="muted">Language class flyer (2 tracks, schedule)</td>
+      <td><code>language-school</code> ministry → full LMS</td>
+      <td>Hidden placeholder, no enrolment</td>
+      <td><span class="badge badge-warning">Phase C</span></td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-info">Img 5</span></td>
+      <td class="muted">Easter Gospel Service flyer</td>
+      <td><code>FeedSection</code> + <code>EventsSection</code> + RSVP</td>
+      <td><code>member_feed_items</code> + <code>events</code> exist, no ticketing</td>
+      <td><span class="badge badge-danger">Phase D — urgent (Apr 5)</span></td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-info">Img 6</span></td>
+      <td class="muted">Bilingual sermon notes (fill-in)</td>
+      <td>New <code>sermon_notes</code> system + Watch page</td>
+      <td>No table, no component</td>
+      <td><span class="badge badge-warning">Phase E</span></td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-success">All</span></td>
+      <td class="muted">Cross-platform data signals</td>
+      <td>Church health score dashboard</td>
+      <td><code>ai_ministry_insights</code> partial</td>
+      <td><span class="badge badge-info">Phase F — ongoing</span></td>
+    </tr>
+  </table>
+
+  <div class="warn-block"><strong>Pre-requisite:</strong> Phase 1 SaaS work (adding <code>org_id</code> to core tables) should complete before building new tables, otherwise every new table needs backfilling twice. Coordinate this with the existing Phase 1 execution plan.</div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-label">Codebase alignment (your report)</div>
+      <div class="card-body">
+        <strong style="color:var(--color-text-primary)">What your report confirmed:</strong><br>
+        · <code>ConnectSection.tsx</code> → base for visitor form<br>
+        · <code>FeedSection.tsx</code> → base for flyer announcements<br>
+        · <code>EventsSection.tsx</code> → base for Easter RSVP<br>
+        · <code>language-school</code> ministry → base for class LMS<br>
+        · <code>public_inquiries</code> table already exists<br>
+        · <code>attendance_records</code> → reuse for class check-in<br>
+        · Footer + Nav need one-line unhide for class route
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">What we're adding beyond your report</div>
+      <div class="card-body">
+        <strong style="color:var(--color-text-primary)">New capabilities:</strong><br>
+        · AI pastoral response drafting (Gemini + Brevo)<br>
+        · QR scan tracking with analytics (seat-level)<br>
+        · 2-tier event system (guest RSVP + member check-in)<br>
+        · Sermon notes as interactive fill-in + PDF export<br>
+        · Payment integration for language class (Stripe/Univapay)<br>
+        · AI study assistant inside class portal<br>
+        · Visitor → member retention analytics pipeline<br>
+        · Flyer image upload from Mission Control → Feed
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PHASE A: VISITOR -->
+<div class="phase" id="phase-visitor">
+  <div class="section-title">Phase A · Visitor form + AI communication</div>
+  <div class="section-sub">Images 2 + 3 — upgrade ConnectSection.tsx into a full visitor CRM pipeline</div>
+
+  <div class="card accent" style="margin-bottom:1.25rem">
+    <div class="card-label">What you have now (from your report)</div>
+    <div class="card-body"><code>ConnectSection.tsx</code> exists as a public inquiry form. Table <code>public.public_inquiries</code> is present. No automation, no AI, no follow-up emails, no visitor classification.</div>
+  </div>
+
+  <div class="card-label" style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">New visitor journey flow</div>
+  <div class="flow">
+    <div class="fstep">Visitor fills digital form<br><small>Name, email, phone, prayer req.</small></div>
+    <div class="farrow">→</div>
+    <div class="fstep">Supabase write<br><small>public_inquiries + visitor_type flag</small></div>
+    <div class="farrow">→</div>
+    <div class="fstep">Edge Function fires<br><small>On INSERT trigger</small></div>
+    <div class="farrow">→</div>
+    <div class="fstep">Gemini classifies<br><small>Intent: first-time / prayer / class interest</small></div>
+    <div class="farrow">→</div>
+    <div class="fstep">Brevo sequence starts<br><small>Welcome journey 5-email series</small></div>
+    <div class="farrow">→</div>
+    <div class="fstep">Pastor dashboard alert<br><small>Urgent prayer → WhatsApp / Twilio</small></div>
+  </div>
+
+  <div class="ai-block">
+    <div class="ai-block-title">AI integration — Gemini + Brevo pipeline</div>
+    <div class="ai-block-body">
+      1. <strong>Visitor intent classification</strong> — Gemini reads the "Questions / Prayer Request" field and classifies into: first-time visitor, returning seeker, language class interest, urgent pastoral need, general inquiry.<br><br>
+      2. <strong>Pastoral email drafting</strong> — Gemini auto-drafts a personalised follow-up email from Pastor Marcel's voice. Appears in Mission Control as a one-click approve-and-send card. Pastor never starts from blank.<br><br>
+      3. <strong>Brevo Welcome Journey</strong> — 5-email automated series triggered on form submit: (1) Welcome + next service info, (2) JKC intro video, (3) Kingdom Class invite, (4) Testimonies, (5) 30-day check-in. Bilingual EN/JP based on form language selection.<br><br>
+      4. <strong>Twilio/WhatsApp alert</strong> — If Gemini detects urgency keywords in the prayer request, Pastor receives an immediate WhatsApp notification with visitor name and request summary.
+    </div>
+  </div>
+
+  <table class="tbl">
+    <tr><th>DB change</th><th>Action</th><th>Purpose</th></tr>
+    <tr><td><code>public_inquiries</code></td><td>Add columns: <code>visitor_type</code>, <code>source_qr_id</code>, <code>ai_intent_class</code>, <code>brevo_contact_id</code>, <code>pastoral_draft</code></td><td>Enable AI classification + CRM sync</td></tr>
+    <tr><td><code>email_sequences</code></td><td>New table</td><td>Track which Brevo sequence each visitor is in</td></tr>
+    <tr><td><code>email_log</code></td><td>New table</td><td>Log every sent email for analytics</td></tr>
+  </table>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-label">Component changes</div>
+      <div class="card-body">
+        · Rename <code>ConnectSection.tsx</code> → add <code>VisitorConnect</code> sub-component<br>
+        · Add language toggle (EN / 日本語) to form<br>
+        · Add prayer request textarea (currently missing)<br>
+        · Add "How did you hear about us?" dropdown<br>
+        · Show confirmation screen with next steps<br>
+        · Mission Control: new "Visitor Inbox" tab with AI draft cards
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">Analytics signals this enables</div>
+      <div class="card-body">
+        · Visitor → member conversion rate<br>
+        · Most common visitor intent categories<br>
+        · Email open/click rates per sequence step<br>
+        · QR source attribution (which QR drove which visitor)<br>
+        · Prayer request topic clustering over time<br>
+        · Language preference split (EN vs JP)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PHASE B: QR -->
+<div class="phase" id="phase-qr">
+  <div class="section-title">Phase B · QR deep links + digital bulletin</div>
+  <div class="section-sub">Image 1 — replace dead seat QR codes with tracked, dynamic digital bulletin</div>
+
+  <div class="card accent" style="margin-bottom:1.25rem">
+    <div class="card-label">Problem (from the seat cards)</div>
+    <div class="card-body">Current QR codes point to <code>www.mypurposejapan.com/connect</code> — a dead or unrelated URL. Visitors scan and land nowhere useful. No analytics on who scanned, when, or what they did next.</div>
+  </div>
+
+  <div class="grid3">
+    <div class="card">
+      <div class="card-label">New route: /connect</div>
+      <div class="card-body">A "digital bulletin" page that shows: today's sermon title + notes link, visitor form CTA, next event, Kingdom Class info, and a "I'm new here" pathway. Changes weekly based on service date.</div>
+    </div>
+    <div class="card">
+      <div class="card-label">QR tracking</div>
+      <div class="card-body">Each seat QR contains a unique <code>?src=seat-A3</code> param. Every scan logs to <code>qr_scan_events</code> table with timestamp, seat, device type, and whether the visitor completed the form.</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Multi-surface QR</div>
+      <div class="card-body">Beyond chairs: projection screen (before service), physical brochures, Easter event flyer, Kingdom Class schedule. Each surface gets its own QR code and <code>src</code> param for attribution.</div>
+    </div>
+  </div>
+
+  <div class="ai-block">
+    <div class="ai-block-title">Dynamic content per scan time</div>
+    <div class="ai-block-body">The <code>/connect</code> page detects the day of week and time. Sunday 10:00–12:00 = service mode (sermon notes + live stream link). Any other time = general visitor mode (about JKC, upcoming events, class registration). This makes the QR permanently relevant, not just useful on Sundays.</div>
+  </div>
+
+  <table class="tbl">
+    <tr><th>DB change</th><th>Action</th><th>Purpose</th></tr>
+    <tr><td><code>qr_scan_events</code></td><td>New table: <code>id, qr_source, scanned_at, device, visitor_id (nullable), completed_form</code></td><td>Seat-level attendance intelligence</td></tr>
+    <tr><td><code>public_inquiries</code></td><td>Add <code>source_qr_id</code> FK</td><td>Link visitor form submission to the QR that drove them</td></tr>
+  </table>
+</div>
+
+<!-- PHASE C: CLASS -->
+<div class="phase" id="phase-class">
+  <div class="section-title">Phase C · Kingdom Japanese Language Class LMS</div>
+  <div class="section-sub">Image 4 — restore hidden page and build full learning management system</div>
+
+  <div class="card accent" style="margin-bottom:1.25rem">
+    <div class="card-label">What you have now (from your report)</div>
+    <div class="card-body"><code>language-school</code> ministry exists as a placeholder. Route exists but is hidden from <code>PublicFooter.tsx</code> and <code>PublicNav.tsx</code>. Tables <code>ministries</code> and <code>bible_study_groups</code> are the closest existing structures. No enrolment, no payment, no schedule, no curriculum.</div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-label">Beginners track (Sundays 15:00–17:00)</div>
+      <div class="card-body">
+        10 classes, Apr 5 → Jul 12<br>
+        Dates: 4/5, 4/12, 4/26, 5/10, 5/17, 5/31, 6/7, 6/21, 6/28, 7/12<br>
+        Fee: ¥12,000 (¥1,000/class + ¥2,000 textbook)<br>
+        For absolute beginners, hiragana start
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">JLPT N5 track (Fridays 19:00–21:00)</div>
+      <div class="card-body">
+        10 classes, Apr 3 → Jul 3<br>
+        Dates: 4/3, 4/10, 4/24, 5/1, 5/15, 5/22, 6/5, 6/12, 6/26, 7/3<br>
+        Fee: ¥17,000 (¥1,500/class + ¥2,000 textbook)<br>
+        For advance beginners, JLPT prep
+      </div>
+    </div>
+  </div>
+
+  <div class="card-label" style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">Full LMS feature set</div>
+  <table class="tbl">
+    <tr><th>Feature</th><th>Implementation</th><th>Existing hook</th></tr>
+    <tr><td>Public curriculum page</td><td>Restore route, add track cards, schedule table</td><td><code>language-school</code> ministry page</td></tr>
+    <tr><td>Class registration form</td><td>Name, email, track choice, payment</td><td><code>ConnectSection</code> pattern</td></tr>
+    <tr><td>Payment processing</td><td>Stripe (global) or Univapay (Japan-local)</td><td>Your report mentions <code>merchandise</code> shop — reuse payment logic</td></tr>
+    <tr><td>Session check-in</td><td>Member logs attendance per class date</td><td><code>attendance_records</code> table (your report confirmed)</td></tr>
+    <tr><td>Class materials</td><td>PDF/resource uploads per session, Supabase Storage</td><td>New — needs storage bucket</td></tr>
+    <tr><td>AI study assistant</td><td>Gemini answers questions from curriculum context</td><td>New Edge Function</td></tr>
+    <tr><td>Progress tracking</td><td>Classes attended / 10, completion certificate</td><td>New — <code>class_enrollments</code> table</td></tr>
+    <tr><td>Footer + Nav link</td><td>One-line unhide in PublicFooter.tsx + PublicNav.tsx</td><td>Already routed, just hidden</td></tr>
+  </table>
+
+  <div class="ai-block">
+    <div class="ai-block-title">AI — Kingdom Class study assistant</div>
+    <div class="ai-block-body">
+      Inside the class portal, students can ask questions about lesson material. Gemini is primed with the lesson content for that week and responds in the student's preferred language (EN or JP).<br><br>
+      Admin insight: AI tracks most-asked questions across all students → surfaces a "FAQ this week" card for the teacher to address at the start of next class. Over a semester, question clusters reveal which grammar points need more time.
+    </div>
+  </div>
+
+  <table class="tbl">
+    <tr><th>New DB table</th><th>Key columns</th></tr>
+    <tr><td><code>class_enrollments</code></td><td><code>id, profile_id, track (beginners|jlpt_n5), payment_status, enrolled_at, org_id</code></td></tr>
+    <tr><td><code>class_sessions</code></td><td><code>id, track, session_number, session_date, materials_url, org_id</code></td></tr>
+    <tr><td><code>class_attendance</code></td><td><code>id, enrollment_id, session_id, checked_in_at</code></td></tr>
+    <tr><td><code>class_payments</code></td><td><code>id, enrollment_id, amount_yen, stripe_payment_id, paid_at</code></td></tr>
+  </table>
+</div>
+
+<!-- PHASE D: EVENTS -->
+<div class="phase" id="phase-events">
+  <div class="section-title">Phase D · Events, announcements + flyer system</div>
+  <div class="section-sub">Image 5 — Easter Gospel Service (Apr 5) needs to be live NOW with RSVP + ticketing</div>
+
+  <div class="warn-block"><strong>Urgent:</strong> Easter Gospel Service is April 5, 2026 — 12 days from today. The digital version of this flyer should be live this week. The <code>events</code> table and <code>FeedSection</code> exist; this is primarily configuration + RSVP layer work.</div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-label">Tier 1 — Guest (public)</div>
+      <div class="card-body">
+        · "Register interest" button → collects name + email<br>
+        · Writes to <code>event_registrations</code> table<br>
+        · Brevo confirmation email with event details<br>
+        · Download flyer image button (Supabase Storage)<br>
+        · Social share link (WhatsApp, LINE, Twitter)<br>
+        · QR code for physical handout generated from URL
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">Tier 2 — Member (logged in)</div>
+      <div class="card-body">
+        · "Mark attendance" button → <code>attendance_records</code><br>
+        · Add to calendar (Google Cal / Apple Cal ICS file)<br>
+        · Personal reminder 24h before event<br>
+        · Post-event: prompt to write a testimony<br>
+        · Post-event: sermon notes PDF download<br>
+        · Member counts visible to Mission Control
+      </div>
+    </div>
+  </div>
+
+  <div class="card-label" style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">Easter event data (from flyer)</div>
+  <div class="card" style="margin-bottom:1.25rem">
+    <div class="card-body">
+      <strong style="color:var(--color-text-primary)">History Gospel — Easter Service Live</strong><br>
+      Date: Sunday April 5, 2026 · Open 10:00 / Start 10:30<br>
+      Venue: TE Akishima Building, 3F, 2-1-6 Showa-cho, Akishima City, Tokyo 196-0015<br>
+      Nearest station: JR Akishima Station (2-minute walk)<br>
+      Admission: Free (donations accepted)<br>
+      Contact: japankingdom1@gmail.com · 042-519-4940
+    </div>
+  </div>
+
+  <div class="ai-block">
+    <div class="ai-block-title">AI — flyer to digital content pipeline</div>
+    <div class="ai-block-body">
+      When admin uploads a flyer image in Mission Control:<br>
+      1. Gemini Vision extracts event details (date, venue, time, title) and pre-fills the event creation form — admin just confirms.<br>
+      2. Gemini generates a bilingual social media caption (EN + JP) for the pastor to copy-paste to LINE, Instagram, WhatsApp.<br>
+      3. After the event, Gemini drafts a "recap post" based on attendance numbers + any testimony submissions, ready for the Feed.
+    </div>
+  </div>
+
+  <table class="tbl">
+    <tr><th>New DB table</th><th>Key columns</th></tr>
+    <tr><td><code>event_registrations</code></td><td><code>id, event_id, name, email, type (guest|member), profile_id (nullable), registered_at, org_id</code></td></tr>
+    <tr><td>Extend <code>events</code></td><td>Add: <code>flyer_image_url, rsvp_enabled, capacity, social_caption_en, social_caption_jp</code></td></tr>
+    <tr><td>Extend <code>member_feed_items</code></td><td>Add: <code>downloadable_asset_url, share_enabled, event_id (FK)</code></td></tr>
+  </table>
+</div>
+
+<!-- PHASE E: SERMON -->
+<div class="phase" id="phase-sermon">
+  <div class="section-title">Phase E · Sermon notes — digital fill-in + live sync</div>
+  <div class="section-sub">Image 6 — bilingual notes (EN + JP) must be uploadable by admin and usable by members during and after service</div>
+
+  <div class="card accent" style="margin-bottom:1.25rem">
+    <div class="card-label">What we're building from scratch</div>
+    <div class="card-body">No table, no component exists for sermon notes. This is the most complex Phase E item because it spans three surfaces: Mission Control (admin upload), Watch page (live service), and Member profile (personal saved notes). It must work for both online and in-person attendees.</div>
+  </div>
+
+  <div class="grid3">
+    <div class="card">
+      <div class="card-label">Mission Control (admin)</div>
+      <div class="card-body">
+        · Upload sermon notes template (PDF or structured outline)<br>
+        · Input fill-in-the-blank fields with labels<br>
+        · Set service date and attach to event<br>
+        · Publish to Watch page<br>
+        · After service: publish completed version
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">Watch page (during service)</div>
+      <div class="card-body">
+        · Notes appear alongside live stream<br>
+        · Members type answers into fill-in fields<br>
+        · Auto-save every 30 seconds to Supabase<br>
+        · Guest mode: download blank PDF to print<br>
+        · Language toggle: EN / 日本語
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">Member profile (post-service)</div>
+      <div class="card-body">
+        · Access all saved notes from past services<br>
+        · Download personal notes as PDF<br>
+        · Download completed "answer key" version<br>
+        · Pastor can update notes any time<br>
+        · Notes searchable by keyword or date
+      </div>
+    </div>
+  </div>
+
+  <div class="ai-block">
+    <div class="ai-block-title">AI — post-service notes completion</div>
+    <div class="ai-block-body">
+      After service, pastor or admin clicks "AI complete notes." Gemini is given:<br>
+      · The sermon outline/title<br>
+      · The scripture references (already in the notes)<br>
+      · Any sermon recording transcript (if available)<br><br>
+      Output: fill-in-the-blank answers generated automatically. Admin reviews, edits if needed, publishes to all members. Members who missed service still get the full experience. This is the most high-value single AI feature in the entire system.
+    </div>
+  </div>
+
+  <table class="tbl">
+    <tr><th>New DB table</th><th>Key columns</th></tr>
+    <tr><td><code>sermon_notes</code></td><td><code>id, service_date, title_en, title_jp, outline_json, scripture_refs, is_published, completed_json, org_id</code></td></tr>
+    <tr><td><code>member_sermon_notes</code></td><td><code>id, profile_id, sermon_note_id, answers_json, last_saved_at, downloaded_at</code></td></tr>
+  </table>
+
+  <div class="warn-block"><strong>Static export note:</strong> The auto-save feature requires Supabase Realtime or periodic REST calls — both work with static export. PDF generation should use a Supabase Edge Function with a headless Chrome/puppeteer layer or a service like PDFShift. Do not attempt PDF generation client-side.</div>
+</div>
+
+<!-- PHASE F: ANALYTICS -->
+<div class="phase" id="phase-analytics">
+  <div class="section-title">Phase F · Analytics + AI growth intelligence</div>
+  <div class="section-sub">All 6 phases feed data into a unified church health score and AI insight engine</div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="stat-num" style="font-size:16px">Visitor</div><div class="stat-lbl">form conversion rate</div></div>
+    <div class="stat"><div class="stat-num" style="font-size:16px">QR scan</div><div class="stat-lbl">→ form completion %</div></div>
+    <div class="stat"><div class="stat-num" style="font-size:16px">Class</div><div class="stat-lbl">enrolment growth</div></div>
+    <div class="stat"><div class="stat-num" style="font-size:16px">Notes</div><div class="stat-lbl">engagement per service</div></div>
+  </div>
+
+  <table class="tbl">
+    <tr><th>Signal source</th><th>Metric</th><th>Decision it supports</th></tr>
+    <tr><td>QR scan events</td><td>Scan rate per seat section, time of scan</td><td>Which service area has most first-time visitors → direct outreach resources there</td></tr>
+    <tr><td>Visitor form + email log</td><td>Email open rate, sequence completion, conversion to member</td><td>Is the Welcome Journey working? Which step has highest drop-off?</td></tr>
+    <tr><td>Class enrollments + attendance</td><td>Track fill rate, class attendance streak, dropout point</td><td>When to open second session, which session loses students</td></tr>
+    <tr><td>Event registrations</td><td>Guest vs member ratio, social share clicks, flyer downloads</td><td>Is evangelism working? Are members inviting friends?</td></tr>
+    <tr><td>Sermon notes engagement</td><td>Notes started, completed, downloaded per service</td><td>Are members engaged with teaching? Which sermons drive most engagement?</td></tr>
+    <tr><td>Visitor → class → member path</td><td>Time between visitor form → class enrolment → member profile creation</td><td>What is the average "conversion journey" length?</td></tr>
+  </table>
+
+  <div class="ai-block">
+    <div class="ai-block-title">AI weekly sweep — existing <code>ai_ministry_insights</code> table gains new scopes</div>
+    <div class="ai-block-body">
+      Your existing weekly Gemini sweep (Edge Function, cron <code>0 21 * * 0</code>) should gain 4 new analysis scopes:<br><br>
+      <strong>visitor_intel</strong> — "This week 3 visitors expressed interest in the language class. Recommend: send class registration link to these 3 specifically."<br><br>
+      <strong>class_health</strong> — "JLPT N5 track has 40% attendance drop-off at session 5. Recommend: add mid-semester encouragement email and reduce difficulty curve."<br><br>
+      <strong>event_reach</strong> — "Easter flyer was shared 12 times from the site. 8 guest RSVPs. Recommend: follow up these 8 guests on Monday with a post-event welcome email."<br><br>
+      <strong>notes_engagement</strong> — "Only 20% of members completed sermon notes this week. Recommend: add a WhatsApp reminder before next service with a direct link to the notes page."
+    </div>
+  </div>
+</div>
+
+<!-- SCHEMA -->
+<div class="phase" id="phase-schema">
+  <div class="section-title">Complete schema map — existing + new tables</div>
+  <div class="section-sub">All tables needed across all 6 phases, mapped to codebase reality</div>
+
+  <div class="card-label" style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">Existing tables (from your codebase report)</div>
+  <table class="tbl">
+    <tr><th>Table</th><th>Current use</th><th>Needed changes</th></tr>
+    <tr><td><code>public_inquiries</code></td><td>ConnectSection form submissions</td><td>Add: <code>visitor_type, source_qr_id, ai_intent_class, brevo_contact_id, pastoral_draft</code></td></tr>
+    <tr><td><code>member_feed_items</code></td><td>Church Feed / announcements</td><td>Add: <code>downloadable_asset_url, share_enabled, event_id</code></td></tr>
+    <tr><td><code>ministry_announcements</code></td><td>Ministry-scoped posts</td><td>Minor: add <code>org_id</code> (Phase 1 SaaS)</td></tr>
+    <tr><td><code>events</code></td><td>Upcoming events display</td><td>Add: <code>flyer_image_url, rsvp_enabled, capacity, social_caption_en/jp</code></td></tr>
+    <tr><td><code>ministries</code></td><td>Ministry registry incl. language-school</td><td>No change — already correct</td></tr>
+    <tr><td><code>attendance_records</code></td><td>General attendance tracking</td><td>Reuse for class check-in via FK to <code>class_sessions</code></td></tr>
+    <tr><td><code>ai_ministry_insights</code></td><td>Weekly Gemini sweep output</td><td>Add new <code>scope</code> values: visitor_intel, class_health, event_reach, notes_engagement</td></tr>
+    <tr><td><code>profiles</code> / <code>member_stats</code></td><td>Member data</td><td>Add <code>org_id</code> (Phase 1 SaaS prerequisite)</td></tr>
+  </table>
+
+  <div class="card-label" style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">New tables to create</div>
+  <table class="tbl">
+    <tr><th>Table</th><th>Phase</th><th>Purpose</th></tr>
+    <tr><td><code>qr_scan_events</code></td><td><span class="badge badge-info">B</span></td><td>Track every QR scan by source, timestamp, outcome</td></tr>
+    <tr><td><code>email_sequences</code></td><td><span class="badge badge-danger">A</span></td><td>Track visitor email journey progress in Brevo</td></tr>
+    <tr><td><code>email_log</code></td><td><span class="badge badge-danger">A</span></td><td>Full log of every email sent for analytics</td></tr>
+    <tr><td><code>event_registrations</code></td><td><span class="badge badge-danger">D</span></td><td>Guest + member RSVPs per event</td></tr>
+    <tr><td><code>class_enrollments</code></td><td><span class="badge badge-warning">C</span></td><td>Student → track assignment + payment status</td></tr>
+    <tr><td><code>class_sessions</code></td><td><span class="badge badge-warning">C</span></td><td>Individual class dates + materials</td></tr>
+    <tr><td><code>class_attendance</code></td><td><span class="badge badge-warning">C</span></td><td>Per-student per-session check-in</td></tr>
+    <tr><td><code>class_payments</code></td><td><span class="badge badge-warning">C</span></td><td>Payment records per enrollment</td></tr>
+    <tr><td><code>sermon_notes</code></td><td><span class="badge badge-info">E</span></td><td>Pastor-uploaded outline + fill-in structure</td></tr>
+    <tr><td><code>member_sermon_notes</code></td><td><span class="badge badge-info">E</span></td><td>Per-member saved notes + answers</td></tr>
+  </table>
+
+  <div class="warn-block"><strong>All new tables must include <code>org_id UUID REFERENCES organizations(id)</code></strong> so they are SaaS-ready from day one. Add this column before the first INSERT, not after.</div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:1rem">
+    <button class="cta-btn" onclick="sendPrompt('Build the SQL migration for the sermon_notes and member_sermon_notes tables with org_id')">Generate sermon_notes SQL ↗</button>
+    <button class="cta-btn" onclick="sendPrompt('Build the SQL migration for event_registrations and extend the events table')">Generate event_registrations SQL ↗</button>
+    <button class="cta-btn" onclick="sendPrompt('Build the SQL migration for class_enrollments, class_sessions, class_attendance, class_payments')">Generate class tables SQL ↗</button>
+    <button class="cta-btn" onclick="sendPrompt('Write the Supabase Edge Function for the visitor AI pipeline: Gemini classification + Brevo trigger')">Write visitor AI Edge Function ↗</button>
+  </div>
+</div>
+</div>
+
+<script>
+function showPhase(id){
+  document.querySelectorAll('.phase').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.pnav').forEach(p=>p.classList.remove('active'));
+  document.getElementById('phase-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>

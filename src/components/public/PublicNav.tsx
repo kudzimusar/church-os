@@ -140,6 +140,7 @@ export default function PublicNav() {
       ]
     },
     { label: 'SHOP', href: '/merchandise' },
+    { label: 'ACADEMY', href: '/welcome/ministries/language-school' },
     { label: 'DEVOTION', href: '/welcome/devotion' },
   ];
 
@@ -150,7 +151,9 @@ export default function PublicNav() {
     { label: 'ABOUT', href: '/welcome/about' },
     { label: 'OUR PASTOR', href: '/welcome/our-pastor' },
     { label: 'STAFF', href: '/welcome/staff' },
+    { label: 'ACADEMY', href: '/welcome/ministries/language-school' },
     { label: 'MINISTRIES', href: '/welcome/ministries' },
+    { label: 'GIVE', href: '/welcome/give' },
   ];
 
   return (

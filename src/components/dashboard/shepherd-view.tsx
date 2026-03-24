@@ -66,6 +66,8 @@ interface DashboardData {
         totalVolunteers: number;
     } | null;
     declarationsToday: number;
+    pendingApplications: any[];
+    aiBriefing: any[];
 }
 
 interface AtRiskMember {
@@ -112,7 +114,9 @@ const INITIAL_DATA: DashboardData = {
     staffingGaps: [],
     discipleshipData: [],
     churchHealth: null,
-    declarationsToday: 0
+    declarationsToday: 0,
+    pendingApplications: [],
+    aiBriefing: []
 };
 
 /* ─── Sub-components ─── */
@@ -250,7 +254,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 sentimentRes,
                 evangelismRes,
                 ministryAnalyticsRes,
-                decCountRes
+                pendingAppsRes,
+                aiBriefingRes
             ] = await Promise.all([
                 db.from('profiles').select('*').eq('org_id', orgId),
                 db.from('member_stats').select('*').eq('org_id', orgId),
@@ -267,7 +272,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 db.from('soap_sentiment_metrics').select('*').eq('org_id', orgId),
                 db.from('evangelism_pipeline').select('*').eq('org_id', orgId),
                 db.from('ministry_analytics').select('ministry_id, health_score, avg_attendance, total_reports, salvations').eq('org_id', orgId).eq('period_type', 'monthly'),
-                db.from('user_declarations').select('*', { count: 'exact', head: true }).eq('org_id', orgId).gte('confirmed_at', startOfToday.toISOString())
+                db.from('ministry_members').select('*, profiles(name, avatar_url, org_id), ministries(name)').eq('org_id', orgId).eq('status', 'pending'),
+                db.from('ai_insights').select('*').eq('org_id', orgId).eq('status', 'active').limit(3)
             ]);
 
             const profiles = profilesRes.data || [];
@@ -282,6 +288,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const soupSentimentData = sentimentRes.data || [];
             const evangelismData = evangelismRes.data || [];
             const ministryAnalyticsData = ministryAnalyticsRes.data || [];
+            const pendingApplications = pendingAppsRes.data || [];
+            const aiBriefing = aiBriefingRes.data || [];
 
             // 2. Calculations
             const now = new Date();

@@ -15,6 +15,42 @@ type Ministry = {
   leader_name?: string;
 };
 
+type Curriculum = {
+  level: string;
+  title: string;
+  description: string;
+  topics: string[];
+};
+
+const curricula: Record<string, Curriculum[]> = {
+  'language-school': [
+    {
+      level: 'A1',
+      title: 'Intro to Japanese',
+      description: 'Survival Japanese for daily life in Japan.',
+      topics: ['Hiragana & Katakana', 'Greetings & Introduction', 'Shopping & Dining', 'Basic Directions']
+    },
+    {
+      level: 'A2',
+      title: 'Beginner Japanese',
+      description: 'Daily conversations and grammar (JLPT N5 level).',
+      topics: ['Verb Conjugation', 'Time & Dates', 'Simple Past Tense', 'Particle Mastery']
+    },
+    {
+      level: 'B1',
+      title: 'Higher Beginner',
+      description: 'Engaging in social situations (JLPT N4 level).',
+      topics: ['Honorifics (Keigo)', 'Conditional Forms', 'Giving Opinions', 'Kanji (150-300)']
+    },
+    {
+      level: 'B2',
+      title: 'Intermediate',
+      description: 'Professional and deeper communication (JLPT N3 level).',
+      topics: ['Advanced Grammar', 'Reading News', 'Business Japanese', 'Discussion Skills']
+    }
+  ]
+};
+
 const fallbacks: Ministry[] = [
   { name: "Children's Ministry", slug: "kids-ministry",
     description: "Nurturing the next generation in faith." },
@@ -210,6 +246,54 @@ export default function MinistryClient({ slug }: { slug: string }) {
               </div>
             )}
 
+            {/* Language School Curriculum Section */}
+            {slug === 'language-school' && (
+              <div className="pt-16 space-y-12">
+                <div className="flex flex-col gap-4 border-b border-[var(--border)] pb-8">
+                   <h2 className="text-4xl font-black uppercase tracking-tight" style={{ color: 'var(--foreground)' }}>Curriculum</h2>
+                   <p className="text-sm font-medium italic" style={{ color: 'var(--muted-foreground)' }}>Our structured approach to language mastery for the Kingdom.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {curricula['language-school'].map((c) => (
+                    <div key={c.level} className="p-10 rounded-[2.5rem] border transition-all hover:scale-[1.02]" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+                      <div className="flex items-center gap-4 mb-6">
+                        <div className="w-16 h-16 rounded-2xl bg-[var(--jkc-navy)] flex items-center justify-center text-white font-black text-2xl shadow-lg">
+                          {c.level}
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-black" style={{ color: 'var(--foreground)' }}>{c.title}</h3>
+                          <p className="text-[10px] uppercase font-black tracking-widest text-[var(--jkc-gold)]">{c.description}</p>
+                        </div>
+                      </div>
+                      <ul className="space-y-4">
+                        {c.topics.map((t, idx) => (
+                           <li key={idx} className="flex items-center gap-3 text-sm font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                              <div className="w-1.5 h-1.5 rounded-full bg-[var(--jkc-gold)]" />
+                              {t}
+                           </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Tuition Strip */}
+                <div className="p-12 rounded-[3rem] bg-[var(--jkc-navy)] text-white flex flex-col md:flex-row items-center justify-between gap-8 border border-white/10 shadow-2xl">
+                   <div className="space-y-4 text-center md:text-left">
+                      <p className="text-[10px] font-black tracking-[0.4em] text-[var(--jkc-gold)] uppercase">ENROLLMENT & FEES</p>
+                      <h3 className="text-3xl font-black italic underline decoration-[var(--jkc-gold)] underline-offset-8">¥15,000 / Course Cycle</h3>
+                      <p className="text-sm opacity-60 font-medium">Includes course material and certification upon completion.</p>
+                   </div>
+                   <button 
+                     onClick={() => document.getElementById('enroll-form')?.scrollIntoView({ behavior: 'smooth' })}
+                     className="px-12 py-6 rounded-2xl bg-[var(--jkc-gold)] text-[var(--jkc-navy)] font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-all"
+                   >
+                     Apply for Admission
+                   </button>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-6">
                <div className="rounded-3xl p-8 space-y-2 border" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
                   <p className="text-[10px] font-black tracking-widest text-[var(--jkc-gold)] uppercase">FREQUENCY</p>
@@ -224,13 +308,16 @@ export default function MinistryClient({ slug }: { slug: string }) {
             </div>
           </div>
 
-          {/* Inquiry Form */}
-          <div className="rounded-[3rem] p-12 border shadow-2xl relative overflow-hidden" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+          <div id="enroll-form" className="rounded-[3rem] p-12 border shadow-2xl relative overflow-hidden" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
             <div className="absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full" style={{ background: 'rgba(245,166,35,0.08)' }} />
             <div className="relative space-y-8">
               <div className="space-y-2 text-center">
-                 <h2 className="text-3xl font-black" style={{ color: 'var(--foreground)' }}>Join this Ministry</h2>
-                 <p className="text-sm italic font-medium" style={{ color: 'var(--muted-foreground)' }}>Interested in serving? Let us know.</p>
+                 <h2 className="text-3xl font-black" style={{ color: 'var(--foreground)' }}>
+                   {slug === 'language-school' ? 'Enroll in Academy' : 'Join this Ministry'}
+                 </h2>
+                 <p className="text-sm italic font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                   {slug === 'language-school' ? 'Start your learning journey today.' : 'Interested in serving? Let us know.'}
+                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">

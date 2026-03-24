@@ -126,6 +126,7 @@ export default function PublicFooter() {
                 { label: 'Shop', href: '/merchandise' },
                 { label: 'About', href: '/welcome/about' },
                 { label: 'Pastor', href: '/welcome/our-pastor' },
+                { label: 'Academy', href: '/welcome/ministries/language-school' },
                 { label: 'Staff', href: '/welcome/staff' },
               ].map(link => (
                 <Link key={link.label} href={link.href}

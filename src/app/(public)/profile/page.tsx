@@ -501,7 +501,7 @@ export default function ProfileHub() {
                 ministry_name: newMinistry,
                 ministry_role: newMinistryRoleTitle || 'Member',
                 status: 'pending',
-                joined_date: new Date().toISOString()
+                joined_at: new Date().toISOString()
             }]).select().single();
             if (error) throw error;
             setMinistryRoles([...ministryRoles, data]);
@@ -509,6 +509,28 @@ export default function ProfileHub() {
             toast.success("Ministry application sent!");
         } catch (e: any) {
             toast.error(e.message || "Error linking role");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleJoinMinistry = async (mName: string) => {
+        if (!user || !profile?.org_id) return;
+        setIsSaving(true);
+        try {
+            const { data, error } = await supabase.from('ministry_members').insert([{
+                user_id: user.id,
+                org_id: profile.org_id,
+                ministry_name: mName,
+                ministry_role: 'Member',
+                status: 'pending',
+                joined_at: new Date().toISOString()
+            }]).select().single();
+            if (error) throw error;
+            setMinistryRoles([...ministryRoles, data]);
+            toast.success(`${mName} application sent!`);
+        } catch (e: any) {
+            toast.error(e.message || "Error joining team");
         } finally {
             setIsSaving(false);
         }
@@ -1475,8 +1497,13 @@ export default function ProfileHub() {
                                                                         </div>
                                                                         <p className="font-black text-sm">{rec}</p>
                                                                     </div>
-                                                                    <Button variant="ghost" className="text-[10px] font-black text-[var(--primary)] uppercase tracking-widest hover:bg-transparent">
-                                                                        Join Team <ChevronRight className="w-4 h-4 ml-1" />
+                                                                    <Button 
+                                                                        variant="ghost" 
+                                                                        disabled={isSaving}
+                                                                        onClick={() => handleJoinMinistry(rec)}
+                                                                        className="text-[10px] font-black text-[var(--primary)] uppercase tracking-widest hover:bg-transparent"
+                                                                    >
+                                                                        {isSaving ? "Joining..." : "Join Team"} <ChevronRight className="w-4 h-4 ml-1" />
                                                                     </Button>
                                                                 </div>
                                                             ))
