@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { format } from 'date-fns';
+import { Calendar, Tag } from 'lucide-react';
 
 export default function SermonSection() {
   const [sermon, setSermon] = useState<any>(null);
@@ -8,8 +10,8 @@ export default function SermonSection() {
     supabase
       .from('public_sermons')
       .select('*')
-      .eq('is_featured', true)
       .eq('status', 'published')
+      .order('is_featured', { ascending: false })
       .order('date', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -23,6 +25,8 @@ export default function SermonSection() {
   const title    = sermon.title;
   const speaker  = sermon.speaker || "Guest Speaker";
   const watchUrl = sermon.youtube_url;
+  const dateStr  = sermon.date ? format(new Date(sermon.date), 'MMMM dd, yyyy') : '';
+  const series   = sermon.series;
 
   return (
     <section id="watch" data-section="sermon" className="py-32 px-6 scroll-mt-20"
@@ -57,36 +61,51 @@ export default function SermonSection() {
                style={{ color: 'var(--jkc-gold)' }}>
               LATEST SERMON
             </p>
-            <h2 className="text-3xl md:text-4xl font-serif italic font-black leading-snug"
-                style={{ color: 'var(--foreground)' }}>
+            <h2 className="text-4xl md:text-6xl font-sans font-black leading-[0.9] tracking-tighter uppercase"
+                 style={{ color: 'var(--foreground)' }}>
+              <span className="font-serif italic font-medium normal-case text-muted-foreground mr-4">Theme:</span>
               {title}
             </h2>
+            <div className="flex flex-wrap items-center gap-6 mt-6">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-2">
+                      <Calendar size={12} className="text-primary" /> {dateStr}
+                  </span>
+                </div>
+                {series && (
+                    <div className="flex flex-col border-l border-border pl-6">
+                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 flex items-center gap-2">
+                          <Tag size={12} className="text-primary" /> {series}
+                      </span>
+                    </div>
+                )}
+            </div>
           </div>
 
-          <div className="rounded-xl px-5 py-4 inline-block"
+          <div className="rounded-3xl p-8 inline-block relative overflow-hidden group/speaker"
                style={{ background: 'var(--section-alt)', border: '1px solid var(--border)' }}>
-            <p className="text-[10px] font-black tracking-widest uppercase m-0"
-               style={{ color: 'var(--muted-foreground)' }}>
-              SPEAKER
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover/speaker:opacity-10 transition-opacity">
+                <Users size={80} />
+            </div>
+            <p className="text-[10px] font-black tracking-widest uppercase m-0 text-primary">
+              MINISTERING
             </p>
-            <p className="text-xl font-black mt-1 m-0" style={{ color: 'var(--jkc-navy)' }}>
+            <p className="text-2xl md:text-3xl font-black mt-2 m-0 uppercase italic tracking-tighter" style={{ color: 'var(--jkc-navy)' }}>
               {speaker}
             </p>
           </div>
 
-          <p className="text-base leading-relaxed max-w-md"
+          <p className="text-lg leading-relaxed max-w-md font-medium italic opacity-60"
              style={{ color: 'var(--muted-foreground)' }}>
             Watch our latest message and discover how we are growing together in faith and purpose.
           </p>
 
-          <div className="pt-2">
+          <div className="pt-6">
             <a
-              href={watchUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-navy inline-flex items-center gap-3 rounded-full px-10 py-5 text-xs font-black tracking-[0.2em] uppercase"
+              href="/welcome/watch"
+              className="bg-[var(--jkc-navy)] text-white hover:bg-black inline-flex items-center gap-4 rounded-[2rem] px-12 py-5 text-xs font-black tracking-[0.3em] uppercase transition-all shadow-[0_20px_50px_rgba(var(--jkc-navy-rgb),0.2)] hover:scale-[1.02]"
             >
-              WATCH MORE ON YOUTUBE →
+              BROWSE SERMON LIBRARY →
             </a>
           </div>
         </div>

@@ -258,7 +258,8 @@ export default function SermonManagementPage() {
           sermon_id: sermonData.id,
           org_id: orgId,
           type,
-          url: publicUrl
+          url: publicUrl,
+          status: 'active'
         });
       };
 
@@ -291,6 +292,7 @@ export default function SermonManagementPage() {
       setVideoFile(null);
       setAudioFile(null);
       setThumbnailFile(null);
+      setNotesFile(null);
       fetchSermons();
     } catch (error: any) {
       toast.error(error.message || 'Failed to post sermon');

@@ -258,12 +258,12 @@ export default function WatchClient() {
   }, [activeSermon, loading, liveStream]);
   const filteredSermons = sermons
     .filter(s => s.id !== currentSermon?.id)
-    .filter(s => filter === 'all' || s.series === filter)
+    .filter(s => filter === 'all' || (s.series && s.series === filter))
     .filter(s => 
-      s.title.toLowerCase().includes(search.toLowerCase()) || 
-      s.speaker.toLowerCase().includes(search.toLowerCase()) ||
-      s.series.toLowerCase().includes(search.toLowerCase()) ||
-      (s.transcript_text && s.transcript_text.toLowerCase().includes(search.toLowerCase()))
+      (s.title?.toLowerCase() || '').includes(search.toLowerCase()) || 
+      (s.speaker?.toLowerCase() || '').includes(search.toLowerCase()) ||
+      (s.series?.toLowerCase() || '').includes(search.toLowerCase()) ||
+      (s.transcript_text?.toLowerCase() || '').includes(search.toLowerCase())
     );
 
   return (
@@ -320,36 +320,56 @@ export default function WatchClient() {
             <section className="space-y-12">
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="space-y-2 text-center md:text-left">
-                  <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                    <span className="bg-primary/10 text-primary text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-primary/20 flex items-center gap-2">
+                  <div className="flex flex-col md:flex-row md:items-center justify-center md:justify-start gap-3 mb-4">
+                    <span className="bg-primary/10 text-primary text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.3em] border border-primary/20 flex items-center gap-2 w-fit">
                          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                         NOW STREAMING
+                         FEATURED MESSAGE
                     </span>
                     {currentSermon.series && (
-                        <span className="text-[10px] font-black text-white/30 uppercase tracking-widest flex items-center gap-2">
-                            / SERIES / <span className="text-white/60">{currentSermon.series}</span>
+                        <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] flex items-center gap-2">
+                             / <span className="text-white/60">{currentSermon.series}</span>
                         </span>
                     )}
                   </div>
-                  <h2 className="text-3xl md:text-5xl font-black text-white italic tracking-tight uppercase leading-tight mt-4">
+                  <h2 className="text-4xl md:text-7xl font-black text-white italic tracking-tighter uppercase leading-[0.85] mt-4 max-w-4xl">
                     {currentSermon.title}
                   </h2>
+                  <div className="flex flex-wrap items-center gap-8 mt-10">
+                    <div className="flex flex-col group/meta">
+                        <span className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-2 group-hover/meta:text-primary transition-colors">Ministering</span>
+                        <span className="text-xl font-black text-primary uppercase italic tracking-tighter">{currentSermon.speaker || 'Pastor Marcel Jonte'}</span>
+                    </div>
+                    <div className="w-px h-12 bg-white/10 hidden md:block" />
+                    <div className="flex flex-col group/meta">
+                        <span className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-2 group-hover/meta:text-white/60 transition-colors">Released</span>
+                        <span className="text-xl font-black text-white/80 uppercase tracking-tighter">{format(new Date(currentSermon.date), 'MMMM dd, yyyy')}</span>
+                    </div>
+                    {currentSermon.scripture && (
+                        <>
+                            <div className="w-px h-12 bg-white/10 hidden md:block" />
+                            <div className="flex flex-col group/meta">
+                                <span className="text-[9px] font-black text-white/30 uppercase tracking-widest mb-2 group-hover/meta:text-white/60 transition-colors">Scripture</span>
+                                <span className="text-xl font-black text-white/60 uppercase italic tracking-tighter">{currentSermon.scripture}</span>
+                            </div>
+                        </>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-4">
                      <button 
                         onClick={() => toggleInteraction('like')} 
-                        className={`p-4 rounded-2xl hover:bg-white/10 transition-all border ${isLiked ? 'bg-red-500/20 border-red-500/30' : 'bg-white/5 border-white/10'} group`}
+                        className={`p-6 rounded-[2rem] hover:bg-white/10 transition-all border ${isLiked ? 'bg-red-500/20 border-red-500/30' : 'bg-white/5 border-white/10'} group`}
                      >
-                        <Heart size={24} className={`${isLiked ? 'text-red-500 scale-110' : 'text-white/40 group-hover:text-red-500'} transition-all`} fill={isLiked ? 'currentColor' : 'none'} />
+                        <Heart size={32} className={`${isLiked ? 'text-red-500 scale-110' : 'text-white/40 group-hover:text-red-500'} transition-all`} fill={isLiked ? 'currentColor' : 'none'} />
                      </button>
                      <button 
                         onClick={() => toggleInteraction('bookmark')} 
-                        className={`p-4 rounded-2xl hover:bg-white/10 transition-all border ${isBookmarked ? 'bg-primary/20 border-primary/30' : 'bg-white/5 border-white/10'} group`}
+                        className={`p-6 rounded-[2rem] hover:bg-white/10 transition-all border ${isBookmarked ? 'bg-primary/20 border-primary/30' : 'bg-white/5 border-white/10'} group`}
                      >
-                        <Bookmark size={24} className={`${isBookmarked ? 'text-primary scale-110' : 'text-white/40 group-hover:text-primary'} transition-all`} fill={isBookmarked ? 'currentColor' : 'none'} />
+                        <Bookmark size={32} className={`${isBookmarked ? 'text-primary scale-110' : 'text-white/40 group-hover:text-primary'} transition-all`} fill={isBookmarked ? 'currentColor' : 'none'} />
                      </button>
-                     <button onClick={handleShare} className="bg-white/5 p-4 rounded-2xl hover:bg-white/10 transition-all border border-white/10 group">
-                        <Share2 size={24} className="text-white/40 group-hover:text-primary transition-colors" />
+                     <button onClick={handleShare} className="bg-white/5 p-6 rounded-[2rem] hover:bg-white/10 transition-all border border-white/10 group">
+                        <Share2 size={32} className="text-white/40 group-hover:text-primary transition-colors" />
                      </button>
                 </div>
               </div>
@@ -357,12 +377,32 @@ export default function WatchClient() {
               <div className="flex justify-center md:justify-start">
                     <button 
                         onClick={() => setShowResponseModal(true)}
-                        className="bg-primary hover:bg-primary/90 text-white px-12 py-5 rounded-[2rem] text-xs font-black tracking-[0.3em] uppercase transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_20px_50px_rgba(var(--primary-rgb),0.3)] flex items-center gap-3 group"
+                        className="bg-primary hover:bg-primary/90 text-white px-16 py-6 rounded-[2.5rem] text-xs font-black tracking-[0.4em] uppercase transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_30px_60px_rgba(var(--primary-rgb),0.3)] flex items-center gap-4 group"
                     >
-                        <Star size={16} className="group-hover:rotate-45 transition-transform" />
+                        <Star size={20} className="group-hover:rotate-45 transition-transform" />
                         Respond to the Word
                     </button>
               </div>
+
+              {/* JSON-LD Structured Data */}
+              <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                  __html: JSON.stringify({
+                    "@context": "https://schema.org",
+                    "@type": "VideoObject",
+                    "name": currentSermon.title,
+                    "description": currentSermon.transcript_text?.slice(0, 160) || `Sermon by ${currentSermon.speaker}`,
+                    "thumbnailUrl": [`https://img.youtube.com/vi/${currentSermon.youtube_url.split('v=')[1] || currentSermon.youtube_url.split('/').pop()}/maxresdefault.jpg`],
+                    "uploadDate": currentSermon.date,
+                    "author": {
+                      "@type": "Person",
+                      "name": currentSermon.speaker
+                    },
+                    "contentUrl": currentSermon.youtube_url
+                  })
+                }}
+              />
               
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-3 glass rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl relative">
@@ -466,7 +506,9 @@ export default function WatchClient() {
         {currentSermon && !liveStream && (         <section className="space-y-8 py-12 border-y border-white/5">
               <div className="flex items-center justify-between">
                  <h3 className="text-xs font-black tracking-[0.3em] text-white/40 uppercase">Recommended For You</h3>
-                 {currentSermon.series && <span className="text-[10px] font-black text-primary uppercase">MORE FROM {currentSermon.series}</span>}
+                 <span className="text-[10px] font-black text-primary uppercase">
+                    {currentSermon.series ? `MORE FROM ${currentSermon.series}` : 'PREVIOUS SERVICES'}
+                 </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {sermons
@@ -561,16 +603,35 @@ export default function WatchClient() {
               <div key={s.id} className="group glass rounded-[2rem] p-8 border border-white/10 hover:border-[var(--primary)]/30 transition-all flex flex-col justify-between">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <p 
-                      suppressHydrationWarning
-                      className="text-[10px] tracking-[0.3em] font-black text-[var(--primary)] opacity-60 uppercase"
-                    >
-                      {new Date(s.date).toLocaleDateString()}
-                    </p>
-                    {s.series && <span className="bg-[var(--primary)]/10 text-[var(--primary)] text-[9px] font-black tracking-widest px-3 py-1 rounded-full uppercase">{s.series}</span>}
+                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                        <PlayCircle size={16} />
+                    </div>
+                    <div className="flex flex-col text-right">
+                        <p 
+                          suppressHydrationWarning
+                          className="text-[10px] tracking-[0.1em] font-black text-white/40 uppercase"
+                        >
+                          {s.date ? format(new Date(s.date), 'MMM dd, yyyy') : 'No Date'}
+                        </p>
+                        {s.series && <span className="text-[8px] font-black tracking-widest text-primary/50 uppercase mt-1">{s.series}</span>}
+                    </div>
                   </div>
-                  <h3 className="text-xl font-black leading-snug group-hover:text-[var(--primary)] transition-colors">{s.title}</h3>
-                  <p className="text-sm text-white/40 font-medium italic">{s.speaker}</p>
+                  <h3 className="text-xl font-black leading-tight group-hover:text-[var(--primary)] transition-colors uppercase italic tracking-tighter">{s.title}</h3>
+                  <div className="flex items-center gap-3 pt-2">
+                     <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/20">
+                        <User size={12} />
+                     </div>
+                     <div>
+                        <p className="text-[9px] font-black text-white/40 uppercase tracking-widest leading-none">Speaker</p>
+                        <p className="text-xs font-black text-white/80 mt-1 uppercase">{s.speaker || 'Pastor Marcel Jonte'}</p>
+                     </div>
+                  </div>
+                  {s.scripture && (
+                    <div className="mt-4 p-3 bg-white/2 border border-white/5 rounded-2xl">
+                        <p className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] mb-1">Scripture</p>
+                        <p className="text-[10px] font-bold text-white/40 uppercase">{s.scripture}</p>
+                    </div>
+                  )}
                 </div>
                 <div className="pt-8">
                   <button 
