@@ -8,7 +8,7 @@ import {
     MessageCircle, AlertCircle, Plus, Save, Clock,
     Camera, MapPin, Globe, Milestone, Copy, LayoutDashboard, Settings, CheckCircle2, LogOut,
     Briefcase, Music, Calendar, CalendarCheck, Coins, Activity, ChevronRight, Sparkles, XCircle,
-    TrendingUp, Newspaper, ArrowUpRight, Landmark, Smartphone, ShoppingBag, Package
+    TrendingUp, Newspaper, ArrowUpRight, Landmark, Smartphone, ShoppingBag, Package, Loader2
 } from "lucide-react";
 import { ShopService } from "@/lib/shop-service";
 import { Button } from "@/components/ui/button";
