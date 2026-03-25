@@ -15,7 +15,7 @@ export function AttendanceReconciliationCard() {
             setLoading(true);
             try {
                 const { data, error } = await supabase
-                    .from('vw_attendance_reconciliation_new')
+                    .from('vw_attendance_reconciliation')
                     .select('*')
                     .order('event_date', { ascending: false })
                     .limit(1);
