@@ -17,6 +17,9 @@ export const PILEngine = {
             disengagement: 0,
             geo: 0,
             volunteer: 0,
+            crisis: 0,
+            retention: 0,
+            isolation: 0,
             ai_insights: 0,
         };
 
@@ -65,8 +68,79 @@ export const PILEngine = {
                     results.geo++;
                 }
             }
+            
+            // 3. MODEL: Crisis Early Warning
+            const { data: crisisAlerts } = await supabase
+                .from('vw_crisis_early_warning')
+                .select('*')
+                .eq('org_id', orgId);
 
-            // 3. PHASE 3: MINISTRY CONTEXT COLLECTION
+            if (crisisAlerts) {
+                for (const crisis of crisisAlerts) {
+                    await supabase.from('prophetic_insights').upsert({
+                        org_id: orgId,
+                        category: 'crisis',
+                        subject_id: crisis.user_id,
+                        probability_score: crisis.crisis_score,
+                        risk_level: crisis.crisis_score >= 85 ? 'critical' : 'high',
+                        insight_title: `Crisis Alert: ${crisis.name}`,
+                        insight_description: `${crisis.name} flagged for crisis: ${crisis.days_silent}d silence, ${crisis.active_crisis_prayers} active crisis prayers, ${crisis.negative_soap_sentiment_count} negative SOAP entries.`,
+                        recommended_action: `Immediate pastoral intervention required.`,
+                        metadata: { score: crisis.crisis_score, prayers: crisis.active_crisis_prayers, soap: crisis.negative_soap_sentiment_count }
+                    }, { onConflict: 'org_id,category,subject_id' });
+                    results.crisis++;
+                }
+            }
+
+            // 4. MODEL: New Member 90-Day Health
+            const { data: retentionAlerts } = await supabase
+                .from('vw_new_member_90day_health')
+                .select('*')
+                .eq('org_id', orgId)
+                .eq('health_status', 'At Risk');
+
+            if (retentionAlerts) {
+                for (const member of retentionAlerts) {
+                    await supabase.from('prophetic_insights').upsert({
+                        org_id: orgId,
+                        category: 'retention',
+                        subject_id: member.user_id,
+                        probability_score: member.attrition_risk_score,
+                        risk_level: 'high',
+                        insight_title: `Onboarding Risk: ${member.name}`,
+                        insight_description: `${member.name} joined < 90 days ago but has zero group/ministry connections and low attendance.`,
+                        recommended_action: `Assign a dedicated welcome buddy for connection.`,
+                        metadata: { joined_at: member.joined_at, attendance: member.recent_attendance }
+                    }, { onConflict: 'org_id,category,subject_id' });
+                    results.retention++;
+                }
+            }
+
+            // 5. MODEL: Community Isolation Risk
+            const { data: isolatedMembers } = await supabase
+                .from('vw_community_isolation_risk')
+                .select('*')
+                .eq('org_id', orgId)
+                .limit(10);
+
+            if (isolatedMembers) {
+                for (const member of isolatedMembers) {
+                    await supabase.from('prophetic_insights').upsert({
+                        org_id: orgId,
+                        category: 'isolation',
+                        subject_id: member.user_id,
+                        probability_score: 100,
+                        risk_level: 'medium',
+                        insight_title: `Isolation Risk: ${member.name}`,
+                        insight_description: `${member.name} has zero ministry or small group connections. Isolated members are high risk for attrition.`,
+                        recommended_action: `Invite to a Bible Study group matching their interests.`,
+                        metadata: { joined_at: member.joined_at }
+                    }, { onConflict: 'org_id,category,subject_id' });
+                    results.isolation++;
+                }
+            }
+
+            // 6. PHASE 3: MINISTRY CONTEXT COLLECTION
             console.log("🏛️ PIL Engine: Collecting ministry context...");
 
             const { data: ministryData } = await supabase
@@ -110,6 +184,14 @@ export const PILEngine = {
 
             const memberDataSummary = `Total Members: ${memberSummary?.length || 0} | Avg Discipleship: ${avgDiscipleship}/100`;
 
+            const crisisContext = (crisisAlerts || []).map(c => 
+                `CRITICAL: ${c.name} (Score: ${c.crisis_score}) | Silent: ${c.days_silent}d | Prayers: ${c.active_crisis_prayers}`
+            ).join('\n');
+
+            const onboardingContext = (retentionAlerts || []).map(r => 
+                `RETENTION: ${r.name} (Status: ${r.health_status}) | Joined: ${r.joined_at}`
+            ).join('\n');
+
             const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
             if (!GEMINI_API_KEY) {
                 console.warn("⚠️ No GEMINI_API_KEY — skipping AI sweep");
@@ -126,6 +208,12 @@ ${skillGapContext}
 
 Available Talent Pool (Members with skills not in matching ministries):
 ${talentContext}
+
+Crisis Early Warnings:
+${crisisContext}
+
+New Member Onboarding Risks:
+${onboardingContext}
 
 Output JSON: { "insights": [{ "subject": "e.g., Media Ministry", "summary": "Short title", "detail": "Description", "recommended_action": "Action to take", "insight_type": "opportunity", "urgency": "this_week" }] }`;
 

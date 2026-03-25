@@ -20,6 +20,7 @@ import {
 import { UsherReportModal } from "./UsherReportModal";
 import { AttendanceReconciliationCard } from "./AttendanceReconciliationCard";
 import { MinistryOnboarding } from "./MinistryOnboarding";
+import { LeadershipForecastsCard } from "./LeadershipForecastsCard";
 import { toast } from "sonner";
 import { CRITICAL_MINISTRIES, MINISTRY_OPTIONS } from "@/lib/constants";
 import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
@@ -640,6 +641,9 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
 
                 {/* Attendance Reconciliation Card (Integrated Digital Ministry Data) */}
                 <AttendanceReconciliationCard />
+
+                {/* Leadership Forecasts (Integrated Rule-Based Intelligence) */}
+                <LeadershipForecastsCard orgId={orgId} />
             </div>
 
             {/* ─── ROW 2: SPIRITUAL HEALTH ANALYTICS ─── */}

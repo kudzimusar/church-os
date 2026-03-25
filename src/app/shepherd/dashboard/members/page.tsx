@@ -55,9 +55,29 @@ export default function MembersPage() {
 
     const { orgId } = useAdminCtx();
 
+    const [memberInsights, setMemberInsights] = useState<any[]>([]);
+
     useEffect(() => {
         if (orgId) fetchMembers();
     }, [orgId]);
+
+    useEffect(() => {
+        if (selectedMember && orgId) {
+            fetchMemberInsights(selectedMember.id);
+        } else {
+            setMemberInsights([]);
+        }
+    }, [selectedMember, orgId]);
+
+    async function fetchMemberInsights(memberId: string) {
+        const { data } = await supabase
+            .from('prophetic_insights')
+            .select('*')
+            .eq('org_id', orgId)
+            .eq('subject_id', memberId)
+            .eq('is_acknowledged', false);
+        setMemberInsights(data || []);
+    }
 
     async function fetchMembers() {
         if (!orgId) return;
@@ -561,6 +581,38 @@ export default function MembersPage() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Prophetic Intelligence Section */}
+                            {memberInsights.length > 0 && (
+                                <div className="space-y-4 pt-6 border-t border-border">
+                                    <div className="flex items-center gap-2">
+                                        <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                                        <h4 className="text-xs font-black text-primary uppercase tracking-[0.2em]">Leadership Forecasts</h4>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {memberInsights.map(insight => (
+                                            <div key={insight.id} className={`p-4 rounded-2xl border ${insight.risk_level === 'critical' ? 'bg-red-500/5 border-red-500/20' : 'bg-primary/5 border-primary/20'}`}>
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <p className={`text-[10px] font-black uppercase tracking-widest ${insight.risk_level === 'critical' ? 'text-red-500' : 'text-primary'}`}>
+                                                        {insight.category.replace('_', ' ')} Alert
+                                                    </p>
+                                                    {insight.probability_score && (
+                                                        <span className="text-[9px] font-black text-muted-foreground/50">{insight.probability_score}% Prob.</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm font-bold text-foreground mb-1">{insight.insight_title}</p>
+                                                <p className="text-xs text-muted-foreground leading-relaxed mb-3">{insight.insight_description}</p>
+                                                {insight.recommended_action && (
+                                                    <div className="bg-background/50 rounded-xl p-3 border border-border/50">
+                                                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-wider mb-1">Recommended Action</p>
+                                                        <p className="text-[10px] font-bold text-foreground/80">{insight.recommended_action}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>

@@ -50,6 +50,7 @@ const MINISTRY_IMAGES: Record<string, string> = {
 export default function MinistriesSection() {
   const { isDark } = usePublicTheme();
   const [ministries, setMinistries] = useState<Ministry[]>(fallbacks);
+  const [skillGaps, setSkillGaps] = useState<any[]>([]);
 
   useEffect(() => {
     supabase
@@ -61,6 +62,14 @@ export default function MinistriesSection() {
         if (data && data.length > 0) {
           setMinistries(data);
         }
+      });
+
+    // Fetch skill gaps for recruiting badges
+    supabase
+      .from('vw_ministry_skill_gaps')
+      .select('*')
+      .then(({ data }) => {
+        setSkillGaps(data || []);
       });
   }, []);
 
@@ -118,6 +127,11 @@ export default function MinistriesSection() {
                     <h3 className="text-lg font-black uppercase tracking-wide text-white drop-shadow-lg">
                       {m.name}
                     </h3>
+                    {skillGaps.some(g => g.ministry_id === m.id && g.skilled_volunteers_count < 2) && (
+                      <div className="bg-amber-500 text-slate-900 text-[8px] font-black uppercase px-2 py-0.5 rounded-full inline-block mt-1 animate-pulse">
+                        Urgently Recruiting
+                      </div>
+                    )}
                   </div>
                   <div className="overflow-hidden h-0 group-hover:h-12 transition-all duration-300">
                     <p className="text-[11px] leading-relaxed text-slate-200 line-clamp-2">
