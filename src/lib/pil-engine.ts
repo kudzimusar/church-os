@@ -1,4 +1,4 @@
-import { supabaseAdmin as supabase } from "./supabase-admin";
+import { supabase } from "./supabase";
 
 /**
  * PIL (Prophetic Intelligence Layer) Engine

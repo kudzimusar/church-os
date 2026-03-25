@@ -280,7 +280,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 db.from('evangelism_pipeline').select('*').eq('org_id', orgId),
                 db.from('ministry_analytics').select('ministry_id, health_score, avg_attendance, total_reports, salvations').eq('org_id', orgId).eq('period_type', 'monthly'),
                 db.from('ministry_members').select('*, profiles(name, avatar_url, org_id), ministries(name)').eq('org_id', orgId).eq('status', 'pending'),
-                db.from('ai_insights').select('*').eq('org_id', orgId).eq('status', 'active').limit(3),
+                db.from('prophetic_insights').select('*').eq('org_id', orgId).eq('is_acknowledged', false).order('generated_at', { ascending: false }).limit(3),
                 db.from('user_declarations').select('*', { count: 'exact', head: true }).eq('org_id', orgId).gte('confirmed_at', startOfToday.toISOString())
             ]);
 
@@ -297,7 +297,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const evangelismData = evangelismRes.data || [];
             const ministryAnalyticsData = ministryAnalyticsRes.data || [];
             const pendingApplications = pendingAppsRes.data || [];
-            const aiBriefing = aiBriefingRes.data || [];
+            // aiBriefing is now mapped below to include real prophetic insights schema
 
             // 2. Calculations
             const now = new Date();
@@ -344,14 +344,21 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 { name: 'Leaders', value: ministryMembers.filter(m => m.is_leader).length }
             ];
 
-            // Alerts Mapping
-            const mappedAlerts = propheticInsights.map((i: any) => ({
+            // 10. AI Briefing & Intelligence Mapping
+            const aiBriefing = (aiBriefingRes.data || []).map((i: any) => ({
+                title: i.insight_title,
+                insight: i.insight_description,
+                type: i.category,
+                priority: i.risk_level === 'critical' || i.risk_level === 'high' ? 'high' : 'normal'
+            }));
+
+            // High priority alerts for the "Attention Required" list
+            const mappedAlerts = (propheticRes.data || []).filter((i: any) => i.category === 'drop_off' || i.risk_level === 'critical').map((i: any) => ({
                 id: i.id,
                 name: i.insight_title.replace('Disengagement Risk: ', '').split(' ')[0],
-                email: '',
                 days_inactive: i.metadata?.days_silent || 0,
-                risk_level: i.risk_level || 'high',
-                current_streak: 0
+                current_streak: i.metadata?.previous_streak || 0,
+                risk_level: i.risk_level || 'critical'
             }));
 
             // Skills Mapping

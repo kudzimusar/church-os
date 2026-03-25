@@ -1,66 +1,34 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, RefreshCw, AlertTriangle, TrendingUp, Heart, Users, ChevronRight, ChevronLeft, Zap } from "lucide-react";
+import { Sparkles, RefreshCw, AlertTriangle, TrendingUp, ChevronRight, ChevronLeft, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { PILEngine } from "@/lib/pil-engine";
+import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
 
 interface AiInsight {
     id: string;
-    insight_type: string;
-    title: string;
-    description: string;
-    suggested_action: string;
-    priority: 'critical' | 'warning' | 'info';
+    category: string;
+    insight_title: string;
+    insight_description: string;
+    recommended_action: string;
+    risk_level: string;
     generated_at: string;
 }
 
-const MOCK_INSIGHTS: AiInsight[] = [
-    {
-        id: '1', insight_type: 'daily',
-        title: '12 Members Inactive 7+ Days',
-        description: 'Devotional engagement has dropped sharply among 12 members who had active streaks just 2 weeks ago.',
-        suggested_action: 'Assign 3 pastoral leaders to make personal check-in calls this week.',
-        priority: 'critical', generated_at: new Date().toISOString()
-    },
-    {
-        id: '2', insight_type: 'daily',
-        title: 'Financial Stress Prayers +40%',
-        description: 'Prayer requests mentioning financial difficulty have surged 40% vs. last week across all fellowship groups.',
-        suggested_action: 'Prepare a sermon or workshop on biblical financial stewardship within 2 weeks.',
-        priority: 'warning', generated_at: new Date().toISOString()
-    },
-    {
-        id: '3', insight_type: 'weekly',
-        title: 'Youth Attendance Up 24%',
-        description: 'Youth ministry attendance has increased 24% month-over-month. Small group participation is at an all-time high.',
-        suggested_action: 'Expand youth leadership team. Consider adding a second youth service slot.',
-        priority: 'info', generated_at: new Date().toISOString()
-    },
-    {
-        id: '4', insight_type: 'weekly',
-        title: 'SOAP Anxiety Theme Rising',
-        description: 'AI analysis of this week\'s SOAP journals shows anxiety-themed language in 31% of entries, up from 18% last week.',
-        suggested_action: 'Incorporate a church-wide prayer and fasting day focused on peace and trust in God.',
-        priority: 'warning', generated_at: new Date().toISOString()
-    },
-    {
-        id: '5', insight_type: 'monthly',
-        title: '3 New Families Registered',
-        description: 'Three new household units joined through the app and attended at least one Sunday service this month.',
-        suggested_action: 'Assign a welcome deacon to each new family for follow-up within 72 hours.',
-        priority: 'info', generated_at: new Date().toISOString()
-    }
-];
-
-const PRIORITY_CONFIG = {
+const PRIORITY_CONFIG: Record<string, any> = {
     critical: { color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/5 dark:bg-red-500/10 border-red-500/10 dark:border-red-500/20', icon: AlertTriangle, dot: 'bg-red-500', label: 'CRITICAL' },
+    high: { color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/5 dark:bg-red-500/10 border-red-500/10 dark:border-red-500/20', icon: AlertTriangle, dot: 'bg-red-500', label: 'CRITICAL' },
     warning: { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/10 dark:border-amber-500/20', icon: TrendingUp, dot: 'bg-amber-500', label: 'ATTENTION' },
+    medium: { color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/10 dark:border-amber-500/20', icon: TrendingUp, dot: 'bg-amber-500', label: 'ATTENTION' },
     info: { color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/10 dark:border-emerald-500/20', icon: Zap, dot: 'bg-emerald-500', label: 'INSIGHT' },
+    low: { color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/10 dark:border-emerald-500/20', icon: Zap, dot: 'bg-emerald-500', label: 'INSIGHT' },
 };
 
 export function AIPanel({ insights: externalInsights }: { insights?: AiInsight[] }) {
+    const { orgId } = useAdminCtx();
     const [insights, setInsights] = useState<AiInsight[]>([]);
     const [loading, setLoading] = useState(true);
     const [expanded, setExpanded] = useState<string | null>(null);
@@ -71,46 +39,53 @@ export function AIPanel({ insights: externalInsights }: { insights?: AiInsight[]
         if (externalInsights && externalInsights.length > 0) {
             setInsights(externalInsights);
             setLoading(false);
-        } else {
+        } else if (orgId) {
             loadInsights();
         }
-    }, [externalInsights]);
+    }, [externalInsights, orgId]);
 
     async function loadInsights() {
+        if (!orgId) return;
         setLoading(true);
         try {
-            // 1. Ask DB to recalculate insights based on latest data
-            await supabase.rpc('refresh_ai_insights');
+            // 1. Run the PI Engine Sweep to refresh insights from real data
+            await PILEngine.runIntelligenceSweep(orgId);
             
-            // 2. Fetch the newly generated insights
+            // 2. Fetch the latest unacknowledged insights
             const { data } = await supabase
-                .from('ai_insights')
+                .from('prophetic_insights')
                 .select('*')
+                .eq('org_id', orgId)
+                .eq('is_acknowledged', false)
                 .order('generated_at', { ascending: false })
                 .limit(10);
             
             // 3. Try to load health score
-            const { data: scoreData } = await supabase.rpc('get_church_health_score');
+            const { data: scoreData } = await supabase
+                .from('church_health_metrics')
+                .select('score')
+                .eq('org_id', orgId)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
             if (scoreData?.score) setChurchScore(scoreData.score);
-            else setChurchScore(78); // Default/Mock
+            else setChurchScore(78); // Fallback if no metric row found
 
             if (data && data.length > 0) {
                 setInsights(data);
             } else {
-                setInsights(MOCK_INSIGHTS);
+                setInsights([]); // No data = empty state
             }
         } catch (err) {
             console.error("AIPanel load error:", err);
-            // If function doesn't exist yet, just fallback to mock
-            setInsights(MOCK_INSIGHTS);
-            setChurchScore(78);
+            setInsights([]);
         } finally {
             setLoading(false);
         }
     }
 
-
-    const criticalCount = insights.filter(i => i.priority === 'critical').length;
+    const criticalCount = insights.filter(i => i.risk_level === 'critical' || i.risk_level === 'high').length;
 
     return (
         <motion.aside
@@ -191,9 +166,15 @@ export function AIPanel({ insights: externalInsights }: { insights?: AiInsight[]
                                 Array.from({ length: 4 }).map((_, i) => (
                                     <div key={i} className="h-20 bg-muted rounded-xl animate-pulse" />
                                 ))
+                            ) : insights.length === 0 ? (
+                                <div className="p-10 text-center border-2 border-dashed border-border rounded-2xl">
+                                    <p className="text-[10px] text-muted-foreground/30 font-black uppercase tracking-widest leading-loose">
+                                        No new alerts recorded today.<br/>System at rest.
+                                    </p>
+                                </div>
                             ) : (
                                 insights.map((insight, idx) => {
-                                    const cfg = PRIORITY_CONFIG[insight.priority as 'critical' | 'warning' | 'info'] || PRIORITY_CONFIG.info;
+                                    const cfg = PRIORITY_CONFIG[insight.risk_level] || PRIORITY_CONFIG.info;
                                     const isExp = expanded === insight.id;
                                     return (
                                         <motion.div
@@ -214,7 +195,7 @@ export function AIPanel({ insights: externalInsights }: { insights?: AiInsight[]
                                                         <p className={`text-[9px] font-black tracking-wider uppercase ${cfg.color}`}>{cfg.label}</p>
                                                         <ChevronRight className={`w-3 h-3 text-muted-foreground flex-shrink-0 transition-transform ${isExp ? 'rotate-90' : ''}`} />
                                                     </div>
-                                                    <p className="text-xs font-semibold text-foreground mt-0.5 leading-tight">{insight.title}</p>
+                                                    <p className="text-xs font-semibold text-foreground mt-0.5 leading-tight">{insight.insight_title}</p>
                                                     <AnimatePresence>
                                                         {isExp && (
                                                             <motion.div
@@ -223,10 +204,13 @@ export function AIPanel({ insights: externalInsights }: { insights?: AiInsight[]
                                                                 exit={{ height: 0, opacity: 0 }}
                                                                 className="overflow-hidden"
                                                             >
-                                                                <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">{insight.description}</p>
+                                                                <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">{insight.insight_description}</p>
                                                                 <div className="mt-2 pt-2 border-t border-border">
                                                                     <p className="text-[9px] font-black text-violet-500 uppercase tracking-wider mb-1">Suggested Action</p>
-                                                                    <p className="text-[10px] text-muted-foreground leading-relaxed">{insight.suggested_action}</p>
+                                                                    <p className="text-[10px] text-muted-foreground leading-relaxed">{insight.recommended_action}</p>
+                                                                </div>
+                                                                <div className="mt-2 text-[8px] text-muted-foreground/30 font-mono">
+                                                                    Generated: {new Date(insight.generated_at).toLocaleString()}
                                                                 </div>
                                                             </motion.div>
                                                         )}
@@ -243,7 +227,7 @@ export function AIPanel({ insights: externalInsights }: { insights?: AiInsight[]
                     {/* Footer */}
                     <div className="px-4 py-3 border-t border-border flex-shrink-0">
                         <p className="text-[9px] text-muted-foreground text-center font-medium tracking-wider">
-                            AI Analysis · Updated {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                            PIL-Layer Engine · Stable {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                         </p>
                     </div>
                 </div>
