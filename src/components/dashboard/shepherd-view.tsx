@@ -356,6 +356,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const mappedAlerts = (propheticRes.data || []).filter((i: any) => i.category === 'drop_off' || i.risk_level === 'critical').map((i: any) => ({
                 id: i.id,
                 name: i.insight_title.replace('Disengagement Risk: ', '').split(' ')[0],
+                email: "", // Needed for AtRiskMember interface
                 days_inactive: i.metadata?.days_silent || 0,
                 current_streak: i.metadata?.previous_streak || 0,
                 risk_level: i.risk_level || 'critical'
