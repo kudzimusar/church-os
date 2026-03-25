@@ -17,11 +17,25 @@ const PRIORITY_CONFIG = {
 
 // Insight type → visual config
 const INSIGHT_TYPE_CONFIG: Record<string, { color: string; bg: string; border: string; icon: any; label: string }> = {
-    growth:       { color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/10', border: 'border-emerald-200 dark:border-emerald-500/30', icon: TrendingUp, label: 'Growth' },
-    risk:         { color: 'text-red-700 dark:text-red-400',     bg: 'bg-red-50 dark:bg-red-500/10',     border: 'border-red-200 dark:border-red-500/30',     icon: ShieldAlert, label: 'Risk' },
-    opportunity:  { color: 'text-blue-700 dark:text-blue-400',    bg: 'bg-blue-50 dark:bg-blue-500/10',    border: 'border-blue-200 dark:border-blue-500/30',    icon: Sparkles,    label: 'Opportunity' },
-    commendation: { color: 'text-amber-700 dark:text-amber-400',   bg: 'bg-amber-50 dark:bg-amber-500/10',   border: 'border-amber-200 dark:border-amber-500/30',   icon: Star,        label: 'Commendation' },
-    correlation:  { color: 'text-violet-700 dark:text-violet-400',  bg: 'bg-violet-50 dark:bg-violet-500/10',  border: 'border-violet-200 dark:border-violet-500/30',  icon: Link2,       label: 'Correlation' },
+    // Standard AI insight types
+    growth:           { color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/10', border: 'border-emerald-200 dark:border-emerald-500/30', icon: TrendingUp, label: 'Growth' },
+    risk:             { color: 'text-red-700 dark:text-red-400',         bg: 'bg-red-50 dark:bg-red-500/10',         border: 'border-red-200 dark:border-red-500/30',         icon: ShieldAlert, label: 'Risk' },
+    opportunity:      { color: 'text-blue-700 dark:text-blue-400',        bg: 'bg-blue-50 dark:bg-blue-500/10',        border: 'border-blue-200 dark:border-blue-500/30',        icon: Sparkles,    label: 'Opportunity' },
+    commendation:     { color: 'text-amber-700 dark:text-amber-400',       bg: 'bg-amber-50 dark:bg-amber-500/10',       border: 'border-amber-200 dark:border-amber-500/30',       icon: Star,        label: 'Commendation' },
+    correlation:      { color: 'text-violet-700 dark:text-violet-400',     bg: 'bg-violet-50 dark:bg-violet-500/10',     border: 'border-violet-200 dark:border-violet-500/30',     icon: Link2,       label: 'Correlation' },
+    // P0 — Critical care categories
+    crisis:           { color: 'text-red-700 dark:text-red-400',         bg: 'bg-red-50 dark:bg-red-500/10',         border: 'border-red-200 dark:border-red-500/30',         icon: ShieldAlert, label: 'Crisis Alert' },
+    drop_off:         { color: 'text-red-700 dark:text-red-400',         bg: 'bg-red-50 dark:bg-red-500/10',         border: 'border-red-200 dark:border-red-500/30',         icon: ShieldAlert, label: 'Drop-Off Risk' },
+    retention:        { color: 'text-orange-700 dark:text-orange-400',    bg: 'bg-orange-50 dark:bg-orange-500/10',    border: 'border-orange-200 dark:border-orange-500/30',    icon: AlertTriangle, label: 'Onboarding Risk' },
+    isolation:        { color: 'text-violet-700 dark:text-violet-400',    bg: 'bg-violet-50 dark:bg-violet-500/10',    border: 'border-violet-200 dark:border-violet-500/30',    icon: Link2,       label: 'Isolation Risk' },
+    // P1 — Strategic categories
+    spiritual_climate:{ color: 'text-blue-700 dark:text-blue-400',        bg: 'bg-blue-50 dark:bg-blue-500/10',        border: 'border-blue-200 dark:border-blue-500/30',        icon: Sparkles,    label: 'Spiritual Climate' },
+    pastoral_load:    { color: 'text-amber-700 dark:text-amber-400',       bg: 'bg-amber-50 dark:bg-amber-500/10',       border: 'border-amber-200 dark:border-amber-500/30',       icon: AlertTriangle, label: 'Pastoral Load' },
+    stewardship:      { color: 'text-emerald-700 dark:text-emerald-400',   bg: 'bg-emerald-50 dark:bg-emerald-500/10',   border: 'border-emerald-200 dark:border-emerald-500/30',   icon: TrendingUp,  label: 'Stewardship' },
+    // P2 — Operational categories
+    burnout:          { color: 'text-orange-700 dark:text-orange-400',    bg: 'bg-orange-50 dark:bg-orange-500/10',    border: 'border-orange-200 dark:border-orange-500/30',    icon: AlertTriangle, label: 'Volunteer Burnout' },
+    content:          { color: 'text-blue-700 dark:text-blue-400',        bg: 'bg-blue-50 dark:bg-blue-500/10',        border: 'border-blue-200 dark:border-blue-500/30',        icon: Star,        label: 'Content Impact' },
+    geo:              { color: 'text-emerald-700 dark:text-emerald-400',   bg: 'bg-emerald-50 dark:bg-emerald-500/10',   border: 'border-emerald-200 dark:border-emerald-500/30',   icon: TrendingUp,  label: 'Geo Expansion' },
 };
 
 const URGENCY_CONFIG: Record<string, string> = {
@@ -64,9 +78,6 @@ export default function AICommandCenterPage() {
         setAiLoading(false);
     };
 
-    const loadAiInsights = async () => {
-        // Now unified into loadInsights
-    };
 
 
 
@@ -76,7 +87,6 @@ export default function AICommandCenterPage() {
         try {
             await PILEngine.runIntelligenceSweep(orgId);
             await loadInsights();
-            await loadAiInsights();
         } finally {
             setRunningSweep(false);
         }
@@ -85,7 +95,6 @@ export default function AICommandCenterPage() {
     useEffect(() => {
         if (orgId) {
             loadInsights();
-            loadAiInsights();
         }
     }, [orgId]);
 
@@ -118,7 +127,7 @@ export default function AICommandCenterPage() {
                 .single();
 
             await supabase.from('member_feed_items').insert({
-                org_id: 'fa547adf-f820-412f-9458-d6bade11517d',
+                org_id: orgId,
                 target_user_id: insight.subject_id,
                 feed_type: 'ministry_invitation',
                 title: ministry
@@ -160,7 +169,7 @@ export default function AICommandCenterPage() {
         const { data: { user } } = await supabase.auth.getUser();
 
         await supabase.from('member_feed_items').insert({
-            org_id: 'fa547adf-f820-412f-9458-d6bade11517d',
+            org_id: orgId,
             feed_type: 'church_announcement',
             title: broadcastTitle,
             body: broadcastBody,
@@ -197,7 +206,7 @@ export default function AICommandCenterPage() {
                         <Zap className={`w-3.5 h-3.5 ${runningSweep ? 'animate-pulse' : ''}`} />
                         {runningSweep ? 'Scanning...' : 'Run Full Sweep'}
                     </button>
-                    <button onClick={() => { loadInsights(); loadAiInsights(); }}
+                    <button onClick={() => loadInsights()}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted border border-border text-xs text-muted-foreground hover:text-foreground transition-all">
                         <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                         Refresh
@@ -284,10 +293,10 @@ export default function AICommandCenterPage() {
             </div>
 
             {/* Stats row */}
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                    { label: 'Rule-Based Forecasts', val: insights.length, color: 'text-primary' },
-                    { label: 'Critical Risk', val: insights.filter(i => i.risk_level === 'critical').length, color: 'text-red-600 dark:text-red-400' },
+                    { label: 'Crisis & Risk', val: insights.filter(i => ['crisis','drop_off','retention'].includes(i.category) && !i.is_acknowledged).length, color: 'text-red-600 dark:text-red-400' },
+                    { label: 'Care & Burnout', val: insights.filter(i => ['pastoral_load','burnout','isolation'].includes(i.category) && !i.is_acknowledged).length, color: 'text-orange-600 dark:text-orange-400' },
                     { label: 'AI Pending Review', val: pendingAi.length, color: 'text-amber-600 dark:text-amber-400' },
                     { label: 'Resolved', val: acknowledged.length, color: 'text-emerald-600 dark:text-emerald-400' },
                 ].map(s => (
