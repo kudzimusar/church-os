@@ -457,32 +457,49 @@ export default function ProfileHub() {
     };
 
     const handleAddPrayer = async () => {
-        if (!newPrayerText || !user || !profile?.org_id) return;
+        if (!newPrayerText || !user) return;
         setIsSaving(true);
         try {
+            // Resolve org_id — fetch from DB if profile didn't load it yet
+            let orgId = profile?.org_id;
+            if (!orgId) {
+                const { data: globalOrg } = await supabase.from('organizations').select('id').limit(1).maybeSingle();
+                orgId = globalOrg?.id;
+            }
+            if (!orgId) {
+                toast.error("Organization context missing. Please refresh the page.");
+                return;
+            }
+
             const { data, error } = await supabase.from('prayer_requests').insert([{
                 user_id: user.id,
-                org_id: profile.org_id,
+                org_id: orgId,
                 request_text: newPrayerText,
                 category: newPrayerCategory,
                 urgency: newPrayerUrgency,
                 requires_pastoral_contact: pastoralContact,
-                status: 'pending'
+                status: 'active'  // DB schema uses 'active', not 'pending'
             }]).select().single();
-            if (error) throw error;
+            if (error) {
+                console.error("Prayer request insert error:", error);
+                throw error;
+            }
             setPrayers([data, ...prayers]);
             clearPrayer();
             setPastoralContact(false);
             toast.success("Prayer submitted to leadership.");
         } catch (e: any) {
-            toast.error("Failed submitting prayer");
+            console.error("handleAddPrayer failed:", e);
+            toast.error(e.message || "Failed submitting prayer");
         } finally {
             setIsSaving(false);
         }
     };
 
+
     const togglePrayer = async (id: string, currentStatus: string) => {
-        const newStatus = currentStatus === 'pending' ? 'answered' : 'pending';
+        // DB uses 'active' and 'answered' (not 'pending')
+        const newStatus = currentStatus === 'answered' ? 'active' : 'answered';
         try {
             await supabase.from('prayer_requests').update({ status: newStatus }).eq('id', id);
             setPrayers(prayers.map(p => p.id === id ? { ...p, status: newStatus } : p));
@@ -491,6 +508,7 @@ export default function ProfileHub() {
             toast.error("Failed update");
         }
     };
+
 
     const handleAddMinistry = async () => {
         if (!newMinistry || !user || !profile?.org_id) return;
@@ -1406,12 +1424,12 @@ export default function ProfileHub() {
                                                     {prayers.map(p => (
                                                         <div key={p.id} className="flex flex-col p-4 bg-muted border border-border rounded-2xl space-y-3 transition-colors">
                                                             <div className="flex justify-between items-start gap-4">
-                                                                <p className={`font-bold text-sm text-foreground ${p.status === 'Answered' ? 'line-through opacity-50' : ''}`}>{p.request_text}</p>
+                                                                <p className={`font-bold text-sm text-foreground ${p.status === 'answered' ? 'line-through opacity-50' : ''}`}>{p.request_text}</p>
                                                                 <span className="text-xs shrink-0 bg-card px-2 py-1 rounded-md font-semibold text-muted-foreground">{p.category}</span>
                                                             </div>
                                                             <div className="flex justify-end">
                                                                 <Button onClick={() => togglePrayer(p.id, p.status)} variant="outline" size="sm" className="text-xs font-bold h-8 border-border bg-card text-foreground">
-                                                                    {p.status === 'Pending' ? 'MARK ANSWERED' : 'MARK PENDING'}
+                                                                    {p.status === 'answered' ? 'MARK ACTIVE' : 'MARK ANSWERED'}
                                                                 </Button>
                                                             </div>
                                                         </div>
