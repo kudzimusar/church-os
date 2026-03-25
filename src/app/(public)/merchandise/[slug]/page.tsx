@@ -13,7 +13,8 @@ export async function generateStaticParams() {
     .from('merchandise')
     .select('slug');
   
-  return (data || []).map(p => ({ slug: p.slug }));
+  const slugs = (data || []).map(p => ({ slug: p.slug }));
+  return slugs.length > 0 ? slugs : [{ slug: 'default' }];
 }
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
