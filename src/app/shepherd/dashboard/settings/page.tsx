@@ -190,9 +190,10 @@ export default function SettingsPage() {
             setIsMFAVerified(true);
             toast.success("MFA Successfully Enrolled!");
             
-            // Refresh the page to clear the mfa_required flag and update session
+            // Refresh or Redirect based on role
             setTimeout(() => {
-                window.location.href = window.location.pathname;
+                const target = myRole === 'pastor' ? '/pastor-hq/' : '/shepherd/dashboard/';
+                window.location.href = `${BP}${target}`;
             }, 1500);
         } catch (err: any) {
             toast.error(err.message || "Verification failed");

@@ -39,6 +39,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
 
     const ROLE_LABELS: Record<string, string> = {
         super_admin: "System Master",
+        pastor: "Chief Pastor / Strategic Head",
         owner: "Organization Owner",
         shepherd: "Shepherd / Leader",
         admin: "Administrator",

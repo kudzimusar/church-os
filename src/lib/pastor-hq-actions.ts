@@ -55,7 +55,16 @@ export async function getPastorDashboardData(orgId?: string) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error("Unauthorized");
 
-  const effectiveOrgId = orgId;
+  let effectiveOrgId = orgId;
+  if (!effectiveOrgId) {
+    const { data: member } = await supabase
+      .from('org_members')
+      .select('org_id')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+    effectiveOrgId = member?.org_id || undefined;
+  }
+
   if (!effectiveOrgId) return null;
 
   // Pulse & Attendance

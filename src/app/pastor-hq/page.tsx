@@ -2,6 +2,8 @@
 
 import { usePastorCtx } from "./pastor-context";
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { basePath as BP } from "@/lib/utils";
 import { 
     Users, TrendingUp, DollarSign, Activity, 
     ArrowUpRight, ArrowDownRight, MessageSquare, 
@@ -29,14 +31,14 @@ const item = {
 };
 
 function PastorHQDashboard() {
-    const { userName } = usePastorCtx();
+    const { userName, orgId } = usePastorCtx();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function loadData() {
             try {
-                const dashboardData = await getPastorDashboardData();
+                const dashboardData = await getPastorDashboardData(orgId);
                 setData(dashboardData);
             } catch (error) {
                 console.error("Failed to load dashboard data:", error);
@@ -44,8 +46,8 @@ function PastorHQDashboard() {
                 setLoading(false);
             }
         }
-        loadData();
-    }, []);
+        if (orgId) loadData();
+    }, [orgId]);
 
     if (loading) {
         return (
@@ -179,13 +181,14 @@ function PastorHQDashboard() {
                     <Card className="rounded-[2.5rem] border-border bg-card/40 backdrop-blur-sm h-full overflow-hidden">
                         <CardContent className="p-0">
                             {[
-                                { label: "Member Messages", count: data?.correspondence.memberMessages, icon: MessageSquare, color: "bg-violet-500" },
-                                { label: "Website Inquiries", count: data?.correspondence.websiteInquiries, icon: Mail, color: "bg-blue-500" },
-                                { label: "Admin Direct", count: data?.correspondence.adminDirect, icon: Activity, color: "bg-emerald-500" },
-                                { label: "External (Gmail)", count: data?.correspondence.externalGmail, icon: Mail, color: "bg-red-500" },
+                                { label: "Member Messages", count: data?.correspondence.memberMessages, icon: MessageSquare, color: "bg-violet-500", href: "/shepherd/dashboard/" },
+                                { label: "Website Inquiries", count: data?.correspondence.websiteInquiries, icon: Mail, color: "bg-blue-500", href: "/shepherd/dashboard/" },
+                                { label: "Admin Direct", count: data?.correspondence.adminDirect, icon: Activity, color: "bg-emerald-500", href: "/shepherd/dashboard/settings/" },
+                                { label: "External (Gmail)", count: data?.correspondence.externalGmail, icon: Mail, color: "bg-red-500", href: "https://gmail.com" },
                             ].map((channel, i) => (
-                                <button 
+                                <Link 
                                     key={channel.label}
+                                    href={channel.href.startsWith('http') ? channel.href : `${BP}${channel.href}`}
                                     className={`w-full flex items-center justify-between p-6 hover:bg-muted/50 transition-all border-b border-border last:border-0 ${i === 0 ? 'bg-muted/30' : ''}`}
                                 >
                                     <div className="flex items-center gap-4">
@@ -202,7 +205,7 @@ function PastorHQDashboard() {
                                             {channel.count}
                                         </div>
                                     )}
-                                </button>
+                                </Link>
                             ))}
                         </CardContent>
                     </Card>
