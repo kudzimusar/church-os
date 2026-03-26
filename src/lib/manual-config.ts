@@ -1,4 +1,4 @@
-export type ManualRole = 'super-admin' | 'pastor-hq' | 'media-ministry' | 'ministry-leader' | 'member';
+export type ManualRole = 'super-admin' | 'pastor-hq' | 'media-ministry' | 'ministry-leader' | 'member' | 'pastor';
 
 export interface ManualSection {
   title: string;
@@ -97,6 +97,46 @@ export const MANUAL_CONTENT: Record<ManualRole, ManualSection[]> = {
             expectedResult: 'Newly uploaded sermon appears in the correct org dashboard only.',
             failureScenario: 'Searching for an unpublished sermon results in "No items found".'
         }
+    },
+    {
+      id: 'strategic-governance',
+      title: 'Ecclesiastical Oversight',
+      icon: 'ShieldCheck',
+      overview: 'Strategic cockpit for financial and growth-layer management.',
+      workflow: [
+        'Login via Strategic Center Gateway',
+        'Analyze "Church Health Score" across all metrics',
+        'Verify Strategic AI Insights (Prophetic Layer)'
+      ],
+      systemBehavior: [
+        { action: 'Strategic Audit', internalEvent: 'governance_audit', affectedTables: ['financials', 'church_health_metrics'] }
+      ],
+      validation: {
+        testTask: 'Log in as the Primary Pastor.',
+        expectedResult: 'Dashboard loads with "Strategy" and "Operational" toggle enabled.',
+        failureScenario: 'Logging in with AAL1 (no MFA) locks the strategic cockpit.'
+      }
+    }
+  ],
+  'pastor': [
+    {
+      id: 'ultimate-authority',
+      title: 'The Sovereign Dashboard',
+      icon: 'Crown',
+      overview: 'Ultimate ecclesiastical authority with full Strategic Center and Mission Control oversight.',
+      workflow: [
+        'Bypass specific ministry filters to see Global aggregates',
+        'Access Financial, Spiritual, and Operational data simultaneously',
+        'Use "Strategic Hot-Switch" to manage ground-level ministry'
+      ],
+      systemBehavior: [
+        { action: 'Global Access', internalEvent: 'root_access_granted', affectedTables: ['all'] }
+      ],
+      validation: {
+        testTask: 'Access the Mission Control from the Pastor HQ.',
+        expectedResult: 'Seamless transition between Strategy and Operations.',
+        failureScenario: 'Incorrect role level (below 100) restricts financial granularity.'
+      }
     }
   ],
   'media-ministry': [
