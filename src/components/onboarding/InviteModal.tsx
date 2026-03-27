@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface InviteModalProps {
   isOpen: boolean;
@@ -21,12 +22,19 @@ export const InviteModal = ({ isOpen, onClose, churchName }: InviteModalProps) =
     setError('');
     
     try {
-      const response = await fetch('/api/onboarding/invite', {
+      const { data: { session } } = await supabase.auth.getSession();
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-url.supabase.co';
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/onboarding-invite`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+        },
         body: JSON.stringify({ 
           email, 
-          churchName: churchName || 'your church'
+          churchName: churchName || 'your church',
+          invitedBy: session?.user?.email || 'System'
         })
       });
       
