@@ -298,7 +298,7 @@ export default function ProfileHub() {
             setMembershipRequest(mrData);
 
             // Load Member Stats (Streak/Completed)
-            const s = await SoapJournal.getStats();
+            const s = await SoapJournal.getStats(currentOrgId);
             setStats(s);
 
         } catch (e) {

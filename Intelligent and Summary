@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Church OS | Intelligence DNA</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;700;800&amp;family=Inter:wght@300;400;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-fixed": "#ffd709",
+                        "background": "#0c0e12",
+                        "primary-dim": "#63e1e7",
+                        "error-container": "#a70138",
+                        "outline": "#74757a",
+                        "surface-bright": "#292c32",
+                        "tertiary-dim": "#c37fff",
+                        "surface-container-highest": "#23262c",
+                        "on-tertiary-fixed-variant": "#570092",
+                        "on-surface-variant": "#aaabb0",
+                        "secondary-container": "#705d00",
+                        "on-primary-fixed-variant": "#006266",
+                        "inverse-surface": "#f9f9ff",
+                        "surface-tint": "#72eff5",
+                        "secondary-dim": "#efc900",
+                        "tertiary": "#c37fff",
+                        "on-secondary-fixed": "#453900",
+                        "on-secondary-fixed-variant": "#665500",
+                        "primary-fixed": "#72eff5",
+                        "surface-container-high": "#1d2025",
+                        "surface-container-lowest": "#000000",
+                        "surface-variant": "#23262c",
+                        "surface-container": "#171a1f",
+                        "surface-container-low": "#111318",
+                        "on-secondary": "#5b4b00",
+                        "surface-dim": "#0c0e12",
+                        "on-error": "#490013",
+                        "on-error-container": "#ffb2b9",
+                        "error": "#ff6e84",
+                        "error-dim": "#d73357",
+                        "on-primary-fixed": "#004346",
+                        "on-surface": "#f6f6fc",
+                        "tertiary-fixed-dim": "#c787ff",
+                        "on-tertiary": "#330059",
+                        "on-secondary-container": "#fff7e6",
+                        "surface": "#0c0e12",
+                        "primary-fixed-dim": "#63e1e7",
+                        "secondary": "#ffd709",
+                        "on-primary-container": "#002829",
+                        "inverse-primary": "#006a6e",
+                        "tertiary-container": "#b669fb",
+                        "on-tertiary-fixed": "#280047",
+                        "inverse-on-surface": "#53555a",
+                        "primary-container": "#1fb1b7",
+                        "secondary-fixed-dim": "#efc900",
+                        "on-tertiary-container": "#140027",
+                        "tertiary-fixed": "#d09aff",
+                        "on-background": "#f6f6fc",
+                        "on-primary": "#00585b",
+                        "primary": "#72eff5",
+                        "outline-variant": "#46484d"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(23, 26, 31, 0.6);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ambient-aura {
+            box-shadow: 0 0 60px -10px rgba(114, 239, 245, 0.1);
+        }
+
+        .ghost-border {
+            border: 1px solid rgba(70, 72, 77, 0.2);
+        }
+
+        .ghost-border:focus-within {
+            border-color: rgba(114, 239, 245, 0.6);
+            box-shadow: 0 0 4px rgba(114, 239, 245, 0.3);
+        }
+    </style>
+</head>
+
+<body class="bg-surface font-body text-on-surface min-h-screen selection:bg-primary/30 flex flex-col items-center">
+    <!-- TopAppBar Anchor -->
+    <header class="flex justify-center items-center w-full py-8 px-6 bg-transparent docked full-width top-0">
+        <div class="text-2xl font-black tracking-tighter text-cyan-400 dark:text-cyan-300 font-headline uppercase">
+            Church OS
+        </div>
+    </header>
+    <main class="flex-1 flex flex-col items-center justify-center w-full max-w-4xl px-6 pb-24">
+        <!-- Step Indicator -->
+        <div class="w-full max-w-md mb-8 flex flex-col">
+            <div class="flex justify-between items-end mb-3">
+                <span class="text-secondary font-headline font-bold text-sm tracking-widest uppercase">Step 2 of
+                    3</span>
+                <span class="text-on-surface-variant text-xs font-label tracking-wider uppercase">Intelligence
+                    DNA</span>
+            </div>
+            <div class="h-0.5 w-full bg-surface-variant rounded-full overflow-hidden">
+                <div class="h-full bg-secondary w-2/3 shadow-[0_0_8px_rgba(255,215,9,0.5)]"></div>
+            </div>
+        </div>
+        <!-- Onboarding Card -->
+        <div class="glass-card ambient-aura rounded-xl p-10 md:p-16 w-full max-w-2xl">
+            <div class="mb-12">
+                <h1
+                    class="font-headline text-4xl md:text-5xl font-extrabold tracking-tight text-on-surface leading-tight">
+                    Define Your <span class="text-primary">Spiritual Core</span>.
+                </h1>
+                <p class="text-on-surface-variant mt-4 text-lg font-light leading-relaxed">
+                    To tailor your celestial experience, we must understand the theological foundations of your
+                    sanctuary.
+                </p>
+            </div>
+            <form class="space-y-8">
+                <!-- Theological Tradition -->
+                <div class="group">
+                    <label
+                        class="block text-xs font-label uppercase tracking-[0.15em] text-on-surface-variant mb-3 group-focus-within:text-primary transition-colors">Theological
+                        Tradition</label>
+                    <div class="ghost-border bg-surface-container-highest/40 rounded-lg overflow-hidden transition-all">
+                        <select
+                            class="w-full bg-transparent border-none focus:ring-0 py-4 px-5 text-on-surface appearance-none cursor-pointer">
+                            <option disabled="" selected="">Select a tradition...</option>
+                            <option>Pentecostal</option>
+                            <option>Reformed</option>
+                            <option>Evangelical</option>
+                            <option>Baptist</option>
+                            <option>Anglican</option>
+                            <option>Non-Denominational</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Ministry Emphasis -->
+                <div class="group">
+                    <label
+                        class="block text-xs font-label uppercase tracking-[0.15em] text-on-surface-variant mb-3 group-focus-within:text-primary transition-colors">Ministry
+                        Emphasis</label>
+                    <div class="ghost-border bg-surface-container-highest/40 rounded-lg overflow-hidden transition-all">
+                        <select
+                            class="w-full bg-transparent border-none focus:ring-0 py-4 px-5 text-on-surface appearance-none cursor-pointer">
+                            <option disabled="" selected="">Focus Area</option>
+                            <option>Evangelism-led</option>
+                            <option>Discipleship-focused</option>
+                            <option>Social-Justice</option>
+                            <option>Scripture-intensive</option>
+                            <option>Worship-led</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Worship Style -->
+                <div class="group">
+                    <label
+                        class="block text-xs font-label uppercase tracking-[0.15em] text-on-surface-variant mb-3 group-focus-within:text-primary transition-colors">Worship
+                        Style</label>
+                    <div class="ghost-border bg-surface-container-highest/40 rounded-lg overflow-hidden transition-all">
+                        <select
+                            class="w-full bg-transparent border-none focus:ring-0 py-4 px-5 text-on-surface appearance-none cursor-pointer">
+                            <option disabled="" selected="">Vibe &amp; Flow</option>
+                            <option>Modern/Contemporary</option>
+                            <option>Traditional/Hymnal</option>
+                            <option>Blended</option>
+                            <option>Spontaneous/Spirit-led</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Congregation Size -->
+                <div class="group">
+                    <label
+                        class="block text-xs font-label uppercase tracking-[0.15em] text-on-surface-variant mb-3 group-focus-within:text-primary transition-colors">Congregation
+                        Size</label>
+                    <div class="ghost-border bg-surface-container-highest/40 rounded-lg overflow-hidden transition-all">
+                        <select
+                            class="w-full bg-transparent border-none focus:ring-0 py-4 px-5 text-on-surface appearance-none cursor-pointer">
+                            <option disabled="" selected="">Attendance</option>
+                            <option>&lt;100</option>
+                            <option>100-500</option>
+                            <option>500-2000</option>
+                            <option>2000+</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Primary Language -->
+                <div class="group">
+                    <label
+                        class="block text-xs font-label uppercase tracking-[0.15em] text-on-surface-variant mb-3 group-focus-within:text-primary transition-colors">Primary
+                        Language</label>
+                    <div class="ghost-border bg-surface-container-highest/40 rounded-lg overflow-hidden transition-all">
+                        <select
+                            class="w-full bg-transparent border-none focus:ring-0 py-4 px-5 text-on-surface appearance-none cursor-pointer">
+                            <option disabled="" selected="">Global Tongue</option>
+                            <option>English</option>
+                            <option>Japanese</option>
+                            <option>Bilingual</option>
+                            <option>Korean</option>
+                            <option>Portuguese</option>
+                            <option>Spanish</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <!-- Navigation -->
+        <div class="mt-12 flex items-center justify-between w-full max-w-2xl px-2">
+            <a class="text-on-surface-variant hover:text-primary font-label text-sm uppercase tracking-widest transition-all flex items-center gap-2 group"
+                href="#">
+                <span class="material-symbols-outlined text-lg transition-transform group-hover:-translate-x-1"
+                    data-icon="arrow_back">arrow_back</span>
+                Previous
+            </a>
+            <button
+                class="bg-gradient-to-br from-primary to-primary-container text-on-primary-container px-10 py-4 rounded-full font-headline font-bold text-lg shadow-lg hover:shadow-primary/20 active:scale-95 transition-all flex items-center gap-3">
+                Continue
+                <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+            </button>
+        </div>
+    </main>
+    <!-- Visual Background Accents -->
+    <div class="fixed top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10"></div>
+    <div class="fixed bottom-[-5%] left-[-5%] w-[400px] h-[400px] bg-tertiary/5 rounded-full blur-[100px] -z-10"></div>
+</body>
+
+</html>

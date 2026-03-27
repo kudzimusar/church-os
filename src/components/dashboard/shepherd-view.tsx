@@ -21,6 +21,7 @@ import { UsherReportModal } from "./UsherReportModal";
 import { AttendanceReconciliationCard } from "./AttendanceReconciliationCard";
 import { MinistryOnboarding } from "./MinistryOnboarding";
 import { LeadershipForecastsCard } from "./LeadershipForecastsCard";
+import { AIOnboardingStatus } from "./AIOnboardingStatus";
 import { toast } from "sonner";
 import { CRITICAL_MINISTRIES, MINISTRY_OPTIONS } from "@/lib/constants";
 import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
@@ -481,6 +482,9 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
 
     return (
         <div className="space-y-10 pb-16">
+            
+            {/* AI Onboarding Status / First Insight Blueprint */}
+            <AIOnboardingStatus orgId={orgId} />
 
             {/* ─── ROW 0: AI CHURCH HEALTH METRICS ─── */}
             {data.churchHealth && (

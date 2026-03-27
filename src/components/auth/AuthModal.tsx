@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,13 @@ import { supabase } from "@/lib/supabase";
 import { Auth } from "@/lib/auth";
 import { basePath as BP } from "@/lib/utils";
 import { useStickyForm } from "@/hooks/useStickyForm";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -26,8 +33,22 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
     const { values, handleChange: handleStickyChange, clear } = useStickyForm({
         email: "",
         name: "",
+        org_id: "fa547adf-f820-412f-9458-d6bade11517d", // Default to JKC
         isMemberRequest: false
     }, "auth-modal");
+
+    const [organizations, setOrganizations] = useState<{ id: string, name: string }[]>([]);
+
+    useEffect(() => {
+        const fetchOrgs = async () => {
+            const { data } = await supabase
+                .from('organizations')
+                .select('id, name')
+                .eq('subscription_status', 'active');
+            if (data) setOrganizations(data);
+        };
+        fetchOrgs();
+    }, []);
 
     const email = values.email;
     const setEmail = (val: string) => handleStickyChange("email", val);
@@ -70,7 +91,10 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
             return;
         }
         setLoading(true);
-        const metadata = isMemberRequest ? { membership_status: 'pending_approval' } : {};
+        const metadata = { 
+            org_id: values.org_id,
+            membership_status: isMemberRequest ? 'pending_approval' : 'guest'
+        };
         const res = await Auth.createAccount(email, password, name, metadata);
         if (res.success) {
             setShowVerificationMessage(true);
@@ -285,18 +309,34 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
                                             <Input placeholder="Set Password" type="password" value={password} onChange={e => setPassword(e.target.value)} className="h-16 rounded-3xl bg-foreground/5 border-0 px-8 text-lg" />
                                         </div>
 
-                                        <div className="flex items-center gap-4 p-5 bg-[var(--primary)]/5 rounded-3xl border border-[var(--primary)]/10">
-                                            <input
-                                                type="checkbox"
-                                                id="memberRequest"
-                                                checked={isMemberRequest}
-                                                onChange={(e) => setIsMemberRequest(e.target.checked)}
-                                                className="w-6 h-6 rounded-lg accent-[var(--primary)] transition-all cursor-pointer"
-                                            />
-                                            <label htmlFor="memberRequest" className="text-[11px] font-bold text-foreground/70 cursor-pointer leading-tight">
-                                                Are you a member of Japan Kingdom Church? <br />
-                                                <span className="opacity-50 font-medium italic">Pending approval to access admin features.</span>
-                                            </label>
+                                        <div className="space-y-4 p-5 bg-[var(--primary)]/5 rounded-3xl border border-[var(--primary)]/10">
+                                            <div className="space-y-1.5">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 px-2">Select Your Church</label>
+                                                <Select value={values.org_id} onValueChange={(v) => handleStickyChange("org_id", v)}>
+                                                    <SelectTrigger className="h-12 rounded-2xl bg-background border-border font-bold text-xs">
+                                                        <SelectValue placeholder="Select Church" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="rounded-2xl">
+                                                        {organizations.map(org => (
+                                                            <SelectItem key={org.id} value={org.id} className="font-bold text-xs">{org.name}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            <div className="flex items-center gap-4">
+                                                <input
+                                                    type="checkbox"
+                                                    id="memberRequest"
+                                                    checked={isMemberRequest}
+                                                    onChange={(e) => setIsMemberRequest(e.target.checked)}
+                                                    className="w-6 h-6 rounded-lg accent-[var(--primary)] transition-all cursor-pointer"
+                                                />
+                                                <label htmlFor="memberRequest" className="text-[11px] font-bold text-foreground/70 cursor-pointer leading-tight">
+                                                    I am a regular member of this church <br />
+                                                    <span className="opacity-50 font-medium italic">Enables attendance, tithing, and group features.</span>
+                                                </label>
+                                            </div>
                                         </div>
 
                                         <Button onClick={handleRegister} className="w-full h-16 rounded-full bg-[var(--primary)] font-black text-xl shadow-xl shadow-[var(--primary)]/30 hover:scale-[1.02] active:scale-[0.98] transition-all" disabled={loading}>

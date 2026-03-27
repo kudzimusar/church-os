@@ -36,6 +36,15 @@ export default function OnboardingPage() {
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Check for invited status in URL
+    useEffect(() => {
+        const query = new URLSearchParams(window.location.search);
+        const invitedChurch = query.get('church');
+        if (invitedChurch && !churchName) {
+            setChurchName(decodeURIComponent(invitedChurch));
+        }
+    }, [churchName]);
+
     // Auto-save integration
     const [showRestore, setShowRestore] = useState(false);
     const [savedData, setSavedData] = useState<any>(null);

@@ -105,6 +105,13 @@ export async function POST(request: Request) {
             },
             body: JSON.stringify({ record: intelligenceData })
         }).catch(err => console.error('Background AI Provisioning Trigger Failed:', err));
+        
+        // Mark invitation as completed if it exists
+        await supabase
+            .from('onboarding_invitations')
+            .update({ status: 'completed', completed_at: new Date().toISOString() })
+            .eq('email', contactEmail)
+            .eq('status', 'pending');
 
     } catch (triggerErr) {
         console.error('AI Provisioning trigger error:', triggerErr);

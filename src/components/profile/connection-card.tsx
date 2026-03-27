@@ -46,6 +46,7 @@ interface ProfileData {
     phone_number?: string;
     nationality?: string;
     preferred_language?: string;
+    org_id?: string;
 }
 
 interface ProfileViewProps {
@@ -125,6 +126,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                     phone_number: mapped.phone_number,
                     nationality: mapped.nationality,
                     preferred_language: mapped.preferred_language || 'EN',
+                    org_id: profileData.org_id
                 });
             } else if (authUser && !memberId) {
                 setProfile({
@@ -136,56 +138,83 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                     phone_number: '',
                     nationality: '',
                     preferred_language: 'EN',
+                    org_id: authUser?.user_metadata?.org_id
                 });
             }
 
             // Load household members from DB
-            const { data: hhData } = await supabase.from('household_members').select('*').eq('user_id', targetId);
+            const { data: hhData } = await supabase.from('household_members').select('*')
+                .eq('user_id', targetId)
+                .eq('org_id', profileData?.org_id || authUser?.user_metadata?.org_id);
             setHousehold(hhData || []);
 
             // Load prayer requests from DB
-            const { data: prData } = await supabase.from('prayer_requests').select('*').eq('user_id', targetId).order('created_at', { ascending: false });
+            const { data: prData } = await supabase.from('prayer_requests').select('*')
+                .eq('user_id', targetId)
+                .eq('org_id', profileData?.org_id || authUser?.user_metadata?.org_id)
+                .order('created_at', { ascending: false });
             setPrayers((prData || []).map((p: any) => ({ id: p.id, text: p.request_text, status: p.status === 'answered' ? 'ANSWERED' : 'PENDING', category: p.category, urgency: p.urgency, dbId: p.id })));
 
             // Load ministry roles from DB
-            const { data: mrData } = await supabase.from('ministry_members').select('*').eq('user_id', targetId);
+            const { data: mrData } = await supabase.from('ministry_members').select('*')
+                .eq('user_id', targetId)
+                .eq('org_id', profileData?.org_id || authUser?.user_metadata?.org_id);
             setMinistryRoles((mrData || []).map((m: any) => ({ id: m.id, role: m.ministry_name || m.ministry_role, status: m.is_active ? 'ACTIVE' : 'PAST' })));
 
             // Load financial records (giving/tithe) from DB
-            const { data: frData } = await supabase.from('financial_records').select('*').eq('user_id', targetId).order('given_date', { ascending: false }).limit(12);
+            const { data: frData } = await supabase.from('financial_records').select('*')
+                .eq('user_id', targetId)
+                .eq('org_id', profileData?.org_id || authUser?.user_metadata?.org_id)
+                .order('given_date', { ascending: false }).limit(12);
             setStewardship((frData || []).map((f: any) => ({ id: f.id, date: f.given_date, fund: f.record_type || 'Tithe', amount: f.amount || 0 })));
 
             // Load attendance records for the chart
-            const { data: atData } = await supabase.from('attendance_records').select('attended').eq('user_id', targetId).order('event_date', { ascending: false }).limit(7);
+            const { data: atData } = await supabase.from('attendance_records').select('attended')
+                .eq('user_id', targetId)
+                .eq('org_id', profileData?.org_id || authUser?.user_metadata?.org_id)
+                .order('event_date', { ascending: false }).limit(7);
             setAttendanceData((atData || []).map((a: any) => a.attended ? 100 : 20).reverse());
 
             // Load skills & talents from DB
-            const { data: skData } = await supabase.from('member_skills').select('*').eq('user_id', targetId);
+            const { data: skData } = await supabase.from('member_skills').select('*')
+                .eq('user_id', targetId)
+                .eq('org_id', profileData?.org_id || authUser?.user_metadata?.org_id);
             setSkills(skData || []);
 
             // Load children (guardian_links) from DB
-            const { data: kidData } = await supabase.from('guardian_links').select('*').eq('guardian_id', targetId);
+            const { data: kidData } = await supabase.from('guardian_links').select('*')
+                .eq('guardian_id', targetId)
+                .eq('org_id', profileData?.org_id || authUser?.user_metadata?.org_id);
             setChildren(kidData || []);
 
             // Load Bible Study Group memberships
-            const { data: bgData } = await supabase.from('bible_study_group_members').select('*, bible_study_groups(*)').eq('user_id', targetId);
+            const { data: bgData } = await supabase.from('bible_study_group_members').select('*, bible_study_groups(*)')
+                .eq('user_id', targetId)
+                .eq('org_id', profileData?.org_id || authUser?.user_metadata?.org_id);
             setMyGroups((bgData || []).map((r: any) => ({ ...r.bible_study_groups, membership_id: r.id })));
 
             // Load available groups for self-enrollment
-            const { data: allGroups } = await supabase.from('bible_study_groups').select('id, name, location, meeting_day, meeting_time');
+            const { data: allGroups } = await supabase.from('bible_study_groups').select('id, name, location, meeting_day, meeting_time')
+                .eq('org_id', profileData?.org_id || authUser?.user_metadata?.org_id);
             const myGroupIds = (bgData || []).map((r: any) => r.group_id);
             setAvailableGroups((allGroups || []).filter((g: any) => !myGroupIds.includes(g.id)));
 
             // Load merchandise orders
-            const { data: moData } = await supabase.from('merchandise_orders').select('*').eq('user_id', targetId).order('created_at', { ascending: false }).limit(10);
+            const { data: moData } = await supabase.from('merchandise_orders').select('*')
+                .eq('user_id', targetId)
+                .eq('org_id', profileData?.org_id || authUser?.user_metadata?.org_id)
+                .order('created_at', { ascending: false }).limit(10);
             setMerchOrders(moData || []);
 
             // Load Stats
             let journalStats = { completed: 0, streak: 0 };
             if (!memberId || memberId === authUser?.id) {
-                journalStats = await SoapJournal.getStats();
+                journalStats = await SoapJournal.getStats(profileData?.org_id || authUser?.user_metadata?.org_id);
             } else {
-                const { data: statsData } = await supabase.from('member_stats').select('*').eq('user_id', targetId).single();
+                const { data: statsData } = await supabase.from('member_stats').select('*')
+                    .eq('user_id', targetId)
+                    .eq('org_id', profileData?.org_id || authUser?.user_metadata?.org_id)
+                    .single();
                 if (statsData) {
                     journalStats = { completed: statsData.completed_devotions || 0, streak: statsData.current_streak || 0 };
                 }
@@ -239,8 +268,13 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
     }
 
     const handleAddHousehold = async () => {
-        if (!newHouseholdName || !profile) return;
-        const newMember = { user_id: profile.id, full_name: newHouseholdName, relationship: newHouseholdRel };
+        if (!newHouseholdName || !profile || !profile.org_id) return;
+        const newMember = { 
+            user_id: profile.id, 
+            org_id: profile.org_id,
+            full_name: newHouseholdName, 
+            relationship: newHouseholdRel 
+        };
         const { data, error } = await supabase.from('household_members').insert(newMember).select().single();
         if (error) { toast.error('Failed to add household member'); console.error(error); return; }
         setHousehold([...household, data || { id: Date.now(), ...newMember }]);
@@ -250,8 +284,15 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
     }
 
     const handleAddPrayer = async () => {
-        if (!newPrayer || !profile) return;
-        const payload = { user_id: profile.id, request_text: newPrayer, category: 'General', urgency: 'normal', status: 'active' };
+        if (!newPrayer || !profile || !profile.org_id) return;
+        const payload = { 
+            user_id: profile.id, 
+            org_id: profile.org_id,
+            request_text: newPrayer, 
+            category: 'General', 
+            urgency: 'normal', 
+            status: 'active' 
+        };
         const { data, error } = await supabase.from('prayer_requests').insert(payload).select().single();
         if (error) { toast.error('Failed to submit prayer request'); console.error(error); return; }
         setPrayers([...prayers, { id: data?.id || Date.now(), text: newPrayer, status: 'PENDING', dbId: data?.id }]);
@@ -273,8 +314,14 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
     }
 
     const handleAddMinistry = async () => {
-        if (!newMinistry || !profile) return;
-        const payload = { user_id: profile.id, ministry_name: newMinistry, ministry_role: 'Volunteer', is_active: true };
+        if (!newMinistry || !profile || !profile.org_id) return;
+        const payload = { 
+            user_id: profile.id, 
+            org_id: profile.org_id,
+            ministry_name: newMinistry, 
+            ministry_role: 'Volunteer', 
+            is_active: true 
+        };
         const { data, error } = await supabase.from('ministry_members').insert(payload).select().single();
         if (error) { toast.error('Failed to add ministry role'); console.error(error); return; }
         setMinistryRoles([...ministryRoles, { id: data?.id || Date.now(), role: newMinistry, status: 'ACTIVE' }]);
@@ -284,8 +331,15 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
     }
 
     const handleAddSkill = async () => {
-        if (!newSkillName || !profile) return;
-        const payload = { user_id: profile.id, skill_name: newSkillName, skill_category: newSkillCategory, skill_level: newSkillLevel, years_experience: 0 };
+        if (!newSkillName || !profile || !profile.org_id) return;
+        const payload = { 
+            user_id: profile.id, 
+            org_id: profile.org_id,
+            skill_name: newSkillName, 
+            skill_category: newSkillCategory, 
+            skill_level: newSkillLevel, 
+            years_experience: 0 
+        };
         const { data, error } = await supabase.from('member_skills').insert(payload).select().single();
         if (error) { toast.error('Failed to add skill'); console.error(error); return; }
         setSkills([...skills, data || { id: Date.now(), ...payload }]);
@@ -295,14 +349,26 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
     }
 
     const handleRemoveSkill = async (skillId: string) => {
-        const { error } = await supabase.from('member_skills').delete().eq('id', skillId);
+        if (!profile || !profile.org_id) return;
+        const { error } = await supabase
+            .from('member_skills')
+            .delete()
+            .eq('id', skillId)
+            .eq('org_id', profile.org_id);
         if (error) { toast.error('Failed to remove skill'); return; }
         setSkills(skills.filter(s => s.id !== skillId));
     }
 
     const handleAddChild = async () => {
-        if (!newChildName || !profile) return;
-        const payload = { guardian_id: profile.id, child_name: newChildName, child_birthdate: newChildBirthdate || null, medical_notes: newChildMedical || null, relationship: 'Parent' };
+        if (!newChildName || !profile || !profile.org_id) return;
+        const payload = { 
+            guardian_id: profile.id, 
+            org_id: profile.org_id,
+            child_name: newChildName, 
+            child_birthdate: newChildBirthdate || null, 
+            medical_notes: newChildMedical || null, 
+            relationship: 'Parent' 
+        };
         const { data, error } = await supabase.from('guardian_links').insert(payload).select().single();
         if (error) { toast.error('Failed to add child'); console.error(error); return; }
         setChildren([...children, data || { id: Date.now(), ...payload }]);
@@ -314,14 +380,19 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
     }
 
     const handleRemoveChild = async (childId: string) => {
-        const { error } = await supabase.from('guardian_links').delete().eq('id', childId);
+        if (!profile || !profile.org_id) return;
+        const { error } = await supabase
+            .from('guardian_links')
+            .delete()
+            .eq('id', childId)
+            .eq('org_id', profile.org_id);
         if (error) { toast.error('Failed to remove child'); return; }
         setChildren(children.filter(c => c.id !== childId));
     }
 
     const handleJoinBibleGroup = async (groupId: string) => {
-        if (!profile) return;
-        const payload = { user_id: profile.id, group_id: groupId };
+        if (!profile || !profile.org_id) return;
+        const payload = { user_id: profile.id, org_id: profile.org_id, group_id: groupId };
         const { data, error } = await supabase.from('bible_study_group_members').insert(payload).select().single();
         if (error) { toast.error('Failed to join group'); console.error(error); return; }
         // Move from available to my groups
@@ -335,7 +406,12 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
     }
 
     const handleLeaveBibleGroup = async (membershipId: string, groupId: string) => {
-        const { error } = await supabase.from('bible_study_group_members').delete().eq('id', membershipId);
+        if (!profile || !profile.org_id) return;
+        const { error } = await supabase
+            .from('bible_study_group_members')
+            .delete()
+            .eq('id', membershipId)
+            .eq('org_id', profile.org_id);
         if (error) { toast.error('Failed to leave group'); return; }
         const left = myGroups.find(g => g.id === groupId);
         if (left) {
@@ -351,10 +427,11 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
             const { error } = await supabase
                 .from('pastoral_notes')
                 .upsert({ 
-                    member_user_id: profile.id, 
+                    member_id: profile.id, 
+                    org_id: profile.org_id,
                     note: pastoralNotes, 
                     updated_at: new Date().toISOString() 
-                }, { onConflict: 'member_user_id,category,is_resolved' });
+                }, { onConflict: 'member_id,category,is_resolved' });
 
             if (error) throw error;
             toast.success("Pastoral notes saved successfully!");

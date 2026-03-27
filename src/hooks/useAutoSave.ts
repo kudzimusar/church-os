@@ -48,15 +48,20 @@ export const useAutoSave = ({
     };
   }, [data, formType, enabled, debounceMs, onSave]);
 
+  // Use a ref for onRestore to avoid dependency loops
+  const onRestoreRef = useRef(onRestore);
+  onRestoreRef.current = onRestore;
+
   // Check for saved data on mount
   useEffect(() => {
     if (!enabled) return;
     
     const saved = loadFormData(formType);
     if (saved && saved.data && Object.keys(saved.data).length > 0) {
-      onRestore?.(saved.data);
+      onRestoreRef.current?.(saved.data);
     }
-  }, [formType, enabled, onRestore]);
+    // We only want to check on mount or when formType/enabled changes
+  }, [formType, enabled]);
 
   const clearSaved = useCallback(() => {
     clearFormData(formType);

@@ -10,8 +10,8 @@ interface UseSessionHeartbeatOptions {
 
 export const useSessionHeartbeat = ({
   enabled = true,
-  refreshIntervalMs = 10 * 60 * 1000, // 10 minutes
-  activityTimeoutMs = 5 * 60 * 1000 // 5 minutes
+  refreshIntervalMs = 10 * 1000, // 10 seconds for testing
+  activityTimeoutMs = 5 * 1000 // 5 seconds for testing
 }: UseSessionHeartbeatOptions = {}) => {
   const activityTimerRef = useRef<NodeJS.Timeout>(undefined);
   const refreshTimerRef = useRef<NodeJS.Timeout>(undefined);

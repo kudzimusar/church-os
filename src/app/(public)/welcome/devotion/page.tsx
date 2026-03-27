@@ -305,8 +305,12 @@ export default function DevotionalApp() {
   const [mounted, setMounted] = useState(false);
   const loadStats = async () => {
     if (user) {
-      const s = await SoapJournal.getStats();
-      setStats(s);
+      // Try to get org_id from user metadata or profile
+      const orgId = user.user_metadata?.org_id;
+      if (orgId) {
+        const s = await SoapJournal.getStats(orgId);
+        setStats(s);
+      }
     }
   };
 
@@ -359,7 +363,8 @@ export default function DevotionalApp() {
 
         if (d) {
           if (user) {
-            const entry = await SoapJournal.getEntry(d.id);
+            const orgId = user.user_metadata?.org_id;
+            const entry = await SoapJournal.getEntry(d.id, orgId);
             setSoapEntry(entry);
             setNote(entry.observation || "");
           } else {
@@ -431,8 +436,9 @@ export default function DevotionalApp() {
     }
     try {
       setLoading(true);
+      const orgId = user.user_metadata?.org_id;
       const entryToSave = { ...soapEntry, observation: note, day_number: devotion.id, scripture: devotion.scripture };
-      const savedEntry = await SoapJournal.saveEntry(devotion.id, entryToSave);
+      const savedEntry = await SoapJournal.saveEntry(devotion.id, entryToSave, orgId);
       setSoapEntry(entryToSave);
 
       // Fire and forget AI background processing
