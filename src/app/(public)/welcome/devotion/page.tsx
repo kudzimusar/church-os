@@ -306,9 +306,9 @@ export default function DevotionalApp() {
   const loadStats = async () => {
     if (user) {
       // Try to get org_id from user metadata or profile
-      const orgId = user.user_metadata?.org_id;
+      const orgId = user.org_id;
       if (orgId) {
-        const s = await SoapJournal.getStats(orgId);
+        const s = await SoapJournal.getStats(orgId as string);
         setStats(s);
       }
     }
@@ -362,9 +362,9 @@ export default function DevotionalApp() {
         setDevotion(d || undefined);
 
         if (d) {
-          if (user) {
-            const orgId = user.user_metadata?.org_id;
-            const entry = await SoapJournal.getEntry(d.id, orgId);
+          if (user && user.org_id) {
+            const orgId = user.org_id;
+            const entry = await SoapJournal.getEntry(d.id, orgId as string);
             setSoapEntry(entry);
             setNote(entry.observation || "");
           } else {
@@ -436,9 +436,10 @@ export default function DevotionalApp() {
     }
     try {
       setLoading(true);
-      const orgId = user.user_metadata?.org_id;
+      const orgId = user.org_id;
+      if (!orgId) throw new Error("Organization context missing");
       const entryToSave = { ...soapEntry, observation: note, day_number: devotion.id, scripture: devotion.scripture };
-      const savedEntry = await SoapJournal.saveEntry(devotion.id, entryToSave, orgId);
+      const savedEntry = await SoapJournal.saveEntry(devotion.id, entryToSave, orgId as string);
       setSoapEntry(entryToSave);
 
       // Fire and forget AI background processing

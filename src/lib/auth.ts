@@ -9,6 +9,7 @@ export interface User {
     email: string | undefined;
     name: string;
     avatar_url?: string;
+    org_id?: string;
 }
 
 export interface AuthResponse {
@@ -34,7 +35,8 @@ export const Auth = {
             id: session.user.id,
             email: session.user.email,
             name: profile?.name || session.user.user_metadata?.full_name || 'User',
-            avatar_url: profile?.avatar_url || session.user.user_metadata?.avatar_url
+            avatar_url: profile?.avatar_url || session.user.user_metadata?.avatar_url,
+            org_id: profile?.org_id || session.user.user_metadata?.org_id
         };
     },
 
