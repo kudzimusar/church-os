@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { 
   Users, 
   Church, 
@@ -23,6 +24,8 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import Loading from "./loading";
 
 interface DashboardStat {
   title: string;
@@ -31,12 +34,89 @@ interface DashboardStat {
   type: string;
 }
 
-interface DashboardProps {
-  stats: DashboardStat[];
-  auditLogs: any[];
-}
+export default function DashboardClient() {
+  const [stats, setStats] = useState<DashboardStat[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default function DashboardClient({ stats, auditLogs }: DashboardProps) {
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        // 1. Fetch Total Organizations
+        const { count: orgCount } = await supabase
+          .from('organizations')
+          .select('*', { count: 'exact', head: true });
+
+        // 2. Fetch Total Members (Sum)
+        const { data: memberCounts } = await supabase
+          .rpc('get_org_member_counts');
+        
+        const totalUsers = memberCounts?.reduce((acc: number, curr: any) => acc + (curr.member_count || 0), 0) || 0;
+
+        // 3. Fetch Unresolved AI Insights
+        const { count: insightCount } = await supabase
+          .from('admin_ai_insights')
+          .select('*', { count: 'exact', head: true })
+          .is('resolved_at', null);
+
+        // 4. Fetch Latest Analytics Row for MRR and Churn
+        const { data: latestAnalytics } = await supabase
+          .from('company_analytics')
+          .select('metrics')
+          .order('date', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const mrrValue = latestAnalytics?.metrics?.mrr || 0;
+        const churnRate = (latestAnalytics?.metrics?.churn_rate || 0) * 100;
+
+        // 5. Fetch Recent Audit Logs
+        const { data: logs } = await supabase
+          .from('admin_audit_logs')
+          .select(`
+            *,
+            profiles:admin_id (name, email)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        setStats([
+          {
+            title: "Total Churches",
+            value: (orgCount || 0).toString(),
+            description: "Active platform nodes",
+            type: "nodes"
+          },
+          {
+            title: "Monthly Revenue",
+            value: `$${mrrValue.toLocaleString()}`,
+            description: `${churnRate.toFixed(1)}% churn rate`,
+            type: "revenue"
+          },
+          {
+            title: "Global Users",
+            value: totalUsers.toLocaleString(),
+            description: "Across all tenants",
+            type: "users"
+          },
+          {
+            title: "AI Alerts",
+            value: (insightCount || 0).toString(),
+            description: "Unresolved insights",
+            type: "alerts"
+          },
+        ]);
+        setAuditLogs(logs || []);
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDashboardData();
+  }, []);
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'nodes': return Church;
@@ -56,6 +136,8 @@ export default function DashboardClient({ stats, auditLogs }: DashboardProps) {
       default: return { text: "text-slate-400", bg: "bg-slate-400/10" };
     }
   };
+
+  if (loading) return <Loading />;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -130,16 +212,16 @@ export default function DashboardClient({ stats, auditLogs }: DashboardProps) {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-sm font-medium text-white">{log.action.replace(/_/g, ' ').toUpperCase()}</p>
+                        <p className="text-sm font-medium text-white">{log.action?.replace(/_/g, ' ').toUpperCase()}</p>
                         <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">{new Date(log.created_at).toLocaleTimeString()}</span>
                       </div>
                       <p className="text-xs text-slate-400 mb-2">Performed by {log.profiles?.email}</p>
                       <div className="flex items-center gap-2">
                          <span className={cn(
                            "px-2 py-0.5 rounded-full text-[10px] font-bold border",
-                           log.action.includes('suspend') ? "bg-rose-500/10 text-rose-400 border-rose-500/20" : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                           log.action?.includes('suspend') ? "bg-rose-500/10 text-rose-400 border-rose-500/20" : "bg-blue-500/10 text-blue-400 border-blue-500/20"
                          )}>
-                            {log.action.includes('suspend') ? 'SECURITY' : 'SYSTEM'}
+                            {log.action?.includes('suspend') ? 'SECURITY' : 'SYSTEM'}
                          </span>
                          <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[10px] font-bold border border-slate-700">ORD-{log.id.slice(0, 5).toUpperCase()}</span>
                       </div>
