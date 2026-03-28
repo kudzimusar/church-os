@@ -130,6 +130,12 @@ export default function AIPerformanceClient({
           <p className="text-slate-400">Monitoring platform-wide AI performance and effectiveness.</p>
         </div>
         <div className="flex gap-3">
+           <Link href="/super-admin/ai-ops/logs">
+             <Button variant="outline" className="bg-slate-900 border-slate-800 text-slate-300 rounded-xl hover:bg-slate-800">
+                <MessageSquare className="w-4 h-4 mr-2 text-amber-500" />
+                Interaction Logs
+             </Button>
+           </Link>
            <Button 
             variant="outline" 
             className="bg-slate-900 border-slate-800 text-slate-300 rounded-xl hover:bg-slate-800 disabled:opacity-50"

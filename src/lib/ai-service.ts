@@ -1,4 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { aiTools, executeToolCall } from "./ai-tools";
+import { logAIConversation } from "./ai-logger";
 
 /**
  * AI SERVICE - Core Intelligence Hub for Church OS
@@ -83,16 +85,16 @@ const intelligentFallback = (userRole: string, userName: string, query: string, 
     return response;
 };
 
-const getAIModel = () => {
+const getAIModel = (tools?: any[]) => {
     const key = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-    console.log(`[AI SERVICE] Diagnostic - API Key check: ${key ? `Found (Len: ${key.length})` : 'MISSING'}`);
-    
     if (!key || key === "YOUR_GEMINI_API_KEY" || key.trim() === "") return null;
-    if (!model) {
-        genAI = new GoogleGenerativeAI(key);
-        model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-    }
-    return model;
+    
+    // Using gemini-3.1-pro for the most stable and advanced function calling support in 2026
+    const ai = new GoogleGenerativeAI(key);
+    return ai.getGenerativeModel({ 
+        model: "gemini-3.1-pro",
+        tools: tools 
+    });
 };
 
 // Gemini Service Account Reference (for audit/logging)
@@ -133,7 +135,14 @@ PROPHETIC INTELLIGENCE LAYER (PIL):
 STYLING & PERSONALIZATION:
 - Treat the user with pastoral warmth, but stay grounded in the specific biblical context provided.
 - Use the user's name and stats (streak/completion) to personalize the response.
-- Keep responses concise but spiritually rich.`;
+- Keep responses concise but spiritually rich.
+
+TOOL USAGE PROTOCOLS (STRICT ENFORCEMENT):
+- ONLY call 'create_care_task' and 'mark_insight_visited' if Active Persona is 'Shepherd' or 'Strategist'.
+- ONLY call 'update_profile_skill' if Active Persona is 'Steward' or 'Sentinel'.
+- 'escalate_to_human', 'create_prayer_request', and 'schedule_reminder' are available to ALL personas.
+- 'record_attendance' is for 'Shepherd' and 'Facilitator' personas only.
+- ALWAYS confirm with the user before executing an irreversible tool like 'create_care_task' or 'escalate_to_human'.`;
 
 export const AIService = {
     generateHeroMessage: (streak: number, completed: number, total: number = 90) => {
@@ -166,7 +175,13 @@ export const AIService = {
         });
     },
 
-    chatWithGlobalAssistant: async (userRole: string, userName: string, query: string, contextPayload?: any, chatHistory?: { role: string, content: string }[]) => {
+    chatWithGlobalAssistant: async (userRole: string, userName: string, userId: string, query: string, contextPayload?: any, chatHistory?: { role: string, content: string }[]): Promise<{ text: string, logId: string | null }> => {
+        const startTime = Date.now();
+        let toolsCalled: any[] = [];
+        let toolResults: any[] = [];
+        let errorMsg: string | undefined;
+        let finalResponse = "";
+        let logId: string | null = null;
         const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
         const isAdmin = userRole === 'admin' || userRole === 'leader' || userRole === 'pastor';
 
@@ -190,60 +205,134 @@ export const AIService = {
             // Silently fail PIL context if schema is not fully applied
         }
 
+        // Format RAG Context for Persona Grounding
+        let ragContextString = "";
+        const r = contextPayload.ragContext;
+
+        if (contextPayload.activePersona === 'Shepherd' && r?.shepherd) {
+            const { prophetic_insights, assigned_members, recent_absences } = r.shepherd;
+            ragContextString = `\n--- GROUNDED SHEPHERD DATA ---\n` +
+                `- Active Prophetic Insights: ${prophetic_insights.length}\n` +
+                prophetic_insights.map((i: any) => `  * ${i.member?.name || 'Member'}: ${i.insight_summary} (Severity: ${i.severity})`).join('\n') +
+                `\n- Total Managed Members: ${assigned_members.length}\n` +
+                `- Members Needing Care (Inactive 3+ Days): ${recent_absences.length}\n` +
+                recent_absences.map((m: any) => `  * ${m.name || 'Member'} - Last: ${m.member_stats?.last_devotion_date || 'N/A'}`).join('\n') +
+                `\n--- END GROUNDED DATA ---`;
+        } else if (contextPayload.activePersona === 'Disciple' && r?.disciple) {
+            const { streak, ninety_day_progress, todays_devotion, recent_soap_entries } = r.disciple;
+            ragContextString = `\n--- GROUNDED DISCIPLE DATA ---\n` +
+                `- Current Streak: ${streak} days\n` +
+                `- 90-Day Challenge Progress: ${ninety_day_progress.completed}/90 days\n` +
+                `- Today's Devotion: ${todays_devotion?.title || 'Not loaded'} (${todays_devotion?.scripture || 'N/A'})\n` +
+                `- Recent Journals: ${recent_soap_entries.length} entries\n` +
+                recent_soap_entries.map((e: any) => `  * ${new Date(e.created_at).toLocaleDateString()}: ${e.scripture}`).join('\n') +
+                `\n--- END GROUNDED DATA ---`;
+        } else if (contextPayload.activePersona === 'Strategist' && r?.strategist) {
+            const { engagement_trends } = r.strategist;
+            ragContextString = `\n--- GROUNDED STRATEGIC DATA ---\n` +
+                `- Church Health Score: ${engagement_trends.score}/100\n` +
+                `- Active Devoters (Last 7 Days): ${engagement_trends.active_devoters}\n` +
+                `- Total Platform Members: ${engagement_trends.total_members}\n` +
+                `--- END GROUNDED DATA ---`;
+        } else if (contextPayload.activePersona === 'Concierge' && r?.concierge) {
+            const { missing_fields, completion_percentage } = r.concierge;
+            ragContextString = `\n--- GROUNDED CONCIERGE DATA ---\n` +
+                `- User Profile Completion: ${Math.round(completion_percentage)}%\n` +
+                `- Missing Critical Fields: ${missing_fields.join(', ') || 'None'}\n` +
+                `--- END GROUNDED DATA ---`;
+        }
+
         const contextStr = contextPayload ? `
         --- CURRENT USER STATE ---
         Name: ${userName}
         Role: ${userRole}
-        Stats: ${JSON.stringify(contextPayload.stats)}
-        Active Devotion: ${JSON.stringify(contextPayload.devotion)}
+        Active Persona: ${contextPayload.activePersona}
+        Current Page: ${contextPayload.currentPage}
         Date: ${contextPayload.currentDate}
+        ${ragContextString}
         ${pilContext}
         --- END CONTEXT ---
         ` : "";
 
         const historyStr = chatHistory?.map(m => `${m.role.toUpperCase()}: ${m.content}`).join("\n") || "";
-        const fullPrompt = `${SYSTEM_PROMPT}\n\n${contextStr}\n\nCONVERSATION HISTORY:\n${historyStr}\n\nUSER QUESTION: ${query}\n\nRESPONSE:`;
+        const fullPrompt = `${SYSTEM_PROMPT}\n\n${contextStr}\n\nIMPORTANT: Ground your responses in the [GROUNDED DATA] provided above. If data is missing or N/A, guide the user on how to populate it.\n\nCONVERSATION HISTORY:\n${historyStr}\n\nUSER QUESTION: ${query}\n\nRESPONSE:`;
 
-        const aiModel = getAIModel();
-        console.log(`[AI SERVICE] Initializing with: ${aiModel ? 'GEMINI_REAL' : 'INTELLIGENT_FALLBACK'}`);
+        const aiModel = getAIModel(aiTools);
+        console.log(`[AI SERVICE] Initializing with: ${aiModel ? 'GEMINI_3_1_PRO_WITH_TOOLS' : 'INTELLIGENT_FALLBACK'}`);
 
         if (aiModel) {
             try {
-                const result = await aiModel.generateContent({
-                    contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+                // Initialize chat with tools
+                const chat = aiModel.startChat({
+                    history: chatHistory?.map(m => ({
+                        role: m.role === 'ai' ? 'model' : 'user',
+                        parts: [{ text: m.content }]
+                    })) || [],
                     generationConfig: {
                         temperature: 0.7,
-                        topK: 40,
-                        topP: 0.95,
                         maxOutputTokens: 1024,
-                    },
-                    safetySettings: [
-                        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-                        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-                        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-                        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-                    ]
+                    }
                 });
-                const response = await result.response;
-                const text = response.text();
-                if (text && text.length > 5) {
-                    console.log("[AI SERVICE] Real AI Response Successful");
-                    return text;
+
+                const result = await chat.sendMessage(fullPrompt);
+                const response = result.response;
+                
+                // Handle possible tool calls (Function Calling)
+                const functionCalls = response.functionCalls();
+                if (functionCalls && functionCalls.length > 0) {
+                    const call = functionCalls[0];
+                    console.log(`[AI SERVICE] Gemini requested tool call: ${call.name}`);
+                    toolsCalled.push({ name: call.name, args: call.args });
+                    
+                    // Execute the tool locally
+                    const toolResult = await executeToolCall(call.name, call.args, userId, userRole);
+                    toolResults.push(toolResult);
+                    console.log(`[AI SERVICE] Tool result:`, toolResult);
+                    
+                    // Respond back to Gemini with tool outcome
+                    const finalResult = await chat.sendMessage([{
+                        functionResponse: {
+                            name: call.name,
+                            response: toolResult
+                        }
+                    }]);
+                    
+                    finalResponse = finalResult.response.text();
+                } else {
+                    finalResponse = response.text();
                 }
-                throw new Error("Empty AI response");
+
             } catch (err: any) {
                 console.warn("[AI SERVICE] Real AI Failed, Using Fallback. Reason:", err.message);
-                return intelligentFallback(userRole, userName, query, contextPayload, chatHistory);
+                errorMsg = err.message;
+                finalResponse = intelligentFallback(userRole, userName, query, contextPayload, chatHistory);
             }
+        } else {
+            // Diagnostic Fallback for lack of API Key
+            console.log("[AI SERVICE] No API Key Found, Executing Contextual Fallback");
+            finalResponse = intelligentFallback(userRole, userName, query, contextPayload, chatHistory);
         }
 
-        // Diagnostic Fallback for lack of API Key
-        console.log("[AI SERVICE] No API Key Found, Executing Contextual Fallback");
-        const fallbackValue = intelligentFallback(userRole, userName, query, contextPayload, chatHistory);
+        // Final Logging Pass (Phase 5)
+        try {
+            logId = await logAIConversation({
+                userId: userId || null,
+                organizationId: contextPayload?.ragContext?.user_profile?.org_id || null,
+                persona: contextPayload.activePersona,
+                path: contextPayload.currentPage,
+                userQuery: query,
+                aiResponse: finalResponse,
+                responseTimeMs: Date.now() - startTime,
+                toolsCalled,
+                toolResults,
+                errorMessage: errorMsg,
+                modelUsed: 'gemini-3.1-pro'
+            });
+        } catch (logErr) {
+            console.error("[AI SERVICE] Logging failed", logErr);
+        }
 
-        return new Promise<string>((resolve) => {
-            setTimeout(() => resolve(fallbackValue), 800);
-        });
+        return { text: finalResponse, logId };
     },
 
     generateNewsletterDraft: async (topics: string[], activePrayersCount: number, recentMilestonesCount: number) => {

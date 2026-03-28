@@ -5,11 +5,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Button } from "@/components/ui/button";
 import { Sparkles, Send, Bot, BarChart } from "lucide-react";
 import { AIService } from "@/lib/ai-service";
+import { AIFeedback } from "@/components/AIFeedback";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Auth } from "@/lib/auth";
+
+import { getContextForPersona } from "@/lib/context-injections";
 
 export function GlobalAIAssistant({ 
     user: propUser, 
@@ -29,7 +32,7 @@ export function GlobalAIAssistant({
     const pathname = usePathname();
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
-    const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
+    const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai', content: string, logId?: string | null }[]>([]);
     const [loading, setLoading] = useState(false);
     
     // Internal state for self-sufficiency
@@ -38,6 +41,25 @@ export function GlobalAIAssistant({
 
     const user = propUser || internalUser;
     const userRole = propUserRole || internalRole;
+
+    /**
+     * @see knowledge/personas/index.md
+     */
+    const detectPersona = (pathName: string, role: string | null) => {
+        const path = pathName || '';
+        
+        if (path.includes('/super-admin') || path.includes('/console')) return 'Sentinel';
+        if (role === 'pastor' || role === 'admin' || path.includes('/pastor-hq')) return 'Strategist';
+        if (role === 'shepherd' || path.includes('/shepherd')) return 'Shepherd';
+        if (path.includes('/bible-study') || path.includes('/groups')) return 'Facilitator';
+        if (path.includes('/devotion') || path.includes('/soap')) return 'Disciple';
+        if (path.includes('/profile')) return 'Steward';
+        if (path.includes('/onboarding') || path.includes('/welcome') || path === '/' || path === '') return 'Concierge';
+        
+        return 'Concierge';
+    };
+
+    const [currentPersona, setCurrentPersona] = useState(detectPersona(pathname, userRole));
 
     useEffect(() => {
         if (!propUser || !propUserRole) {
@@ -58,32 +80,20 @@ export function GlobalAIAssistant({
         }
     }, [propUser, propUserRole, pathname]);
 
-    const isAdmin = userRole === 'admin' || userRole === 'leader' || userRole === 'pastor';
+    // Handle Persona Shift Notification
+    useEffect(() => {
+        const nextPersona = detectPersona(pathname, userRole);
+        
+        if (nextPersona !== currentPersona && chatHistory.length > 0) {
+            const shiftMsg = `*I notice you've moved to the ${pathname} section. I'll shift focus to my ${nextPersona} persona to assist you better. ${getInitialMessageForPersona(nextPersona)}*`;
+            setChatHistory(prev => [...prev, { role: 'ai', content: shiftMsg }]);
+            setCurrentPersona(nextPersona);
+        } else if (nextPersona !== currentPersona) {
+            setCurrentPersona(nextPersona);
+        }
+    }, [pathname, userRole, currentPersona, chatHistory.length]);
 
-    /**
-     * @see knowledge/personas/index.md
-     * @see knowledge/prompts/index.md
-     */
-    const detectPersona = () => {
-        const path = pathname || '';
-        
-        // Priority 1: Super Admin / Console
-        if (path.includes('/super-admin') || path.includes('/console')) return 'Sentinel';
-        
-        // Priority 2: Staff Roles
-        if (userRole === 'pastor' || userRole === 'admin' || path.includes('/pastor-hq')) return 'Strategist';
-        if (userRole === 'shepherd' || path.includes('/shepherd')) return 'Shepherd';
-        
-        // Priority 3: Specialized Features
-        if (path.includes('/bible-study') || path.includes('/groups')) return 'Facilitator';
-        if (path.includes('/devotion') || path.includes('/soap')) return 'Disciple';
-        if (path.includes('/profile')) return 'Steward';
-        
-        // Priority 4: Entry / Public
-        if (path.includes('/onboarding') || path.includes('/welcome') || path === '/' || path === '') return 'Concierge';
-        
-        return 'Concierge';
-    };
+    const isAdmin = userRole === 'admin' || userRole === 'leader' || userRole === 'pastor';
 
     const handleSend = async () => {
         if (!query.trim()) return;
@@ -92,9 +102,14 @@ export function GlobalAIAssistant({
         setQuery("");
         setLoading(true);
 
-        const currentPersona = detectPersona();
-
         try {
+            // Phase 3: RAG Context Injection
+            const contextData = await getContextForPersona(
+                currentPersona.toLowerCase(),
+                user?.id || null,
+                userRole || 'visitor'
+            );
+
             const isCompletedToday = propDevotion && propStats?.completedDays?.includes(propDevotion.id);
 
             const contextPayload = {
@@ -108,11 +123,19 @@ export function GlobalAIAssistant({
                 currentDate: (propCurrentDate || new Date()).toISOString(),
                 currentPage: propCurrentPage || pathname,
                 membershipStatus: userRole || ' visitor',
-                activePersona: currentPersona
+                activePersona: currentPersona,
+                ragContext: contextData // Pass new context to AI Service
             };
 
-            const response = await AIService.chatWithGlobalAssistant(currentPersona, user?.name || 'Guest', query, contextPayload, chatHistory);
-            setChatHistory([...newChat, { role: 'ai', content: response }]);
+            const { text, logId } = await AIService.chatWithGlobalAssistant(
+                currentPersona, 
+                user?.name || 'Guest', 
+                user?.id || '', // Pass the actual Supabase user ID for tool execution
+                query, 
+                contextPayload, 
+                chatHistory
+            );
+            setChatHistory([...newChat, { role: 'ai', content: text, logId }]);
         } catch (e) {
             setChatHistory([...newChat, { role: 'ai', content: "I'm sorry, I'm having trouble connecting right now." }]);
         } finally {
@@ -120,27 +143,29 @@ export function GlobalAIAssistant({
         }
     };
 
-    // Determine initial message based on persona path
-    const getInitialMessage = () => {
-        const persona = detectPersona();
-        
+    const getInitialMessageForPersona = (persona: string) => {
         switch(persona) {
             case 'Shepherd':
-                return "I am the Church OS Shepherd. I am monitoring your assigned members and prophetic alerts. How can I assist your pastoral care today?";
+                return "I am monitoring assigned members and prophetic alerts. How can I assist your pastoral care today?";
             case 'Strategist':
-                return "I am the Church OS Strategist. I have analyzed church growth and ministry trends. What strategic insights do you need?";
+                return "I have analyzed church growth and ministry trends. What strategic insights do you need?";
             case 'Sentinel':
-                return "Systems are nominal. I am the Sentinel. How can I help you manage the platform architecture today?";
+                return "Systems are nominal. How can I help you manage the platform architecture today?";
             case 'Steward':
-                return "I am the Steward. I am here to help you manage your profile, ministry gifts, and engagement records.";
+                return "I am here to help you manage your profile, ministry gifts, and engagement records.";
             case 'Disciple':
-                return "I am here to guide your daily devotion, answer context about scriptures, and encourage your personal growth.";
+                return "I am here to guide your daily devotion and answer context about scriptures.";
             case 'Facilitator':
-                return "I am the Facilitator. I'm here to help manage your Bible study groups and curriculum engagement.";
+                return "I'm here to help manage your Bible study groups and curriculum engagement.";
             case 'Concierge':
             default:
-                return "Welcome! I'm your Concierge. I'll help you navigate the Church OS ecosystem. Where shall we start?";
+                return "I'll help you navigate the Church OS ecosystem. Where shall we start?";
         }
+    };
+
+    const getInitialMessage = () => {
+        const persona = currentPersona;
+        return `Welcome! ${getInitialMessageForPersona(persona)}`;
     };
 
     return (
@@ -190,19 +215,23 @@ export function GlobalAIAssistant({
                     )}
 
                     <AnimatePresence initial={false}>
-                        {chatHistory.map((chat, idx) => (
+                        {chatHistory.map((msg, idx) => (
                             <motion.div
                                 key={idx}
                                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                                className={`flex ${chat.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
-                                <div className={`max-w-[85%] rounded-3xl p-4 text-sm leading-relaxed ${chat.role === 'user'
-                                    ? 'bg-primary text-white rounded-br-sm shadow-xl shadow-primary/20'
-                                    : 'glass bg-foreground/5 border border-foreground/10 rounded-bl-sm prose prose-sm dark:prose-invert font-serif whitespace-pre-wrap'
+                                <div className={`p-4 rounded-2xl max-w-[85%] shadow-sm ${
+                                        msg.role === 'user' 
+                                            ? 'bg-amber-600 text-white ml-auto rounded-tr-none' 
+                                            : 'bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 mr-auto rounded-tl-none border border-zinc-100 dark:border-zinc-800'
                                     }`}>
-                                    {chat.content}
-                                </div>
+                                        <div className="text-[14px] leading-relaxed whitespace-pre-wrap">{msg.content}</div>
+                                        {msg.role === 'ai' && msg.logId && (
+                                            <AIFeedback logId={msg.logId} />
+                                        )}
+                                    </div>
                             </motion.div>
                         ))}
                         {loading && (
