@@ -50,8 +50,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
             const hasOrg = !error && member?.org_id;
             const role = member?.role || 'member';
 
-            // SaaS/API Dashboard logic: Only owners/admins with an ORG can stay in /admin
-            if (pathname.startsWith("/admin")) {
+            // SaaS/API Dashboard logic: Only owners/admins with an ORG can stay in /settings
+            if (pathname.startsWith("/settings")) {
                 if (!hasOrg) {
                     router.push("/onboarding");
                 } else if (role === 'member') {
@@ -66,9 +66,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
                 }
             }
 
-            // Onboarding logic: If already has an org, go to admin
+            // Onboarding logic: If already has an org, go to settings
             if (pathname.startsWith("/onboarding") && hasOrg) {
-                router.push("/admin");
+                router.push("/settings");
             }
 
             setLoading(false);
@@ -79,10 +79,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
     if (isPublic) return <>{children}</>;
 
-    const isProtected = cleanPath.startsWith("/admin") || 
+    const isProtected = cleanPath.startsWith("/settings") || 
                        cleanPath.startsWith("/onboarding") || 
                        cleanPath.startsWith("/shepherd") ||
-                       cleanPath.startsWith("/pastor-hq");
+                       cleanPath.startsWith("/pastor-hq") ||
+                       cleanPath.startsWith("/super-admin");
 
     if (loading && isProtected) {
         return (

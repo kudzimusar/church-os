@@ -184,7 +184,7 @@ export default function OnboardingPage() {
             if (res.ok) {
                 clearSaved();
                 toast.success('Sanctuary Provisioned Successfully!');
-                router.push('/admin');
+                router.push('/settings');
             } else {
                 toast.error(result.error || 'Registration failed');
             }

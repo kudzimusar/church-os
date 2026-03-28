@@ -12,6 +12,14 @@
 - A user from Org A cannot see, modify, or delete data belonging to Org B.
 - No "naked" select queries (queries without filters) exist in the service layer.
 
+### Analytics Queries (Cross‑Tenant)
+
+For admin dashboards that need aggregated data across organizations:
+
+1. Use the service role client (or dedicated admin API) to query the target tables.
+2. Always anonymize before presenting: mask PII by default (e.g. `em***@example.com`).
+3. Log the query in `admin_audit_logs` with `action = 'cross_tenant_analytics'`.
+
 **Failure Handling:** 
 - If `org_id` is missing from the table, halt work and request a database migration to add the column.
 - If the RLS policy is missing or incorrectly defined, prioritize fixing the policy before writing any frontend code.

@@ -176,6 +176,97 @@ The onboarding experience uses a custom design system:
 - **Body**: Inter (weight 400-500)
 
 
+## Data Analytics & AI: The Core of Church OS
+
+Church OS is built on a **data analytics engine** that powers every feature. All data (journals, prayer requests, engagement, AI insights) flows through a unified analytics pipeline that:
+
+- **Tracks church health** (engagement, growth, spiritual maturity)
+- **Drives AI insights** (Prophetic Intelligence, churn prediction, strategic recommendations)
+- **Enables business intelligence** for the Church OS team (MRR, adoption, trends)
+
+### Analytics Data Flow
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  User Actions   │ ──► │ AnalyticsService│ ──► │  Data Warehouse │
+│ (journals, etc.)│     │ (Supabase)      │     │ (Supabase)      │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                                                        │
+                                                        ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Vertex AI      │ ◄── │  Aggregated     │     │  Admin Console  │
+│  (PIL Engine)   │     │  Metrics        │ ──► │  (Dashboards)   │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+        │                                               │
+        ▼                                               ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Prophetic      │     │  Cross‑tenant   │     │  Business       │
+│  Insights       │     │  Analytics      │     │  Intelligence   │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
+
+### Analytics Tables (Existing & Planned)
+
+| Table | Purpose |
+|-------|---------|
+| `user_events` | All user actions (login, journal, prayer, etc.) with metadata |
+| `daily_org_metrics` | Aggregated metrics per organization (engagement, active users, AI calls) |
+| `prophetic_insights` | AI-generated insights delivered to pastors |
+| `ai_feedback` | Pastor ratings on insight helpfulness |
+| `company_analytics` | Cross-tenant aggregates (MRR, churn, adoption rates) |
+
+### AI Training Pipeline
+
+Anonymized data from churches that opt in is used to:
+- Improve the PIL Engine (better insight accuracy)
+- Train churn prediction models
+- Identify growth patterns across denominations
+
+Churches can opt in/out via `organization_intelligence.ai_training_opt_in` (default: false).
+
+## Super Admin Console (The SaaS Command Center)
+
+The Super Admin Console (`/super-admin`) is the internal operations platform for the Church OS management team. It provides a central hub for managing the entire SaaS multi-tenant ecosystem.
+
+| Module | Purpose | Implementation |
+|--------|---------|----------------|
+| **Tenant Browser** | Directory of all churches/organizations | `/super-admin/tenants` |
+| **Tenant Details** | Individual church management & overrides | `/super-admin/tenants/[id]` |
+| **Audit Logs** | Security & administrative event tracking | `admin_audit_logs` table |
+| **Subscription Overrides** | Manual control of plans & billing status | `/super-admin/tenants/actions.ts` |
+| **AI Decision Intelligence** | Predictive analytics for SaaS operations | `admin_ai_insights` table |
+| **Daily Analytics Aggregator** | Daily snapshots of platform KPIs | `daily-analytics-aggregator` Edge Function |
+
+## Dashboards & Analytics
+
+Church OS features several specialized dashboards for different roles:
+
+| Dashboard | Access | Core Purpose | Data Source |
+|-----------|--------|--------------|-------------|
+| **Devotion Dashboard** | Members | Spiritual growth tracking | `journal_entries`, `prayer_requests` |
+| **Pastor HQ / Shepherd** | Pastors/Leaders | Congregation health & care | `prophetic_insights`, `user_events` |
+| **Super Admin Console** | Company Admin | SaaS business metrics & operations | `company_analytics`, `admin_ai_insights` |
+
+### Platform Metrics Tracking
+
+The `daily-analytics-aggregator` function runs at midnight to calculate:
+- **MRR (Monthly Recurring Revenue)**: Sum of all active/trialing monthly subscription prices.
+- **Churn Rate**: Percentage of suspended organizations vs. total.
+- **User Growth**: Total registered profiles across the entire platform.
+- **Plan Distribution**: Breakdown of organizations by product tier (Lite, Pro, Enterprise).
+- **AI Health**: Count of unresolved administrative insights.
+
+## AI Decision Intelligence for Admin Console
+
+The Admin Console includes an **AI co-pilot** for the operations team. Every view includes AI-generated insights that help prioritize administrative actions.
+
+- **Churn Risk**: Identifies churches at risk of leaving based on engagement drops.
+- **Upgrade Opportunities**: Predicts when a church will outgrow its current plan.
+- **Anomalies**: Alerts on unusual platform activity (e.g., failed AI provision, trial expiry).
+- **Automation**: The `ai-decision-engine` Edge Function runs daily sweeps to refresh all admin insights.
+
+All AI insights are stored in `admin_ai_insights` and displayed prominently in the dashboard and tenant views to ensure the platform remains healthy and growing.
+
 ## Conventions
 - **File naming**: Components use `PascalCase.tsx`, services/utils use `kebab-case.ts`.
 - **Component structure**: Functional components with arrow functions or standard declarations, typically using `export default`.
@@ -184,6 +275,7 @@ The onboarding experience uses a custom design system:
 - **State management**: React Query handles server state (cache/fetching), while `useState`/`useEffect` handles local UI interactions.
 - **API calls**: Direct Supabase wrapper calls defined in `src/lib` services.
 - **Error handling**: `Sonner` toast notifications for user-facing errors, try/catch patterns in services.
+- **Admin Security**: Server-side checks via `supabaseAdmin` for all privileged super-admin operations.
 
 ## Common Commands
 | Purpose | Command |

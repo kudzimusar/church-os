@@ -9,6 +9,7 @@ import { AIPanel } from "@/components/dashboard/AIPanel";
 import { supabase } from "@/lib/supabase";
 import { basePath as BP } from "@/lib/utils";
 import { toast } from "sonner";
+import BroadcastAlert from "@/components/dashboard/BroadcastAlert";
 
 import { AdminCtx, AdminContext, useAdminCtx } from "./Context";
 
@@ -75,6 +76,7 @@ export default function ShepherdDashboardLayout({ children }: { children: React.
     return (
         <AdminContext.Provider value={state.ctx}>
             <div className="flex h-screen overflow-hidden bg-background text-foreground transition-colors duration-500">
+                <BroadcastAlert />
                 {/* Sidebar */}
                 <Sidebar />
 

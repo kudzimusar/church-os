@@ -26,6 +26,8 @@ export const metadata: Metadata = {
   },
 };
 
+import ImpersonationBanner from "@/components/super-admin/ImpersonationBanner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -38,6 +40,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen transition-colors duration-500`}
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <ImpersonationBanner />
           <AuthGuard>
             {children}
           </AuthGuard>

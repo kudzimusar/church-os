@@ -13,3 +13,12 @@
 **Success Criteria:** Insight appears in pastor dashboard within 30 seconds of generation, includes scripture reference and actionable recommendation.
 
 **Failure Handling:** If Vertex AI rate-limited, queue generation and notify user. If output doesn't match schema, regenerate with refined prompt.
+
+### AI Insight Analytics Integration
+
+When generating a prophetic insight (via `provision-church-intelligence` or scheduled jobs):
+
+1. Insert a record into `prophetic_insights` with the generated content.
+2. Create a corresponding entry in `ai_feedback` (initially with `was_helpful = NULL`).
+3. Track when the pastor views the insight (via a `viewed_at` timestamp).
+4. After 7 days, if no feedback is given, prompt the pastor to rate the insight.
