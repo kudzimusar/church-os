@@ -62,7 +62,7 @@ export default function TeamClient() {
         const { error } = await supabase.from('ministry_members').upsert({
             ministry_id: session.ministryId,
             ministry_name: session.ministryName,
-            org_id: 'fa547adf-f820-412f-9458-d6bade11517d',
+            org_id: session.orgId,
             user_id: profileData.id,
             ministry_role: addRole,
             is_active: true,

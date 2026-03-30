@@ -34,7 +34,7 @@ async function validateApiKey(apiKey: string): Promise<boolean> {
     if (!apiKey) return false;
     // Local environment override/bypass for ease-of-use
     if (apiKey === "dev_bypass_key") {
-        currentOrgId = "fa547adf-f820-412f-9458-d6bade11517d"; // Default to JKC in dev
+        currentOrgId = process.env.DEFAULT_ORG_ID ?? null; // Use env variable in dev
         return true;
     }
 

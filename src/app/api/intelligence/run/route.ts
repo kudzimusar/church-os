@@ -118,8 +118,49 @@ export async function POST(req: Request) {
 
             // 3. Run PIL Engine Sweep (Predictive Models)
             const { PILEngine } = await import('@/lib/pil-engine');
-            // 5. Trigger PIL specific rule generators
             const sweepResults = await PILEngine.runIntelligenceSweep(orgId);
+            
+            // 5. Map top insights to ministry-level table for leadership visibility
+            console.log(`📡 Mapping insights to ministries for Org: ${orgId}`);
+            const { data: ministries } = await supabaseAdmin
+                .from('ministries')
+                .select('id')
+                .eq('org_id', orgId)
+                .eq('is_active', true);
+
+            if (ministries && ministries.length > 0) {
+                const { data: topInsights } = await supabaseAdmin
+                    .from('prophetic_insights')
+                    .select('*')
+                    .eq('org_id', orgId)
+                    .eq('is_acknowledged', false)
+                    .in('category', ['burnout', 'isolation', 'drop_off', 'growth'])
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                if (topInsights && topInsights.length > 0) {
+                    for (const ministry of ministries) {
+                        const inserts = topInsights.map(insight => ({
+                            org_id: orgId,
+                            ministry_id: ministry.id,
+                            generated_by: 'gemini-sweep',
+                            insight_type: insight.category,
+                            subject: insight.insight_title,
+                            summary: insight.insight_description,
+                            detail: insight.insight_description,
+                            recommended_action: insight.recommended_action,
+                            urgency: insight.risk_level === 'critical' ? 'this_week' : 'this_month',
+                            is_approved: false,
+                            visible_to_ministry_leaders: true,
+                            visible_to_members: false,
+                        }));
+
+                        await supabaseAdmin
+                            .from('ai_ministry_insights')
+                            .insert(inserts);
+                    }
+                }
+            }
 
             // Map successful run summary
             const summary = {
@@ -134,7 +175,7 @@ export async function POST(req: Request) {
                 id: crypto.randomUUID(),
                 org_id: orgId,
                 action: 'INTELLIGENCE_SWEEP',
-                details: 'Completed Intelligence Engine Sweep',
+                details: 'Completed Intelligence Engine Sweep and Ministry Mapping',
                 metadata: { status: 'completed', timestamp: new Date().toISOString(), ...summary }
             });
 

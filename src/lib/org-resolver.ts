@@ -9,6 +9,10 @@ export const JKC_ORG_ID = 'fa547adf-f820-412f-9458-d6bade11517d';
 const ORG_CACHE_KEY = 'church_os_public_org';
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
+// In-memory memoization
+let memoizedPublicOrgId: string | null = null;
+let memoizedAdminContext: { orgId: string; role: string } | null = null;
+
 interface CachedOrg {
   orgId: string;
   cachedAt: number;
@@ -21,6 +25,9 @@ interface CachedOrg {
  * Falls back to the first org for localhost/dev environments.
  */
 export async function resolvePublicOrgId(): Promise<string | null> {
+  // 0. Check in-memory memoization first
+  if (memoizedPublicOrgId) return memoizedPublicOrgId;
+
   // 1. Check session cache
   if (typeof window !== 'undefined') {
     const cached = sessionStorage.getItem(ORG_CACHE_KEY);
@@ -28,6 +35,7 @@ export async function resolvePublicOrgId(): Promise<string | null> {
       try {
         const parsed: CachedOrg = JSON.parse(cached);
         if (Date.now() - parsed.cachedAt < CACHE_TTL_MS) {
+          memoizedPublicOrgId = parsed.orgId;
           return parsed.orgId;
         }
       } catch { /* ignore */ }
@@ -39,27 +47,34 @@ export async function resolvePublicOrgId(): Promise<string | null> {
 
   let orgId: string | null = null;
 
-  if (isLocal) {
-    // Dev/GitHub Pages fallback: use the JKC org explicitly
-    // This is intentional — in production each domain resolves dynamically
-    const { data } = await supabase
-      .from('organizations')
-      .select('id')
-      .eq('id', JKC_ORG_ID)
-      .single();
-    orgId = data?.id ?? null;
-  } else {
-    // Production: resolve by domain
-    const { data } = await supabase
-      .from('organizations')
-      .select('id')
-      .eq('domain', hostname)
-      .single();
-    orgId = data?.id ?? null;
+  try {
+    if (isLocal) {
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('id', JKC_ORG_ID)
+        .single();
+      
+      if (error) console.error('[ORG RESOLVER] Local resolve failed:', error.message);
+      orgId = data?.id ?? null;
+    } else {
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('domain', hostname)
+        .single();
+      
+      if (error) console.error(`[ORG RESOLVER] Domain resolve failed (${hostname}):`, error.message);
+      orgId = data?.id ?? null;
+    }
+  } catch (err) {
+    console.error('[ORG RESOLVER] Unexpected error during resolution:', err);
+    return null;
   }
 
   // Cache the result
   if (orgId && typeof window !== 'undefined') {
+    memoizedPublicOrgId = orgId;
     const toCache: CachedOrg = { orgId, cachedAt: Date.now() };
     sessionStorage.setItem(ORG_CACHE_KEY, JSON.stringify(toCache));
   }
@@ -74,39 +89,54 @@ export async function resolvePublicOrgId(): Promise<string | null> {
  * Used by AdminAuth and dashboard pages.
  */
 export async function resolveAdminOrgId(): Promise<{ orgId: string; role: string } | null> {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return null;
+  if (memoizedAdminContext) return memoizedAdminContext;
 
-  const { data: members, error } = await supabase
-    .from('org_members')
-    .select('role, org_id')
-    .eq('user_id', session.user.id);
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return null;
 
-  if (error || !members || members.length === 0) return null;
+    const { data: members, error } = await supabase
+      .from('org_members')
+      .select('role, org_id')
+      .eq('user_id', session.user.id);
 
-  // Single org: straightforward
-  if (members.length === 1) {
-    return { orgId: members[0].org_id, role: members[0].role };
-  }
+    if (error || !members || members.length === 0) return null;
 
-  // Multi-org: check if an active org is stored in session
-  if (typeof window !== 'undefined') {
-    const activeOrgId = sessionStorage.getItem('church_os_active_org');
-    if (activeOrgId) {
-      const match = members.find(m => m.org_id === activeOrgId);
-      if (match) return { orgId: match.org_id, role: match.role };
+    let result: { orgId: string; role: string } | null = null;
+
+    // Single org: straightforward
+    if (members.length === 1) {
+      result = { orgId: members[0].org_id, role: members[0].role };
+    } else {
+      // Multi-org: check if an active org is stored in session
+      if (typeof window !== 'undefined') {
+        const activeOrgId = sessionStorage.getItem('church_os_active_org');
+        if (activeOrgId) {
+          const match = members.find(m => m.org_id === activeOrgId);
+          if (match) result = { orgId: match.org_id, role: match.role };
+        }
+      }
+      
+      // Default to the first org
+      if (!result) result = { orgId: members[0].org_id, role: members[0].role };
     }
-  }
 
-  // Default to the first org (highest role wins in future enhancement)
-  return { orgId: members[0].org_id, role: members[0].role };
+    if (result) memoizedAdminContext = result;
+    return result;
+  } catch (err) {
+    console.error('[ORG RESOLVER] Admin resolution error:', err);
+    return null;
+  }
 }
 
 /**
  * Clears the public org cache (call on domain change or logout)
  */
 export function clearOrgCache() {
+  memoizedPublicOrgId = null;
+  memoizedAdminContext = null;
   if (typeof window !== 'undefined') {
     sessionStorage.removeItem(ORG_CACHE_KEY);
+    sessionStorage.removeItem('church_os_active_org'); // Also clear admin selection
   }
 }

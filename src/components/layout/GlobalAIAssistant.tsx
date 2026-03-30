@@ -107,22 +107,26 @@ export function GlobalAIAssistant({
             console.log(`[UI] Starting generation for ${currentPersona}...`);
             
             // Resolve Org Context
+            console.log(`[UI-AI] 1. Resolving organization context...`);
             let orgId = '';
             if (isAdmin) {
               const res = await resolveAdminOrgId();
               orgId = res?.orgId || '';
+              console.log(`[UI-AI] 1a. Resolved Admin Org ID: ${orgId}`);
             } else {
               orgId = (await resolvePublicOrgId()) || '';
+              console.log(`[UI-AI] 1b. Resolved Public Org ID: ${orgId}`);
             }
 
             // Phase 3: RAG Context Injection
+            console.log(`[UI-AI] 2. Injecting RAG context for ${currentPersona}...`);
             const contextData = await getContextForPersona(
                 currentPersona.toLowerCase(),
                 orgId,
                 user?.id || null, 
                 userRole || 'visitor'
             );
-            console.log(`[UI] Context retrieved:`, Object.keys(contextData));
+            console.log(`[UI-AI] 2a. Context retrieved:`, Object.keys(contextData));
 
             const isCompletedToday = propDevotion && propStats?.completedDays?.includes(propDevotion.id);
 
@@ -141,7 +145,7 @@ export function GlobalAIAssistant({
                 ragContext: contextData // Pass new context to AI Service
             };
 
-            console.log(`[UI] Calling AIService...`);
+            console.log(`[UI-AI] 3. Calling AI Backend Service...`);
             const aiResponse = await AIService.chatWithGlobalAssistant(
                 currentPersona, 
                 user?.name || 'Guest', 

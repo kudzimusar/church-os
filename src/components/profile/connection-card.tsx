@@ -427,11 +427,13 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
             const { error } = await supabase
                 .from('pastoral_notes')
                 .upsert({ 
-                    member_id: profile.id, 
+                    member_user_id: profile.id, 
                     org_id: profile.org_id,
                     note: pastoralNotes, 
+                    category: 'general',
+                    is_resolved: false,
                     updated_at: new Date().toISOString() 
-                }, { onConflict: 'member_id,category,is_resolved' });
+                }, { onConflict: 'member_user_id,category,is_resolved' });
 
             if (error) throw error;
             toast.success("Pastoral notes saved successfully!");

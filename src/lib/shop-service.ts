@@ -1,10 +1,11 @@
 "use client";
 
 import { supabase } from '@/lib/supabase';
+import { JKC_ORG_ID } from './org-resolver';
 
-export function getCurrencySymbol(org_id: string, country?: string) {
+export function getCurrencySymbol(org_id?: string, country?: string) {
     // Organizations in Japan get Yen
-    if (org_id === "fa547adf-f820-412f-9458-d6bade11517d") return "¥";
+    if (org_id === JKC_ORG_ID) return "¥";
     if (country === "Japan") return "¥";
     return "$";
 }

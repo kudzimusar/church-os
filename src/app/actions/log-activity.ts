@@ -4,15 +4,27 @@ export type ActivityAction = 'LOGIN' | 'LOGOUT' | 'MEMBER_UPDATE' | 'FINANCE_EDI
 
 /**
  * Logs activity from the client side.
- * RLS must allow the current user to insert to system_activity_logs.
+ * Resolves org_id dynamically from the authenticated user's org_members record.
  */
 export async function logActivityServer(userId: string, action: ActivityAction, details: string, metadata: any = {}) {
-    const { error } = await supabase.from('system_activity_logs').insert({ 
-        actor_id: userId, 
-        org_id: 'fa547adf-f820-412f-9458-d6bade11517d', // TODO: Make this dynamic from current user context
-        action, 
-        details, 
-        metadata: { ...metadata, timestamp: new Date().toISOString() } 
-    });
-    if (error) console.error("Activity log error:", error.message);
+    try {
+        // Resolve org_id from org_members — never hardcode
+        const { data: member } = await supabase
+            .from('org_members')
+            .select('org_id')
+            .eq('user_id', userId)
+            .limit(1)
+            .single();
+
+        const { error } = await supabase.from('system_activity_logs').insert({
+            actor_id: userId,
+            org_id: member?.org_id ?? null,
+            action,
+            details,
+            metadata: { ...metadata, timestamp: new Date().toISOString() }
+        });
+        if (error) console.error("Activity log error:", error.message);
+    } catch (err) {
+        console.error("Failed to log activity:", err);
+    }
 }

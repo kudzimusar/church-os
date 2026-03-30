@@ -184,6 +184,9 @@ export const AIService = {
         let logId: string | null = null;
         const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
         const isAdmin = userRole === 'admin' || userRole === 'leader' || userRole === 'pastor';
+        const isGuest = !userId || userId.trim() === "";
+
+        console.log(`[AI SERVICE] [${isGuest ? 'GUEST' : 'USER'}] Request started for ${contextPayload?.activePersona || 'Church OS'} mode.`);
 
         let pilContext = "";
         try {
@@ -266,43 +269,54 @@ export const AIService = {
 
         if (aiModel) {
             try {
-                console.log(`[AI SERVICE] Starting main loop...`);
-                const chat = aiModel.startChat({
-                    history: chatHistory?.map(m => ({
-                        role: m.role === 'ai' ? 'model' : 'user',
-                        parts: [{ text: m.content }]
-                    })) || [],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 1024,
-                    }
+                console.log(`[AI SERVICE] Starting main AI loop...`);
+                
+                // Create a timeout promise
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error("AI_TIMEOUT")), 15000); // 15s timeout
                 });
 
-                const result = await chat.sendMessage(fullPrompt);
-                const response = result.response;
-                
-                const functionCalls = response.functionCalls();
-                if (functionCalls && functionCalls.length > 0) {
-                    const call = functionCalls[0];
-                    toolsCalled.push({ name: call.name, args: call.args });
-                    const toolResult = await executeToolCall(call.name, call.args, userId, userRole);
-                    toolResults.push(toolResult);
-                    
-                    const finalResult = await chat.sendMessage([{
-                        functionResponse: {
-                            name: call.name,
-                            response: toolResult
+                const aiLogic = async () => {
+                    const chat = aiModel.startChat({
+                        history: chatHistory?.map(m => ({
+                            role: m.role === 'ai' ? 'model' : 'user',
+                            parts: [{ text: m.content }]
+                        })) || [],
+                        generationConfig: {
+                            temperature: 0.7,
+                            maxOutputTokens: 1024,
                         }
-                    }]);
+                    });
+
+                    const result = await chat.sendMessage(fullPrompt);
+                    const response = result.response;
                     
-                    finalResponse = finalResult.response.text();
-                } else {
-                    finalResponse = response.text();
-                }
-                console.log(`[AI SERVICE] Finishing generation.`);
+                    const functionCalls = response.functionCalls();
+                    if (functionCalls && functionCalls.length > 0) {
+                        const call = functionCalls[0];
+                        toolsCalled.push({ name: call.name, args: call.args });
+                        const toolResult = await executeToolCall(call.name, call.args, userId, userRole);
+                        toolResults.push(toolResult);
+                        
+                        const finalResult = await chat.sendMessage([{
+                            functionResponse: {
+                                name: call.name,
+                                response: toolResult
+                            }
+                        }]);
+                        
+                        return finalResult.response.text();
+                    } else {
+                        return response.text();
+                    }
+                };
+
+                // Race against timeout
+                finalResponse = await Promise.race([aiLogic(), timeoutPromise]) as string;
+                console.log(`[AI SERVICE] Finishing generation successfully.`);
 
             } catch (err: any) {
-                console.error("[AI SERVICE] Real AI Failed, Using Fallback. Reason:", err.message);
+                console.error(`[AI SERVICE] ${err.message === 'AI_TIMEOUT' ? 'Timeout' : 'Real AI Failed'}. Reason:`, err.message);
                 errorMsg = err.message;
                 finalResponse = intelligentFallback(userRole, userName, query, contextPayload, chatHistory);
             }

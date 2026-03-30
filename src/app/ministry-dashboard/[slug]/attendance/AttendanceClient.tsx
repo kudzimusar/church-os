@@ -64,7 +64,7 @@ export default function AttendanceClient() {
 
         const { error } = await supabase.from('ministry_reports').insert({
             ministry_id: session.ministryId,
-            org_id: 'fa547adf-f820-412f-9458-d6bade11517d',
+            org_id: session.orgId,
             submitted_by: user?.id,
             report_type: 'attendance',
             service_date: serviceDate,

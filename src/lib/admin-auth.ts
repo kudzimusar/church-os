@@ -6,7 +6,7 @@
  */
 import { supabase } from './supabase';
 import { basePath as BP } from './utils';
-import { resolveAdminOrgId } from './org-resolver';
+import { resolveAdminOrgId, clearOrgCache } from './org-resolver';
 
 export const ADMIN_ROLES = ['super_admin', 'pastor', 'owner', 'shepherd', 'admin', 'ministry_lead', 'ministry_leader', 'member'] as const;
 export type AdminRole = typeof ADMIN_ROLES[number];
@@ -112,6 +112,7 @@ export const AdminAuth = {
     async logoutAdmin() {
         if (typeof window !== 'undefined') {
             sessionStorage.removeItem(CACHE_KEY);
+            clearOrgCache();
         }
         await supabase.auth.signOut();
         window.location.href = `${BP}/login/`;

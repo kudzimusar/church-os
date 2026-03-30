@@ -70,6 +70,7 @@ interface DashboardData {
     declarationsToday: number;
     pendingApplications: any[];
     aiBriefing: any[];
+    pendingMinistryInsights: any[];
 }
 
 interface AtRiskMember {
@@ -118,7 +119,8 @@ const INITIAL_DATA: DashboardData = {
     churchHealth: null,
     declarationsToday: 0,
     pendingApplications: [],
-    aiBriefing: []
+    aiBriefing: [],
+    pendingMinistryInsights: []
 };
 
 /* ─── Sub-components ─── */
@@ -237,9 +239,32 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
         }
     };
 
+    const approveInsight = async (insightId: string) => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            const { error } = await supabase
+                .from('ai_ministry_insights')
+                .update({
+                    is_approved: true,
+                    approved_by: user?.id,
+                    approved_at: new Date().toISOString()
+                })
+                .eq('id', insightId);
+            
+            if (error) throw error;
+            toast.success("Insight Approved for Ministry View!");
+            loadData();
+        } catch (e) {
+            toast.error("Approval failed");
+        }
+    };
+
     const loadData = useCallback(async () => {
         if (!orgId) return;
+        const loadStartTime = performance.now();
         setLoading(true);
+        console.log(`[DASHBOARD] Starting data sync for org: ${orgId}`);
+        
         try {
             const db = supabase;
 
@@ -264,7 +289,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 ministryAnalyticsRes,
                 pendingAppsRes,
                 aiBriefingRes,
-                decCountRes
+                decCountRes,
+                ministryInsightsRes
             ] = await Promise.all([
                 db.from('profiles').select('*').eq('org_id', orgId),
                 db.from('member_stats').select('*').eq('org_id', orgId),
@@ -283,7 +309,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 db.from('ministry_analytics').select('ministry_id, health_score, avg_attendance, total_reports, salvations').eq('org_id', orgId).eq('period_type', 'monthly'),
                 db.from('ministry_members').select('*, profiles(name, avatar_url, org_id), ministries(name)').eq('org_id', orgId).eq('status', 'pending'),
                 db.from('prophetic_insights').select('*').eq('org_id', orgId).eq('is_acknowledged', false).order('generated_at', { ascending: false }).limit(3),
-                db.from('user_declarations').select('*', { count: 'exact', head: true }).eq('org_id', orgId).gte('confirmed_at', startOfToday.toISOString())
+                db.from('user_declarations').select('*', { count: 'exact', head: true }).eq('org_id', orgId).gte('confirmed_at', startOfToday.toISOString()),
+                db.from('ai_ministry_insights').select('*, ministries(name)').eq('org_id', orgId).eq('is_approved', false).order('created_at', { ascending: false }).limit(20)
             ]);
 
             const profiles = profilesRes.data || [];
@@ -299,6 +326,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const evangelismData = evangelismRes.data || [];
             const ministryAnalyticsData = ministryAnalyticsRes.data || [];
             const pendingApplications = pendingAppsRes.data || [];
+            const pendingMinistryInsights = ministryInsightsRes.data || [];
             // aiBriefing is now mapped below to include real prophetic insights schema
 
             // 2. Calculations
@@ -316,13 +344,19 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 ? Math.round(stats.reduce((a, s) => a + (s.current_streak || 0), 0) / stats.length)
                 : 0;
 
-            // Household Split
+            // Household Split & New Families
             const hhSplit = { couples: 0, singles: 0, families: 0 };
+            let newFamiliesCount = 0;
             profiles.forEach(p => {
                 const type = (p.household_type || '').toLowerCase();
+                const isNew = isAfter(new Date(p.created_at || now), startOfThisMonth);
+                
                 if (type.includes('single')) hhSplit.singles++;
                 else if (type.includes('couple')) hhSplit.couples++;
-                else if (type.includes('family')) hhSplit.families++;
+                else if (type.includes('family')) {
+                    hhSplit.families++;
+                    if (isNew) newFamiliesCount++;
+                }
             });
 
             // Ministry Data
@@ -363,6 +397,25 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 current_streak: i.metadata?.previous_streak || 0,
                 risk_level: i.risk_level || 'critical'
             }));
+
+            // Prayer Categories Mapping
+            const prayerCatMap: Record<string, number> = {};
+            prayers.forEach(p => {
+                const cat = p.category || 'General';
+                prayerCatMap[cat] = (prayerCatMap[cat] || 0) + 1;
+            });
+            const prayerColors = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+            const prayerCategories = Object.entries(prayerCatMap).map(([name, value], i) => ({
+                name, value, color: prayerColors[i % prayerColors.length]
+            }));
+
+            // Word Cloud / Themes Extraction
+            const themes = stats.flatMap(s => s.metadata?.spiritual_themes || []);
+            const themeCounts: Record<string, number> = {};
+            themes.forEach(t => themeCounts[t] = (themeCounts[t] || 0) + 1);
+            const wordCloud = Object.entries(themeCounts)
+                .sort((a, b) => b[1] - a[1])
+                .map(([name]) => name);
 
             // Skills Mapping
             const skillMap: Record<string, number> = {};
@@ -434,14 +487,18 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 avgStreak,
                 lastSundayAttendance: (recon?.usher_headcount > recon?.digital_count) ? recon?.usher_headcount : (recon?.digital_count || 0),
                 weeklyAvgAttendance: Math.round(((recon?.usher_headcount || recon?.digital_count || 0)) * 0.95),
+                newFamilies: newFamiliesCount,
                 salvations: pulse.total_salvations,
                 baptisms: pulse.total_baptisms,
                 prayerActive: prayers.filter(p => p.status === 'Pending').length,
                 prayerAnswered: prayers.filter(p => p.status === 'Answered').length,
+                criticalAlerts: mappedAlerts.length,
                 engagementScore: healthRes.data?.[0]?.score || prev.engagementScore,
                 alertMembers: mappedAlerts.length > 0 ? mappedAlerts : prev.alertMembers,
+                prayerCategories: prayerCategories,
+                wordCloud: wordCloud.length > 0 ? wordCloud : prev.wordCloud,
                 counselingQueue: pastoralNotes.map(n => ({
-                    name: (n.member as any)?.name || 'Member',
+                    name: (n.profiles as any)?.name || 'Member',
                     category: n.category,
                     leader: 'Pastor',
                     date: format(new Date(n.created_at), 'MMM d'),
@@ -465,8 +522,13 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     overdueMinistries: 0,
                     totalVolunteers,
                 },
-                declarationsToday: (decCountRes as any)?.count || 0
+                declarationsToday: (decCountRes as any)?.count || 0,
+                pendingMinistryInsights
             }));
+
+            const duration = performance.now() - loadStartTime;
+            console.log(`[DASHBOARD] Data Sync Complete in ${duration.toFixed(2)}ms`);
+
         } catch (e) {
             console.error("Dashboard Load Error:", e);
         } finally {
@@ -1061,8 +1123,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             </section>
 
             {/* ─── BOTTOM: GROWTH STATS + AI SUMMARY ─── */}
-            <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Church Growth Summary */}
+            <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* 1. Church Health Breakdown */}
                 <div className="bg-gradient-to-br from-violet-100 to-indigo-50 dark:from-violet-900/30 dark:to-indigo-900/20 border border-violet-200 dark:border-violet-500/20 rounded-2xl p-6">
                     <p className="text-xs font-black text-violet-600 dark:text-violet-300 uppercase tracking-widest mb-4">Church Health Score Breakdown</p>
                     <div className="space-y-3">
@@ -1091,7 +1153,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     </div>
                 </div>
 
-                {/* AI Daily Summary */}
+                {/* 2. Morning Briefing */}
                 <div className="bg-card border border-border rounded-2xl p-6">
                     <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Morning Pastor Briefing</p>
                     <div className="space-y-3">
@@ -1109,9 +1171,39 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                             </div>
                         )}
                     </div>
-                    <div className="mt-4 pt-3 border-t border-border flex justify-between text-[9px] text-muted-foreground/30">
-                        <span>AI Analysis · {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</span>
-                        <span>JST +09:00</span>
+                </div>
+
+                {/* 3. Ministry Insight Approvals (NEW) */}
+                <div className="bg-card border border-border rounded-2xl p-6 flex flex-col">
+                    <div className="flex items-center justify-between mb-4">
+                        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Ministry Insight Approvals</p>
+                        <Badge className="bg-amber-500 text-white border-0 font-black text-[9px]">{data.pendingMinistryInsights.length} PENDING</Badge>
+                    </div>
+                    <div className="space-y-3 flex-1 overflow-y-auto max-h-[320px] pr-2 scrollbar-thin scrollbar-thumb-border">
+                        {data.pendingMinistryInsights.length > 0 ? data.pendingMinistryInsights.map((insight: any) => (
+                             <div key={insight.id} className="p-3 bg-muted/50 rounded-xl border border-border flex flex-col gap-2">
+                                <div className="flex items-center justify-between">
+                                    <Badge variant="outline" className="text-[8px] font-black border-primary/20 text-primary uppercase">
+                                        {insight.ministries?.name || 'General'}
+                                    </Badge>
+                                    <span className={`w-2 h-2 rounded-full ${insight.urgency === 'this_week' ? 'bg-red-500 animate-pulse' : 'bg-amber-500'}`} title={insight.urgency} />
+                                </div>
+                                <p className="text-[10px] font-bold text-foreground leading-tight">{insight.subject}</p>
+                                <p className="text-[9px] text-muted-foreground line-clamp-2 italic">"{insight.summary}"</p>
+                                <Button 
+                                    size="sm" 
+                                    onClick={() => approveInsight(insight.id)}
+                                    className="w-full mt-1 bg-primary text-primary-foreground h-7 rounded-lg text-[9px] font-black uppercase tracking-widest"
+                                >
+                                    Approve for Leader View
+                                </Button>
+                             </div>
+                        )) : (
+                            <div className="h-full flex flex-col items-center justify-center opacity-20 py-10">
+                                <ShieldCheck className="w-12 h-12 mb-2" />
+                                <p className="text-[9px] font-black uppercase tracking-widest">Awaiting Sweep...</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </section>

@@ -2,6 +2,7 @@
 import { supabase } from "@/lib/supabase";
 
 import { useState, useEffect } from 'react';
+import { useAdminCtx } from '../../Context';
 
 import { toast } from 'sonner';
 import { Plus, DollarSign, Calendar, User, FileText, Loader2, ArrowRight } from 'lucide-react';
@@ -16,9 +17,9 @@ type GivingRecord = {
   given_date: string;
 };
 
-const ORG_ID = 'fa547adf-f820-412f-9458-d6bade11517d';
 
 export default function GivingLogPage() {
+  const { orgId } = useAdminCtx();
   const [records, setRecords] = useState<GivingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -37,7 +38,7 @@ export default function GivingLogPage() {
       const { data, error } = await supabase
         .from('financial_records')
         .select('*')
-        .eq('org_id', ORG_ID)
+        .eq('org_id', orgId)
         .order('given_date', { ascending: false })
         .limit(20);
 
@@ -52,8 +53,10 @@ export default function GivingLogPage() {
   };
 
   useEffect(() => {
-    fetchRecords();
-  }, []);
+    if (orgId) {
+      fetchRecords();
+    }
+  }, [orgId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +73,7 @@ export default function GivingLogPage() {
         currency,
         record_type: type,
         notes: `${paymentMethod.toUpperCase()}: ${donorName}. ${notes}`,
-        org_id: ORG_ID,
+        org_id: orgId,
         given_date: date
       });
 
