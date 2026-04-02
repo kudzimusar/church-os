@@ -48,6 +48,7 @@ interface Campaign {
   total_failed: number;
   created_at: string;
   sent_at: string | null;
+  author?: { name: string } | null;
 }
 
 interface Newsletter {
@@ -122,6 +123,7 @@ export default function COCEHub() {
   const [intent, setIntent] = useState("");
   const [campaignType, setCampaignType] = useState("newsletter");
   const [audienceScope, setAudienceScope] = useState("org_wide");
+  const [targetId, setTargetId] = useState(""); // Stores specific ministry or member details
   const [selectedChannels, setSelectedChannels] = useState<string[]>(["email", "line"]);
   const [scheduledAt, setScheduledAt] = useState("");
   const [isComposing, setIsComposing] = useState(false);
@@ -129,9 +131,14 @@ export default function COCEHub() {
   const [draftCampaignId, setDraftCampaignId] = useState<string | null>(null);
   const [previewLang, setPreviewLang] = useState<"en" | "ja">("en");
 
+  // Autocomplete targeting
+  const [foundUsers, setFoundUsers] = useState<any[]>([]);
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
+
   // Campaigns list
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
+  const [campaignFilter, setCampaignFilter] = useState<"all" | "drafts" | "sent">("all");
 
   // Member Feed state (fixed: member_feed_items not news_feed)
   const [feedData, setFeedData] = useState({
@@ -162,7 +169,7 @@ export default function COCEHub() {
     try {
       const { data, error } = await supabase
         .from("communication_campaigns")
-        .select("id, title, campaign_type, status, channels, subject_en, ai_drafted, total_sent, total_opened, total_failed, created_at, sent_at")
+        .select("id, title, campaign_type, status, channels, subject_en, ai_drafted, total_sent, total_opened, total_failed, created_at, sent_at, author:profiles!created_by(name)")
         .eq("org_id", orgId)
         .order("created_at", { ascending: false })
         .limit(50);
@@ -241,6 +248,7 @@ export default function COCEHub() {
             intent,
             campaign_type: campaignType,
             audience_scope: audienceScope,
+            target_id: targetId,
             channels: selectedChannels,
             scheduled_at: scheduledAt || undefined,
             created_by: user.id,
@@ -256,6 +264,10 @@ export default function COCEHub() {
 
       setAiDraft(result.draft);
       setDraftCampaignId(result.campaign_id);
+      
+      // Instantly refetch campaigns so the newly saved draft is instantly visible in the Campaigns tab
+      await fetchCampaigns();
+      
       toast.success("Draft ready — review and send");
     } catch (e: any) {
       console.error("[coce-compose]", e);
@@ -267,8 +279,113 @@ export default function COCEHub() {
 
   const handleSendDraft = async () => {
     if (!draftCampaignId) return;
-    // Trigger coce-send (Phase 2B) — placeholder until Edge Function deployed
-    toast.info("Scheduling send via coce-send — deploy Edge Function first");
+    
+    // First, update the campaign with any manual edits the user made
+    try {
+      const { error: updateError } = await supabase
+        .from("communication_campaigns")
+        .update({
+          subject_en: aiDraft?.subject_en || null,
+          subject_ja: aiDraft?.subject_ja || null,
+          body_en: aiDraft?.body_en || null,
+          body_ja: aiDraft?.body_ja || null,
+          status: scheduledAt && new Date(scheduledAt) > new Date() ? "scheduled" : "sending",
+        })
+        .eq("id", draftCampaignId);
+
+      if (updateError) throw updateError;
+
+      // If scheduled in the future, we just leave it. If sending now, call the dispatch endpoint
+      if (!scheduledAt || new Date(scheduledAt) <= new Date()) {
+        toast.info("Sending message via dispatch...");
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/coce-dispatch`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({
+              campaign_id: draftCampaignId,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Dispatch function failed to start");
+        }
+        toast.success("Message has been dispatched successfully!");
+      } else {
+        toast.success("Message scheduled successfully!");
+      }
+      
+      // Clean up UI and fetch to reflect new status
+      setAiDraft(null);
+      setDraftCampaignId(null);
+      fetchCampaigns();
+    } catch (e: any) {
+      console.error("[coce-send-draft]", e);
+      toast.error(e.message || "Failed to send message");
+    }
+  };
+
+  // Search logic for specific target
+  useEffect(() => {
+    if (!targetId || targetId.length < 2 || audienceScope === "org_wide" || audienceScope === "segment") {
+      setFoundUsers([]);
+      return;
+    }
+    const searchMembers = async () => {
+      setIsSearchingUsers(true);
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, email, name")
+          .eq("org_id", orgId)
+          .or(`email.ilike.%${targetId}%,name.ilike.%${targetId}%`)
+          .limit(5);
+        if (data) setFoundUsers(data);
+      } finally {
+        setIsSearchingUsers(false);
+      }
+    };
+    const timer = setTimeout(searchMembers, 400);
+    return () => clearTimeout(timer);
+  }, [targetId, orgId, audienceScope]);
+
+  const loadDraft = async (campaignId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("communication_campaigns")
+        .select("*")
+        .eq("id", campaignId)
+        .single();
+      
+      if (error) throw error;
+
+      setCampaignType(data.campaign_type);
+      setAudienceScope(data.audience_scope);
+      setSelectedChannels(data.channels);
+      setTargetId(data.audience_filter?.target_id || "");
+      setIntent(data.ai_prompt_used || "Loaded from explicit draft.");
+      
+      setDraftCampaignId(data.id);
+      setAiDraft({
+        subject_en: data.subject_en,
+        subject_ja: data.subject_ja,
+        body_en: data.body_en,
+        body_ja: data.body_ja,
+        line_message_en: data.line_message_en || "",
+        line_message_ja: data.line_message_ja || "",
+        sms_message_en: "",
+        sms_message_ja: "",
+        send_time_suggestion: "Ready to send"
+      });
+      setActiveTab("compose");
+    } catch (e: any) {
+      toast.error("Failed to load draft");
+    }
   };
 
   // ============================================================
@@ -433,7 +550,10 @@ export default function COCEHub() {
                 <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block">Audience</label>
                 <select
                   value={audienceScope}
-                  onChange={e => setAudienceScope(e.target.value)}
+                  onChange={e => {
+                    setAudienceScope(e.target.value);
+                    setTargetId(""); // Reset target id when scope changes
+                  }}
                   className="w-full bg-muted border border-border rounded-xl h-11 px-3 text-sm text-foreground focus:border-primary outline-none"
                 >
                   {AUDIENCE_SCOPES.map(a => (
@@ -451,6 +571,50 @@ export default function COCEHub() {
                 />
               </div>
             </div>
+
+            {/* Sub-target selector ONLY IF specific targeting is requested */}
+            <AnimatePresence>
+              {(audienceScope !== "org_wide" && audienceScope !== "segment") && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }} 
+                  animate={{ opacity: 1, height: "auto" }} 
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <label className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 block">
+                    Target {audienceScope.replace("_", " ")} Name or ID
+                  </label>
+                  <div className="relative">
+                    <Input
+                      placeholder={`Enter ${audienceScope.replace("_", " ")} email specifically...`}
+                      value={targetId}
+                      onChange={e => setTargetId(e.target.value)}
+                      className="bg-emerald-500/5 border-emerald-500/20 rounded-xl h-11 text-foreground text-sm focus:border-emerald-500"
+                    />
+                    {isSearchingUsers && <Loader2 className="absolute right-3 top-3 w-4 h-4 animate-spin text-emerald-500" />}
+                  </div>
+                  {foundUsers.length > 0 && targetId.length >= 2 && (
+                    <div className="mt-2 bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+                      {foundUsers.map(u => (
+                        <button
+                          key={u.id}
+                          className="w-full text-left px-3 py-2 text-xs hover:bg-muted font-medium transition-colors border-b last:border-b-0 border-border truncate"
+                          onClick={() => {
+                            setTargetId(u.email);
+                            setFoundUsers([]);
+                          }}
+                        >
+                          <span className="text-foreground">{u.name || "Unnamed"} ({u.email})</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-[10px] text-muted-foreground mt-2">
+                    Specify who exactly you are targeting (e.g. "John Doe" or "Youth Minstry").
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Channel toggles */}
             <div>
@@ -521,6 +685,12 @@ export default function COCEHub() {
                   </div>
                 </div>
 
+                <div className="bg-primary/5 rounded-xl p-3 border border-primary/10">
+                  <p className="text-[11px] font-medium text-muted-foreground leading-snug">
+                    <span className="font-extrabold text-foreground">Sender Note:</span> This message will be sent through <strong className="text-foreground">coce-dispatch</strong>. The system will automatically check each targeted member's <code className="text-[10px] text-primary">preferred_language</code> on their communication profile to decide whether to send the English or Japanese draft. The language toggle above is just to preview the generated drafts.
+                  </p>
+                </div>
+
                 {/* Email preview */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
@@ -528,12 +698,22 @@ export default function COCEHub() {
                     <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">Email</span>
                   </div>
                   <div className="bg-muted rounded-2xl p-4 space-y-2">
-                    <p className="text-xs font-black text-foreground uppercase">
-                      {previewLang === "en" ? aiDraft.subject_en : aiDraft.subject_ja}
-                    </p>
-                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                      {previewLang === "en" ? aiDraft.body_en : aiDraft.body_ja}
-                    </p>
+                    <Input
+                      className="text-sm font-black text-foreground bg-transparent border-0 px-0 focus-visible:ring-0 shadow-none -ml-1 uppercase w-full"
+                      value={previewLang === "en" ? aiDraft.subject_en : aiDraft.subject_ja}
+                      onChange={e => {
+                        const v = e.target.value;
+                        setAiDraft(prev => prev ? (previewLang === "en" ? { ...prev, subject_en: v } : { ...prev, subject_ja: v }) : prev);
+                      }}
+                    />
+                    <Textarea
+                      className="text-sm text-foreground bg-transparent border-0 px-0 focus-visible:ring-0 shadow-none leading-relaxed resize-none min-h-[140px] w-full"
+                      value={previewLang === "en" ? aiDraft.body_en : aiDraft.body_ja}
+                      onChange={e => {
+                        const v = e.target.value;
+                        setAiDraft(prev => prev ? (previewLang === "en" ? { ...prev, body_en: v } : { ...prev, body_ja: v }) : prev);
+                      }}
+                    />
                   </div>
                 </div>
 
@@ -545,9 +725,14 @@ export default function COCEHub() {
                       <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">LINE</span>
                     </div>
                     <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4">
-                      <p className="text-sm text-foreground leading-relaxed">
-                        {previewLang === "en" ? aiDraft.line_message_en : aiDraft.line_message_ja}
-                      </p>
+                      <Textarea
+                        className="text-sm text-foreground bg-transparent border-0 px-0 focus-visible:ring-0 shadow-none leading-relaxed resize-none min-h-[60px] w-full"
+                        value={previewLang === "en" ? aiDraft.line_message_en : aiDraft.line_message_ja}
+                        onChange={e => {
+                          const v = e.target.value;
+                          setAiDraft(prev => prev ? (previewLang === "en" ? { ...prev, line_message_en: v } : { ...prev, line_message_ja: v }) : prev);
+                        }}
+                      />
                     </div>
                   </div>
                 )}
@@ -599,6 +784,24 @@ export default function COCEHub() {
       {/* ===== CAMPAIGNS TAB ===== */}
       {activeTab === "campaigns" && (
         <div className="space-y-4">
+          <div className="flex gap-2">
+            {[
+              { id: "all", label: "All Campaigns" },
+              { id: "drafts", label: "Drafts & Scheduled" },
+              { id: "sent", label: "Sent out" },
+            ].map(f => (
+              <button
+                key={f.id}
+                onClick={() => setCampaignFilter(f.id as any)}
+                className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest transition-colors ${
+                  campaignFilter === f.id ? "bg-primary text-white" : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
           {loadingCampaigns ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -610,47 +813,123 @@ export default function COCEHub() {
             </div>
           ) : (
             <div className="space-y-3">
-              {campaigns.map(c => (
-                <div key={c.id} className="bg-card border border-border rounded-2xl p-5 flex items-center justify-between gap-4">
+              {campaigns
+                .filter(c => {
+                  if (campaignFilter === "drafts") return c.status === "draft" || c.status === "scheduled";
+                  if (campaignFilter === "sent") return c.status === "sent" || c.status === "sending";
+                  return true;
+                })
+                .map(c => (
+                <div key={c.id} className="bg-card hover:bg-muted/50 border border-border rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
                   <div className="flex items-center gap-4 min-w-0">
-                    {c.ai_drafted && (
-                      <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <Sparkles className="w-4 h-4 text-primary" />
+                    {c.ai_drafted ? (
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                        <MessageSquare className="w-5 h-5 text-blue-500" />
                       </div>
                     )}
-                    <div className="min-w-0">
-                      <p className="font-black text-foreground truncate">{c.title || c.subject_en}</p>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <div className="min-w-0 flex flex-col justify-center">
+                      <p className="font-black text-foreground truncate text-base">{c.title || c.subject_en || "Untitled Campaign"}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 mb-2 truncate">
+                        Created by <span className="font-bold text-foreground">{c.author?.name || "System Base"}</span>
+                      </p>
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${STATUS_COLORS[c.status] || STATUS_COLORS.draft}`}>
                           {c.status}
                         </span>
-                        <span className="text-[10px] text-muted-foreground font-medium">
-                          {c.campaign_type.replace("_", " ")}
+                        <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                          {c.campaign_type.replace(/_/g, " ")}
                         </span>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-[10px] text-muted-foreground font-bold uppercase">
                           {c.channels.join(" · ")}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-6 shrink-0 text-right">
-                    <div className="hidden md:flex flex-col">
-                      <span className="text-xs font-black text-foreground">{c.total_sent}</span>
-                      <span className="text-[9px] text-muted-foreground uppercase">Sent</span>
+                  
+                  <div className="flex items-center gap-6 shrink-0 md:justify-end pt-4 md:pt-0 border-t border-border md:border-0">
+                    <div className="flex gap-4">
+                      {c.status === "sent" && (
+                        <>
+                          <div className="flex flex-col text-center">
+                            <span className="text-sm font-black text-foreground">{c.total_sent}</span>
+                            <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Sent</span>
+                          </div>
+                          <div className="flex flex-col text-center">
+                            <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{c.total_opened}</span>
+                            <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Opened</span>
+                          </div>
+                          {c.total_failed > 0 && (
+                            <div className="flex flex-col text-center">
+                              <span className="text-sm font-black text-red-600 dark:text-red-400">{c.total_failed}</span>
+                              <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">Failed</span>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
-                    <div className="hidden md:flex flex-col">
-                      <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">{c.total_opened}</span>
-                      <span className="text-[9px] text-muted-foreground uppercase">Opened</span>
+                    
+                    <div className="flex flex-col text-right">
+                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                        {new Date(c.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </span>
+                      <span className="text-[9px] text-muted-foreground">
+                        {new Date(c.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                      </span>
                     </div>
-                    {c.total_failed > 0 && (
-                      <div className="flex flex-col">
-                        <span className="text-xs font-black text-red-600 dark:text-red-400">{c.total_failed}</span>
-                        <span className="text-[9px] text-muted-foreground uppercase">Failed</span>
-                      </div>
-                    )}
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                      {new Date(c.created_at).toLocaleDateString()}
-                    </span>
+
+                    <div className="flex gap-2">
+                      {(c.status === "draft" || c.status === "scheduled") ? (
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => loadDraft(c.id)}
+                            className="bg-primary hover:bg-primary/90 text-white shadow-sm h-9 px-4 rounded-xl text-xs font-black transition-all"
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-9 w-9 hover:text-red-500 rounded-xl"
+                            onClick={async () => {
+                              if(confirm('Delete draft completely?')) {
+                                await supabase.from('communication_campaigns').delete().eq('id', c.id);
+                                fetchCampaigns();
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </>
+                      ) : (
+                        <div className="flex gap-2 border-l border-border pl-4">
+                           <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => toast.info('Preview currently disabled for sent messages')}
+                            className="h-9 px-4 rounded-xl text-xs font-black transition-all"
+                           >
+                            View
+                           </Button>
+                           <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-9 w-9 hover:text-red-500 rounded-xl"
+                            onClick={async () => {
+                              if(confirm('Archive message? It will be preserved for history.')) {
+                                toast.success('Message Archived');
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

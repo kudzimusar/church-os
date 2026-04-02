@@ -213,6 +213,9 @@ export function GlobalAIAssistant({
                             <span className="text-[10px] font-black uppercase tracking-widest opacity-50">
                                 {isAdmin ? "Leadership Analytics Mode" : "Personal Devotion Mode"}
                             </span>
+                            <div className="sr-only">
+                                <p>Personal AI assistant for church guidance, devotion help, and ministry intelligence.</p>
+                            </div>
                         </div>
                     </div>
                 </SheetHeader>
@@ -276,6 +279,7 @@ export function GlobalAIAssistant({
                     <div className="relative flex items-center">
                         <Textarea
                             placeholder="Message Assistant..."
+                            aria-label="Message Assistant"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             onKeyDown={(e) => { 
@@ -291,6 +295,7 @@ export function GlobalAIAssistant({
                             disabled={!query.trim() || loading}
                             onClick={handleSend}
                             size="icon"
+                            aria-label="Send Message"
                             className="absolute right-2 bottom-2 w-10 h-10 rounded-full bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
                         >
                             <Send className="w-4 h-4 ml-0.5" />

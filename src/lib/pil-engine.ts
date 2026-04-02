@@ -48,7 +48,7 @@ export const PILEngine = {
                         insight_description: `${member.name} has been silent for ${member.days_silent} days.`,
                         recommended_action: `Initiate a pastoral care call.`,
                         metadata: { days_silent: member.days_silent, last_date: member.last_devotion_date }
-                    }, { onConflict: 'org_id,category,subject_id' });
+                    }, { onConflict: 'org_id,insight_title' });
                     results.disengagement++;
                 }
             }
@@ -93,7 +93,7 @@ export const PILEngine = {
                         insight_description: `${crisis.name} flagged for crisis: ${crisis.days_silent}d silence, ${crisis.active_crisis_prayers} active crisis prayers, ${crisis.negative_soap_sentiment_count} negative SOAP entries.`,
                         recommended_action: `Immediate pastoral intervention required.`,
                         metadata: { score: crisis.crisis_score, prayers: crisis.active_crisis_prayers, soap: crisis.negative_soap_sentiment_count }
-                    }, { onConflict: 'org_id,category,subject_id' });
+                    }, { onConflict: 'org_id,insight_title' });
                     results.crisis++;
                 }
             }
@@ -117,7 +117,7 @@ export const PILEngine = {
                         insight_description: `${member.name} joined < 90 days ago but has zero group/ministry connections and low attendance.`,
                         recommended_action: `Assign a dedicated welcome buddy for connection.`,
                         metadata: { joined_at: member.joined_at, attendance: member.recent_attendance }
-                    }, { onConflict: 'org_id,category,subject_id' });
+                    }, { onConflict: 'org_id,insight_title' });
                     results.retention++;
                 }
             }
@@ -141,7 +141,7 @@ export const PILEngine = {
                         insight_description: `${member.name} has zero ministry or small group connections. Isolated members are high risk for attrition.`,
                         recommended_action: `Invite to a Bible Study group matching their interests.`,
                         metadata: { joined_at: member.joined_at }
-                    }, { onConflict: 'org_id,category,subject_id' });
+                    }, { onConflict: 'org_id,insight_title' });
                     results.isolation++;
                 }
             }
@@ -165,7 +165,7 @@ export const PILEngine = {
                         insight_description: `Congregational sentiment shows ${climateData.critical_sentiment_count} negative entries (anxiety/despair) this week out of ${climateData.total_entries} journals.`,
                         recommended_action: `Speak on peace/provision in upcoming teaching.`,
                         metadata: { distribution: climateData.sentiment_distribution, totals: climateData.total_entries }
-                    }, { onConflict: 'org_id,category,subject_id' });
+                    }, { onConflict: 'org_id,insight_title' });
                     results.spiritual_climate++;
                 }
             }
@@ -189,7 +189,7 @@ export const PILEngine = {
                         insight_description: `There are ${careLoad.total_active_cases} active counseling cases and ${careLoad.overdue_follow_ups} overdue follow-ups. System capacity is reaching limits.`,
                         recommended_action: `Delegate ${Math.ceil(careLoad.total_active_cases * 0.3)} cases to ministry leads.`,
                         metadata: careLoad
-                    }, { onConflict: 'org_id,category,subject_id' });
+                    }, { onConflict: 'org_id,insight_title' });
                     results.pastoral_load++;
                 }
             }
@@ -213,7 +213,7 @@ export const PILEngine = {
                         insight_description: `${givingHealth.lapsed_givers_30d} regular givers have not given in the last 30 days.`,
                         recommended_action: `Send a "Thinking of You" message to regular donors who missed a month.`,
                         metadata: givingHealth
-                    }, { onConflict: 'org_id,category,subject_id' });
+                    }, { onConflict: 'org_id,insight_title' });
                     results.stewardship++;
                 }
             }
@@ -238,7 +238,7 @@ export const PILEngine = {
                         insight_description: `${referrer.referrer_name} is an MVP referrer with ${referrer.conversions} conversions (${referrer.conversion_rate}% rate).`,
                         recommended_action: `Publicly acknowledge their contribution or invite to leadership training.`,
                         metadata: referrer
-                    }, { onConflict: 'org_id,category,subject_id' });
+                    }, { onConflict: 'org_id,insight_title' });
                     results.evangelism++;
                 }
             }
@@ -263,7 +263,7 @@ export const PILEngine = {
                     insight_description: `The sermon "${top.title}" drove ${top.journals_in_followed_week} SOAP journals in the week following its broadcast.`,
                     recommended_action: `Consider creating more content on this theme.`,
                     metadata: top
-                }, { onConflict: 'org_id,category,subject_id' });
+                }, { onConflict: 'org_id,insight_title' });
                 results.sermon_impact++;
             }
 
@@ -286,7 +286,7 @@ export const PILEngine = {
                         insight_description: `${risk.name} is serving in ${risk.ministry_count} ministries but has dropped to ${risk.recent_attendance} attendances.`,
                         recommended_action: `Enforce a mandatory rest period from one ministry.`,
                         metadata: risk
-                    }, { onConflict: 'org_id,category,subject_id' });
+                    }, { onConflict: 'org_id,insight_title' });
                     results.burnout++;
                 }
             }
@@ -420,7 +420,13 @@ Output JSON: { "insights": [{ "subject": "e.g., Media Ministry", "summary": "Sho
                 
                 if (aiText) {
                     try {
-                        const cleaned = aiText.replace(/```json|```/g, '').trim();
+                        let cleaned = aiText.replace(/```json|```/g, '').trim();
+                        // Find the first { and the last } to strip conversational text
+                        const firstBrace = cleaned.indexOf('{');
+                        const lastBrace = cleaned.lastIndexOf('}');
+                        if (firstBrace !== -1 && lastBrace !== -1) {
+                            cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+                        }
                         const parsed = JSON.parse(cleaned);
                         
                         for (const insight of parsed.insights) {
