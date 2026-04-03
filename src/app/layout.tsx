@@ -28,6 +28,7 @@ export const metadata: Metadata = {
 
 import ImpersonationBanner from "@/components/super-admin/ImpersonationBanner";
 import { GlobalAIAssistant } from "@/components/layout/GlobalAIAssistant";
+import { ChurchGPTWidget } from "@/components/churchgpt/ChurchGPTWidget";
 
 export default function RootLayout({
   children,
@@ -45,6 +46,7 @@ export default function RootLayout({
           <AuthGuard>
             {children}
             <GlobalAIAssistant />
+            <ChurchGPTWidget />
           </AuthGuard>
           <StickyAutoRestorer />
           <Toaster position="top-center" />

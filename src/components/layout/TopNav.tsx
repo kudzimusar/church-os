@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Settings, Bell } from "lucide-react";
+import { Settings, Bell, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { basePath as BP } from "@/lib/utils";
@@ -41,7 +41,14 @@ export function TopNav({ user, userRole, stats, devotion, currentDate, onLoginCl
                             <span className="text-xs font-black text-[var(--primary)]">Login</span>
                         </button>
                     )}
-                    <div className="flex gap-1 items-center">
+                    <div className="flex gap-2 items-center">
+                        <Button asChild variant="ghost" className="hidden sm:flex items-center gap-2 glass px-4 h-9 md:h-11 rounded-full border-amber-400/30 bg-amber-400/10 text-amber-600 hover:bg-amber-400/20 shadow-sm transition-all font-black">
+                            <Link href="/churchgpt">
+                                <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
+                                <span className="text-[10px] md:text-xs uppercase tracking-[0.2em]">ChurchGPT</span>
+                            </Link>
+                        </Button>
+
                         <Button variant="ghost" size="icon" className="glass rounded-full h-9 w-9 md:h-11 md:w-11 relative" onClick={() => toast.info("There are no new notifications at this time.")}>
                             <Bell className="w-4 h-4 md:w-5 md:h-5 text-[var(--primary)]" />
                             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>

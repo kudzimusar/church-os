@@ -1,0 +1,14 @@
+
+> tmp_next@0.1.0 build
+> npm run build:widget && next build --webpack
+
+
+> tmp_next@0.1.0 build:widget
+> esbuild src/widget/index.js --bundle --minify --outfile=public/widget.js
+
+
+  public/widget.js  8.4kb
+
+⚡ Done in 45ms
+⨯ Unable to acquire lock at /Users/shadreckmusarurwa/Project AI/jkc-devotion-app/.next/lock, is another instance of next build running?
+  Suggestion: If you intended to restart next build, terminate the other process, and then try again.

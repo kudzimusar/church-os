@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
     { label: "Church Overview", icon: LayoutDashboard, path: "" },
+    { label: "ChurchGPT AI", icon: Sparkles, path: "/churchgpt", absolute: true },
     { label: "Spiritual Analytics", icon: HeartPulse, path: "/spiritual" },
     { label: "Pastoral Care", icon: Shield, path: "/care" },
     { label: "Members", icon: Users, path: "/members" },
@@ -82,23 +83,25 @@ export function Sidebar() {
             <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4">
                 <div className="space-y-0.5 px-2">
                     {NAV_ITEMS.map((item) => {
-                        const fullPath = `${BASE_PATH}${item.path}`;
+                        const fullPath = item.absolute ? item.path : `${BASE_PATH}${item.path}`;
                         const isActive = item.path === ""
                             ? pathname === BASE_PATH || pathname === BASE_PATH + "/"
-                            : pathname === `${BASE_PATH}${item.path}` || 
-                              pathname === `${BASE_PATH}${item.path}/`;
+                            : pathname === fullPath || 
+                              pathname === `${fullPath}/`;
                         const Icon = item.icon;
 
                         return (
                             <motion.button
                                 key={item.path}
                                 whileHover={{ x: 2 }}
-                                onClick={() => router.push(`${BASE_PATH}${item.path}/`)}
+                                onClick={() => router.push(fullPath.endsWith('/') ? fullPath : `${fullPath}/`)}
                                 className={cn(
                                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 group",
                                     isActive
                                         ? "bg-violet-500/10 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400 shadow-sm"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                                        : item.label === "ChurchGPT AI" 
+                                            ? "text-amber-600 hover:bg-amber-500/10" 
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted",
                                     collapsed && "justify-center px-0"
                                 )}
                             >

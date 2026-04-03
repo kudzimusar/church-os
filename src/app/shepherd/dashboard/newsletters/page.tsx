@@ -48,7 +48,7 @@ interface Campaign {
   total_failed: number;
   created_at: string;
   sent_at: string | null;
-  author?: { name: string }[] | null;
+  author?: { name: string } | { name: string }[] | null;
 }
 
 interface Newsletter {
@@ -250,7 +250,7 @@ export default function COCEHub() {
             audience_scope: audienceScope,
             target_id: targetId,
             channels: selectedChannels,
-            scheduled_at: scheduledAt || undefined,
+            scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
             created_by: user.id,
           }),
         }
@@ -289,7 +289,8 @@ export default function COCEHub() {
           subject_ja: aiDraft?.subject_ja || null,
           body_en: aiDraft?.body_en || null,
           body_ja: aiDraft?.body_ja || null,
-          status: scheduledAt && new Date(scheduledAt) > new Date() ? "scheduled" : "sending",
+          scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : new Date().toISOString(),
+          status: "scheduled",
         })
         .eq("id", draftCampaignId);
 
@@ -336,21 +337,39 @@ export default function COCEHub() {
       setFoundUsers([]);
       return;
     }
-    const searchMembers = async () => {
+    const searchTargets = async () => {
       setIsSearchingUsers(true);
       try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("id, email, name")
-          .eq("org_id", orgId)
-          .or(`email.ilike.%${targetId}%,name.ilike.%${targetId}%`)
-          .limit(5);
-        if (data) setFoundUsers(data);
+        if (audienceScope === "individual" || audienceScope === "role") {
+          const { data } = await supabase
+            .from("profiles")
+            .select("id, email, name")
+            .eq("org_id", orgId)
+            .or(`email.ilike.%${targetId}%,name.ilike.%${targetId}%`)
+            .limit(5);
+          if (data) setFoundUsers(data.map(u => ({ id: u.email, name: u.name, detail: u.email })));
+        } else if (audienceScope === "ministry") {
+          const { data } = await supabase
+            .from("ministries")
+            .select("id, name, description")
+            .eq("org_id", orgId)
+            .ilike("name", `%${targetId}%`)
+            .limit(5);
+          if (data) setFoundUsers(data.map(m => ({ id: m.id, name: m.name, detail: m.description || "Ministry" })));
+        } else if (audienceScope === "small_group") {
+          const { data } = await supabase
+            .from("bible_study_groups")
+            .select("id, name, type")
+            .eq("org_id", orgId)
+            .ilike("name", `%${targetId}%`)
+            .limit(5);
+          if (data) setFoundUsers(data.map(g => ({ id: g.id, name: g.name, detail: g.type || "Group" })));
+        }
       } finally {
         setIsSearchingUsers(false);
       }
     };
-    const timer = setTimeout(searchMembers, 400);
+    const timer = setTimeout(searchTargets, 400);
     return () => clearTimeout(timer);
   }, [targetId, orgId, audienceScope]);
 
@@ -598,13 +617,16 @@ export default function COCEHub() {
                       {foundUsers.map(u => (
                         <button
                           key={u.id}
-                          className="w-full text-left px-3 py-2 text-xs hover:bg-muted font-medium transition-colors border-b last:border-b-0 border-border truncate"
                           onClick={() => {
-                            setTargetId(u.email);
+                            setTargetId(u.name);
+                            if (audienceScope === "individual") setTargetId(u.id);
+                            else setTargetId(u.id);
                             setFoundUsers([]);
                           }}
+                          className="w-full text-left px-4 py-3 hover:bg-muted text-sm border-b border-border last:border-0"
                         >
-                          <span className="text-foreground">{u.name || "Unnamed"} ({u.email})</span>
+                          <div className="font-bold text-foreground">{u.name}</div>
+                          <div className="text-xs text-muted-foreground">{u.detail}</div>
                         </button>
                       ))}
                     </div>
@@ -834,7 +856,9 @@ export default function COCEHub() {
                     <div className="min-w-0 flex flex-col justify-center">
                       <p className="font-black text-foreground truncate text-base">{c.title || c.subject_en || "Untitled Campaign"}</p>
                       <p className="text-xs text-muted-foreground mt-0.5 mb-2 truncate">
-                        Created by <span className="font-bold text-foreground">{c.author?.[0]?.name || "System Base"}</span>
+                        Created by <span className="font-bold text-foreground">
+                          {Array.isArray(c.author) ? c.author[0]?.name : (c.author as any)?.name || "System Base"}
+                        </span>
                       </p>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${STATUS_COLORS[c.status] || STATUS_COLORS.draft}`}>
@@ -910,7 +934,7 @@ export default function COCEHub() {
                            <Button
                             size="sm"
                             variant="secondary"
-                            onClick={() => toast.info('Preview currently disabled for sent messages')}
+                            onClick={() => loadDraft(c.id)}
                             className="h-9 px-4 rounded-xl text-xs font-black transition-all"
                            >
                             View
