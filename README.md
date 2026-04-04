@@ -134,12 +134,17 @@ To ensure layout stability and visual consistency, the following components and 
 
 1.  **Top Navigation Bar (`PublicNav.tsx`)**
     *   **Positioning**: Must remain `fixed top-0`.
-    *   **Sign-Out**: Must perform a full state refresh (`window.location.href = '/'`) to ensure session security. Do not replace with simple state-clearing.
+    *   **Sign-Out**: Must perform a full state refresh with BASE PATH detection (`window.location.href = BP + "/"`) to ensure session security on GitHub Pages. Do not use root-relative paths like `'/'`.
     
 2.  **Home Page Performance & UX (`WelcomeClient.tsx`, `HeroSection.tsx`)**
     *   **Hero Check-In**: Must use **Optimistic UI** and **Parallel DB Hits**. Do not switch to sequential `await` calls as it compromises the "Premium Speed" feel.
+    *   **Guest Attendance Tracking**: Guests MUST be tracked via `device_id` in `attendance_records` AND `attendance_logs` before the conversion modal pops. This is critical for "Mission Control" data accuracy.
     *   **Button Design**: Attendance buttons must use high-contrast solid white backgrounds to ensure visibility over video backgrounds.
-    *   **Guest Card**: The `InitialConnectModal` is an onboarding critical component. It must be scoped to guests only (`!user`) and triggered within a 2-second window.
+    *   **Guest Card**: The `InitialConnectModal` must be triggered automatically for guests OR manually via the `open-connect-modal` event from the Hero.
+
+3.  **Routing & Redirects (GitHub Pages Subpath Aware)**
+    *   **Path Resolution**: All `router.push`, `router.replace`, and `window.location.href` calls MUST use the `basePath` (BP) prefix from `@/lib/utils`. 
+    *   **Reason**: Hardcoded root redirects (`/`) trigger 404 errors on `kudzimusar.github.io/jkc-devotion-app/`.
 
 **⚠️ COMMITMENT**: Any developer (human or AI) attempting to alter these locked behaviors **must first seek explicit confirmation (the "nod") from the owner**. 
 

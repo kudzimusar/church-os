@@ -23,11 +23,11 @@ export default function UnifiedLoginPage() {
 
     const performRedirection = (role: string, skipMemberRedirect: boolean = false) => {
         if (['pastor', 'owner', 'super_admin'].includes(role)) {
-            router.replace("/pastor-hq/");
+            router.replace(`${BP}/pastor-hq/`);
         } else if (['admin', 'shepherd', 'ministry_leader', 'ministry_lead'].includes(role)) {
-            router.replace("/shepherd/dashboard/");
+            router.replace(`${BP}/shepherd/dashboard/`);
         } else if (role === 'member' && !skipMemberRedirect) {
-            router.replace("/");
+            router.replace(`${BP}/`);
         }
         // If role is member and skipMemberRedirect is true, we stay on the login page
     };
@@ -90,7 +90,7 @@ export default function UnifiedLoginPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="w-full max-w-md z-10"
+                className="w-full max-w-md z-10 my-auto"
             >
                 {/* Logo */}
                 <div className="flex flex-col items-center mb-8">

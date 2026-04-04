@@ -89,7 +89,7 @@ export default function InitialConnectModal({ user }: { user?: any }) {
                 </div>
 
                 {/* Right side: The actual Form */}
-                <div className="flex-1 w-full bg-[var(--background)] p-6 sm:p-10 -my-16 scale-[0.9]">
+                <div className="flex-1 w-full bg-[var(--background)] p-6 sm:p-10">
                     <ConnectSection />
                 </div>
             </div>

@@ -16,6 +16,7 @@ function HeroCheckIn({ user }: { user: any }) {
   const [loading, setLoading]     = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const [selected, setSelected]   = useState<string | null>(null);
+  const [deviceId, setDeviceId]   = useState<string | null>(null);
 
   const now      = new Date();
   // Always compute JST regardless of client timezone (UTC+9)
@@ -25,37 +26,55 @@ function HeroCheckIn({ user }: { user: any }) {
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Saturday OR Sunday
   const todayStr = format(jstNow, 'yyyy-MM-dd');
 
+  const JKC_ORG_ID = 'fa547adf-f820-412f-9458-d6bade11517d';
+
   useEffect(() => {
-    if (!user || !isWeekend) return;
-    supabase.from('attendance_records')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('event_date', todayStr)
-      .maybeSingle()
-      .then(({ data }) => { if (data) setCheckedIn(true); });
+    // 1. Initialize Device ID for guests
+    if (!user) {
+      let storedId = localStorage.getItem('guest_device_id');
+      if (!storedId) {
+        storedId = crypto.randomUUID();
+        localStorage.setItem('guest_device_id', storedId);
+      }
+      setDeviceId(storedId);
+    }
+
+    if (!isWeekend) return;
+
+    // 2. Check for existing check-in (Auth or Guest)
+    const checkStatus = async () => {
+      const query = supabase.from('attendance_records')
+        .select('id, event_type')
+        .eq('event_date', todayStr);
+      
+      if (user) {
+        query.eq('user_id', user.id);
+      } else {
+        const storedId = localStorage.getItem('guest_device_id');
+        if (!storedId) return;
+        query.is('user_id', null).eq('device_id', storedId);
+      }
+
+      const { data } = await query.maybeSingle();
+      if (data) {
+        setCheckedIn(true);
+        setSelected(data.event_type === 'absence' ? 'absent' : (data.event_type === 'online' ? 'online' : 'in-person'));
+      }
+    };
+
+    checkStatus();
   }, [user, isWeekend, todayStr]);
 
   if (!isWeekend) return null;
 
   /**
    * PERFORMANCE CRITICAL: handleCheckIn
-   * 1. Uses Optimistic UI (setCheckedIn sets immediately)
-   * 2. Uses Promise.all to hit database endpoints in parallel
-   * DO NOT switch to sequential await calls as it blocks the user experience.
+   * Now also supports GUEST TRACKING to log data for mission control.
    */
   const handleCheckIn = async (type: string) => {
-    // GUEST FLOW: If no user, trigger the Digital Connect modal
-    if (!user) {
-      window.dispatchEvent(new CustomEvent('open-connect-modal'));
-      toast.info('Please fill in our visitor form to complete your check-in!', {
-        icon: '👋',
-      });
-      return;
-    }
-
     if (loading || checkedIn) return;
     
-    // OPTIMISTIC UPDATE: Show success immediately for perceived zero-latency
+    // OPTIMISTIC UPDATE:
     setLoading(true);
     setSelected(type);
     setCheckedIn(true); 
@@ -65,26 +84,62 @@ function HeroCheckIn({ user }: { user: any }) {
         'in-person': 'in-person', 'online': 'online', 'absent': 'not-attending'
       };
 
-      // Run both database updates in parallel
-      await Promise.all([
-        supabase.from('attendance_records').insert([{
-          user_id: user.id,
-          event_date: todayStr,
-          event_type: type === 'absent' ? 'absence' : 'sunday_service',
-          notes: `Checked in via hero: ${type}`
-        }]),
-        supabase.from('attendance_logs').upsert({
-          user_id: user.id,
-          service_date: todayStr,
-          status: statusMap[type]
-        }, { onConflict: 'user_id, service_date' })
-      ]);
+      if (user) {
+        // AUTHENTICATED FLOW
+        await Promise.all([
+          supabase.from('attendance_records').insert([{
+            user_id: user.id,
+            event_date: todayStr,
+            event_type: type === 'absent' ? 'absence' : (type === 'online' ? 'online' : 'sunday_service'),
+            org_id: JKC_ORG_ID, // Ensure org isolation
+            notes: `Checked in via hero: ${type}`
+          }]),
+          supabase.from('attendance_logs').upsert({
+            user_id: user.id,
+            service_date: todayStr,
+            status: statusMap[type],
+            org_id: JKC_ORG_ID
+          }, { onConflict: 'user_id, service_date' })
+        ]);
+        
+        toast.success(type === 'absent' ? 'Noted — leadership has been informed.' : 'Checked in! God bless your service.');
+      } else {
+        // GUEST FLOW (Data Collection for Mission Control)
+        if (!deviceId) throw new Error('Missing ID');
 
-      toast.success(type === 'absent' ? 'Noted — leadership has been informed.' : 'Checked in! God bless your service.');
-    } catch {
-      // Revert if it fails (rare)
-      setCheckedIn(false);
-      toast.error('Check-in failed, please try again.');
+        await Promise.all([
+          supabase.from('attendance_records').insert([{
+            user_id: null,
+            device_id: deviceId,
+            event_date: todayStr,
+            event_type: type === 'absent' ? 'absence' : (type === 'online' ? 'online' : 'sunday_service'),
+            org_id: JKC_ORG_ID,
+            notes: `Visitor check-in from device: ${deviceId}`
+          }]),
+          supabase.from('attendance_logs').insert({
+            user_id: null,
+            device_id: deviceId,
+            service_date: todayStr,
+            status: statusMap[type],
+            org_id: JKC_ORG_ID,
+            metadata: { visitor: true, source: 'hero_checkin' }
+          })
+        ]);
+
+        // Trigger Digital Connection modal AFTER successfully logging attendance
+        window.dispatchEvent(new CustomEvent('open-connect-modal'));
+        toast.info('Almost there! Please fill in our visitor form to complete your connection.', {
+          icon: '👋',
+          duration: 6000,
+        });
+      }
+    } catch (err: any) {
+      // Revert if it fails (ignore conflict errors as they mean the user already checked in)
+      if (err.code !== '23505') { 
+        setCheckedIn(false);
+        toast.error('Check-in failed, please try again.');
+        console.error('Check-in error:', err);
+      }
     } finally {
       setLoading(false);
     }
@@ -101,11 +156,12 @@ function HeroCheckIn({ user }: { user: any }) {
       >
         <CheckCircle2 className="w-5 h-5 shrink-0" style={{ color: 'var(--jkc-gold)' }} />
         <span className="text-xs font-black tracking-widest uppercase" style={{ color: 'var(--jkc-gold)' }}>
-          You're checked in for today
+          Check-in confirmed
         </span>
       </motion.div>
     );
   }
+
 
 
   /* ── 3-option picker ── */
