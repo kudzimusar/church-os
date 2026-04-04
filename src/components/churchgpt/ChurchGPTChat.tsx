@@ -3,27 +3,64 @@
 import { useState, useRef, useEffect } from "react"
 import { useChurchGPT } from "@/hooks/useChurchGPT"
 import { supabase } from "@/lib/supabase"
+import { resolveAdminOrgId } from "@/lib/org-resolver"
 import { ChurchGPTMessage } from "./ChurchGPTMessage"
 import { ChurchGPTInput } from "./ChurchGPTInput"
 import { ChurchGPTSuggestions } from "./ChurchGPTSuggestions"
-import { Trash2 } from "lucide-react"
+import { ChurchGPTSidebar } from "./ChurchGPTSidebar"
+import { Menu, X, ChevronDown, Search, MoreVertical, Edit2 } from "lucide-react"
 
 export function ChurchGPTChat({ initialSessionType = 'general' }: { initialSessionType?: string }) {
   const [sessionType, setSessionType] = useState(initialSessionType)
   const [memberProfile, setMemberProfile] = useState<any>(null)
+  const [orgId, setOrgId] = useState<string | undefined>(undefined)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
   
   useEffect(() => {
-    async function getProfile() {
+    async function init() {
       const { data: { user } } = await supabase.auth.getUser()
+      let userProfile = null
       if (user) {
         const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
         setMemberProfile(profile)
+        userProfile = profile
+      }
+      
+      const adminCtx = await resolveAdminOrgId()
+      if (adminCtx?.orgId) {
+        setOrgId(adminCtx.orgId)
+      } else if (userProfile?.org_id) {
+        setOrgId(userProfile.org_id)
       }
     }
-    getProfile()
+    init()
+
+    // Handle initial sidebar state based on screen width
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false)
+    }
   }, [])
 
-  const { messages, isLoading, error, sendMessage, clearConversation } = useChurchGPT(sessionType, undefined, memberProfile)
+  const { 
+    messages, 
+    isLoading, 
+    error, 
+    sendMessage, 
+    clearConversation,
+    conversations,
+    conversationId,
+    currentConversation,
+    loadMessages,
+    deleteConversation
+  } = useChurchGPT(sessionType, orgId, memberProfile)
+
+  useEffect(() => {
+    if (currentConversation?.session_type) {
+      setSessionType(currentConversation.session_type)
+    }
+  }, [currentConversation])
+
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -31,61 +68,123 @@ export function ChurchGPTChat({ initialSessionType = 'general' }: { initialSessi
   }, [messages])
 
   return (
-    <div className="flex flex-col h-full min-h-[calc(100vh-4rem)] bg-[#fcfbf9]">
-      <header className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100 shadow-sm shrink-0">
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-[#1b3a6b] text-white text-xs font-bold shadow-sm">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2v20M8 8h8" />
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-[#1b3a6b] leading-tight">ChurchGPT</h1>
-            <p className="text-xs text-gray-500 font-medium">Your Christian AI Companion</p>
-          </div>
-        </div>
-        {messages.length > 0 && (
-          <button 
-            onClick={clearConversation}
-            className="flex items-center space-x-2 text-xs text-gray-500 hover:text-red-600 transition-colors bg-gray-50 px-3 py-1.5 rounded-full"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Clear</span>
-          </button>
-        )}
-      </header>
-
-      <main className="flex-1 overflow-y-auto w-full min-h-0">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          {messages.length === 0 ? (
-            <ChurchGPTSuggestions onSelect={(msg) => sendMessage(msg)} />
-          ) : (
-            <div className="space-y-4">
-              {messages.map(msg => (
-                <ChurchGPTMessage key={msg.id} message={msg} />
-              ))}
-            </div>
-          )}
-          {error && (
-            <div className="mt-4 p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg text-center">
-              {error}
-            </div>
-          )}
-          <div ref={bottomRef} className="h-4" />
-        </div>
-      </main>
-
-      <footer className="sticky bottom-0 bg-gradient-to-t from-[#fcfbf9] via-[#fcfbf9] to-transparent pt-6 pb-6 px-4 shrink-0">
-        <ChurchGPTInput 
-          onSend={(msg, sType) => sendMessage(msg)} 
-          disabled={isLoading}
-          sessionType={sessionType}
-          setSessionType={setSessionType}
+    <div className="flex h-screen overflow-hidden bg-[#fafafa]">
+      {/* Sidebar - Dark Drawer / Overlay on Mobile */}
+      <div className={`
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+        lg:translate-x-0 fixed lg:relative z-50 h-full 
+        transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none
+      `}>
+        <ChurchGPTSidebar 
+          conversations={conversations}
+          activeId={conversationId}
+          onSelect={(id) => {
+            loadMessages(id)
+            if (window.innerWidth < 1024) setIsSidebarOpen(false)
+          }}
+          onDelete={deleteConversation}
+          onNewChat={() => {
+            clearConversation()
+            if (window.innerWidth < 1024) setIsSidebarOpen(false)
+          }}
+          isLoading={isLoading}
+          memberProfile={memberProfile}
         />
-        <div className="text-center mt-3 text-[10px] text-gray-400">
-          ChurchGPT can make mistakes. Consider verifying important spiritual counsel.
-        </div>
-      </footer>
+        {/* Mobile Sidebar Close Overlay */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/40 z-[-1] lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+      </div>
+
+      {/* Main Container */}
+      <div className="flex-1 flex flex-col h-full min-w-0 bg-[#fafafa]">
+        {/* Header - Transparent/White Glassmorphism */}
+        <header className="sticky top-0 z-10 flex items-center justify-between px-6 py-3 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm shrink-0">
+          <div className="flex items-center space-x-4 min-w-0">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className={`p-2 hover:bg-gray-100 rounded-lg lg:hidden transition-all ${isSidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+            >
+              <Menu className="w-5 h-5 text-gray-500" />
+            </button>
+            <div className="flex items-center space-x-2 truncate">
+              {isEditingTitle ? (
+                <input 
+                  type="text" 
+                  autoFocus 
+                  onBlur={() => setIsEditingTitle(false)}
+                  onKeyDown={e => e.key === 'Enter' && setIsEditingTitle(false)}
+                  defaultValue={currentConversation?.title || "New Chat"}
+                  className="bg-transparent border-b border-[#f5a623] focus:outline-none text-sm font-bold text-[#1b3a6b]"
+                />
+              ) : (
+                <div 
+                  className="flex items-center space-x-2 cursor-pointer group truncate"
+                  onClick={() => setIsEditingTitle(true)}
+                >
+                  <h1 className="text-sm font-bold text-[#1b3a6b] leading-tight truncate">
+                    {currentConversation?.title || "New Chat"}
+                  </h1>
+                  <span className="text-xs font-medium text-gray-300 group-hover:text-[#f5a623] transition-colors">•</span>
+                  <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest hidden md:block">
+                    {sessionType}
+                  </p>
+                  <Edit2 className="w-3 h-3 text-gray-200 group-hover:text-gray-400 transition-colors" />
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <button className="p-2 text-gray-400 hover:text-[#1b3a6b] hover:bg-gray-100 rounded-lg transition-all hidden sm:block">
+              <Search className="w-4 h-4" />
+            </button>
+            <button className="p-2 text-gray-400 hover:text-[#1b3a6b] hover:bg-gray-100 rounded-lg transition-colors">
+              <MoreVertical className="w-4 h-4" />
+            </button>
+          </div>
+        </header>
+
+        {/* Scroll Area */}
+        <main className="flex-1 overflow-y-auto w-full custom-scrollbar pt-6">
+          <div className="max-w-4xl mx-auto px-6 py-10 min-h-full flex flex-col">
+            {messages.length === 0 ? (
+               <ChurchGPTSuggestions onSelect={(msg) => sendMessage(msg, sessionType)} />
+            ) : (
+              <div className="space-y-2">
+                {messages.map(msg => (
+                  <ChurchGPTMessage key={msg.id} message={msg} />
+                ))}
+              </div>
+            )}
+            {error && (
+              <div className="mt-8 p-4 text-xs font-medium text-red-700 bg-red-100/50 border border-red-200 rounded-xl text-center shadow-sm max-w-lg mx-auto">
+                {error}
+              </div>
+            )}
+            <div ref={bottomRef} className="h-10 shrink-0" />
+          </div>
+        </main>
+
+        {/* Footer / Input Bar Area */}
+        <footer className="bg-gradient-to-t from-[#fafafa] via-[#fafafa]/95 to-transparent pt-4 pb-4 px-4 shrink-0 transition-all">
+          <div className="max-w-3xl mx-auto flex flex-col items-center">
+            <ChurchGPTInput 
+              onSend={(msg, sType) => sendMessage(msg, sType)} 
+              disabled={isLoading}
+              sessionType={sessionType}
+              setSessionType={setSessionType}
+              userRole={memberProfile?.role}
+            />
+            <p className="text-center mt-4 text-[10px] text-gray-400 font-medium tracking-wide">
+              ChurchGPT can make mistakes · <span className="font-bold text-[#1b3a6b]/50 italic">Ephesians 4:15</span>
+            </p>
+          </div>
+        </footer>
+      </div>
     </div>
   )
 }

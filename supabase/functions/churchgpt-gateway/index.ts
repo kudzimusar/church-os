@@ -72,11 +72,14 @@ serve(async (req) => {
     }
 
     const parts = [CHURCHGPT_CORE_IDENTITY]
+    parts.push("IMPORTANT: Keep responses concise and focused. Match the user's energy and avoid overly long explanations unless explicitly requested for high depth. Aim for max 3 paragraphs per turn.")
+    
     if (orgName) {
       parts.push(`You are deployed within ${orgName}. Reference this church warmly when relevant.`)
     }
-    if (memberProfile?.full_name) {
-      parts.push(`The member you are speaking with is ${memberProfile.full_name}.${memberProfile.spiritual_notes ? ` Pastoral context: ${memberProfile.spiritual_notes}` : ''} Use their name naturally in conversation.`)
+    const profileName = memberProfile?.name || memberProfile?.full_name
+    if (profileName) {
+      parts.push(`The member you are speaking with is ${profileName}.${memberProfile.spiritual_notes ? ` Pastoral context: ${memberProfile.spiritual_notes}` : ''} Use their name naturally in conversation.`)
     }
     const modifier = SESSION_MODIFIERS[sessionType || 'general']
     if (modifier) parts.push(modifier)
@@ -90,7 +93,7 @@ serve(async (req) => {
       generationConfig: {
         temperature: 0.7,
         topP: 0.9,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 500, // Reduced to force punchy responses
       }
     })
 

@@ -1,16 +1,26 @@
+"use client"
+
 import { useState, KeyboardEvent, useRef } from "react"
-import { Send, Mic } from "lucide-react"
+import { Send, Mic, ChevronDown } from "lucide-react"
 
 interface ChurchGPTInputProps {
   onSend: (message: string, sessionType: string) => void
   disabled?: boolean
   sessionType: string
   setSessionType: (v: string) => void
+  userRole?: 'admin' | 'pastor' | 'leader' | 'member' | 'visitor' | null
 }
 
-export function ChurchGPTInput({ onSend, disabled, sessionType, setSessionType }: ChurchGPTInputProps) {
+export function ChurchGPTInput({ onSend, disabled, sessionType, setSessionType, userRole }: ChurchGPTInputProps) {
   const [content, setContent] = useState("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Session options based on role
+  const sessionOptions = userRole === 'admin' || userRole === 'pastor'
+    ? ['general', 'devotional', 'prayer', 'bible-study', 'apologetics', 'pastoral', 'admin', 'visitor']
+    : userRole === 'member' || userRole === 'leader'
+    ? ['general', 'devotional', 'prayer', 'bible-study', 'apologetics', 'pastoral']
+    : ['general', 'prayer', 'bible-study', 'visitor'] // unauthenticated / external
 
   const handleSend = () => {
     if (content.trim() && !disabled) {
@@ -38,49 +48,49 @@ export function ChurchGPTInput({ onSend, disabled, sessionType, setSessionType }
   }
 
   return (
-    <div className="relative w-full max-w-4xl mx-auto bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col focus-within:ring-2 focus-within:ring-[#f5a623] focus-within:border-transparent transition-all">
-      <div className="absolute opacity-[0.03] pointer-events-none right-4 bottom-4">
-        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2v20M8 8h8" />
-        </svg>
-      </div>
+    <div className="relative w-full max-w-3xl mx-auto bg-white border-2 border-[#e8e8e8] rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-[#f5a623]/20 focus-within:border-[#f5a623]/40 transition-all p-3 flex flex-col space-y-3">
       <textarea
         ref={textareaRef}
         value={content}
         onChange={handleInput}
         onKeyDown={handleKeyDown}
         placeholder="Ask ChurchGPT anything..."
-        className="w-full resize-none bg-transparent px-4 pt-4 pb-2 text-gray-800 focus:outline-none min-h-[60px] relative z-10"
+        className="w-full resize-none bg-transparent px-2 pt-1 pb-1 text-gray-800 focus:outline-none min-h-[48px] text-[15px] font-sans scrollbar-hide"
         rows={1}
         disabled={disabled}
       />
-      <div className="flex justify-between items-center px-4 pb-3 pt-2 bg-white relative z-10">
+      
+      <div className="flex items-center justify-between mt-1">
         <div className="flex items-center space-x-2">
-          <select 
-            value={sessionType}
-            onChange={e => setSessionType(e.target.value)}
-            disabled={disabled}
-            className="text-xs bg-gray-50 border border-gray-200 text-gray-600 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#1b3a6b]"
-          >
-            <option value="general">General</option>
-            <option value="devotional">Devotional</option>
-            <option value="prayer">Prayer</option>
-            <option value="bible-study">Bible Study</option>
-            <option value="apologetics">Apologetics</option>
-            <option value="admin">Admin</option>
-            <option value="pastoral">Pastoral</option>
-            <option value="visitor">Visitor</option>
-          </select>
-          <button type="button" className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors" disabled={disabled}>
+          {/* Custom Styled Select Overlay */}
+          <div className="relative group">
+            <select 
+              value={sessionType}
+              onChange={e => setSessionType(e.target.value)}
+              disabled={disabled}
+              className="appearance-none text-[11px] font-bold uppercase tracking-wider bg-gray-100/80 border border-transparent text-gray-500 rounded-lg pl-3 pr-8 py-1.5 focus:outline-none hover:bg-gray-100 transition-colors cursor-pointer"
+            >
+              {sessionOptions.map(opt => (
+                <option key={opt} value={opt}>
+                  {opt.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
+          </div>
+
+          <button type="button" className="p-2 text-gray-400 hover:text-[#1b3a6b] hover:bg-gray-100 rounded-xl transition-all" disabled={disabled}>
             <Mic className="w-4 h-4" />
           </button>
         </div>
+
         <button
           onClick={handleSend}
           disabled={!content.trim() || disabled}
-          className="bg-[#1b3a6b] text-white p-2.5 rounded-xl hover:bg-[#152e55] disabled:opacity-50 disabled:hover:bg-[#1b3a6b] transition-colors flex shrink-0 items-center justify-center"
+          className="bg-[#1b3a6b] text-[#f5a623] p-2 px-5 rounded-xl hover:bg-[#152e55] disabled:opacity-30 transition-all flex shrink-0 items-center justify-center shadow-lg group"
         >
-          <Send className="w-4 h-4" />
+          <span className="mr-2 text-xs font-bold text-white tracking-widest uppercase">Send</span>
+          <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
         </button>
       </div>
     </div>
