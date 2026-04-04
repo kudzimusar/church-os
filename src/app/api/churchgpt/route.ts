@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       generationConfig: {
         temperature: 0.7,
         topP: 0.9,
-        maxOutputTokens: 800,  // was 2048 — reduce to force concise responses
+        maxOutputTokens: 1200,  // was 2048 — reduce to force concise responses
       }
     })
     

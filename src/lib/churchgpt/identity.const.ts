@@ -34,5 +34,5 @@ RESPONSE LENGTH — HARD RULES:
 - NEVER write more than 3 bullet points in a row.
 - After every response, ask ONE follow-up question or make ONE invitation —
   never more than one.
-- If your response exceeds 200 words, it is too long. Cut it.
+- Aim for 100-200 words for most responses. Never exceed 300 words unless the user explicitly asks for depth. Always complete your thought — never end mid-sentence.
 `;

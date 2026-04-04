@@ -149,12 +149,12 @@ export function ChurchGPTChat({ initialSessionType = 'general' }: { initialSessi
         </header>
 
         {/* Scroll Area */}
-        <main className="flex-1 overflow-y-auto w-full custom-scrollbar pt-6">
-          <div className="max-w-4xl mx-auto px-6 py-10 min-h-full flex flex-col">
+        <main className="flex-1 overflow-y-auto px-4 py-6 custom-scrollbar">
+          <div className="max-w-3xl mx-auto space-y-6">
             {messages.length === 0 ? (
                <ChurchGPTSuggestions onSelect={(msg) => sendMessage(msg, sessionType)} />
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-6">
                 {messages.map(msg => (
                   <ChurchGPTMessage key={msg.id} message={msg} />
                 ))}

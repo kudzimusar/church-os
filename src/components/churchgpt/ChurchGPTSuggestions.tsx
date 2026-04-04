@@ -1,4 +1,4 @@
-import { BookOpen } from "lucide-react"
+import { BookOpen, Sparkles, MessageCircle, Heart, HelpCircle, Compass } from "lucide-react"
 
 interface ChurchGPTSuggestionsProps {
   onSelect: (prompt: string) => void;
@@ -6,36 +6,48 @@ interface ChurchGPTSuggestionsProps {
 
 export function ChurchGPTSuggestions({ onSelect }: ChurchGPTSuggestionsProps) {
   const suggestions = [
-    "Help me understand John 3:16 more deeply",
-    "I'm struggling with doubt — what does the Bible say?",
-    "Write a prayer for my family",
-    "What does Christianity say about suffering?",
-    "I want to read the Bible but don't know where to start",
-    "Help me prepare a short devotional"
+    { label: "Understand a Bible verse", icon: <BookOpen className="w-5 h-5" /> },
+    { label: "Write a prayer for me", icon: <Sparkles className="w-5 h-5" /> },
+    { label: "I have a faith question", icon: <MessageCircle className="w-5 h-5" /> },
+    { label: "Help with something else", icon: <Heart className="w-5 h-5" /> },
+    { label: "What does Christianity say about suffering?", icon: <HelpCircle className="w-5 h-5" /> },
+    { label: "I want to start reading the Bible", icon: <Compass className="w-5 h-5" /> }
   ]
 
   return (
-    <div className="w-full max-w-4xl mx-auto mt-12 px-4">
-      <div className="text-center mb-10">
-        <div className="flex justify-center mb-4 text-[#f5a623]">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2v20M8 8h8" />
-          </svg>
+    <div className="flex flex-col items-center justify-center p-8 max-w-2xl mx-auto flex-1 min-h-[400px]">
+      <div className="text-center mb-8 space-y-2">
+        <div className="text-[#f5a623] mb-4 flex justify-center">
+          <span className="text-4xl drop-shadow-sm">✟</span>
         </div>
-        <h2 className="text-2xl font-semibold text-[#1b3a6b]">How can I help you today?</h2>
-        <p className="text-gray-500 mt-2">Choose a suggestion below or type your own message.</p>
+        <h2 
+          className="text-3xl font-bold text-[#1b3a6b]" 
+          style={{ fontFamily: 'Georgia, serif' }}
+        >
+          ChurchGPT
+        </h2>
+        <p className="text-gray-400 font-medium text-xs tracking-widest uppercase">
+          Your Christian AI Companion
+        </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {suggestions.map((s, i) => (
-          <button
-            key={i}
-            onClick={() => onSelect(s)}
-            className="flex items-start text-left p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md hover:border-[#f5a623] transition-all"
-          >
-            <BookOpen className="text-[#f5a623] w-5 h-5 shrink-0 mt-0.5 mr-3" />
-            <span className="text-sm text-gray-700">{s}</span>
-          </button>
-        ))}
+
+      <div className="w-full">
+        <div className="grid grid-cols-2 gap-3">
+          {suggestions.map((s, i) => (
+            <button
+              key={i}
+              onClick={() => onSelect(s.label)}
+              className="flex items-center gap-3 p-4 min-h-[64px] bg-white border border-gray-200 hover:border-[#f5a623] hover:bg-amber-50 cursor-pointer transition-all rounded-xl shadow-sm text-left group"
+            >
+              <span className="shrink-0 text-[#f5a623]">
+                {s.icon}
+              </span>
+              <span className="text-sm font-medium text-[#1b3a6b] leading-snug line-clamp-2">
+                {s.label}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   )

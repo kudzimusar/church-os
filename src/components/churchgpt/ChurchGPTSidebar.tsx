@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { ChurchGPTConversation } from "@/hooks/useChurchGPT"
 import { format, isToday, isYesterday, isThisWeek, subDays } from "date-fns"
+import { useRouter } from "next/navigation"
 
 interface ChurchGPTSidebarProps {
   conversations: ChurchGPTConversation[]
@@ -35,6 +36,7 @@ export function ChurchGPTSidebar({
 }: ChurchGPTSidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const router = useRouter()
 
   const groupedConversations = useMemo(() => {
     const filtered = conversations.filter(c => 
@@ -89,8 +91,14 @@ export function ChurchGPTSidebar({
           ))}
         </div>
         <div className="mt-auto pt-4 border-t border-white/5 w-full flex flex-col items-center space-y-4">
-          <Settings className="w-5 h-5 text-white/40 hover:text-white/80 cursor-pointer" />
-          <div className="w-8 h-8 rounded-full bg-[#1b3a6b] flex items-center justify-center text-[10px] font-bold text-white border border-white/10 uppercase">
+          <Settings 
+            className="w-5 h-5 text-white/40 hover:text-white/80 cursor-pointer" 
+            onClick={() => router.push('/console/settings')}
+          />
+          <div 
+            className="w-8 h-8 rounded-full bg-[#1b3a6b] flex items-center justify-center text-[10px] font-bold text-white border border-white/10 uppercase cursor-pointer hover:border-[#f5a623]/50 transition-all"
+            onClick={() => router.push('/console/profile')}
+          >
             {memberProfile?.name?.charAt(0) || "U"}
           </div>
         </div>
@@ -184,18 +192,24 @@ export function ChurchGPTSidebar({
 
       {/* Bottom Profile Section */}
       <div className="p-4 bg-black/20 border-t border-white/5 flex items-center justify-between">
-        <div className="flex items-center space-x-3 overflow-hidden">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1b3a6b] to-[#2a4d8a] flex items-center justify-center text-white text-[10px] font-bold border border-white/20 shrink-0">
+        <div 
+          className="flex items-center space-x-3 overflow-hidden cursor-pointer group"
+          onClick={() => router.push('/console/profile')}
+        >
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1b3a6b] to-[#2a4d8a] flex items-center justify-center text-white text-[10px] font-bold border border-white/20 shrink-0 group-hover:border-[#f5a623]/50 transition-all">
             {memberProfile?.name?.charAt(0) || "U"}
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-[#e8e8e8] truncate">
+            <p className="text-xs font-bold text-[#e8e8e8] truncate group-hover:text-white transition-colors">
               {memberProfile?.name || "User"}
             </p>
             <p className="text-[10px] text-white/40 truncate">Tokyo Grace Community</p>
           </div>
         </div>
-        <button className="p-1.5 text-white/30 hover:text-white transition-colors">
+        <button 
+          className="p-1.5 text-white/30 hover:text-white transition-colors"
+          onClick={() => router.push('/console/settings')}
+        >
           <Settings className="w-4 h-4" />
         </button>
       </div>
