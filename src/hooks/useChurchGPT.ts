@@ -44,6 +44,7 @@ export function useChurchGPT(sessionType: string = 'general', orgId?: string, me
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
           messages: [...messages, userMessage].map(m => ({
