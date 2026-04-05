@@ -19,7 +19,7 @@
 | Styling | Tailwind CSS 4 | ^4.0.0 | Premium Glassmorphism & Animations |
 | Hosting | GitHub Pages | - | Deployed at `kudzimusar.github.io/jkc-devotion-app/` |
 
-> **AI Model Note**: Confirmed working model is `gemini-2.5-flash`. The string `gemini-1.5-pro` is deprecated in this codebase. Edge Functions use `GEMINI_API_KEY` (server-side). Client-side AI uses `NEXT_PUBLIC_GEMINI_API_KEY`. Never swap these.
+> **AI Model Rule**: The ONLY active model string is `models/gemini-2.5-flash`. ALL `gemini-1.5-flash`, `gemini-1.5-pro`, or `gemini-3.1-pro` strings are **deprecated and forbidden**. Edge Functions use `GEMINI_API_KEY` (server-side). Client-side AI uses `NEXT_PUBLIC_GEMINI_API_KEY`. Never swap these. Always use the latest 2.5 architecture.
 
 ## Architecture
 - **Structure**: 
