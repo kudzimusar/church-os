@@ -95,21 +95,25 @@ export async function resolveAdminOrgId(): Promise<{ orgId: string; role: string
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return null;
 
-    const { data: members, error } = await supabase
+    const { data: rawMembers, error } = await supabase
       .from('org_members')
       .select('role, org_id')
       .eq('user_id', session.user.id);
 
-    if (error || !members || members.length === 0) return null;
+    if (error || !rawMembers || rawMembers.length === 0) return null;
 
+    const members = rawMembers as { role: string; org_id: string }[];
     let result: { orgId: string; role: string } | null = null;
 
-    // Single org: straightforward
+    // ── Organization Resolution Logic ──
     if (members.length === 1) {
       result = { orgId: members[0].org_id, role: members[0].role };
-    } else {
-      // Multi-org: check if an active org is stored in session
-      if (typeof window !== 'undefined') {
+    } else if (members.length > 1) {
+      // 1. Prioritize super_admin role (Corporate Layer)
+      const saMatch = members.find(m => m.role === 'super_admin');
+      if (saMatch) {
+         result = { orgId: saMatch.org_id, role: saMatch.role };
+      } else if (typeof window !== 'undefined') {
         const activeOrgId = sessionStorage.getItem('church_os_active_org');
         if (activeOrgId) {
           const match = members.find(m => m.org_id === activeOrgId);
@@ -117,7 +121,7 @@ export async function resolveAdminOrgId(): Promise<{ orgId: string; role: string
         }
       }
       
-      // Default to the first org
+      // Fallback to first if no selection
       if (!result) result = { orgId: members[0].org_id, role: members[0].role };
     }
 

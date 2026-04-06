@@ -22,7 +22,9 @@ export default function UnifiedLoginPage() {
     const [checkingSession, setCheckingSession] = useState(true);
 
     const performRedirection = (role: string, skipMemberRedirect: boolean = false) => {
-        if (['pastor', 'owner', 'super_admin'].includes(role)) {
+        if (role === 'super_admin') {
+            router.replace(`${BP}/super-admin/`);
+        } else if (['pastor', 'owner'].includes(role)) {
             router.replace(`${BP}/pastor-hq/`);
         } else if (['admin', 'shepherd', 'ministry_leader', 'ministry_lead'].includes(role)) {
             router.replace(`${BP}/shepherd/dashboard/`);

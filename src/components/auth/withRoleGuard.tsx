@@ -43,7 +43,9 @@ export function withRoleGuard<T extends object>(
 
                 if (!isAuthorized) {
                     // ... (keep existing redirection logic for unauthorized roles)
-                    if (['pastor', 'owner', 'super_admin'].includes(session.role)) {
+                    if (session.role === 'super_admin') {
+                        router.replace(`${BP}/super-admin/`);
+                    } else if (['pastor', 'owner'].includes(session.role)) {
                         router.replace(`${BP}/pastor-hq/`);
                     } else if (['admin', 'shepherd'].includes(session.role)) {
                         router.replace(`${BP}/shepherd/dashboard/`);
