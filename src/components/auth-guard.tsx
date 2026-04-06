@@ -40,15 +40,19 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
                 return;
             }
 
-            // Check for org membership
-            const { data: member, error } = await supabase
+            // Check for org membership (Handle multi-org users by not using .single())
+            const { data: members, error } = await supabase
                 .from("org_members")
                 .select("org_id, role")
-                .eq("user_id", user.id)
-                .single();
+                .eq("user_id", user.id);
 
-            const hasOrg = !error && member?.org_id;
-            const role = member?.role || 'member';
+            const member = members && members.length > 0 ? members[0] : null;
+            // Prioritize super_admin role if they have multiple
+            const saMatch = members?.find(m => m.role === 'super_admin');
+            const effectiveMember = saMatch || member;
+            
+            const hasOrg = !error && members && members.length > 0;
+            const role = effectiveMember?.role || 'member';
 
             // SaaS/API Dashboard logic: Only owners/admins with an ORG can stay in /settings
             if (pathname.startsWith("/settings")) {

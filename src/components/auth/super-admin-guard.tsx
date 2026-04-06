@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { AdminAuth } from "@/lib/admin-auth";
+import { basePath as BP } from "@/lib/utils";
 
 export function SuperAdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -12,30 +13,23 @@ export function SuperAdminGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function checkSuperAdmin() {
       try {
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const session = await AdminAuth.getAdminSession();
         
-        if (authError || !user) {
-          router.push("/login");
+        if (!session) {
+          router.push(`${BP}/login/`);
           return;
         }
 
-        const { data: role, error: roleError } = await supabase
-          .from("admin_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "super_admin")
-          .single();
-
-        if (roleError || !role) {
+        if (session.role !== 'super_admin') {
           console.error("Access denied: Not a super admin");
-          router.push("/");
+          router.push(BP);
           return;
         }
 
         setIsSuperAdmin(true);
       } catch (err) {
         console.error("SuperAdminGuard Error:", err);
-        router.push("/");
+        router.push(BP);
       } finally {
         setLoading(false);
       }
