@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { basePath } from '@/lib/utils';
 import ConnectSection from './ConnectSection';
 
-export default function InitialConnectModal({ user }: { user?: any }) {
+export function InitialConnectModal({ user }: { user?: any }) {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -135,7 +135,6 @@ export default function InitialConnectModal({ user }: { user?: any }) {
                 {/* Right side: Form Panel */}
                 <div className="md:col-span-7 bg-white dark:bg-slate-950 overflow-y-auto max-h-[80vh] relative">
                     <div className="p-2 sm:p-4">
-                      {/* We use the existing ConnectSection but stripped down via CSS or just as is */}
                       <ConnectSection />
                     </div>
                     
@@ -158,4 +157,5 @@ export default function InitialConnectModal({ user }: { user?: any }) {
     </AnimatePresence>
   );
 }
+export default InitialConnectModal;
 
