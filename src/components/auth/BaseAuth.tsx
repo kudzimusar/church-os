@@ -85,16 +85,39 @@ export const BaseAuth = ({
       if (contexts.length > 1) {
         // Redirect to context selector
         router.push(`/auth/context-selector?domain=${authDomain}&surface=${authSurface}`);
+      } else if (authSurface === 'ministry') {
+        // Dynamic lookup — ministry leads each have their own dashboard slug
+        const { data: ministry } = await supabase
+          .from('ministries')
+          .select('slug')
+          .eq('leader_id', data.user.id)
+          .single();
+        if (ministry?.slug) {
+          router.push(`${BP}/ministry-dashboard/${ministry.slug}`);
+        } else {
+          // Step 2: fallback — check org_members.ministry_id
+          const { data: membership } = await supabase
+            .from('org_members')
+            .select('ministry_id, ministries(slug)')
+            .eq('user_id', data.user.id)
+            .eq('role', 'ministry_lead')
+            .single();
+          const slug = (membership?.ministries as any)?.slug;
+          if (slug) {
+            router.push(`${BP}/ministry-dashboard/${slug}`);
+          } else {
+            router.push(`${BP}/ministry-dashboard`);
+          }
+        }
       } else {
-        // Redirect to target surface
-        const redirectMap: Record<AuthSurface, string> = {
+        // Static redirect map for all other surfaces
+        const redirectMap: Record<Exclude<AuthSurface, 'ministry'>, string> = {
           'console': '/super-admin',
           'mission-control': '/pastor-hq',
-          'ministry': '/shepherd/dashboard',
           'profile': '/member/profile',
           'onboarding': '/onboarding'
         };
-        router.push(redirectMap[authSurface]);
+        router.push(`${BP}${redirectMap[authSurface as Exclude<AuthSurface, 'ministry'>]}`);
       }
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");
