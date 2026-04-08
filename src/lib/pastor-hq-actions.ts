@@ -79,7 +79,7 @@ export async function getPastorDashboardData(orgId?: string) {
     .select('*')
     .eq('org_id', effectiveOrgId)
     .order('week_start', { ascending: false })
-    .limit(1);
+    .limit(2);
 
   const { count: totalMembers } = await supabase
     .from('profiles')
@@ -156,26 +156,43 @@ export async function getPastorDashboardData(orgId?: string) {
     .select('*', { count: 'exact', head: true })
     .eq('org_id', effectiveOrgId);
 
+  const { count: prayerCount } = await supabase
+    .from('prayer_requests')
+    .select('*', { count: 'exact', head: true })
+    .eq('org_id', effectiveOrgId);
+
+  // Calculated trends
+  const currentAttendance = attendanceTrends?.[0]?.total_attended || 0;
+  const prevAttendance = attendanceTrends?.[1]?.total_attended || 0;
+  const attendanceTrend = prevAttendance > 0
+    ? Math.round(((currentAttendance - prevAttendance) / prevAttendance) * 100)
+    : 0;
+
+  const prevMonthIncome = Number(financeData?.[1]?.total_amount || 0);
+  const incomeTrend = prevMonthIncome > 0
+    ? Math.round(((totalIncome - prevMonthIncome) / prevMonthIncome) * 100)
+    : 0;
+
   return {
     pulse: {
       totalMembers: totalMembers || 0,
       newSeekers: newSeekers || 0,
       weeklyAttendance: attendanceTrends?.[0]?.total_attended || 0,
       onlineReach: attendanceTrends?.[0]?.online_count || 0,
-      retentionRate: climate?.avg_engagement || 90,
+      retentionRate: climate?.avg_engagement || 0,
       trends: {
-        members: 12, // Placeholder for actual calc logic
-        seekers: 8,
-        attendance: 5,
-        reach: 15,
-        retention: 2
+        members: 0,
+        seekers: 0,
+        attendance: attendanceTrend,
+        reach: 0,
+        retention: 0
       }
     },
     finance: {
       monthlyIncome: totalIncome,
-      incomeTrend: 14,
-      budgetPerformance: 102,
-      topMinistry: "Global Missions",
+      incomeTrend,
+      budgetPerformance: 0,
+      topMinistry: "",
       monthlyBreakdown: (monthlyBreakdownData || []).map(r => ({
         month_start: r.month_start,
         total_amount: Number(r.total_amount || 0)
@@ -188,14 +205,14 @@ export async function getPastorDashboardData(orgId?: string) {
       { id: '1', name: "Check Live Feed", issue: "No active alerts", urgency: "Low", action: "N/A" }
     ],
     correspondence: {
-      memberMessages: 0,
+      memberMessages: prayerCount || 0,
       websiteInquiries: websiteInquiries || 0,
       adminDirect: 0,
       externalGmail: 0
     },
     climate: {
         theme: climate?.dominant_theme || "Peace",
-        confidence: 85
+        confidence: climate?.avg_engagement || 0
     }
   };
 }
