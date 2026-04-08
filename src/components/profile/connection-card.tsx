@@ -46,6 +46,7 @@ interface ProfileData {
     phone_number?: string;
     nationality?: string;
     preferred_language?: string;
+    salvation_date?: string;
     org_id?: string;
 }
 
@@ -226,8 +227,14 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
             });
 
             if (isAdmin && targetId) {
-                // To prevent 400 errors from strict RLS on client fetches, this query is currently disabled.
-                // Replace with a Server Action proxy.
+                const { data: noteData } = await supabase
+                    .from('pastoral_notes')
+                    .select('note')
+                    .eq('member_user_id', targetId)
+                    .eq('org_id', profile?.org_id)
+                    .eq('category', 'general')
+                    .maybeSingle();
+                if (noteData?.note) setPastoralNotes(noteData.note);
             }
 
         } catch (err) {
@@ -612,11 +619,6 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                         <div className="text-3xl font-black">{stats.completed}</div>
                                         <div className="text-[10px] font-bold uppercase opacity-40">Devotions Finished</div>
                                     </Card>
-                                    <Card className="glass border-foreground/10 bg-foreground/5 rounded-3xl p-6 flex flex-col items-center text-center">
-                                        <CheckCircle2 className="w-8 h-8 text-green-500 mb-2" />
-                                        <div className="text-3xl font-black">74%</div>
-                                        <div className="text-[10px] font-bold uppercase opacity-40">Target Complete</div>
-                                    </Card>
                                 </div>
 
                                 <div className="space-y-4 pt-4">
@@ -632,7 +634,7 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                                     <p className="text-[10px] opacity-40 leading-none">Accepted Christ at Church Service</p>
                                                 </div>
                                             </div>
-                                            <p className="text-xs font-mono opacity-60">2026-03-01</p>
+                                            <p className="text-xs font-mono opacity-60">{profile?.salvation_date ?? 'Not recorded'}</p>
                                         </div>
                                         <Button variant="outline" className="w-full border-dashed border-foreground/10 rounded-2xl h-12 font-bold opacity-40 hover:opacity-100 transition-all">
                                             <Plus className="w-4 h-4 mr-2" /> RECORD NEW MILESTONE

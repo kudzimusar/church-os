@@ -1361,15 +1361,15 @@ export default function ProfileHub() {
                                                     <div className="space-y-3">
                                                         <div className="flex justify-between items-center p-3 rounded-xl bg-muted/50 border border-border">
                                                             <span className="text-[10px] font-bold text-muted-foreground uppercase">Cash App</span>
-                                                            <span className="text-xs font-black text-foreground">$JapanKingdomChurch</span>
+                                                            <span className="text-xs font-black text-foreground">Contact your church office for giving details</span>
                                                         </div>
                                                         <div className="flex justify-between items-center p-3 rounded-xl bg-muted/50 border border-border">
                                                             <span className="text-[10px] font-bold text-muted-foreground uppercase">Zelle</span>
-                                                            <span className="text-xs font-black text-foreground">finance.jkchurch@gmail.com</span>
+                                                            <span className="text-xs font-black text-foreground">Contact your church office for giving details</span>
                                                         </div>
                                                         <div className="flex justify-between items-center p-3 rounded-xl bg-muted/50 border border-border">
                                                             <span className="text-[10px] font-bold text-muted-foreground uppercase">Wells Fargo</span>
-                                                            <span className="text-xs font-black text-foreground">7520856647</span>
+                                                            <span className="text-xs font-black text-foreground">Contact your church office for giving details</span>
                                                         </div>
                                                     </div>
                                                 </div>

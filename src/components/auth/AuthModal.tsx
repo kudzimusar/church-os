@@ -182,6 +182,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
                             </TabsList>
 
                             <TabsContent value="login" className="space-y-4">
+                                <form onSubmit={e => { e.preventDefault(); handleLogin(); }}>
                                 <div className="space-y-2">
                                     <Input
                                         placeholder="Email Address"
@@ -199,12 +200,13 @@ export function AuthModal({ isOpen, onClose, onSuccess, onEmailNotConfirmed }: A
                                     />
                                 </div>
                                 <Button
-                                    onClick={handleLogin}
+                                    type="submit"
                                     className="w-full h-16 rounded-full bg-[var(--primary)] font-black text-xl py-6 shadow-xl shadow-[var(--primary)]/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
                                     disabled={loading}
                                 >
                                     {loading ? "AUTHENTICATING..." : "CONTINUE"}
                                 </Button>
+                                </form>
 
                                 <div className="flex justify-between items-center px-2">
                                     <Button variant="ghost" onClick={() => setAuthMode("magic")} className="text-[10px] font-bold uppercase tracking-[0.2em] transition-all h-auto py-2" style={{ color: 'var(--muted-foreground)' }}>
