@@ -43,7 +43,6 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { sendConnectEmail } from '@/app/(public)/connect/actions';
 
 export default function KingdomConnectModal({ user }: { user?: any }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -182,14 +181,6 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
         .single();
 
       if (inquiryError) throw inquiryError;
-
-      if (data.email) {
-        sendConnectEmail(
-          intent, 
-          data.email, 
-          data.name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Visitor'
-        ).catch(e => console.error("Brevo failed:", e));
-      }
 
       if (childTable) {
         // Clean childData to only include valid columns for the specific table

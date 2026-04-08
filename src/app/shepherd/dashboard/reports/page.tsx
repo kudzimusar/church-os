@@ -79,12 +79,25 @@ export default function ReportsPage() {
                     .eq('org_id', orgId);
                 if (!profiles) return;
 
+                // Fetch engagement counts for weighted health score
+                const [{ count: attendanceCount }, { count: soapCount }, { count: prayerCount }] = await Promise.all([
+                    supabase.from('attendance_records').select('*', { count: 'exact', head: true }).eq('org_id', orgId),
+                    supabase.from('soap_entries').select('*', { count: 'exact', head: true }).eq('org_id', orgId),
+                    supabase.from('prayer_requests').select('*', { count: 'exact', head: true }).eq('org_id', orgId),
+                ]);
+                const total = profiles.length || 1;
+                const healthScore = Math.min(100, Math.round(
+                    ((attendanceCount ?? 0) / total) * 40 +
+                    ((soapCount ?? 0) / total) * 40 +
+                    ((prayerCount ?? 0) / total) * 20
+                ));
+
                 const exportData = profiles.map((p: any) => ({
                     Name: p.name,
                     Email: p.email,
                     Status: p.membership_status,
                     'Growth Stage': p.growth_stage,
-                    'Health Index': Math.floor(Math.random() * 40) + 60 // Simulated for now
+                    'Health Index': healthScore
                 }));
                 exportToExcel(exportData, `JKC_Health_Report_${timestamp}`, "Spiritual Health");
             }

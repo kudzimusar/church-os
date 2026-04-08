@@ -55,7 +55,8 @@ export default function MinistriesPage() {
     const ministryList = Object.entries(byMinistry).map(([name, mems]) => ({ name, count: mems.length, members: mems }));
     const chartData = ministryList.map(m => ({ name: m.name, count: m.count })).sort((a, b) => b.count - a.count);
 
-    const STAFFING_GAPS = ['childrens', 'counseling', 'missions'];
+    // Derive staffing gaps from real data: ministries with fewer than 3 active members
+    const staffingGaps = ministryList.filter(m => m.count < 3).map(m => m.name);
 
     const handleInvite = async (candidate: any, ministryName: string) => {
         try {
@@ -87,7 +88,7 @@ export default function MinistriesPage() {
                     { label: 'Active Ministries', val: ministryList.length, color: 'text-primary' },
                     { label: 'Team Members', val: members.length, color: 'text-blue-600 dark:text-blue-400' },
                     { label: 'Leaders', val: members.filter(m => m.is_leader).length, color: 'text-amber-600 dark:text-amber-400' },
-                    { label: 'Staffing Gaps', val: STAFFING_GAPS.length, color: 'text-red-600 dark:text-red-400' },
+                    { label: 'Staffing Gaps', val: staffingGaps.length, color: 'text-red-600 dark:text-red-400' },
                 ].map(s => (
                     <div key={s.label} className="bg-card border border-border rounded-2xl p-4 shadow-sm transition-colors">
                         <p className={`text-2xl font-black ${s.color}`}>{loading ? '—' : s.val}</p>
@@ -116,7 +117,7 @@ export default function MinistriesPage() {
             {/* Ministry Cards */}
             <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
                 {ministryList.map((ministry, i) => {
-                    const isGap = STAFFING_GAPS.includes(ministry.name);
+                    const isGap = staffingGaps.includes(ministry.name);
                     return (
                         <motion.div
                             key={ministry.name}
