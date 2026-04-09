@@ -13,13 +13,13 @@ export function InitialConnectModal({ user }: { user?: any }) {
 
   useEffect(() => {
     // Show once per session for ALL visitors regardless of auth state
-    const hasSeenModal = sessionStorage.getItem('kcc_modal_shown');
+    // Delayed to 5 minutes so KingdomConnectModal (2s) fires first
+    const hasSeenModal = sessionStorage.getItem('initial_modal_shown');
     if (!hasSeenModal) {
-      // 2 second delay as specified
       const timer = setTimeout(() => {
         setIsOpen(true);
-        sessionStorage.setItem('kcc_modal_shown', 'true');
-      }, 2000);
+        sessionStorage.setItem('initial_modal_shown', 'true');
+      }, 300000);
       return () => clearTimeout(timer);
     }
   }, [user]);
