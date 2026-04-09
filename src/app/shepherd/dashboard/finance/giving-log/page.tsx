@@ -26,6 +26,7 @@ export default function GivingLogPage() {
 
   // Form state
   const [donorName, setDonorName] = useState('');
+  const [donorEmail, setDonorEmail] = useState('');
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState('JPY');
   const [type, setType] = useState('tithe');
@@ -72,7 +73,12 @@ export default function GivingLogPage() {
         amount: Number(amount),
         currency,
         record_type: type,
-        notes: `${paymentMethod.toUpperCase()}: ${donorName}. ${notes}`,
+        fund_designation: type,
+        payment_gateway: paymentMethod,
+        given_by_name: donorName,
+        given_by_email: donorEmail || null,
+        payment_status: 'completed',
+        notes: notes,
         org_id: orgId,
         given_date: date
       });
@@ -81,6 +87,7 @@ export default function GivingLogPage() {
 
       toast.success('Donation logged to finance dashboard.');
       setDonorName('');
+      setDonorEmail('');
       setAmount('');
       setNotes('');
       fetchRecords();
@@ -113,12 +120,23 @@ export default function GivingLogPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-muted-foreground tracking-widest uppercase ml-1">Donor Name *</label>
-              <input 
+              <input
                 value={donorName}
                 onChange={(e) => setDonorName(e.target.value)}
                 placeholder="Full Name"
                 className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground placeholder-muted-foreground/50 outline-none transition-colors"
                 required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-muted-foreground tracking-widest uppercase ml-1">Donor Email</label>
+              <input
+                type="email"
+                value={donorEmail}
+                onChange={(e) => setDonorEmail(e.target.value)}
+                placeholder="donor@email.com (optional)"
+                className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:border-primary text-foreground placeholder-muted-foreground/50 outline-none transition-colors"
               />
             </div>
 

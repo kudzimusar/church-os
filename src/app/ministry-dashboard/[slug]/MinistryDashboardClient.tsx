@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { MinistryAuth, MinistrySession } from '@/lib/ministry-auth';
 import Link from 'next/link';
-import { ChevronLeft, BarChart3, Users, CalendarDays, FileText, Bell, ClipboardList, TrendingUp, AlertCircle, Sparkles, CheckCircle2, MessagesSquare, BookOpen } from 'lucide-react';
+import { ChevronLeft, BarChart3, Users, CalendarDays, FileText, Bell, ClipboardList, TrendingUp, AlertCircle, Sparkles, CheckCircle2, MessagesSquare, BookOpen, DollarSign, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function MinistryOverviewClient({ slug }: { slug: string }) {
@@ -12,6 +12,11 @@ export default function MinistryOverviewClient({ slug }: { slug: string }) {
     const [analytics, setAnalytics] = useState<any>(null);
     const [insights, setInsights] = useState<any[]>([]);
     const [recentActivity, setRecentActivity] = useState<any>(null);
+    const [orgId, setOrgId] = useState<string | null>(null);
+    const [financeHealth, setFinanceHealth] = useState<any>(null);
+    const [atRiskGivers, setAtRiskGivers] = useState<any[]>([]);
+    const [ministryROI, setMinistryROI] = useState<any[]>([]);
+    const [financeLoading, setFinanceLoading] = useState(false);
 
     const loadData = async (sess: MinistrySession) => {
         // 1. Fetch Analytics
@@ -48,6 +53,14 @@ export default function MinistryOverviewClient({ slug }: { slug: string }) {
                 lastDate: lastReport.service_date
             });
         }
+
+        // Fetch org_id for finance intelligence queries
+        const { data: ministryOrg } = await supabase
+            .from('ministries')
+            .select('org_id')
+            .eq('id', sess.ministryId)
+            .single();
+        setOrgId(ministryOrg?.org_id ?? null);
     };
 
     useEffect(() => {
@@ -59,6 +72,30 @@ export default function MinistryOverviewClient({ slug }: { slug: string }) {
             console.error(err);
         });
     }, [slug]);
+
+    useEffect(() => {
+        if (slug !== 'finance' || !orgId) return;
+        const loadFinance = async () => {
+            setFinanceLoading(true);
+            const [healthRes, riskRes, roiRes] = await Promise.all([
+                supabase.from('vw_church_giving_health')
+                    .select('*').eq('org_id', orgId).maybeSingle(),
+                supabase.from('vw_giving_at_risk')
+                    .select('*').eq('org_id', orgId)
+                    .order('estimated_annual_loss', { ascending: false })
+                    .limit(5),
+                supabase.from('vw_ministry_financial_roi')
+                    .select('*').eq('org_id', orgId)
+                    .order('reports_submitted', { ascending: false })
+                    .limit(6),
+            ]);
+            setFinanceHealth(healthRes.data);
+            setAtRiskGivers(riskRes.data || []);
+            setMinistryROI(roiRes.data || []);
+            setFinanceLoading(false);
+        };
+        loadFinance();
+    }, [slug, orgId]);
 
     if (loading || !session) {
         return <div className="min-h-screen bg-[#080c14] flex items-center justify-center text-white"><p className="text-white/40 font-medium">Loading ministry profile...</p></div>;
@@ -252,6 +289,106 @@ export default function MinistryOverviewClient({ slug }: { slug: string }) {
                             </div>
                         </div>
                     </div>
+
+                    {/* Finance Intelligence — only for finance ministry */}
+                    {slug === 'finance' && (
+                        <div className="space-y-6 mt-6">
+                            <div className="flex items-center gap-3">
+                                <DollarSign className="w-5 h-5 text-emerald-500" />
+                                <h3 className="text-sm font-black uppercase tracking-widest text-white">
+                                    Finance Intelligence
+                                </h3>
+                            </div>
+                            {financeLoading ? (
+                                <div className="text-xs text-white/40">Loading financial data...</div>
+                            ) : (
+                                <>
+                                    {/* Giving Health Summary */}
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        {[
+                                            { label: 'This Month', value: financeHealth ? '¥' + Number(financeHealth.given_this_month).toLocaleString() : '¥0' },
+                                            { label: 'This Year', value: financeHealth ? '¥' + Number(financeHealth.given_this_year).toLocaleString() : '¥0' },
+                                            { label: 'Participation', value: financeHealth ? financeHealth.giving_participation_pct + '%' : '0%' },
+                                            { label: 'Avg Gift', value: financeHealth ? '¥' + Math.round(Number(financeHealth.avg_gift_size)).toLocaleString() : '¥0' },
+                                        ].map(stat => (
+                                            <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-1">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-white/40">{stat.label}</p>
+                                                <p className="text-xl font-black text-white">{stat.value}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Fund Breakdown */}
+                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Fund Breakdown</p>
+                                        {financeHealth && [
+                                            { label: 'Tithe', value: Number(financeHealth.tithe_total), color: 'bg-violet-500' },
+                                            { label: 'Offering', value: Number(financeHealth.offering_total), color: 'bg-emerald-500' },
+                                            { label: 'Missions', value: Number(financeHealth.missions_total), color: 'bg-blue-500' },
+                                            { label: 'Building', value: Number(financeHealth.building_fund_total), color: 'bg-amber-500' },
+                                        ].map(fund => {
+                                            const total = Number(financeHealth.total_given_all_time);
+                                            const pct = total > 0 ? Math.round((fund.value / total) * 100) : 0;
+                                            return (
+                                                <div key={fund.label} className="space-y-1">
+                                                    <div className="flex justify-between text-xs">
+                                                        <span className="font-bold text-white">{fund.label}</span>
+                                                        <span className="text-white/40">¥{fund.value.toLocaleString()} ({pct}%)</span>
+                                                    </div>
+                                                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                                                        <div className={`h-full ${fund.color} rounded-full transition-all`} style={{ width: pct + '%' }} />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* At-Risk Givers */}
+                                    {atRiskGivers.length > 0 && (
+                                        <div className="bg-white/5 border border-red-500/20 rounded-2xl p-5 space-y-3">
+                                            <div className="flex items-center gap-2">
+                                                <AlertTriangle className="w-4 h-4 text-red-500" />
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-red-400">Giving at Risk</p>
+                                            </div>
+                                            {atRiskGivers.map((giver: any) => (
+                                                <div key={giver.user_id} className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
+                                                    <div>
+                                                        <p className="text-xs font-bold text-white">{giver.member_name}</p>
+                                                        <p className="text-[10px] text-white/40">Last gave {giver.days_since_last_gift} days ago</p>
+                                                    </div>
+                                                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${
+                                                        giver.risk_level === 'critical' ? 'bg-red-500/10 text-red-400'
+                                                        : giver.risk_level === 'high' ? 'bg-orange-500/10 text-orange-400'
+                                                        : 'bg-yellow-500/10 text-yellow-500'
+                                                    }`}>
+                                                        {giver.risk_level}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Ministry ROI Table */}
+                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Ministry Activity</p>
+                                        {ministryROI.map((m: any) => (
+                                            <div key={m.ministry_id} className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
+                                                <div>
+                                                    <p className="text-xs font-bold text-white">{m.ministry_name}</p>
+                                                    <p className="text-[10px] text-white/40">{m.team_size} members · {m.reports_submitted} reports</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-xs font-bold text-emerald-400">
+                                                        {m.total_salvations > 0 ? m.total_salvations + ' salvations' : 'No reports'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
 
                     {/* AI Insights Column */}
                     <div className="space-y-4">

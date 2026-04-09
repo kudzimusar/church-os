@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { DollarSign, TrendingUp, Users, PieChart as PieIcon, Plus, Save } from "lucide-react";
+import { DollarSign, TrendingUp, Users, PieChart as PieIcon, Plus, Save, AlertTriangle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useAdminCtx } from "../Context";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -23,6 +23,8 @@ const TYPE_COLORS: Record<string, string> = { offering: '#8b5cf6', tithe: '#06b6
 export default function FinancePage() {
     const [records, setRecords] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [givingHealth, setGivingHealth] = useState<any>(null);
+    const [atRiskGivers, setAtRiskGivers] = useState<any[]>([]);
     const [isTrackerOpen, setIsTrackerOpen] = useState(false);
     const { values, handleChange, clear } = useStickyForm({
         amount: '',
@@ -34,14 +36,23 @@ export default function FinancePage() {
 
     const loadRecords = () => {
         if (!orgId) return;
-        supabase.from('financial_records')
-            .select('*')
-            .eq('org_id', orgId)
-            .order('given_date', { ascending: false })
-            .then(({ data }) => {
-                setRecords(data || []);
-                setLoading(false);
-            });
+        Promise.all([
+            supabase.from('financial_records')
+                .select('*')
+                .eq('org_id', orgId)
+                .order('given_date', { ascending: false }),
+            supabase.from('vw_church_giving_health')
+                .select('*').eq('org_id', orgId).maybeSingle(),
+            supabase.from('vw_giving_at_risk')
+                .select('*').eq('org_id', orgId)
+                .order('estimated_annual_loss', { ascending: false })
+                .limit(5),
+        ]).then(([recordsRes, healthRes, riskRes]) => {
+            setRecords(recordsRes.data || []);
+            setGivingHealth(healthRes.data);
+            setAtRiskGivers(riskRes.data || []);
+            setLoading(false);
+        });
     };
 
     useEffect(() => { loadRecords(); }, [orgId]);
@@ -146,10 +157,10 @@ export default function FinancePage() {
 
             <div className="grid grid-cols-4 gap-3 mb-6">
                 {[
-                    { label: 'Total Giving (¥)', val: total.toLocaleString(), color: 'text-emerald-600 dark:text-emerald-400' },
-                    { label: 'Transactions', val: records.length, color: 'text-primary' },
-                    { label: 'This Month', val: records.filter(r => new Date(r.given_date).getMonth() === new Date().getMonth()).length, color: 'text-blue-600 dark:text-blue-400' },
-                    { label: 'Avg Gift (¥)', val: records.length ? Math.round(total / records.length).toLocaleString() : 0, color: 'text-amber-600 dark:text-amber-400' },
+                    { label: 'This Month (¥)', val: givingHealth ? '¥' + Number(givingHealth.given_this_month).toLocaleString() : '¥' + records.filter(r => new Date(r.given_date).getMonth() === new Date().getMonth()).reduce((a: number, r: any) => a + Number(r.amount || 0), 0).toLocaleString(), color: 'text-emerald-600 dark:text-emerald-400' },
+                    { label: 'This Year (¥)', val: givingHealth ? '¥' + Number(givingHealth.given_this_year).toLocaleString() : '¥' + total.toLocaleString(), color: 'text-primary' },
+                    { label: 'Participation', val: givingHealth ? givingHealth.giving_participation_pct + '%' : '—', color: 'text-blue-600 dark:text-blue-400' },
+                    { label: 'Avg Gift (¥)', val: givingHealth ? '¥' + Math.round(Number(givingHealth.avg_gift_size)).toLocaleString() : (records.length ? '¥' + Math.round(total / records.length).toLocaleString() : '¥0'), color: 'text-amber-600 dark:text-amber-400' },
                 ].map(s => (
                     <div key={s.label} className="bg-card border border-border rounded-2xl p-4 shadow-sm">
                         <p className={`text-2xl font-black ${s.color}`}>{loading ? '—' : s.val}</p>
@@ -193,6 +204,38 @@ export default function FinancePage() {
                     </div>
                 </div>
             </div>
+
+            {/* At-Risk Givers Panel */}
+            {atRiskGivers.length > 0 && (
+                <div className="mt-4 bg-card border border-red-500/20 rounded-2xl p-5 shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                        <AlertTriangle className="w-4 h-4 text-red-500" />
+                        <p className="text-xs font-black text-red-500 uppercase tracking-widest">Giving at Risk</p>
+                    </div>
+                    <div className="space-y-2">
+                        {atRiskGivers.map((giver: any) => (
+                            <div key={giver.user_id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+                                <div>
+                                    <p className="text-xs font-bold text-foreground">{giver.member_name}</p>
+                                    <p className="text-[9px] text-muted-foreground">Last gave {giver.days_since_last_gift} days ago</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    {giver.estimated_annual_loss > 0 && (
+                                        <p className="text-[10px] font-bold text-muted-foreground">¥{Number(giver.estimated_annual_loss).toLocaleString()} at risk</p>
+                                    )}
+                                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${
+                                        giver.risk_level === 'critical' ? 'bg-red-500/10 text-red-500'
+                                        : giver.risk_level === 'high' ? 'bg-orange-500/10 text-orange-500'
+                                        : 'bg-yellow-500/10 text-yellow-600'
+                                    }`}>
+                                        {giver.risk_level}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
