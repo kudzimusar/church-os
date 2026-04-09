@@ -84,6 +84,41 @@ serve(async (req) => {
             .eq("processed", false);
         }
       }
+
+      // SaaS platform subscription confirmed
+      if (metadata.platform === "church_os") {
+        const subscription = await stripe.subscriptions
+          .retrieve(session.subscription as string);
+        const { data: plan } = await supabaseAdmin
+          .from("company_plans")
+          .select("id, price_monthly")
+          .eq("name", metadata.plan_name)
+          .single();
+
+        await supabaseAdmin
+          .from("organization_subscriptions")
+          .upsert({
+            org_id: metadata.org_id,
+            plan_id: plan?.id,
+            status: subscription.status,
+            stripe_customer_id: session.customer as string,
+            stripe_subscription_id: subscription.id,
+            billing_interval: metadata.billing_interval ?? "month",
+            amount: plan?.price_monthly ?? 0,
+            currency: "USD",
+            current_period_start: new Date(
+              subscription.current_period_start * 1000
+            ).toISOString(),
+            current_period_end: new Date(
+              subscription.current_period_end * 1000
+            ).toISOString(),
+          }, { onConflict: "org_id" });
+
+        await supabaseAdmin
+          .from("organizations")
+          .update({ subscription_status: "active" })
+          .eq("id", metadata.org_id);
+      }
     }
 
     // Handle recurring payment success
@@ -145,6 +180,24 @@ serve(async (req) => {
           cancelled_at: new Date().toISOString(),
         })
         .eq("stripe_subscription_id", sub.id);
+    }
+
+    // Handle SaaS subscription upgrades/downgrades
+    if (event.type === "customer.subscription.updated") {
+      const sub = event.data.object as any;
+      if (sub.metadata?.platform === "church_os") {
+        await supabaseAdmin
+          .from("organization_subscriptions")
+          .update({
+            status: sub.status,
+            cancel_at_period_end: sub.cancel_at_period_end,
+            current_period_end: new Date(
+              sub.current_period_end * 1000
+            ).toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("stripe_subscription_id", sub.id);
+      }
     }
 
     return new Response(JSON.stringify({ received: true }), {

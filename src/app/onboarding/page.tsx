@@ -69,6 +69,7 @@ export default function OnboardingPage() {
 
     // Plan State
     const [tier, setTier] = useState<'lite' | 'pro' | 'enterprise'>('lite');
+    const [provisionedOrgId, setProvisionedOrgId] = useState<string | null>(null);
 
     // Provisioning State (Change 2)
     const [loading, setLoading] = useState(false);
@@ -201,6 +202,44 @@ export default function OnboardingPage() {
         }
     };
 
+    const handlePlanSelect = async (planName: string, orgId?: string) => {
+        const resolvedOrgId = orgId || provisionedOrgId;
+        if (planName === 'enterprise') {
+            toast.info('Contact us at hello@churchos.ai for Enterprise');
+            router.push(`${BP}/onboarding/success?church=${encodeURIComponent(churchName)}`);
+            return;
+        }
+        if (!resolvedOrgId) {
+            // Fallback: go to success without billing (org was provisioned, billing optional)
+            router.push(`${BP}/onboarding/success?church=${encodeURIComponent(churchName)}`);
+            return;
+        }
+        try {
+            const { data, error } = await supabase.functions.invoke('saas-billing', {
+                body: {
+                    action: 'create_checkout',
+                    org_id: resolvedOrgId,
+                    plan_name: planName === 'lite' ? 'Lite' : 'Pro',
+                    billing_interval: 'month',
+                    admin_email: contactEmail,
+                    org_name: churchName,
+                    success_url: window.location.origin + '/jkc-devotion-app/onboarding/success?church=' + encodeURIComponent(churchName) + '&plan=' + planName,
+                    cancel_url: window.location.origin + '/jkc-devotion-app/onboarding',
+                }
+            });
+            if (error) throw error;
+            if (data?.url) {
+                window.location.href = data.url;
+            } else {
+                router.push(`${BP}/onboarding/success?church=${encodeURIComponent(churchName)}`);
+            }
+        } catch (err: any) {
+            toast.error('Billing setup failed: ' + err.message);
+            // Still go to success — org is provisioned, billing can be set up later
+            router.push(`${BP}/onboarding/success?church=${encodeURIComponent(churchName)}`);
+        }
+    };
+
     // Change 2: handleSubmit with provisioning animation
     const handleSubmit = async () => {
         setLoading(true);
@@ -263,9 +302,11 @@ export default function OnboardingPage() {
             const result = await res.json();
             if (res.ok) {
                 clearSaved();
-                // Let animation finish (step 5 at 6000ms), then redirect at 6500ms
+                const newOrgId = result.org_id || result.id || null;
+                setProvisionedOrgId(newOrgId);
+                // Let animation finish (step 5 at 6000ms), then go to billing at 6500ms
                 setTimeout(() => {
-                    router.push(`${BP}/onboarding/success?church=${encodeURIComponent(churchName)}`);
+                    handlePlanSelect(tier, newOrgId);
                 }, 6500);
             } else {
                 clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
@@ -591,9 +632,9 @@ export default function OnboardingPage() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         {[
-                                            { id: 'lite', name: 'Shepherd Lite', price: '$0', features: ['AI Basic', 'Member Hub'] },
-                                            { id: 'pro', name: 'Growth Pro', price: '$49', features: ['Prophetic Engine', 'Full Analytics'] },
-                                            { id: 'enterprise', name: 'Celestial', price: '$199', features: ['Unlimited AI', 'Custom DNA'] },
+                                            { id: 'lite', name: 'Shepherd Lite', price: '$29', features: ['AI Basic', 'Member Hub'] },
+                                            { id: 'pro', name: 'Growth Pro', price: '$79', features: ['Prophetic Engine', 'Full Analytics'] },
+                                            { id: 'enterprise', name: 'Celestial', price: 'Custom', features: ['Unlimited AI', 'Custom DNA'] },
                                         ].map((p) => (
                                             <div
                                                 key={p.id}

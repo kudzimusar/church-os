@@ -42,6 +42,8 @@ export default function DashboardClient() {
   const [connectionMetrics, setConnectionMetrics] = useState<any>(null);
   const [intentBreakdown, setIntentBreakdown] = useState<any[]>([]);
   const [countryBreakdown, setCountryBreakdown] = useState<any[]>([]);
+  const [mrrData, setMrrData] = useState<any[]>([]);
+  const [churnRisk, setChurnRisk] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -126,6 +128,16 @@ export default function DashboardClient() {
           setCountryBreakdown(Object.entries(counts).map(([name, value]) => ({ name, value })));
         }
 
+        // 5a. Fetch MRR and churn risk intelligence
+        const [mrrRes, churnRes] = await Promise.all([
+          supabase.from('vw_corporate_mrr').select('*')
+            .order('month', { ascending: false }).limit(6),
+          supabase.from('vw_churn_risk').select('*')
+            .order('days_since_activity', { ascending: false }).limit(5),
+        ]);
+        setMrrData(mrrRes.data || []);
+        setChurnRisk(churnRes.data || []);
+
         // 5. Fetch Recent Audit Logs
         const { data: logs } = await supabase
           .from('admin_audit_logs')
@@ -136,6 +148,7 @@ export default function DashboardClient() {
           .order('created_at', { ascending: false })
           .limit(5);
 
+        const latestMrr = mrrRes.data?.[0];
         setStats([
           {
             title: "Total Churches",
@@ -144,9 +157,9 @@ export default function DashboardClient() {
             type: "nodes"
           },
           {
-            title: "Monthly Revenue",
-            value: `$${mrrValue.toLocaleString()}`,
-            description: `${churnRate.toFixed(1)}% churn rate`,
+            title: "Current MRR",
+            value: `$${Math.round(latestMrr?.mrr || mrrValue).toLocaleString()}/mo`,
+            description: `${latestMrr?.paying_orgs || 0} paying orgs`,
             type: "revenue"
           },
           {
@@ -248,6 +261,33 @@ export default function DashboardClient() {
           );
         })}
       </div>
+
+      {/* Churn Risk Panel */}
+      {churnRisk.length > 0 && (
+        <div className="bg-slate-900/40 border border-rose-500/20 rounded-2xl p-5 space-y-3 backdrop-blur-xl">
+          <div className="flex items-center gap-2 mb-1">
+            <AlertTriangle className="w-4 h-4 text-rose-400" />
+            <p className="text-xs font-black uppercase tracking-widest text-rose-400">Churn Risk</p>
+          </div>
+          <div className="space-y-2">
+            {churnRisk.map((org: any) => (
+              <div key={org.org_id} className="flex items-center justify-between py-2 border-b border-slate-800/50 last:border-0">
+                <div>
+                  <p className="text-sm font-bold text-white">{org.org_name || org.org_id}</p>
+                  <p className="text-xs text-slate-400">{org.plan_name} · {org.days_since_activity} days inactive</p>
+                </div>
+                <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-full ${
+                  org.churn_risk === 'critical' ? 'bg-rose-500/10 text-rose-400'
+                  : org.churn_risk === 'high' ? 'bg-orange-500/10 text-orange-400'
+                  : 'bg-yellow-500/10 text-yellow-500'
+                }`}>
+                  {org.churn_risk}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Global Connections Cards (New) */}
       <div className="space-y-4">
