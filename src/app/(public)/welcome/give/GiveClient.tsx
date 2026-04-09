@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Heart, CreditCard, DollarSign, Smartphone, 
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { resolvePublicOrgId } from '@/lib/org-resolver';
 
 const IMPACT_CARDS = [
   { icon: Heart, title: 'Worship', desc: 'Supporting the spiritual atmosphere and worship team.' },
@@ -43,6 +44,12 @@ const ZelleIcon = () => (
 
 export default function GiveClient() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [orgId, setOrgId] = useState<string | null>(null);
+
+  useEffect(() => {
+    resolvePublicOrgId().then(setOrgId);
+  }, []);
+
   const [cardAmount, setCardAmount] = useState('');
   const [cardFund, setCardFund] = useState('tithe');
   const [cardName, setCardName] = useState('');
@@ -61,7 +68,7 @@ export default function GiveClient() {
           fund_designation: cardFund,
           fund_name: cardFund.charAt(0).toUpperCase() + cardFund.slice(1),
           currency: 'JPY',
-          org_id: 'fa547adf-f820-412f-9458-d6bade11517d',
+          org_id: orgId ?? '',
           given_by_name: cardName,
           given_by_email: cardEmail,
           customer_email: cardEmail,
