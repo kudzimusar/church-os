@@ -7,17 +7,17 @@ import { resolvePublicOrgId } from '@/lib/org-resolver';
 import { basePath } from '@/lib/utils';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronDown, 
-  ChevronUp, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Share2, 
-  QrCode, 
-  Heart, 
-  Users, 
-  Sparkles, 
+import {
+  ChevronDown,
+  ChevronUp,
+  Mail,
+  Phone,
+  MapPin,
+  Share2,
+  QrCode,
+  Heart,
+  Users,
+  Sparkles,
   ArrowRight,
   Download,
   ExternalLink,
@@ -28,7 +28,8 @@ import {
   Languages,
   BookOpen,
   ArrowLeft,
-  X
+  X,
+  Flame
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -256,15 +257,36 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-2xl max-h-[90vh] bg-[#0f172a] rounded-[2.5rem] shadow-2xl overflow-y-auto flex flex-col pointer-events-auto border border-white/10 font-['DM_Sans',sans-serif]"
+            className="relative w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden pointer-events-auto border border-white/10 font-['DM_Sans',sans-serif] grid grid-cols-1 md:grid-cols-5"
           >
-            <button 
+            <button
               onClick={handleClose}
-              className="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center z-[110] hover:scale-110 active:scale-95 transition-all text-slate-500 hover:text-[#1b3a6b] dark:hover:text-[#f5a623]"
+              className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white hover:scale-110 transition-all"
             >
               <X className="w-5 h-5" />
             </button>
 
+            {/* LEFT PANEL */}
+            <div className="md:col-span-2 bg-[#1B3A6B] p-6 md:p-10 flex flex-col items-center justify-center text-center space-y-6 md:space-y-8 relative overflow-hidden shrink-0">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9A84C] blur-[100px] opacity-10 rounded-full pointer-events-none" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#C9A84C]/30 bg-[#C9A84C]/10 text-[#C9A84C] text-xs font-black uppercase tracking-widest relative z-10">
+                <Flame className="w-3 h-3" /> Church OS
+              </div>
+              <h2 className="text-2xl md:text-3xl font-black text-white leading-tight uppercase tracking-tighter relative z-10">
+                Kingdom<br/>Connect<br/>Hub
+              </h2>
+              <div className="bg-white p-3 md:p-4 rounded-[2rem] shadow-2xl relative z-10 w-32 h-32 md:w-48 md:h-48 flex items-center justify-center">
+                {mounted ? (
+                  <img src={qrUrl} alt="Kingdom Connect QR" className="w-full h-full rounded-lg" />
+                ) : (
+                  <div className="w-full h-full bg-slate-200 rounded-lg" />
+                )}
+              </div>
+              <p className="text-white/60 text-xs font-bold uppercase tracking-widest relative z-10 hidden md:block">Scan to connect</p>
+            </div>
+
+            {/* RIGHT PANEL */}
+            <div className="md:col-span-3 bg-[#0f172a] flex flex-col overflow-y-auto max-h-[90vh]">
             <div className="pt-12 pb-8 px-6 text-center space-y-6 bg-gradient-to-b from-[#0f1f3d] to-[#111827]">
               <div className="flex flex-col items-center gap-4">
                 <div className="w-16 h-16 bg-[#1b3a6b]/40 backdrop-blur-md rounded-2xl flex items-center justify-center rotate-3 shadow-xl border border-white/10">
@@ -408,6 +430,7 @@ export default function KingdomConnectModal({ user }: { user?: any }) {
                  <p className="text-[9px] font-black text-slate-700 dark:text-slate-800 uppercase tracking-[0.25em]">Integrated with Church OS Ministry Intelligence</p>
               </div>
             </div>
+            </div>{/* end right panel */}
           </motion.div>
         </div>
       )}
