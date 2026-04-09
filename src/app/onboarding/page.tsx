@@ -3,29 +3,35 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Loader2, Sparkles, Check, Upload, HelpCircle, X } from 'lucide-react';
+import {
+    ArrowRight, ArrowLeft, Loader2, Sparkles, Check, Upload, HelpCircle, X,
+    Music, BookOpen, Baby, Zap, Video, Megaphone, Globe, Users,
+    Wallet, Coffee, Shield, DoorOpen, ShoppingBag, Heart, Landmark,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { RestorePrompt } from '@/components/ui/RestorePrompt';
+import { basePath as BP } from '@/lib/utils';
 
 const steps = ['Identity', 'DNA', 'Ministries', 'Plan'] as const;
 type Step = typeof steps[number];
 
-const MINISTRY_TEMPLATES = [
-    { name: 'Worship Ministry', category: 'worship', emoji: '🎵' },
-    { name: 'Prayer Ministry', category: 'worship', emoji: '🙏' },
-    { name: "Children's Ministry", category: 'care', emoji: '👶' },
-    { name: 'Youth Ministry', category: 'care', emoji: '⭐' },
-    { name: 'Media Ministry', category: 'media', emoji: '📹' },
-    { name: 'Evangelism Ministry', category: 'outreach', emoji: '📢' },
-    { name: 'Missions Ministry', category: 'outreach', emoji: '🌍' },
-    { name: 'Fellowship Circles', category: 'care', emoji: '🤝' },
-    { name: 'Finance Ministry', category: 'admin', emoji: '💰' },
-    { name: 'Hospitality Ministry', category: 'care', emoji: '☕' },
-    { name: 'Pastoral Care', category: 'care', emoji: '🛡️' },
-    { name: 'Ushering Ministry', category: 'admin', emoji: '🚪' },
-    { name: 'The Food Pantry', category: 'outreach', emoji: '🍎' },
-    { name: 'Akiramenai Outreach', category: 'outreach', emoji: '❤️' },
+const MINISTRY_TEMPLATES: { name: string; category: string; Icon: LucideIcon }[] = [
+    { name: 'Worship Ministry',     category: 'worship',  Icon: Music },
+    { name: 'Prayer Ministry',      category: 'worship',  Icon: BookOpen },
+    { name: "Children's Ministry",  category: 'care',     Icon: Baby },
+    { name: 'Youth Ministry',       category: 'care',     Icon: Zap },
+    { name: 'Media Ministry',       category: 'media',    Icon: Video },
+    { name: 'Evangelism Ministry',  category: 'outreach', Icon: Megaphone },
+    { name: 'Missions Ministry',    category: 'outreach', Icon: Globe },
+    { name: 'Fellowship Circles',   category: 'care',     Icon: Users },
+    { name: 'Finance Ministry',     category: 'admin',    Icon: Wallet },
+    { name: 'Hospitality Ministry', category: 'care',     Icon: Coffee },
+    { name: 'Pastoral Care',        category: 'care',     Icon: Shield },
+    { name: 'Ushering Ministry',    category: 'admin',    Icon: DoorOpen },
+    { name: 'The Food Pantry',      category: 'outreach', Icon: ShoppingBag },
+    { name: 'Akiramenai Outreach',  category: 'outreach', Icon: Heart },
 ];
 
 const PROVISION_STEPS = [
@@ -259,7 +265,7 @@ export default function OnboardingPage() {
                 clearSaved();
                 // Let animation finish (step 5 at 6000ms), then redirect at 6500ms
                 setTimeout(() => {
-                    router.push(`/onboarding/success?church=${encodeURIComponent(churchName)}`);
+                    router.push(`${BP}/onboarding/success?church=${encodeURIComponent(churchName)}`);
                 }, 6500);
             } else {
                 clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
@@ -290,8 +296,8 @@ export default function OnboardingPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="w-full max-w-sm flex flex-col items-center gap-10"
                 >
-                    <div className="w-16 h-16 rounded-2xl bg-[#72eff5]/10 border border-[#72eff5]/20 flex items-center justify-center text-3xl">
-                        ⛪
+                    <div className="w-16 h-16 rounded-2xl bg-[#72eff5]/10 border border-[#72eff5]/20 flex items-center justify-center">
+                        <Landmark size={28} className="text-[#72eff5]" />
                     </div>
 
                     <div className="text-center space-y-2">
@@ -546,7 +552,7 @@ export default function OnboardingPage() {
                                                             : 'ghost-border bg-[#23262c]/40 hover:border-[#72eff5]/30 hover:bg-[#72eff5]/5'
                                                     }`}
                                                 >
-                                                    <span className="text-2xl flex-shrink-0">{m.emoji}</span>
+                                                    <m.Icon size={20} className={`flex-shrink-0 ${selected ? 'text-[#72eff5]' : 'text-[#aaabb0]'}`} />
                                                     <div className="flex-1 min-w-0">
                                                         <p className={`text-xs font-bold leading-tight truncate ${selected ? 'text-[#72eff5]' : 'text-[#f6f6fc]'}`}>
                                                             {m.name}
