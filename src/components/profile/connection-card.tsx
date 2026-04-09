@@ -83,6 +83,12 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
     const [givingAmount, setGivingAmount] = useState('');
     const [givingFund, setGivingFund] = useState('tithe');
     const [givingLoading, setGivingLoading] = useState(false);
+    const [showRecurring, setShowRecurring] = useState(false);
+    const [recurringAmount, setRecurringAmount] = useState('');
+    const [recurringFund, setRecurringFund] = useState('tithe');
+    const [recurringInterval, setRecurringInterval] = useState('month');
+    const [recurringPledges, setRecurringPledges] = useState<any[]>([]);
+    const [recurringLoading, setRecurringLoading] = useState(false);
 
     const [attendanceData, setAttendanceData] = useState<number[]>([]);
 
@@ -177,6 +183,16 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                 .eq('org_id', profileData?.org_id || authUser?.user_metadata?.org_id)
                 .order('given_date', { ascending: false }).limit(12);
             setStewardship((frData || []).map((f: any) => ({ id: f.id, date: f.given_date, fund: f.record_type || 'Tithe', amount: f.amount || 0 })));
+
+            // Load recurring pledges
+            const { data: pledgesData } = await supabase.functions.invoke('recurring-giving', {
+                body: {
+                    action: 'list',
+                    org_id: profileData?.org_id || authUser?.user_metadata?.org_id,
+                    user_id: targetId,
+                }
+            });
+            setRecurringPledges(pledgesData?.pledges || []);
 
             // Load attendance records for the chart
             const { data: atData } = await supabase.from('attendance_records').select('attended')
@@ -474,6 +490,22 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
             setSavingNotes(false);
         }
     }
+
+    const handleCancelPledge = async (subscriptionId: string) => {
+        setRecurringLoading(true);
+        try {
+            const { error } = await supabase.functions.invoke('recurring-giving', {
+                body: { action: 'cancel', subscription_id: subscriptionId, org_id: profile?.org_id, user_id: user?.id }
+            });
+            if (error) throw error;
+            setRecurringPledges(prev => prev.map(p => p.stripe_subscription_id === subscriptionId ? { ...p, status: 'cancelled' } : p));
+            toast.success('Recurring pledge cancelled.');
+        } catch (err: any) {
+            toast.error('Failed to cancel pledge: ' + err.message);
+        } finally {
+            setRecurringLoading(false);
+        }
+    };
 
     const handleGiveNow = async () => {
         if (!givingAmount || Number(givingAmount) <= 0) {
@@ -906,6 +938,82 @@ export function ProfileView({ memberId, isAdmin }: ProfileViewProps = {}) {
                                             <Button onClick={() => setShowGivingForm(false)} variant="ghost" className="rounded-full h-9 px-3 text-sm opacity-60">
                                                 Cancel
                                             </Button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Recurring Giving Section */}
+                                <div className="glass border-foreground/10 rounded-2xl p-4 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Monthly Giving Pledges</p>
+                                        <Button
+                                            onClick={() => setShowRecurring(!showRecurring)}
+                                            variant="ghost"
+                                            className="h-7 px-3 text-[10px] rounded-full font-black opacity-60"
+                                        >
+                                            {showRecurring ? 'Hide' : 'Manage'}
+                                        </Button>
+                                    </div>
+
+                                    {/* Active pledges list */}
+                                    {recurringPledges.filter(p => p.status === 'active').length > 0 ? (
+                                        <div className="space-y-2">
+                                            {recurringPledges.filter(p => p.status === 'active').map((p: any) => (
+                                                <div key={p.id} className="flex items-center justify-between py-2 border-b border-foreground/10 last:border-0">
+                                                    <div>
+                                                        <p className="text-xs font-bold capitalize">{p.fund_designation} — ¥{Number(p.amount).toLocaleString()}/{p.interval}</p>
+                                                        <p className="text-[10px] opacity-50">Next: {p.next_billing_date || '—'}</p>
+                                                    </div>
+                                                    <Button
+                                                        onClick={() => handleCancelPledge(p.stripe_subscription_id)}
+                                                        disabled={recurringLoading}
+                                                        variant="ghost"
+                                                        className="h-7 px-3 text-[10px] rounded-full text-red-400 hover:text-red-300 font-black"
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-[11px] opacity-40">No active recurring pledges.</p>
+                                    )}
+
+                                    {/* Set up new pledge form */}
+                                    {showRecurring && (
+                                        <div className="pt-2 border-t border-foreground/10 space-y-3">
+                                            <p className="text-[10px] opacity-60 leading-relaxed">
+                                                Monthly giving requires Stripe setup — contact your church finance team to set up your first pledge, or use the form below to log a manual recurring pledge.
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <Input
+                                                    type="number"
+                                                    placeholder="Amount (JPY)"
+                                                    value={recurringAmount}
+                                                    onChange={(e) => setRecurringAmount(e.target.value)}
+                                                    className="w-32 h-8 rounded-full text-xs"
+                                                />
+                                                <select
+                                                    value={recurringFund}
+                                                    onChange={(e) => setRecurringFund(e.target.value)}
+                                                    className="h-8 rounded-full px-3 text-xs bg-background border border-foreground/20"
+                                                >
+                                                    <option value="tithe">Tithe</option>
+                                                    <option value="offering">Offering</option>
+                                                    <option value="missions">Missions</option>
+                                                    <option value="building">Building</option>
+                                                </select>
+                                                <select
+                                                    value={recurringInterval}
+                                                    onChange={(e) => setRecurringInterval(e.target.value)}
+                                                    className="h-8 rounded-full px-3 text-xs bg-background border border-foreground/20"
+                                                >
+                                                    <option value="week">Weekly</option>
+                                                    <option value="month">Monthly</option>
+                                                    <option value="year">Yearly</option>
+                                                </select>
+                                            </div>
+                                            <p className="text-[9px] opacity-40 italic">Your card will be charged automatically on the selected interval.</p>
                                         </div>
                                     )}
                                 </div>

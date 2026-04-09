@@ -16,6 +16,7 @@ export default function MinistryOverviewClient({ slug }: { slug: string }) {
     const [financeHealth, setFinanceHealth] = useState<any>(null);
     const [atRiskGivers, setAtRiskGivers] = useState<any[]>([]);
     const [ministryROI, setMinistryROI] = useState<any[]>([]);
+    const [recurringHealth, setRecurringHealth] = useState<any>(null);
     const [financeLoading, setFinanceLoading] = useState(false);
 
     const loadData = async (sess: MinistrySession) => {
@@ -77,7 +78,7 @@ export default function MinistryOverviewClient({ slug }: { slug: string }) {
         if (slug !== 'finance' || !orgId) return;
         const loadFinance = async () => {
             setFinanceLoading(true);
-            const [healthRes, riskRes, roiRes] = await Promise.all([
+            const [healthRes, riskRes, roiRes, recurringRes] = await Promise.all([
                 supabase.from('vw_church_giving_health')
                     .select('*').eq('org_id', orgId).maybeSingle(),
                 supabase.from('vw_giving_at_risk')
@@ -88,10 +89,13 @@ export default function MinistryOverviewClient({ slug }: { slug: string }) {
                     .select('*').eq('org_id', orgId)
                     .order('reports_submitted', { ascending: false })
                     .limit(6),
+                supabase.from('vw_recurring_giving_health')
+                    .select('*').eq('org_id', orgId).maybeSingle(),
             ]);
             setFinanceHealth(healthRes.data);
             setAtRiskGivers(riskRes.data || []);
             setMinistryROI(roiRes.data || []);
+            setRecurringHealth(recurringRes.data);
             setFinanceLoading(false);
         };
         loadFinance();
@@ -385,6 +389,25 @@ export default function MinistryOverviewClient({ slug }: { slug: string }) {
                                             </div>
                                         ))}
                                     </div>
+
+                                    {/* Recurring Pledges Summary */}
+                                    {recurringHealth && (
+                                        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Recurring Pledges</p>
+                                            <div className="grid grid-cols-3 gap-3">
+                                                {[
+                                                    { label: 'Active', value: recurringHealth.active_pledges || 0, color: 'text-emerald-400' },
+                                                    { label: 'Monthly Total', value: '¥' + Math.round(recurringHealth.monthly_recurring_total || 0).toLocaleString(), color: 'text-white' },
+                                                    { label: 'Avg Pledge', value: '¥' + Math.round(recurringHealth.avg_pledge_amount || 0).toLocaleString(), color: 'text-blue-400' },
+                                                ].map(s => (
+                                                    <div key={s.label} className="space-y-1">
+                                                        <p className="text-[9px] uppercase tracking-widest text-white/30 font-black">{s.label}</p>
+                                                        <p className={`text-lg font-black ${s.color}`}>{s.value}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </div>

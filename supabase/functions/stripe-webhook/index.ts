@@ -86,6 +86,67 @@ serve(async (req) => {
       }
     }
 
+    // Handle recurring payment success
+    if (event.type === "invoice.payment_succeeded") {
+      const invoice = event.data.object as any;
+      const subscription = invoice.subscription;
+
+      if (
+        invoice.billing_reason === "subscription_cycle" ||
+        invoice.billing_reason === "subscription_create"
+      ) {
+        const { data: pledge } = await supabaseAdmin
+          .from("recurring_pledges")
+          .select("*")
+          .eq("stripe_subscription_id", subscription)
+          .maybeSingle();
+
+        if (pledge) {
+          await supabaseAdmin.from("financial_records").insert({
+            org_id: pledge.org_id,
+            user_id: pledge.user_id || null,
+            amount: invoice.amount_paid / 100,
+            currency: invoice.currency.toUpperCase(),
+            record_type: pledge.fund_designation,
+            fund_designation: pledge.fund_designation,
+            payment_gateway: "stripe",
+            payment_status: "completed",
+            transaction_id: invoice.payment_intent,
+            stripe_payment_intent_id: invoice.payment_intent,
+            given_by_name: pledge.given_by_name,
+            given_by_email: pledge.given_by_email,
+            given_date: new Date().toISOString().split("T")[0],
+            is_recurring: true,
+            recurring_interval: pledge.interval,
+            notes: `Recurring ${pledge.interval}ly giving`,
+            created_at: new Date().toISOString(),
+          });
+
+          const sub = await stripe.subscriptions.retrieve(subscription);
+          await supabaseAdmin
+            .from("recurring_pledges")
+            .update({
+              next_billing_date: new Date(
+                sub.current_period_end * 1000
+              ).toISOString().split("T")[0],
+            })
+            .eq("stripe_subscription_id", subscription);
+        }
+      }
+    }
+
+    // Handle subscription cancellation
+    if (event.type === "customer.subscription.deleted") {
+      const sub = event.data.object as any;
+      await supabaseAdmin
+        .from("recurring_pledges")
+        .update({
+          status: "cancelled",
+          cancelled_at: new Date().toISOString(),
+        })
+        .eq("stripe_subscription_id", sub.id);
+    }
+
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
