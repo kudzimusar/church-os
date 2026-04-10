@@ -79,7 +79,7 @@ const jkcChurchData = {
 /** * UI COMPONENTS
  */
 
-const Button = ({ className = "", variant = "primary", size = "md", children, ...props }) => {
+const Button = ({ className = "", variant = "primary", size = "md", children, ...props }: { className?: string; variant?: 'primary' | 'dark' | 'outline' | 'ghost' | 'white' | 'accent'; size?: 'sm' | 'md' | 'lg' | 'icon'; children?: React.ReactNode; [key: string]: any }) => {
   const baseStyles = "inline-flex items-center justify-center rounded-xl font-bold transition-all focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]";
   const variants = {
     primary: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-500/20",
@@ -98,15 +98,15 @@ const Button = ({ className = "", variant = "primary", size = "md", children, ..
   return <button className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`} {...props}>{children}</button>;
 };
 
-const Card = ({ children, className = "" }) => (
-  <div className={`rounded-3xl border border-slate-100 bg-white shadow-sm hover:shadow-2xl hover:border-emerald-100 transition-all duration-500 ${className}`}>{children}</div>
+const Card = ({ children, className = "", onClick }: { children?: React.ReactNode; className?: string; onClick?: () => void }) => (
+  <div className={`rounded-3xl border border-slate-100 bg-white shadow-sm hover:shadow-2xl hover:border-emerald-100 transition-all duration-500 ${className}`} onClick={onClick}>{children}</div>
 );
 
-const Badge = ({ children, className = "" }) => (
+const Badge = ({ children, className = "" }: { children?: React.ReactNode; className?: string }) => (
   <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest ${className}`}>{children}</span>
 );
 
-const Modal = ({ isOpen, onClose, title, children }) => {
+const Modal = ({ isOpen, onClose, title, children }: { isOpen: boolean; onClose: () => void; title: string; children?: React.ReactNode }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -125,7 +125,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
  * PAGE COMPONENTS
  */
 
-const Navbar = ({ setPage, user }) => {
+const Navbar = ({ setPage, user }: { setPage: (p: string) => void; user: any }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
 
@@ -179,7 +179,7 @@ const Navbar = ({ setPage, user }) => {
   );
 };
 
-const HeroV5 = ({ setPage }) => (
+const HeroV5 = ({ setPage }: { setPage: (p: string) => void }) => (
   <section className="relative pt-44 pb-24 md:pt-60 md:pb-40 overflow-hidden bg-slate-50">
     <div className="absolute inset-0 pointer-events-none opacity-40">
       <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald-300/20 blur-[150px] rounded-full"></div>
@@ -305,7 +305,7 @@ const FeatureIntegrity = () => (
   </section>
 );
 
-const PhilanthropyBridge = ({ setPage }) => (
+const PhilanthropyBridge = ({ setPage }: { setPage: (p: string) => void }) => (
   <section className="py-32 bg-slate-950 text-white relative overflow-hidden">
     <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent"></div>
     <div className="container mx-auto px-6 relative z-10">
@@ -390,7 +390,7 @@ const PhilanthropyBridge = ({ setPage }) => (
   </section>
 );
 
-const DetailedFooter = ({ setPage }) => (
+const DetailedFooter = ({ setPage }: { setPage: (p: string) => void }) => (
   <footer className="bg-white pt-32 pb-16 border-t border-slate-100">
     <div className="container mx-auto px-6">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-12 mb-24">
@@ -463,7 +463,7 @@ const DetailedFooter = ({ setPage }) => (
  * CONTEXTUAL PAGES
  */
 
-const RegistryPage = ({ setPage }) => {
+const RegistryPage = ({ setPage }: { setPage: (p: string) => void }) => {
   const [churches, setChurches] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [regLoading, setRegLoading] = useState(true);
@@ -578,7 +578,7 @@ const RegistryPage = ({ setPage }) => {
   );
 };
 
-const GrowthEnginePage = ({ setPage }) => (
+const GrowthEnginePage = ({ setPage }: { setPage: (p: string) => void }) => (
   <div className="min-h-screen bg-white pt-32 pb-20">
     <div className="container mx-auto px-6">
       <div className="max-w-4xl mb-24 space-y-6">
@@ -641,7 +641,7 @@ const GrowthEnginePage = ({ setPage }) => (
   </div>
 );
 
-const PhilanthropyPage = ({ setPage }) => (
+const PhilanthropyPage = ({ setPage }: { setPage: (p: string) => void }) => (
   <div className="min-h-screen bg-slate-950 pt-32 pb-20 text-white">
     <div className="container mx-auto px-6">
       <div className="grid lg:grid-cols-2 gap-24 items-center mb-32">
@@ -684,7 +684,7 @@ const PhilanthropyPage = ({ setPage }) => (
  * CHURCH PROFILE (JKC)
  */
 
-const FeaturedChurchProfile = ({ setPage }) => {
+const FeaturedChurchProfile = ({ setPage }: { setPage: (p: string) => void }) => {
   const [showVisitDialog, setShowVisitDialog] = useState(false);
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const church = jkcChurchData;
@@ -805,7 +805,7 @@ const FeaturedChurchProfile = ({ setPage }) => {
  * DASHBOARD
  */
 
-const UserDashboard = ({ setPage, user, setUser }) => (
+const UserDashboard = ({ setPage, user, setUser }: { setPage: (p: string) => void; user: any; setUser: (u: any) => void }) => (
   <div className="min-h-screen bg-slate-50 pt-32 pb-20">
     <div className="container mx-auto px-6 max-w-6xl">
       <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16">
@@ -871,7 +871,7 @@ const UserDashboard = ({ setPage, user, setUser }) => (
 export default function App() {
   const router = useRouter();
   const [page, setPage] = useState('index');
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
 
   const nav = (p: string) => {
     const routes: Record<string, string> = {
@@ -892,7 +892,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page]);
 
-  const handleRegister = (email) => {
+  const handleRegister = (email: string) => {
     setUser({ email });
     nav('dashboard');
   };
