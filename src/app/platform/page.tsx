@@ -234,7 +234,7 @@ const HeroV5 = ({ setPage }: { setPage: (p: string) => void }) => (
   </section>
 );
 
-const FeatureIntegrity = () => (
+const FeatureIntegrity = ({ setPage }: { setPage: (p: string) => void }) => (
   <section className="py-32 bg-white">
     <div className="container mx-auto px-6">
       <div className="grid lg:grid-cols-2 gap-24 items-center">
@@ -262,7 +262,7 @@ const FeatureIntegrity = () => (
               <p className="text-sm text-slate-400 font-medium">Data-driven insights for location planting and outreach.</p>
             </div>
           </div>
-          <Button variant="outline" className="h-14 px-10">Software Walkthrough</Button>
+          <Button variant="outline" className="h-14 px-10" onClick={() => setPage('growth')}>Software Walkthrough</Button>
         </div>
 
         <div className="relative">
@@ -390,74 +390,97 @@ const PhilanthropyBridge = ({ setPage }: { setPage: (p: string) => void }) => (
   </section>
 );
 
-const DetailedFooter = ({ setPage }: { setPage: (p: string) => void }) => (
-  <footer className="bg-white pt-32 pb-16 border-t border-slate-100">
-    <div className="container mx-auto px-6">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-12 mb-24">
-        <div className="col-span-2 space-y-8">
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setPage('index')}>
-            <div className="bg-emerald-600 p-2 rounded-xl">
-              <Church className="h-6 w-6 text-white" />
+const DetailedFooter = ({ setPage }: { setPage: (p: string) => void }) => {
+  const [nlEmail, setNlEmail] = useState('');
+  const [nlDone, setNlDone] = useState(false);
+
+  return (
+    <footer className="bg-white pt-32 pb-16 border-t border-slate-100">
+      <div className="container mx-auto px-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-12 mb-24">
+          <div className="col-span-2 space-y-8">
+            <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setPage('index')}>
+              <div className="bg-emerald-600 p-2 rounded-xl">
+                <Church className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-2xl font-black tracking-tighter text-slate-900 uppercase">ChurchOS</span>
             </div>
-            <span className="text-2xl font-black tracking-tighter text-slate-900 uppercase">ChurchOS</span>
+            <p className="text-slate-400 font-medium max-w-sm leading-relaxed">
+              The world's most trusted infrastructure for faith communities. Empowering ministries through intelligence and transparency.
+            </p>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all cursor-pointer"><Globe size={18} /></div>
+              <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all cursor-pointer"><Mail size={18} /></div>
+              <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all cursor-pointer"><MessageSquare size={18} /></div>
+            </div>
           </div>
-          <p className="text-slate-400 font-medium max-w-sm leading-relaxed">
-            The world's most trusted infrastructure for faith communities. Empowering ministries through intelligence and transparency.
-          </p>
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all cursor-pointer"><Globe size={18} /></div>
-            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all cursor-pointer"><Mail size={18} /></div>
-            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all cursor-pointer"><MessageSquare size={18} /></div>
+
+          <div>
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 mb-8">Registry</h4>
+            <ul className="space-y-4 text-sm font-bold text-slate-500">
+              <li><button onClick={() => setPage('registry')} className="hover:text-emerald-600">Find a Church</button></li>
+              <li><button onClick={() => setPage('register')} className="hover:text-emerald-600">Verify Profile</button></li>
+              <li><button onClick={() => setPage('registry')} className="hover:text-emerald-600">Leader Directory</button></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 mb-8">Ecosystem</h4>
+            <ul className="space-y-4 text-sm font-bold text-slate-500">
+              <li><button onClick={() => setPage('growth')} className="hover:text-emerald-600">Growth Engine</button></li>
+              <li><button onClick={() => setPage('philanthropy')} className="hover:text-emerald-600">Philanthropy</button></li>
+              <li><button onClick={() => setPage('growth')} className="hover:text-emerald-600">AI Insights</button></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 mb-8">Company</h4>
+            <ul className="space-y-4 text-sm font-bold text-slate-500">
+              <li><button onClick={() => setPage('index')} className="hover:text-emerald-600">Our Mission</button></li>
+              <li><button onClick={() => setPage('register')} className="hover:text-emerald-600">Partnering</button></li>
+              <li><button onClick={() => setPage('register')} className="hover:text-emerald-600">Support Hub</button></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 mb-8">Newsletter</h4>
+            {nlDone ? (
+              <p className="text-emerald-600 font-bold text-sm">You're subscribed!</p>
+            ) : (
+              <div className="space-y-4">
+                <input
+                  placeholder="Email"
+                  className="w-full h-11 px-4 bg-slate-50 border-none rounded-xl text-xs font-bold"
+                  value={nlEmail}
+                  onChange={(e) => setNlEmail(e.target.value)}
+                />
+                <Button className="w-full h-11" onClick={async () => {
+                  if (!nlEmail) return;
+                  await supabase.from('public_inquiries').insert({
+                    email: nlEmail,
+                    visitor_intent: 'newsletter_signup',
+                    first_name: 'Newsletter',
+                    last_name: 'Subscriber',
+                  });
+                  setNlDone(true);
+                }}>Subscribe</Button>
+              </div>
+            )}
           </div>
         </div>
 
-        <div>
-          <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 mb-8">Registry</h4>
-          <ul className="space-y-4 text-sm font-bold text-slate-500">
-            <li><button onClick={() => setPage('registry')} className="hover:text-emerald-600">Find a Church</button></li>
-            <li><button onClick={() => setPage('register')} className="hover:text-emerald-600">Verify Profile</button></li>
-            <li><button className="hover:text-emerald-600">Leader Directory</button></li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 mb-8">Ecosystem</h4>
-          <ul className="space-y-4 text-sm font-bold text-slate-500">
-            <li><button onClick={() => setPage('growth')} className="hover:text-emerald-600">Growth Engine</button></li>
-            <li><button onClick={() => setPage('philanthropy')} className="hover:text-emerald-600">Philanthropy</button></li>
-            <li><button className="hover:text-emerald-600">AI Insights</button></li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 mb-8">Company</h4>
-          <ul className="space-y-4 text-sm font-bold text-slate-500">
-            <li><button className="hover:text-emerald-600">Our Mission</button></li>
-            <li><button className="hover:text-emerald-600">Partnering</button></li>
-            <li><button className="hover:text-emerald-600">Support Hub</button></li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 mb-8">Newsletter</h4>
-          <div className="space-y-4">
-            <input placeholder="Email" className="w-full h-11 px-4 bg-slate-50 border-none rounded-xl text-xs font-bold" />
-            <Button className="w-full h-11">Subscribe</Button>
+        <div className="pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-200">© 2024 Church OS Collective</p>
+          <div className="flex gap-10 text-[10px] font-black uppercase tracking-widest text-slate-300">
+            <button onClick={() => setPage('index')} className="hover:text-slate-900 transition-colors">Privacy</button>
+            <button onClick={() => setPage('registry')} className="hover:text-slate-900 transition-colors">Registry Terms</button>
+            <button onClick={() => setPage('philanthropy')} className="hover:text-slate-900 transition-colors">Audit Ledger</button>
           </div>
         </div>
       </div>
-
-      <div className="pt-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-200">© 2024 Church OS Collective</p>
-        <div className="flex gap-10 text-[10px] font-black uppercase tracking-widest text-slate-300">
-          <button className="hover:text-slate-900 transition-colors">Privacy</button>
-          <button className="hover:text-slate-900 transition-colors">Registry Terms</button>
-          <button className="hover:text-slate-900 transition-colors">Audit Ledger</button>
-        </div>
-      </div>
-    </div>
-  </footer>
-);
+    </footer>
+  );
+};
 
 /**
  * CONTEXTUAL PAGES
@@ -633,7 +656,7 @@ const GrowthEnginePage = ({ setPage }: { setPage: (p: string) => void }) => (
                 </div>
               ))}
             </div>
-            <Button variant="accent" className="w-full h-14">Get Started with Engine</Button>
+            <Button variant="accent" className="w-full h-14" onClick={() => setPage('register')}>Get Started with Engine</Button>
           </Card>
         </div>
       </div>
@@ -875,15 +898,15 @@ export default function App() {
 
   const nav = (p: string) => {
     const routes: Record<string, string> = {
-      registry: `${BP}/corporate/registry/`,
-      growth: `${BP}/corporate/ai/`,
-      philanthropy: `${BP}/corporate/philanthropy/`,
-      church: `${BP}/welcome/`,
+      registry: `${BP}/platform/registry/`,
+      growth: `${BP}/platform/ai/`,
+      philanthropy: `${BP}/platform/philanthropy/`,
+      church: `${BP}/platform/church/japan-kingdom-church-tokyo/`,
       register: `${BP}/platform/register/`,
-      login: `${BP}/church/login/`,
+      login: `${BP}/corporate/login/`,
       index: `${BP}/platform/`,
       dashboard: `${BP}/shepherd/dashboard/`,
-      pricing: `${BP}/corporate/pricing/`,
+      pricing: `${BP}/platform/register/`,
     };
     if (routes[p]) router.push(routes[p]);
   };
@@ -902,7 +925,7 @@ export default function App() {
       case 'index': return (
         <>
           <HeroV5 setPage={nav} />
-          <FeatureIntegrity />
+          <FeatureIntegrity setPage={nav} />
           <PhilanthropyBridge setPage={nav} />
           <DetailedFooter setPage={nav} />
         </>
