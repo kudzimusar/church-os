@@ -879,9 +879,9 @@ export default function App() {
       growth: `${BP}/corporate/ai/`,
       philanthropy: `${BP}/corporate/philanthropy/`,
       church: `${BP}/welcome/`,
-      register: `${BP}/corporate/register/`,
+      register: `${BP}/platform/register/`,
       login: `${BP}/church/login/`,
-      index: `${BP}/corporate/`,
+      index: `${BP}/platform/`,
       dashboard: `${BP}/shepherd/dashboard/`,
       pricing: `${BP}/corporate/pricing/`,
     };
