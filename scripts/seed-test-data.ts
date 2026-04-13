@@ -63,9 +63,7 @@ async function seedTestData() {
         {
           id: TEST_ORG_ID,
           name: "Test Church",
-          slug: "test-church",
           domain: "test.church.local",
-          primary_contact_email: "pastor@testchurch.local",
         },
       ])
       .select();
