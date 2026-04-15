@@ -6,7 +6,7 @@ import {
     Globe, Calendar, DollarSign, TrendingUp, Sparkles,
     FileText, Settings, ChevronLeft, ChevronRight, Shield,
     MessagesSquare, Flame, LayoutGrid, Megaphone, ShieldCheck,
-    Youtube, Mail, Play, ShoppingBag
+    Youtube, Mail, Play, ShoppingBag, Zap
 } from "lucide-react";
 import { basePath as BP } from "@/lib/utils";
 import { useState } from "react";
@@ -19,6 +19,7 @@ const NAV_ITEMS = [
     { label: "Pastoral Care", icon: Shield, path: "/care" },
     { label: "Members", icon: Users, path: "/members" },
     { label: "Membership Requests", icon: ShieldCheck, path: "/requests" },
+    { label: "Kingdom Connect", icon: Zap, path: "/kcc" },
     { label: "Ministries", icon: Music, path: "/ministries" },
     { label: "Bible Study Groups", icon: MessagesSquare, path: "/bible-study" },
     { label: "Events", icon: Calendar, path: "/events" },
