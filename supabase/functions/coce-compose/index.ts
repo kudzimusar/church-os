@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// CORS — allow GitHub Pages and localhost
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -9,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -20,68 +18,44 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const {
-      org_id,
-      intent,
-      campaign_type,
-      audience_scope,
-      target_id,
-      channels,
-      scheduled_at,
-      created_by,
-    } = await req.json();
+    const { org_id, intent, campaign_type, audience_scope, target_id, channels, scheduled_at, created_by } = await req.json();
 
     if (!org_id || !intent || !campaign_type) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields: org_id, intent, campaign_type" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
+      return new Response(JSON.stringify({ error: "Missing required fields: org_id, intent, campaign_type" }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 });
     }
 
-    // ────────────────────────────────────────────────────────────
-    // 1. Fetch Church Health Context for intelligent drafting
-    // ────────────────────────────────────────────────────────────
-    const { data: org, error: orgErr } = await supabase
-      .from("organizations")
-      .select("name, country")
-      .eq("id", org_id)
-      .single();
-
-    if (orgErr) console.error(`[coce-compose] org query error: ${orgErr.message} (code: ${orgErr.code})`);
+    const { data: org, error: orgErr } = await supabase.from("organizations").select("name, country").eq("id", org_id).single();
+    if (orgErr) console.error(`[coce-compose] org error: ${orgErr.message}`);
 
     const { data: healthMetrics } = await supabase
       .from("church_health_metrics")
-      .select("metric_type, metric_value, note")
+      .select("score, attendance_index, engagement_index, prayer_index, community_index")
       .eq("org_id", org_id)
-      .order("recorded_at", { ascending: false })
-      .limit(10);
+      .order("created_at", { ascending: false })
+      .limit(3);
 
     const { data: recentAttendance } = await supabase
       .from("attendance_logs")
-      .select("attendance_count, service_date")
+      .select("service_date, status")
       .eq("org_id", org_id)
       .order("service_date", { ascending: false })
-      .limit(3);
+      .limit(10);
 
-    // ────────────────────────────────────────────────────────────
-    // 2. Determine which channel formats to generate
-    // ────────────────────────────────────────────────────────────
     const needsLine = Array.isArray(channels) && channels.includes("line");
     const needsSms = Array.isArray(channels) && channels.includes("sms");
-
-    // ────────────────────────────────────────────────────────────
-    // 3. Call Gemini to compose bilingual, multi-channel content
-    // ────────────────────────────────────────────────────────────
     const geminiKey = Deno.env.get("GEMINI_API_KEY");
-
-    // Build context summary for Gemini
     const churchName = org?.name ?? "our church";
+
     console.log(`[coce-compose] org="${churchName}" | gemini=${!!geminiKey}`);
-    const healthSummary = healthMetrics
-      ? healthMetrics.map((m: any) => `${m.metric_type}: ${m.metric_value}${m.note ? ` (${m.note})` : ""}`).join(", ")
+
+    const latestHealth = healthMetrics?.[0];
+    const healthSummary = latestHealth
+      ? `Overall score: ${latestHealth.score}, Attendance: ${latestHealth.attendance_index}, Engagement: ${latestHealth.engagement_index}, Prayer: ${latestHealth.prayer_index}`
       : "No health metrics available";
-    const attendanceSummary = recentAttendance
-      ? recentAttendance.map((a: any) => `${a.service_date}: ${a.attendance_count} present`).join(", ")
+
+    const presentCount = recentAttendance?.filter((a: any) => a.status === "present").length ?? 0;
+    const attendanceSummary = recentAttendance && recentAttendance.length > 0
+      ? `${presentCount} present across ${recentAttendance.length} recent service records`
       : "No recent attendance data";
 
     let draft: Record<string, string> = {
@@ -106,87 +80,57 @@ serve(async (req) => {
       ].filter(Boolean).join(", ");
 
       const prompt = `You are the Church OS Pastoral Communications Intelligence for ${churchName}.
-Act as an expert copywriter and composer giving specific numbers from the ecosystem, rather than just returning the user's intent.
-Draft a ${campaign_type.replace(/_/g, " ")} message based on this admin intent: "${intent}"
+Draft a ${campaign_type.replace(/_/g, " ")} message based on this pastoral intent: "${intent}"
 
-Ecosystem Intelligence: 
-- Health Metrics: ${healthSummary}
-- Recent Attendance: ${attendanceSummary}
-- Audience: ${audience_scope.replace("_", " ")}
-- Sender Context: Sent by a leader/staff member to the church. Ensure it sounds like it comes from the leadership team.
+Church context:
+- Health: ${healthSummary}
+- Attendance: ${attendanceSummary}
+- Audience: ${(audience_scope || "org_wide").replace(/_/g, " ")}
+- From: Church leadership team
 
-Requirement: Use the actual numbers and metrics supplied above in the body of the message to show real impact, spiritual growth, and transparency. Do not tell the user to insert numbers; write them into the text yourself.
+Use real numbers from the context above. Be warm, pastoral, encouraging. No placeholder text.
 
-Return ONLY a valid JSON object with these exact keys: ${channelInstructions}
+Return ONLY valid JSON with these keys: ${channelInstructions}
 
-Be warm, pastoral, encouraging and specific to the intent. No placeholder text. NO MARKDOWN. NO CODE BLOCKS.`;
+NO markdown. NO code blocks.`;
 
+      let rawText = "";
       try {
         const geminiRes = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${geminiKey}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 4096,
-              },
-            }),
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 4096 } }),
           }
         );
-
-
         const geminiData = await geminiRes.json();
-        const candidate = geminiData?.candidates?.[0];
-        const rawText = candidate?.content?.parts?.[0]?.text ?? "";
-        if (geminiData?.error) {
-          console.error(`[coce-compose] Gemini error: ${JSON.stringify(geminiData.error)}`);
-        }
+        rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+        if (geminiData?.error) console.error(`[coce-compose] Gemini error: ${JSON.stringify(geminiData.error)}`);
 
-        // Strip any markdown code fences Gemini sometimes adds
         let cleanJson = rawText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-
         if (cleanJson) {
-           // Handle the case where JSON is slightly cut off but mostly valid (if it ever happens again)
-           if (!cleanJson.endsWith("}")) {
-              cleanJson += "\"}"; // naive append to prevent total failure
-           }
+          if (!cleanJson.endsWith("}")) cleanJson += "\"}";
           const parsed = JSON.parse(cleanJson);
           draft = { ...draft, ...parsed };
-          console.log(`[coce-compose] Draft generated with AI ✓`);
+          console.log(`[coce-compose] AI draft generated with gemini-2.5-flash ✓`);
         }
       } catch (gemErr: any) {
-        console.error("[coce-compose] Gemini parse error:", gemErr.message, "Raw was:", rawText.substring(0, 50));
-        // Fall through to fallback
+        console.error("[coce-compose] Gemini error:", gemErr.message, rawText.substring(0, 100));
       }
-
-
-
     } else {
-      console.warn("[coce-compose] GEMINI_API_KEY not set — returning intent as draft body");
-      // Still return a usable draft so the page works without AI
+      console.warn("[coce-compose] No GEMINI_API_KEY — using intent as fallback draft");
       draft = {
         subject_en: `Message from ${churchName}`,
         subject_ja: `${churchName}からのメッセージ`,
         body_en: intent,
-        body_ja: `(Japanese translation pending — Gemini API key required)\n\n${intent}`,
-        send_time_suggestion: "Consider sending on Sunday morning or Wednesday evening for best engagement.",
+        body_ja: `(Japanese translation pending)\n\n${intent}`,
+        send_time_suggestion: "Consider sending on Sunday morning or Wednesday evening.",
       };
-      if (needsLine) {
-        draft.line_message_en = intent.substring(0, 200);
-        draft.line_message_ja = `(翻訳保留) ${intent.substring(0, 150)}`;
-      }
-      if (needsSms) {
-        draft.sms_message_en = intent.substring(0, 160);
-        draft.sms_message_ja = intent.substring(0, 70);
-      }
+      if (needsLine) { draft.line_message_en = intent.substring(0, 200); draft.line_message_ja = `(翻訳保留) ${intent.substring(0, 150)}`; }
+      if (needsSms) { draft.sms_message_en = intent.substring(0, 160); draft.sms_message_ja = intent.substring(0, 70); }
     }
 
-    // ────────────────────────────────────────────────────────────
-    // 4. Save as draft campaign in communication_campaigns
-    // ────────────────────────────────────────────────────────────
     const { data: campaign, error: campaignError } = await supabase
       .from("communication_campaigns")
       .insert({
@@ -199,12 +143,9 @@ Be warm, pastoral, encouraging and specific to the intent. No placeholder text. 
         body_ja: draft.body_ja,
         ai_drafted: !!geminiKey,
         ai_prompt_used: intent,
-        ai_model_used: geminiKey ? "gemini-2.0-flash" : null,
-        ai_context_used: {
-          health_metrics: healthMetrics,
-          recent_attendance: recentAttendance,
-        },
-        audience_scope,
+        ai_model_used: geminiKey ? "gemini-2.5-flash-preview-04-17" : null,
+        ai_context_used: { health_metrics: healthMetrics, recent_attendance: recentAttendance },
+        audience_scope: audience_scope ?? "org_wide",
         audience_filter: target_id ? { target_id } : null,
         channels: channels ?? ["email"],
         status: "draft",
@@ -217,26 +158,13 @@ Be warm, pastoral, encouraging and specific to the intent. No placeholder text. 
 
     if (campaignError) {
       console.error("[coce-compose] Campaign insert error:", campaignError);
-      return new Response(
-        JSON.stringify({ error: campaignError.message }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-      );
+      return new Response(JSON.stringify({ error: campaignError.message }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 });
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        campaign_id: campaign.id,
-        draft,
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-    );
+    return new Response(JSON.stringify({ success: true, campaign_id: campaign.id, draft }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
 
   } catch (err: any) {
     console.error("[coce-compose] Unhandled error:", err);
-    return new Response(
-      JSON.stringify({ error: err.message ?? "Internal server error" }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-    );
+    return new Response(JSON.stringify({ error: err.message ?? "Internal server error" }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 });
   }
 });
