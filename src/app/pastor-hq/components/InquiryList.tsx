@@ -6,10 +6,11 @@ import type { Inquiry } from '../inquiries/page';
 interface InquiryListProps {
   inquiries: Inquiry[];
   orgId: string;
+  userId: string;
   onStatusChange: (id: string, status: string) => void;
 }
 
-export function InquiryList({ inquiries, orgId, onStatusChange }: InquiryListProps) {
+export function InquiryList({ inquiries, orgId, userId, onStatusChange }: InquiryListProps) {
   return (
     <div className="space-y-2">
       {inquiries.map(inquiry => (
@@ -17,6 +18,7 @@ export function InquiryList({ inquiries, orgId, onStatusChange }: InquiryListPro
           key={inquiry.id}
           inquiry={inquiry}
           orgId={orgId}
+          userId={userId}
           onStatusChange={onStatusChange}
         />
       ))}

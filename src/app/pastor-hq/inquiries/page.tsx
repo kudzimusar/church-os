@@ -28,7 +28,7 @@ export interface Inquiry {
 const STATUS_TABS = ['all', 'new', 'analyzed', 'responded', 'archived'];
 
 function InquiriesPage() {
-  const { orgId } = usePastorCtx();
+  const { orgId, userId } = usePastorCtx();
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -141,7 +141,7 @@ function InquiriesPage() {
           </p>
         </div>
       ) : (
-        <InquiryList inquiries={filtered} orgId={orgId || ''} onStatusChange={handleStatusChange} />
+        <InquiryList inquiries={filtered} orgId={orgId || ''} userId={userId || ''} onStatusChange={handleStatusChange} />
       )}
     </div>
   );

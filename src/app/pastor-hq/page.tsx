@@ -35,7 +35,7 @@ const item = {
 };
 
 function PastorHQDashboard() {
-    const { userName, orgId } = usePastorCtx();
+    const { userName, orgId, userId } = usePastorCtx();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [showComposer, setShowComposer] = useState(false);
@@ -248,8 +248,8 @@ function PastorHQDashboard() {
                             {[
                                 { label: "Prayer Requests", count: data?.correspondence.memberMessages, icon: MessageSquare, color: "bg-violet-500", href: "/pastor-hq/prayer-requests" },
                                 { label: "Website Inquiries", count: data?.correspondence.websiteInquiries, icon: Mail, color: "bg-blue-500", href: "/pastor-hq/inquiries" },
-                                { label: "Admin Direct", count: data?.correspondence.adminDirect, icon: Activity, color: "bg-emerald-500", href: "/pastor-hq/inquiries" },
-                                { label: "Email Campaigns", count: data?.correspondence.externalGmail, icon: Mail, color: "bg-red-500", href: "/shepherd/dashboard/campaigns/" },
+                                { label: "Admin Direct", count: data?.correspondence.adminDirect, icon: Activity, color: "bg-emerald-500", href: "/shepherd/dashboard/communications" },
+                                { label: "Email Campaigns", count: data?.correspondence.externalGmail, icon: Mail, color: "bg-red-500", href: "/shepherd/dashboard/communications" },
                             ].map((channel, i) => (
                                 <Link
                                     key={channel.label}
@@ -317,7 +317,7 @@ function PastorHQDashboard() {
                 </section>
             </div>
             {showComposer && orgId && (
-                <EmailComposer orgId={orgId} onClose={() => setShowComposer(false)} />
+                <EmailComposer orgId={orgId} userId={userId || ''} onClose={() => setShowComposer(false)} />
             )}
         </motion.div>
     );

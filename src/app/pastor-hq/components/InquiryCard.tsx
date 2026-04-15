@@ -45,10 +45,11 @@ const STATUS_COLORS: Record<string, string> = {
 interface InquiryCardProps {
   inquiry: Inquiry;
   orgId: string;
+  userId: string;
   onStatusChange: (id: string, status: string) => void;
 }
 
-export function InquiryCard({ inquiry, orgId, onStatusChange }: InquiryCardProps) {
+export function InquiryCard({ inquiry, orgId, userId, onStatusChange }: InquiryCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
 
@@ -155,6 +156,7 @@ export function InquiryCard({ inquiry, orgId, onStatusChange }: InquiryCardProps
       {showComposer && inquiry.email && (
         <EmailComposer
           orgId={orgId}
+          userId={userId}
           recipientEmail={inquiry.email}
           recipientName={fullName}
           context={intentLabel}
