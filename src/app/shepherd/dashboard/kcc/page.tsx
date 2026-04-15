@@ -1,14 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabaseAdmin } from '@/lib/supabase-admin';
-import { useAdminCtx } from '../Context';
+import { supabase } from '@/lib/supabase';
+import { resolvePublicOrgId } from '@/lib/org-resolver';
 import { format, subDays } from 'date-fns';
 import {
   Zap, Users, Heart, UserPlus, Calendar, BookOpen,
-  Mail, Phone, Clock, ExternalLink, Search, RefreshCw
+  Mail, Clock, ExternalLink, Search, RefreshCw
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 
@@ -35,14 +34,14 @@ const INTENT_COLORS: Record<string, string> = {
 };
 
 const FILTER_TABS = [
-  { key: 'all',             label: 'All' },
-  { key: 'membership',      label: 'Membership' },
-  { key: 'prayer',          label: 'Prayer' },
-  { key: 'volunteer',       label: 'Volunteer' },
-  { key: 'event',           label: 'Event' },
-  { key: 'class_hoth',      label: 'Classes' },
-  { key: 'class_language',  label: 'Language' },
-  { key: 'jkgroup',         label: 'jkGroup' },
+  { key: 'all',            label: 'All' },
+  { key: 'membership',     label: 'Membership' },
+  { key: 'prayer',         label: 'Prayer' },
+  { key: 'volunteer',      label: 'Volunteer' },
+  { key: 'event',          label: 'Event' },
+  { key: 'class_hoth',     label: 'Classes' },
+  { key: 'class_language', label: 'Language' },
+  { key: 'jkgroup',        label: 'jkGroup' },
 ];
 
 const MC_LINKS: Record<string, string> = {
@@ -52,27 +51,33 @@ const MC_LINKS: Record<string, string> = {
 };
 
 export default function KCCDashboardPage() {
-  const { orgId } = useAdminCtx();
+  const [resolvedOrgId, setResolvedOrgId] = useState<string | null>(null);
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
 
+  // Resolve org ID once on mount
   useEffect(() => {
-    if (orgId) fetchData();
-  }, [orgId]);
+    resolvePublicOrgId().then(id => setResolvedOrgId(id));
+  }, []);
 
-  async function fetchData() {
-    if (!orgId) return;
+  // Fetch data once org ID resolves
+  useEffect(() => {
+    if (!resolvedOrgId) return;
+    fetchActivity();
+  }, [resolvedOrgId]);
+
+  async function fetchActivity() {
+    if (!resolvedOrgId) return;
     setLoading(true);
     try {
-      const sevenDaysAgo = subDays(new Date(), 7).toISOString();
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabase
         .from('vw_kcc_activity')
         .select('*')
-        .eq('org_id', orgId)
-        .gte('created_at', sevenDaysAgo)
-        .order('created_at', { ascending: false });
+        .eq('org_id', resolvedOrgId)
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (error) throw error;
       setRecords(data || []);
@@ -84,18 +89,21 @@ export default function KCCDashboardPage() {
     }
   }
 
-  // Summary counts
-  const total         = records.length;
-  const membershipCt  = records.filter(r => r.visitor_intent === 'membership').length;
-  const prayerCt      = records.filter(r => r.visitor_intent === 'prayer').length;
-  const volunteerCt   = records.filter(r => r.visitor_intent === 'volunteer').length;
-  const eventCt       = records.filter(r => r.visitor_intent === 'event').length;
+  // Summary counts (last 7 days only)
+  const sevenDaysAgo = subDays(new Date(), 7);
+  const recentRecords = records.filter(r => r.created_at && new Date(r.created_at) >= sevenDaysAgo);
+
+  const total        = recentRecords.length;
+  const membershipCt = recentRecords.filter(r => r.visitor_intent === 'membership').length;
+  const prayerCt     = recentRecords.filter(r => r.visitor_intent === 'prayer').length;
+  const volunteerCt  = recentRecords.filter(r => r.visitor_intent === 'volunteer').length;
+  const eventCt      = recentRecords.filter(r => r.visitor_intent === 'event').length;
 
   const summaryCards = [
     { label: 'Total This Week', value: total,        icon: Zap,      color: 'text-violet-500' },
     { label: 'Membership Apps', value: membershipCt, icon: Users,    color: 'text-violet-400' },
     { label: 'Prayer Requests', value: prayerCt,     icon: Heart,    color: 'text-blue-500'   },
-    { label: 'Volunteers',      value: volunteerCt,  icon: UserPlus, color: 'text-emerald-500'},
+    { label: 'Volunteers',      value: volunteerCt,  icon: UserPlus, color: 'text-emerald-500' },
     { label: 'Event Sign-ups',  value: eventCt,      icon: Calendar, color: 'text-amber-500'  },
   ];
 
@@ -103,9 +111,9 @@ export default function KCCDashboardPage() {
     const matchFilter = filter === 'all' || r.visitor_intent === filter;
     const q = search.toLowerCase();
     const matchSearch = !q ||
-      (r.first_name || '').toLowerCase().includes(q) ||
-      (r.last_name  || '').toLowerCase().includes(q) ||
-      (r.email      || '').toLowerCase().includes(q) ||
+      (r.first_name  || '').toLowerCase().includes(q) ||
+      (r.last_name   || '').toLowerCase().includes(q) ||
+      (r.email       || '').toLowerCase().includes(q) ||
       (r.visitor_intent || '').toLowerCase().includes(q);
     return matchFilter && matchSearch;
   });
@@ -125,7 +133,7 @@ export default function KCCDashboardPage() {
           </div>
         </div>
         <button
-          onClick={fetchData}
+          onClick={fetchActivity}
           className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
         >
           <RefreshCw className="w-3.5 h-3.5" />
@@ -133,7 +141,7 @@ export default function KCCDashboardPage() {
         </button>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Cards (last 7 days) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {summaryCards.map(card => {
           const Icon = card.icon;
@@ -192,7 +200,7 @@ export default function KCCDashboardPage() {
             <Zap className="w-8 h-8 text-muted-foreground/30 mb-3" />
             <p className="text-sm font-semibold text-muted-foreground">No submissions found</p>
             <p className="text-xs text-muted-foreground/60 mt-1">
-              {filter !== 'all' ? 'Try a different filter' : 'No KCC activity in the last 7 days'}
+              {filter !== 'all' ? 'Try a different filter' : 'No KCC activity yet'}
             </p>
           </div>
         ) : (
@@ -211,17 +219,14 @@ export default function KCCDashboardPage() {
               </thead>
               <tbody>
                 {filtered.map((row, i) => {
-                  const intent = row.visitor_intent || 'inquiry';
-                  const label  = INTENT_LABELS[intent] || intent;
+                  const intent     = row.visitor_intent || 'inquiry';
+                  const label      = INTENT_LABELS[intent] || intent;
                   const colorClass = INTENT_COLORS[intent] || INTENT_COLORS.inquiry;
-                  const fullName = [row.first_name, row.last_name].filter(Boolean).join(' ') || 'Anonymous';
-                  const mcHref = MC_LINKS[intent] || MC_LINKS.default;
+                  const fullName   = [row.first_name, row.last_name].filter(Boolean).join(' ') || 'Anonymous';
+                  const mcHref     = MC_LINKS[intent] || MC_LINKS.default;
 
                   return (
-                    <tr
-                      key={row.id || i}
-                      className="border-b border-border/50 hover:bg-muted/30 transition-colors"
-                    >
+                    <tr key={row.id || i} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
                           <div className="w-7 h-7 rounded-full bg-violet-500/10 flex items-center justify-center flex-shrink-0">
@@ -283,7 +288,7 @@ export default function KCCDashboardPage() {
             </table>
             <div className="px-4 py-3 border-t border-border/50 flex items-center justify-between">
               <span className="text-[10px] text-muted-foreground font-semibold">
-                Showing {filtered.length} of {records.length} records (last 7 days)
+                Showing {filtered.length} of {records.length} total records
               </span>
               <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                 <BookOpen className="w-3 h-3" />

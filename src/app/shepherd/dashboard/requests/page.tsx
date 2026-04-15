@@ -1,17 +1,15 @@
 "use client";
 import { supabase } from "@/lib/supabase";
-
 import { useState, useEffect } from "react";
 import {
     Users, UserCheck, UserX, Clock,
     ShieldCheck, ChevronRight, Mail,
-    Calendar, MapPin, Search, Filter
+    Calendar, MapPin, Search, Zap
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
-
 import { useAdminCtx } from "../Context";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -34,16 +32,8 @@ export default function MembershipRequestsPage() {
         try {
             const { data, error } = await supabase
                 .from('membership_requests')
-                .select(`
-                    *,
-                    profiles:user_id(
-                        name, email, city, ward, 
-                        phone_number, growth_stage, 
-                        invite_method, church_background,
-                        created_at, org_id
-                    )
-                `)
-                .eq('profiles.org_id', orgId)
+                .select('*')
+                .eq('org_id', orgId)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -60,12 +50,8 @@ export default function MembershipRequestsPage() {
         try {
             const { error } = await supabase
                 .from('membership_requests')
-                .update({
-                    status,
-                    reviewed_at: new Date().toISOString()
-                })
+                .update({ status, reviewed_at: new Date().toISOString() })
                 .eq('id', requestId);
-
             if (error) throw error;
             toast.success(`Request ${status} successfully`);
             fetchRequests();
@@ -75,9 +61,17 @@ export default function MembershipRequestsPage() {
         }
     }
 
+    const getDisplayName  = (r: any) => r.guest_name  || r.profiles?.name  || r.profiles?.email || 'Unknown';
+    const getDisplayEmail = (r: any) => r.guest_email || r.profiles?.email || r.email || 'No email';
+    const getDisplayPhone = (r: any) => r.guest_phone || r.profiles?.phone_number || r.phone || 'Not provided';
+    const isGuest         = (r: any) => r.user_id === null;
+    const isKCC           = (r: any) => r.source === 'kcc_form';
+
     const filtered = requests.filter(r => {
-        const matchesSearch = r.profiles?.name?.toLowerCase().includes(search.toLowerCase()) ||
-            r.profiles?.email?.toLowerCase().includes(search.toLowerCase());
+        const name  = getDisplayName(r).toLowerCase();
+        const email = getDisplayEmail(r).toLowerCase();
+        const q = search.toLowerCase();
+        const matchesSearch = !q || name.includes(q) || email.includes(q);
         const matchesFilter = filter === 'all' || r.status === filter;
         return matchesSearch && matchesFilter;
     });
@@ -92,11 +86,9 @@ export default function MembershipRequestsPage() {
                     <h1 className="text-3xl font-black text-foreground uppercase tracking-tight">Membership Pipeline</h1>
                     <p className="text-sm text-muted-foreground font-medium">Review and approve new member applications</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 px-4 py-2 text-xs font-black">
-                        {pendingCount} PENDING ACTION
-                    </Badge>
-                </div>
+                <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 px-4 py-2 text-xs font-black">
+                    {pendingCount} PENDING ACTION
+                </Badge>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -148,17 +140,25 @@ export default function MembershipRequestsPage() {
                                             className={`w-full p-4 flex items-center justify-between text-left hover:bg-muted transition-colors ${selectedRequest?.id === req.id ? 'bg-primary/5 border-l-4 border-l-primary' : 'border-l-4 border-l-transparent'}`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-sm">
-                                                    {req.profiles?.name?.[0] || '?'}
+                                                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-sm flex-shrink-0">
+                                                    {getDisplayName(req)[0]?.toUpperCase() || '?'}
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-foreground">{req.profiles?.name || 'Unknown'}</p>
+                                                <div className="min-w-0">
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <p className="text-sm font-bold text-foreground truncate">{getDisplayName(req)}</p>
+                                                        {isGuest(req) && (
+                                                            <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 border border-amber-500/20">Guest</span>
+                                                        )}
+                                                        {isKCC(req) && (
+                                                            <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 border border-blue-500/20 flex items-center gap-0.5"><Zap className="w-2 h-2" />KCC</span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{format(new Date(req.created_at), 'MMM d, yyyy')}</p>
                                                 </div>
                                             </div>
-                                            <Badge className={`text-[9px] font-black uppercase ${
-                                                req.status === 'pending' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 
-                                                req.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 
+                                            <Badge className={`text-[9px] font-black uppercase flex-shrink-0 ${
+                                                req.status === 'pending'  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
+                                                req.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
                                                 'bg-red-500/10 text-red-600 dark:text-red-400'
                                             }`}>
                                                 {req.status}
@@ -184,16 +184,24 @@ export default function MembershipRequestsPage() {
                             >
                                 <Card className="bg-card border-border border-2 overflow-hidden shadow-sm">
                                     <CardHeader className="bg-muted/30 border-b border-border p-8">
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex items-center justify-between flex-wrap gap-4">
                                             <div className="flex items-center gap-6">
                                                 <div className="w-20 h-20 rounded-3xl bg-primary/10 text-primary flex items-center justify-center text-3xl font-black">
-                                                    {selectedRequest.profiles?.name?.[0] || '?'}
+                                                    {getDisplayName(selectedRequest)[0]?.toUpperCase() || '?'}
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <h2 className="text-2xl font-black text-foreground">{selectedRequest.profiles?.name}</h2>
-                                                    <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                                        <span className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> {selectedRequest.profiles?.email}</span>
-                                                        <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> Joined: {format(new Date(selectedRequest.profiles?.created_at), 'PPP')}</span>
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <h2 className="text-2xl font-black text-foreground">{getDisplayName(selectedRequest)}</h2>
+                                                        {isGuest(selectedRequest) && (
+                                                            <span className="text-[9px] font-black uppercase px-2 py-1 rounded-md bg-amber-500/10 text-amber-600 border border-amber-500/20">Guest</span>
+                                                        )}
+                                                        {isKCC(selectedRequest) && (
+                                                            <span className="text-[9px] font-black uppercase px-2 py-1 rounded-md bg-blue-500/10 text-blue-600 border border-blue-500/20 flex items-center gap-1"><Zap className="w-3 h-3" />Kingdom Connect</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground uppercase tracking-wider flex-wrap">
+                                                        <span className="flex items-center gap-1.5"><Mail className="w-3 h-3" />{getDisplayEmail(selectedRequest)}</span>
+                                                        <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" />Applied: {format(new Date(selectedRequest.created_at), 'PPP')}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -218,51 +226,51 @@ export default function MembershipRequestsPage() {
                                     </CardHeader>
                                     <CardContent className="p-8">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                                            {/* Spiritual Details */}
+                                            {/* Contact Info */}
                                             <div className="space-y-6">
                                                 <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-widest border-b border-border pb-2">
-                                                    <ShieldCheck className="w-4 h-4" /> Spiritual Profile
+                                                    <Mail className="w-4 h-4" /> Contact Details
                                                 </div>
                                                 <div className="space-y-4">
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="space-y-1">
-                                                            <p className="text-[10px] text-muted-foreground uppercase font-black">Growth Stage</p>
-                                                            <Badge variant="outline" className="text-xs font-bold text-foreground border-primary/20 bg-primary/5 uppercase">{selectedRequest.profiles?.growth_stage || 'Visitor'}</Badge>
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <p className="text-[10px] text-muted-foreground uppercase font-black">Background</p>
-                                                            <p className="font-bold text-sm">{selectedRequest.profiles?.church_background || 'None'}</p>
-                                                        </div>
+                                                    <div className="space-y-1">
+                                                        <p className="text-[10px] text-muted-foreground uppercase font-black">Email</p>
+                                                        <p className="font-bold text-sm">{getDisplayEmail(selectedRequest)}</p>
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <p className="text-[10px] text-muted-foreground uppercase font-black">Invite Method</p>
-                                                        <p className="font-bold text-sm italic">"{selectedRequest.profiles?.invite_method || 'Direct Discovery'}"</p>
+                                                        <p className="text-[10px] text-muted-foreground uppercase font-black">Phone</p>
+                                                        <p className="font-bold text-sm">{getDisplayPhone(selectedRequest)}</p>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <p className="text-[10px] text-muted-foreground uppercase font-black">How Heard</p>
+                                                        <p className="font-bold text-sm">{selectedRequest.how_heard || selectedRequest.profiles?.invite_method || 'Not specified'}</p>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <p className="text-[10px] text-muted-foreground uppercase font-black">Source</p>
+                                                        <p className="font-bold text-sm capitalize">{selectedRequest.source || 'profile_form'}</p>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Contact & Location */}
+                                            {/* Notes & Profile */}
                                             <div className="space-y-6">
                                                 <div className="flex items-center gap-2 text-primary font-black uppercase text-xs tracking-widest border-b border-border pb-2">
-                                                    <MapPin className="w-4 h-4" /> Location info
+                                                    <ShieldCheck className="w-4 h-4" /> Application Details
                                                 </div>
                                                 <div className="space-y-4">
-                                                    <div className="grid grid-cols-2 gap-4">
+                                                    {selectedRequest.profiles?.growth_stage && (
                                                         <div className="space-y-1">
-                                                            <p className="text-[10px] text-muted-foreground uppercase font-black">City</p>
-                                                            <p className="font-bold text-sm">{selectedRequest.profiles?.city || 'Tokyo'}</p>
+                                                            <p className="text-[10px] text-muted-foreground uppercase font-black">Growth Stage</p>
+                                                            <Badge variant="outline" className="text-xs font-bold text-foreground border-primary/20 bg-primary/5 uppercase">{selectedRequest.profiles.growth_stage}</Badge>
                                                         </div>
+                                                    )}
+                                                    {selectedRequest.profiles?.church_background && (
                                                         <div className="space-y-1">
-                                                            <p className="text-[10px] text-muted-foreground uppercase font-black">Ward</p>
-                                                            <p className="font-bold text-sm">{selectedRequest.profiles?.ward || 'Unspecified'}</p>
+                                                            <p className="text-[10px] text-muted-foreground uppercase font-black">Church Background</p>
+                                                            <p className="font-bold text-sm">{selectedRequest.profiles.church_background}</p>
                                                         </div>
-                                                    </div>
+                                                    )}
                                                     <div className="space-y-1">
-                                                        <p className="text-[10px] text-muted-foreground uppercase font-black">Phone</p>
-                                                        <p className="font-bold text-sm">{selectedRequest.profiles?.phone_number || 'Not provided'}</p>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <p className="text-[10px] text-muted-foreground uppercase font-black">Notes from Applicant</p>
+                                                        <p className="text-[10px] text-muted-foreground uppercase font-black">Notes</p>
                                                         <div className="p-4 bg-muted rounded-xl text-xs text-muted-foreground font-medium italic border border-border">
                                                             {selectedRequest.notes || "No additional notes provided."}
                                                         </div>

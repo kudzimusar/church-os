@@ -255,6 +255,14 @@ serve(async (req) => {
                 })
               });
               console.log(`[Router] Brevo alert sent to ${toRecipients.length} leaders`);
+              await supabaseClient.from('kcc_email_log').insert({
+                org_id: orgId,
+                inquiry_id: record.id,
+                recipient_email: toRecipients.map((r: any) => r.email).join(', '),
+                recipient_type: 'leader',
+                subject: `[Action Required] New ${intentLabel} — ${guestName}`,
+                status: 'sent'
+              });
             } catch (brevoAlertErr) {
               console.error('[Router] Brevo leader alert error:', brevoAlertErr);
             }
@@ -358,12 +366,22 @@ serve(async (req) => {
           })
         })
 
+        const guestEmailStatus = brevoRes.ok ? 'sent' : 'failed'
+        const guestEmailError = brevoRes.ok ? null : JSON.stringify(await brevoRes.clone().json())
         if (!brevoRes.ok) {
-          const err = await brevoRes.json()
-          console.error('[Brevo Error]', err)
+          console.error('[Brevo Error]', guestEmailError)
         } else {
           console.log('[Brevo Success]')
         }
+        await supabaseClient.from('kcc_email_log').insert({
+          org_id: orgId,
+          inquiry_id: record.id,
+          recipient_email: record.email,
+          recipient_type: 'guest',
+          subject: subject,
+          status: guestEmailStatus,
+          error_message: guestEmailError
+        })
       } catch (e) {
         console.error('[Brevo Fetch Error]', e)
       }
