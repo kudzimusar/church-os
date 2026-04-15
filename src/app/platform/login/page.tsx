@@ -6,7 +6,7 @@ import { basePath as BP } from '@/lib/utils';
 export default function PlatformLogin() {
   const router = useRouter();
   useEffect(() => {
-    router.replace(`${BP}/corporate/login/`);
+    router.replace('/corporate/login/');
   }, []);
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">

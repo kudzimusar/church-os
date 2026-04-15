@@ -43,8 +43,17 @@ export async function resolvePublicOrgId(): Promise<string | null> {
   }
 
   const hostname = typeof window !== 'undefined' ? window.location.hostname : null;
-  const isLocal = !hostname || hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('github.io');
 
+  // Short-circuit: github.io and localhost always serve JKC — no DB call needed
+  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('github.io')) {
+    memoizedPublicOrgId = JKC_ORG_ID;
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(ORG_CACHE_KEY, JSON.stringify({ orgId: JKC_ORG_ID, cachedAt: Date.now() }));
+    }
+    return JKC_ORG_ID;
+  }
+
+  const isLocal = false;
   let orgId: string | null = null;
 
   try {

@@ -72,7 +72,7 @@ export default function SupportPage() {
       <nav className="border-b border-slate-100 py-4 px-6 flex items-center justify-between">
         <div
           className="flex items-center space-x-3 cursor-pointer"
-          onClick={() => router.push(`${BP}/platform/`)}
+          onClick={() => router.push('/platform/')}
         >
           <div className="bg-emerald-600 p-2 rounded-2xl shadow-lg shadow-emerald-500/30">
             <Church className="h-5 w-5 text-white" />
@@ -80,7 +80,7 @@ export default function SupportPage() {
           <span className="text-xl font-black tracking-tighter text-slate-900">Church<span className="text-emerald-600">OS</span></span>
         </div>
         <button
-          onClick={() => router.push(`${BP}/platform/`)}
+          onClick={() => router.push('/platform/')}
           className="flex items-center gap-2 text-xs font-black text-slate-400 hover:text-slate-900 uppercase tracking-widest transition-colors"
         >
           <ArrowLeft size={14} /> Back to Platform
@@ -131,7 +131,7 @@ export default function SupportPage() {
                 <p className="text-slate-500 font-medium">We will respond to <strong>{email}</strong> within 24 hours.</p>
               </div>
               <button
-                onClick={() => router.push(`${BP}/platform/`)}
+                onClick={() => router.push('/platform/')}
                 className="inline-flex items-center gap-2 text-sm font-black text-emerald-600 hover:text-emerald-700"
               >
                 <ArrowLeft size={16} /> Back to Platform

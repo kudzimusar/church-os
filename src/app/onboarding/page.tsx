@@ -206,12 +206,12 @@ export default function OnboardingPage() {
         const resolvedOrgId = orgId || provisionedOrgId;
         if (planName === 'enterprise') {
             toast.info('Contact us at hello@churchos.ai for Enterprise');
-            router.push(`${BP}/onboarding/success?church=${encodeURIComponent(churchName)}`);
+            router.push(`/onboarding/success?church=${encodeURIComponent(churchName)}`);
             return;
         }
         if (!resolvedOrgId) {
             // Fallback: go to success without billing (org was provisioned, billing optional)
-            router.push(`${BP}/onboarding/success?church=${encodeURIComponent(churchName)}`);
+            router.push(`/onboarding/success?church=${encodeURIComponent(churchName)}`);
             return;
         }
         try {
@@ -231,12 +231,12 @@ export default function OnboardingPage() {
             if (data?.url) {
                 window.location.href = data.url;
             } else {
-                router.push(`${BP}/onboarding/success?church=${encodeURIComponent(churchName)}`);
+                router.push(`/onboarding/success?church=${encodeURIComponent(churchName)}`);
             }
         } catch (err: any) {
             toast.error('Billing setup failed: ' + err.message);
             // Still go to success — org is provisioned, billing can be set up later
-            router.push(`${BP}/onboarding/success?church=${encodeURIComponent(churchName)}`);
+            router.push(`/onboarding/success?church=${encodeURIComponent(churchName)}`);
         }
     };
 

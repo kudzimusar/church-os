@@ -63,7 +63,7 @@ export default function PartnersPage() {
       <div className="md:w-5/12 bg-emerald-600 p-12 md:p-16 text-white flex flex-col justify-between">
         <div
           className="flex items-center space-x-3 cursor-pointer"
-          onClick={() => router.push(`${BP}/platform/`)}
+          onClick={() => router.push('/platform/')}
         >
           <div className="bg-white/20 p-2 rounded-2xl">
             <Church className="h-6 w-6 text-white" />
@@ -115,7 +115,7 @@ export default function PartnersPage() {
                 Our partnerships team will review your submission and be in touch within 5 business days.
               </p>
               <button
-                onClick={() => router.push(`${BP}/platform/`)}
+                onClick={() => router.push('/platform/')}
                 className="inline-flex items-center gap-2 text-sm font-black text-emerald-600 hover:text-emerald-700"
               >
                 <ArrowLeft size={16} /> Back to Platform

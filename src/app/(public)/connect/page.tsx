@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useChurch } from '@/lib/church-context';
+import { resolvePublicOrgId } from '@/lib/org-resolver';
 import { basePath } from '@/lib/utils';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -56,9 +56,6 @@ export default function KingdomConnectPage() {
   const [events, setEvents] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
 
-  const { org, isLoading: orgLoading } = useChurch();
-  const currentOrgId = org?.id;
-
   // Navigation / URLs
   const connectUrl = typeof window !== 'undefined' ? `${window.location.origin}${basePath}/connect` : '';
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(connectUrl + '?via=qr')}&color=1B3A6B`;
@@ -70,15 +67,15 @@ export default function KingdomConnectPage() {
     setSource(via);
     setMounted(true);
 
-    if (currentOrgId) {
-      setResolvedOrgId(currentOrgId);
-      fetchPublicData(currentOrgId);
-    }
+    resolvePublicOrgId().then(id => {
+      setResolvedOrgId(id);
+      if (id) fetchPublicData(id);
+    });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
-  }, [currentOrgId]);
+  }, []);
 
   async function fetchPublicData(orgId: string) {
     try {
@@ -147,7 +144,11 @@ export default function KingdomConnectPage() {
 
   // Submission Master
   const submitForm = async (intent: string, childTable: string | null, data: any, childData: any) => {
-    if (!resolvedOrgId) return;
+    if (!resolvedOrgId) {
+      toast.error("Connection error. Please refresh and try again.");
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       // Specialized jkGroup logic for FIX 2
@@ -258,7 +259,7 @@ export default function KingdomConnectPage() {
     <div className="min-h-screen bg-white dark:bg-slate-900 font-geist-sans selection:bg-[#f5a623]/30 selection:text-[#1b3a6b]">
       {/* Top Nav */}
       <div className="max-w-2xl mx-auto px-6 pt-8 flex items-center justify-between">
-        <Link href={basePath + '/'} className="group flex items-center gap-2 text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-[0.2em] hover:text-[#1b3a6b] dark:hover:text-[#f5a623] transition-all">
+        <Link href="/" className="group flex items-center gap-2 text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-[0.2em] hover:text-[#1b3a6b] dark:hover:text-[#f5a623] transition-all">
            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back to Home
         </Link>
       </div>
