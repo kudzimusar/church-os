@@ -1,5 +1,10 @@
 'use client';
 
+// SCHEMA NOTE: Prayers are anonymous-capable by design
+// SCHEMA NOTE: Do NOT display name/email fields (check is_anonymous flag)
+// SCHEMA NOTE: Urgency enum: 'Normal' | 'High' | 'Urgent' (capitalized)
+
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { usePastorCtx } from '../pastor-context';

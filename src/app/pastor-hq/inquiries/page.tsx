@@ -1,5 +1,10 @@
 'use client';
 
+// SCHEMA NOTE: Real data uses first_name + last_name (not single 'name' field)
+// SCHEMA NOTE: visitor_intent is a direct enum (not FK join to inquiry_types)
+// SCHEMA NOTE: Status enum: 'new' | 'in_progress' | 'responded' | 'archived'
+
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { usePastorCtx } from '../pastor-context';

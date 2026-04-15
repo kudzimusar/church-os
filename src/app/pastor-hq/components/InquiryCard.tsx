@@ -1,5 +1,9 @@
 'use client';
 
+// SCHEMA NOTE: Alert uses is_resolved (not resolved) boolean column
+// IMPLEMENTATION NOTE: Concatenate first_name + last_name for display name
+
+
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { ChevronDown, Mail, Clock, Reply } from 'lucide-react';

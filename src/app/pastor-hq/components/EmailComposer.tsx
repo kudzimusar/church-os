@@ -1,5 +1,10 @@
 'use client';
 
+// ARCHITECTURE NOTE: Uses supabase.functions.invoke() directly
+// (Static export constraint prevents API routes)
+// JWT passed automatically by Supabase SDK
+
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { X, Send, Loader2 } from 'lucide-react';
