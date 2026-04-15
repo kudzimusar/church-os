@@ -1,0 +1,62 @@
+# Build outputs — never need to read these
+.next/
+out/
+dist/
+build/
+
+# Dependencies — 824MB, never useful to read
+node_modules/
+
+# Git internals
+.git/
+
+# Supabase local state
+supabase/.branches/
+supabase/.temp/
+
+# Large binary / document files
+*.pdf
+*.docx
+*.doc
+*.xlsx
+*.xls
+
+# Large data files
+supabase_schema.sql
+church_website_phase1.sql
+phase1.sql
+phase2.sql
+phase3.sql
+phase6.sql
+
+# One-off migration / fix scripts (not part of active codebase)
+apply-migration.mjs
+apply_rls_fix.js
+apply_sermon_fix.js
+check_rls.js
+execute_rls_fix.js
+fix-orgs.mjs
+parse_and_insert.js
+parse_rss.js
+run_phase3_fix.js
+run_sql.js
+scrape_youtube.js
+bind
+reload
+
+# Review / audit HTML reports
+*.html
+
+# Logs and build artifacts
+build_log.txt
+terminal_log.txt
+tsconfig.tsbuildinfo
+feed.xml
+
+# Scratch and temp work
+scratch/
+workspace/
+view_def.txt
+
+# Lock files — large, no value to read
+package-lock.json
