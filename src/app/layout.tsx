@@ -19,10 +19,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Church OS",
   description: "Church OS — Multi-tenant church management platform",
-  manifest: "/jkc-devotion-app/manifest.json",
+  manifest: "/jkc/manifest.json",
   icons: {
-    icon: "/jkc-devotion-app/icon.png",
-    apple: "/jkc-devotion-app/apple-icon.png",
+    icon: "/jkc/icon.png",
+    apple: "/jkc/apple-icon.png",
   },
 };
 

@@ -4,7 +4,7 @@ import { useChurch } from '@/lib/church-context';
 
 export default function MissionStrip() {
   const { org, slug } = useChurch();
-  const isJKC = slug === 'jkc-devotion-app' || slug === 'jkc';
+  const isJKC = slug === 'jkc' || slug === 'jkc';
   const mission = org?.mission_statement ?? (isJKC 
     ? "Building a Strong Christian Community that Represents Christ to Japanese Society"
     : "Building a Strong Christian Community that Represents Christ to Our Society");

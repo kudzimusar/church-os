@@ -131,9 +131,9 @@ export default function GiveClient() {
           given_by_name: cardName,
           given_by_email: cardEmail,
           success_url: window.location.origin +
-            '/jkc-devotion-app/welcome/give?paypal=success',
+            '/jkc/welcome/give?paypal=success',
           cancel_url: window.location.origin +
-            '/jkc-devotion-app/welcome/give?paypal=cancelled',
+            '/jkc/welcome/give?paypal=cancelled',
         }
       });
       if (error) throw error;

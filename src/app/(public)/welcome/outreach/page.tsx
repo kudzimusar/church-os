@@ -11,7 +11,7 @@ const outreachPrograms = [
     description: 'Aiming to break the cycle of poverty and exploitation, TYO brings hope and a brighter future to youth living on the streets. Our ministry outreach to the youth in Kabukicho, Shinjuku, focuses on providing support and guidance to those in need. Kabukicho, often referred to as Tokyo\'s red-light district, is a bustling area known for its nightlife. Unfortunately, it is also a hotspot for youth homelessness.',
     location: 'Kabukicho, Shinjuku',
     frequency: 'Monthly',
-    image: '/jkc-devotion-app/images/outreach_toyoko.png',
+    image: '/jkc/images/outreach_toyoko.png',
     color: '#8B5CF6',
     signupUrl: 'https://www.japankingdomchurch.com/contact',
     donateUrl: 'https://www.japankingdomchurch.com/give',
@@ -23,7 +23,7 @@ const outreachPrograms = [
     description: 'Akiramenai means "Don\'t Give Up" in Japanese. At Akiramenai, we provide outreach to Tokyo\'s homeless population by offering food, care, and shelter. Tokyo\'s homeless population is significant, encompassing both the young and the elderly. Jesus said, "Do not forget the poor" (Hebrews 13:16). Join us each month as we reach out to Tokyo\'s homeless, providing daily necessities, food, and friendship.',
     location: 'Shinjuku & Tama Riverside',
     frequency: 'Every 3rd Saturday',
-    image: '/jkc-devotion-app/images/outreach_akiramenai.png',
+    image: '/jkc/images/outreach_akiramenai.png',
     color: '#EF4444',
     signupUrl: 'https://form.jotform.me/81070224484451',
     donateUrl: 'https://www.japankingdomchurch.com/give',
@@ -36,7 +36,7 @@ const outreachPrograms = [
     description: 'The Food Pantry Ministry is dedicated to combating hunger in Tokyo by providing essential nourishment to single mothers and low-income families. At Japan Kingdom Church, our food pantry is a vital resource for single mothers and their children, foreigners in need of food assistance, and the homeless. We ensure our pantry is stocked with relevant and nutritious food items.',
     location: 'Japan Kingdom Church, Akishima',
     frequency: 'When church doors are open',
-    image: '/jkc-devotion-app/images/ministry_foodpantry_card.png',
+    image: '/jkc/images/ministry_foodpantry_card.png',
     color: '#F59E0B',
     signupUrl: 'https://www.japankingdomchurch.com/contact',
     donateUrl: 'https://www.japankingdomchurch.com/give',
@@ -48,7 +48,7 @@ const outreachPrograms = [
     description: 'Taking the gospel of Christ outside the 4 walls of the church and into the streets of Tokyo! At our street outreach, we bring the church to the people! If you enjoy singing, playing an instrument, having friendly conversations, or helping with organization and logistics, then street outreach is for you. Jesus said, "Go out and share the gospel" (Mark 16:15). Japan needs the seeds of the gospel message.',
     location: 'Streets of Tokyo',
     frequency: 'TBD',
-    image: '/jkc-devotion-app/images/outreach_street_evangelism.png',
+    image: '/jkc/images/outreach_street_evangelism.png',
     color: '#10B981',
     signupUrl: 'https://www.japankingdomchurch.com/contact',
     donateUrl: 'https://www.japankingdomchurch.com/give',
@@ -62,7 +62,7 @@ export default function OutreachPage() {
       <section className="relative py-40 px-6 overflow-hidden bg-slate-900">
         <div className="absolute inset-0">
           <img
-            src="/jkc-devotion-app/images/outreach_akiramenai.png"
+            src="/jkc/images/outreach_akiramenai.png"
             alt="JKC Outreach"
             className="w-full h-full object-cover opacity-20"
           />

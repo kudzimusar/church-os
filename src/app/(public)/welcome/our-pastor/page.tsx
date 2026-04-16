@@ -9,25 +9,25 @@ export default function OurPastorPage() {
   const books = [
     {
       title: "Power of Purpose",
-      src: "/jkc-devotion-app/images/books/book-power-of-purpose.png",
+      src: "/jkc/images/books/book-power-of-purpose.png",
       link: "https://a.co/d/0hKjjYn1",
       desc: "Discovering why you are here and where you are going."
     },
     {
       title: "A Miraculous Encounter",
-      src: "/jkc-devotion-app/images/books/book-miraculous-encounter.webp",
+      src: "/jkc/images/books/book-miraculous-encounter.webp",
       link: "https://a.co/d/0eXyvya6",
       desc: "A true story of how God intervened in the most unlikely place."
     },
     {
       title: "The Reason I'm Black",
-      src: "/jkc-devotion-app/images/books/book-why-i-am-black.png",
+      src: "/jkc/images/books/book-why-i-am-black.png",
       link: "https://a.co/d/00mPTRES",
       desc: "Navigating identity, race, and grace in a global context."
     },
     {
       title: "The Ultimate Love Challenge",
-      src: "/jkc-devotion-app/images/books/book-love-challenge.jpg",
+      src: "/jkc/images/books/book-love-challenge.jpg",
       link: "https://form.jotform.com/202568624678467",
       desc: "A guide to building radical and Christ-centered relationships."
     }
@@ -40,7 +40,7 @@ export default function OurPastorPage() {
         <div className="absolute right-0 top-0 w-[40%] md:w-1/2 h-full opacity-40 md:opacity-100">
             <div className="absolute inset-0 bg-gradient-to-r from-white dark:from-slate-950 md:via-transparent to-transparent z-10" />
             <img 
-                src="/jkc-devotion-app/images/pastor/pastor-profile.png" 
+                src="/jkc/images/pastor/pastor-profile.png" 
                 className="w-full h-full object-cover object-top grayscale-[0.2] contrast-125"
                 alt="Pastor Marcel"
             />
@@ -94,7 +94,7 @@ export default function OurPastorPage() {
 
             <div className="lg:col-span-7 relative">
                 <div className="rounded-[4rem] overflow-hidden rotate-2 shadow-2xl border-b-8 border-r-8 border-[var(--jkc-navy)]">
-                   <img src="/jkc-devotion-app/images/pastor/pastor-event.jpg" className="w-full aspect-video object-cover" alt="Marcel Preaching" />
+                   <img src="/jkc/images/pastor/pastor-event.jpg" className="w-full aspect-video object-cover" alt="Marcel Preaching" />
                 </div>
                 <div className="absolute -bottom-8 -left-8 bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl max-w-xs space-y-4 border border-[var(--jkc-gold)]">
                    <Quote className="w-10 h-10 text-[var(--jkc-navy)]" />
@@ -180,7 +180,7 @@ export default function OurPastorPage() {
       <section className="py-24 px-6 md:px-0">
          <div className="max-w-screen-xl mx-auto h-[400px] rounded-[5rem] overflow-hidden relative group">
             <img 
-               src="/jkc-devotion-app/images/church/building-banner.png" 
+               src="/jkc/images/church/building-banner.png" 
                className="absolute inset-0 w-full h-full object-cover grayscale opacity-20 brightness-50 group-hover:scale-110 transition-transform duration-1000" 
                alt="Church"
             />

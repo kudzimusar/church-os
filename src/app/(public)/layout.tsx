@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Japan Kingdom Church',
     description: 'A Christian community in Tokyo, Japan.',
-    url: 'https://kudzimusar.github.io/jkc-devotion-app/',
+    url: 'https://kudzimusar.github.io/jkc/',
     siteName: 'Japan Kingdom Church',
   },
 };

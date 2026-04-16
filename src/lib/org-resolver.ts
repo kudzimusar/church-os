@@ -98,7 +98,7 @@ export async function resolvePublicOrgId(): Promise<string | null> {
       if (!orgId && typeof window !== 'undefined') {
         const pathSegments = window.location.pathname.replace(/^\//, '').split('/');
         const firstSegment = pathSegments[0];
-        if (firstSegment && firstSegment !== 'jkc-devotion-app' && firstSegment !== 'welcome' && firstSegment !== 'member') {
+        if (firstSegment && firstSegment !== 'jkc' && firstSegment !== 'welcome' && firstSegment !== 'member') {
           const { data } = await supabase
             .from('organizations')
             .select('id')

@@ -8,7 +8,7 @@ export default function DirectionsSection() {
   const { org, slug } = useChurch();
   const { isDark } = usePublicTheme();
   
-  const isJKC = slug === 'jkc-devotion-app' || slug === 'jkc';
+  const isJKC = slug === 'jkc' || slug === 'jkc';
 
   const address = org?.address ?? (isJKC ? '〒196-0015 東京都昭島市昭和町2-1-6' : 'Address Not Set');
   const addressSub = org?.address_sub ?? (isJKC ? 'TE Building, 3rd Floor, Akishima-shi, Tokyo' : 'Update in Mission Control');

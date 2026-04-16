@@ -222,8 +222,8 @@ export default function OnboardingPage() {
                     billing_interval: 'month',
                     admin_email: contactEmail,
                     org_name: churchName,
-                    success_url: window.location.origin + '/jkc-devotion-app/onboarding/success?church=' + encodeURIComponent(churchName) + '&plan=' + planName,
-                    cancel_url: window.location.origin + '/jkc-devotion-app/onboarding',
+                    success_url: window.location.origin + '/jkc/onboarding/success?church=' + encodeURIComponent(churchName) + '&plan=' + planName,
+                    cancel_url: window.location.origin + '/jkc/onboarding',
                 }
             });
             if (error) throw error;

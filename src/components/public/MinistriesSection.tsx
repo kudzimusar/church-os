@@ -23,28 +23,28 @@ const fallbacks: Ministry[] = [
 ];
 
 const MINISTRY_IMAGES: Record<string, string> = {
-  'worship-ministry': '/jkc-devotion-app/images/ministry_worship_card.png',
-  'worship': '/jkc-devotion-app/images/ministry_worship_card.png',
-  'ushers': '/jkc-devotion-app/images/ministry_ushers_card.png',
-  'ushers-ministry': '/jkc-devotion-app/images/ministry_ushers_card.png',
-  'evangelism': '/jkc-devotion-app/images/outreach_street_evangelism.png',
-  'prayer': '/jkc-devotion-app/images/ministry_prayer_card.png',
-  'kids-ministry': '/jkc-devotion-app/images/ministry_kids_card.png',
-  'childrens': '/jkc-devotion-app/images/ministry_kids_card.png',
-  'youth-ministry': '/jkc-devotion-app/images/outreach_toyoko.png',
-  'youth': '/jkc-devotion-app/images/outreach_toyoko.png',
-  'finance': '/jkc-devotion-app/images/ministry_finance_card.png',
-  'finance-ministry': '/jkc-devotion-app/images/ministry_finance_card.png',
-  'hospitality': '/jkc-devotion-app/images/ministry_hospitality_card.png',
-  'hospitality-ministry': '/jkc-devotion-app/images/ministry_hospitality_card.png',
-  'fellowship': '/jkc-devotion-app/images/ministry_fellowship_card.png',
-  'fellowship-circles': '/jkc-devotion-app/images/ministry_fellowship_card.png',
-  'bible-study': '/jkc-devotion-app/images/ministry_fellowship_card.png',
-  'bible-study-groups': '/jkc-devotion-app/images/ministry_fellowship_card.png',
-  'akiramenai': '/jkc-devotion-app/images/outreach_akiramenai.png',
-  'food-pantry': '/jkc-devotion-app/images/ministry_foodpantry_card.png',
-  'media': '/jkc-devotion-app/images/hero-background.jpg',
-  'missions': '/jkc-devotion-app/images/church/building-banner.png',
+  'worship-ministry': '/jkc/images/ministry_worship_card.png',
+  'worship': '/jkc/images/ministry_worship_card.png',
+  'ushers': '/jkc/images/ministry_ushers_card.png',
+  'ushers-ministry': '/jkc/images/ministry_ushers_card.png',
+  'evangelism': '/jkc/images/outreach_street_evangelism.png',
+  'prayer': '/jkc/images/ministry_prayer_card.png',
+  'kids-ministry': '/jkc/images/ministry_kids_card.png',
+  'childrens': '/jkc/images/ministry_kids_card.png',
+  'youth-ministry': '/jkc/images/outreach_toyoko.png',
+  'youth': '/jkc/images/outreach_toyoko.png',
+  'finance': '/jkc/images/ministry_finance_card.png',
+  'finance-ministry': '/jkc/images/ministry_finance_card.png',
+  'hospitality': '/jkc/images/ministry_hospitality_card.png',
+  'hospitality-ministry': '/jkc/images/ministry_hospitality_card.png',
+  'fellowship': '/jkc/images/ministry_fellowship_card.png',
+  'fellowship-circles': '/jkc/images/ministry_fellowship_card.png',
+  'bible-study': '/jkc/images/ministry_fellowship_card.png',
+  'bible-study-groups': '/jkc/images/ministry_fellowship_card.png',
+  'akiramenai': '/jkc/images/outreach_akiramenai.png',
+  'food-pantry': '/jkc/images/ministry_foodpantry_card.png',
+  'media': '/jkc/images/hero-background.jpg',
+  'missions': '/jkc/images/church/building-banner.png',
 };
 
 export default function MinistriesSection() {
@@ -99,7 +99,7 @@ export default function MinistriesSection() {
             
             const slugMatch = MINISTRY_IMAGES[m.slug];
             const nameMatch = Object.entries(MINISTRY_IMAGES).find(([k]) => m.name.toLowerCase().includes(k))?.[1];
-            const imageUrl = (m as any).image_url || slugMatch || nameMatch || '/jkc-devotion-app/images/hero-background.jpg';
+            const imageUrl = (m as any).image_url || slugMatch || nameMatch || '/jkc/images/hero-background.jpg';
             
             return (
               <Link

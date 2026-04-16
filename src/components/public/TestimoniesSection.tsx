@@ -8,7 +8,7 @@ import { Loader2 } from 'lucide-react';
 export default function TestimoniesSection() {
   const [testimonies, setTestimonies] = useState<any[]>([]);
   const { org, slug, isLoading: orgLoading } = useChurch();
-  const isJKC = !slug || slug === 'jkc-devotion-app';
+  const isJKC = !slug || slug === 'jkc';
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

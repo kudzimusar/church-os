@@ -24,11 +24,11 @@ export default function PublicNav() {
   const { isDark } = usePublicTheme();
   const { org, slug } = useChurch();
   const pathname = usePathname();
-  const isHomePage = pathname === '/' || pathname === '/jkc-devotion-app/' || pathname === '/jkc-devotion-app';
+  const isHomePage = pathname === '/' || pathname === '/jkc/' || pathname === '/jkc';
 
   // Branding — use org data when available, fall back to JKC defaults
-  const isJKC = !slug || slug === 'jkc-devotion-app';
-  const logoSrc = org?.logo_url ?? '/jkc-devotion-app/images/logo-horizontal.png';
+  const isJKC = !slug || slug === 'jkc';
+  const logoSrc = org?.logo_url ?? '/jkc/images/logo-horizontal.png';
   const churchName = org?.name ?? 'Japan Kingdom Church';
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -119,7 +119,7 @@ export default function PublicNav() {
         setIsDropdownOpen(false);
         sessionStorage.clear();
         toast.success('Signed out successfully');
-        const base = window.location.pathname.startsWith('/jkc-devotion-app') ? '/jkc-devotion-app' : '';
+        const base = window.location.pathname.startsWith('/jkc') ? '/jkc' : '';
         window.location.href = currentSlug
           ? `${base}/${currentSlug}/member/login`
           : `${base}/member/login`;
@@ -216,7 +216,7 @@ export default function PublicNav() {
               />
             ) : isJKC ? (
               <img
-                src="/jkc-devotion-app/images/logo-horizontal.png"
+                src="/jkc/images/logo-horizontal.png"
                 alt="Japan Kingdom Church"
                 className="h-8 w-auto"
                 style={{ filter: (isDark || !scrolled) ? 'brightness(1.5)' : 'none' }}
@@ -439,7 +439,7 @@ export default function PublicNav() {
           </button>
 
               <img
-                src="/jkc-devotion-app/images/logo-horizontal.png"
+                src="/jkc/images/logo-horizontal.png"
                 alt="Japan Kingdom Church"
                 className="h-8 w-auto block brightness-110"
               />

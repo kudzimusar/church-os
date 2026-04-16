@@ -22,7 +22,7 @@ export async function generateStaticParams() {
     console.error("[generateStaticParams] Failed to fetch org slugs:", error.message);
     // Fallback: return known slugs so build never fails completely
     return [
-      { church_slug: "jkc-devotion-app" },
+      { church_slug: "jkc" },
       { church_slug: "grace-fellowship" },
       { church_slug: "grace-fellowship-ai" },
       { church_slug: "test-osaka" },

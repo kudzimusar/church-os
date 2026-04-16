@@ -10,7 +10,7 @@ export default function PublicFooter() {
   const currentYear = new Date().getFullYear();
 
   // ONLY use JKC details if explicitly identified as JKC. Otherwise, stay neutral.
-  const isExplicitJKC = slug === 'jkc-devotion-app' || slug === 'jkc';
+  const isExplicitJKC = slug === 'jkc' || slug === 'jkc';
   const isJKC = isExplicitJKC; // Narrowed scope
   
   const churchName = org?.name ?? (isJKC ? 'Japan Kingdom Church' : 'Your Ministry Name');
@@ -56,7 +56,7 @@ export default function PublicFooter() {
               {org?.logo_url ? (
                 <img src={org.logo_url} alt={churchName} className="h-8 w-auto block" />
               ) : isExplicitJKC ? (
-                <img src="/jkc-devotion-app/images/logo-horizontal.png" alt="Japan Kingdom Church" className="h-8 w-auto block" />
+                <img src="/jkc/images/logo-horizontal.png" alt="Japan Kingdom Church" className="h-8 w-auto block" />
               ) : (
                 <span className="text-xl font-black uppercase tracking-widest" style={{ color: textColor }}>{churchName}</span>
               )}

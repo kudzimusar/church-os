@@ -23,7 +23,7 @@ export default function QRScanPage() {
           {/* We use a placeholder image for the QR, or an external generation API */}
           {/* Since they want to use this to scan the form which is at /welcome/visit, we generate the QR using a public API. */}
           <img 
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://kudzimusar.github.io/jkc-devotion-app/welcome/visit&color=1B3A6B`} 
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://kudzimusar.github.io/jkc/welcome/visit&color=1B3A6B`} 
             alt="Scan to access Visitor Form"
             className="w-48 h-48 sm:w-64 sm:h-64 rounded-xl"
           />

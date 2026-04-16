@@ -8,7 +8,7 @@ export default function ServiceSchedule() {
   const { org, slug } = useChurch();
   const { isDark } = usePublicTheme();
   
-  const isJKC = slug === 'jkc-devotion-app' || slug === 'jkc';
+  const isJKC = slug === 'jkc' || slug === 'jkc';
   
   type ScheduleItem = { label: string; time: string; note: string };
   const schedules: ScheduleItem[] = (org?.service_schedule as ScheduleItem[] | undefined) ?? (isJKC ? [
