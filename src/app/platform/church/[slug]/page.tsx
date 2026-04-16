@@ -345,7 +345,7 @@ const JoinModal = ({ church, onClose }: { church: ChurchData; onClose: () => voi
       first_name: parts[0],
       last_name: parts.slice(1).join(' ') || null,
       email: email.trim(),
-      visitor_intent: 'join_church',
+      visitor_intent: 'become_member',
       org_id: church.org_id ?? '00000000-0000-0000-0000-000000000000',
       message: `Membership interest for ${church.name}`,
     });
