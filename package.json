@@ -6,7 +6,6 @@
     "dev": "next dev",
     "build:widget": "esbuild src/widget/index.js --bundle --minify --outfile=public/widget.js",
     "build": "npm run build:widget && next build --webpack",
-    "postbuild": "cp out/index.html out/404.html",
     "start": "next start",
     "lint": "eslint"
   },

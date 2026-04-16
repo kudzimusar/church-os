@@ -13,7 +13,7 @@ const SUBDOMAIN_REDIRECTS: Record<string, string> = {
   'churchos-ai.website': '/platform',
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
   const pathname = request.nextUrl.pathname
 
