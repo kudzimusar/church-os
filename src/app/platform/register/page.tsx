@@ -28,7 +28,7 @@ const PATHWAYS = [
     desc: "Find your church and access The Secret Place — devotionals, ChurchGPT, your Spiritual Milestone Ledger, and community connection.",
     badge: 'Free · Instant Access',
     cta: 'Create Member Profile',
-    onClick: (router: ReturnType<typeof useRouter>) => router.push('/auth/signup/'),
+    onClick: (router: ReturnType<typeof useRouter>) => router.push('/app/jkc/welcome/'),
   },
   {
     intent: 'giving',

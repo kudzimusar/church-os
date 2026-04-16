@@ -11,7 +11,7 @@ const PORTALS = [
     forLabel: 'FOR CHURCH LEADERS & PASTORS',
     desc: 'Access Mission Control, manage your congregation, and view your church\'s intelligence dashboard.',
     cta: 'Sign In as Church Leader',
-    path: '/auth/login/?role=leader',
+    path: '/shepherd/dashboard/',
   },
   {
     icon: <Users size={22} />,
@@ -19,7 +19,7 @@ const PORTALS = [
     forLabel: 'FOR CHURCH MEMBERS',
     desc: 'Access The Secret Place, your devotion journal, ChurchGPT, and your Spiritual Milestone Ledger.',
     cta: 'Sign In as Member',
-    path: '/auth/login/?role=member',
+    path: '/app/jkc/welcome/',
   },
   {
     icon: <Globe size={22} />,

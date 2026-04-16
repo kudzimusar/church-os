@@ -254,7 +254,7 @@ export default function AuditPage() {
       </div>
 
       <div className="border-t border-white/[.06] bg-[#050d18] py-8 text-center">
-        <p className="text-[10px] font-black uppercase tracking-[.4em] text-slate-700">&copy; 2026 Church OS PVT LTD · audit@churchos.ai</p>
+        <p className="text-[10px] font-black uppercase tracking-[.4em] text-slate-700">&copy; 2026 Church OS PVT LTD &middot; audit@churchos-ai.website</p>
       </div>
     </div>
   );

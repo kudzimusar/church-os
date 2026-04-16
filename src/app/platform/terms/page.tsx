@@ -74,7 +74,7 @@ const SECTIONS = [
   },
   {
     id: 'contact', title: '8. Contact',
-    body: 'For questions about these terms, Registry listing modifications, verification requests, or removal requests, contact legal@churchos.ai. We aim to respond within 10 business days.',
+        body: 'For questions about these terms, Registry listing modifications, verification requests, or removal requests, contact legal@churchos-ai.website. We aim to respond within 10 business days.',
   },
 ];
 
@@ -112,7 +112,7 @@ export default function TermsPage() {
                 </div>
               ))}
               <div className="pt-8 border-t border-white/[.06]">
-                <p className="text-[10px] font-black uppercase tracking-[.3em] text-slate-600">&copy; 2026 Church OS PVT LTD · legal@churchos.ai</p>
+                <p className="text-[10px] font-black uppercase tracking-[.3em] text-slate-600">&copy; 2026 Church OS PVT LTD · legal@churchos-ai.website</p>
               </div>
             </div>
           </div>

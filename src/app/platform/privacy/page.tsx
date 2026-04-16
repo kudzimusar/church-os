@@ -75,7 +75,7 @@ const SECTIONS = [
   },
   {
     id: 'contact', title: '8. Contact',
-    body: 'For privacy enquiries, data subject requests, or concerns about how Church OS handles your information, contact us at privacy@churchos.ai. We aim to respond to all privacy requests within 10 business days.',
+    body: 'For privacy enquiries, data subject requests, or concerns about how Church OS handles your information, contact us at privacy@churchos-ai.website. We aim to respond to all privacy requests within 10 business days.',
   },
 ];
 
@@ -118,7 +118,7 @@ export default function PrivacyPage() {
                 </div>
               ))}
               <div className="pt-8 border-t border-white/[.06]">
-                <p className="text-[10px] font-black uppercase tracking-[.3em] text-slate-600">&copy; 2026 Church OS PVT LTD · privacy@churchos.ai</p>
+                <p className="text-[10px] font-black uppercase tracking-[.3em] text-slate-600">&copy; 2026 Church OS PVT LTD &middot; privacy@churchos-ai.website</p>
               </div>
             </div>
           </div>
