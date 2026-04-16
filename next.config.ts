@@ -5,13 +5,9 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  basePath: '/jkc-devotion-app',
-  assetPrefix: '/jkc-devotion-app/',
   generateBuildId: async () => 'church-os-build',
   trailingSlash: true,
-  // Ensure we don't have hydration issues in static export
   reactStrictMode: true,
 };
 
 export default nextConfig;
-
