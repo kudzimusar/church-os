@@ -10,7 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { usePastorCtx } from '../pastor-context';
 import { InquiryList } from '../components/InquiryList';
 import { Mail, Search, RefreshCw, Loader2 } from 'lucide-react';
-import { withRoleGuard } from '@/components/auth/withRoleGuard';
+
 
 export interface Inquiry {
   id: string;
@@ -147,4 +147,4 @@ function InquiriesPage() {
   );
 }
 
-export default withRoleGuard(InquiriesPage, ['pastor', 'super_admin', 'owner']);
+export default InquiriesPage;

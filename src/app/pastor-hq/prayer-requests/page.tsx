@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { usePastorCtx } from '../pastor-context';
-import { withRoleGuard } from '@/components/auth/withRoleGuard';
+
 import { Heart, RefreshCw, Loader2, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -208,4 +208,4 @@ function PrayerRequestsPage() {
   );
 }
 
-export default withRoleGuard(PrayerRequestsPage, ['pastor', 'super_admin', 'owner']);
+export default PrayerRequestsPage;

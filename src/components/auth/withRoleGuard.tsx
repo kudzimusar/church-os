@@ -24,17 +24,26 @@ export function withRoleGuard<T extends object>(
         const [status, setStatus] = useState<{
             loading: boolean;
             authorized: boolean;
+            timedOut: boolean;
         }>({
             loading: true,
-            authorized: false
+            authorized: false,
+            timedOut: false
         });
 
         useEffect(() => {
+            let cancelled = false;
+            const failsafe = setTimeout(() => {
+                if (!cancelled) setStatus({ loading: false, authorized: false, timedOut: true });
+            }, 12000);
+
             async function checkAuth() {
                 const session = await AdminAuth.getAdminSession();
 
+                if (cancelled) return;
+                clearTimeout(failsafe);
+
                 if (!session) {
-                    // Not logged in
                     router.replace("/login/");
                     return;
                 }
@@ -85,11 +94,29 @@ export function withRoleGuard<T extends object>(
                     // Mission Control paths: no aal2 check — full tab access for high-authority roles
                 }
 
-                setStatus({ loading: false, authorized: true });
+                setStatus({ loading: false, authorized: true, timedOut: false });
             }
 
             checkAuth();
+            return () => { cancelled = true; clearTimeout(failsafe); };
         }, [router]);
+
+        if (status.timedOut) {
+            return (
+                <div className="flex flex-col items-center justify-center min-h-screen bg-background gap-4">
+                    <p className="text-sm font-semibold text-destructive">Session verification timed out</p>
+                    <button
+                        onClick={() => {
+                            AdminAuth.clearCache();
+                            window.location.href = `${BP}/login/`;
+                        }}
+                        className="px-4 py-2 text-xs font-bold uppercase tracking-widest bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
+                    >
+                        Return to Login
+                    </button>
+                </div>
+            );
+        }
 
         if (status.loading) {
             return (

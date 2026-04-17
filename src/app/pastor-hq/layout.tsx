@@ -14,17 +14,16 @@ import { PastorCtx, PastorContext } from "./pastor-context";
 
 export default function PastorHQLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
-    const [state, setState] = useState<{ loading: boolean; authed: boolean; ctx: PastorCtx }>({
+    const [state, setState] = useState<{ loading: boolean; authed: boolean; timedOut: boolean; ctx: PastorCtx }>({
         loading: true,
         authed: false,
+        timedOut: false,
         ctx: { role: 'super_admin', userName: 'Pastor', userId: '', orgId: '', refreshDashboard: () => { } }
     });
 
     const loadSession = useCallback(async () => {
         const session = await AdminAuth.getSession('tenant');
-        
-        // Strict Pastor/SuperAdmin/Owner check for Pastor HQ
-        // Surface check: pastor-hq
+
         const authorized = session && session.auth_surface === 'pastor-hq';
 
         if (!authorized) {
@@ -35,6 +34,7 @@ export default function PastorHQLayout({ children }: { children: React.ReactNode
         setState({
             loading: false,
             authed: true,
+            timedOut: false,
             ctx: {
                 role: session.role as AdminRole,
                 userName: session.name,
@@ -45,12 +45,32 @@ export default function PastorHQLayout({ children }: { children: React.ReactNode
         });
     }, [router]);
 
-    useEffect(() => { loadSession(); }, [loadSession]);
+    useEffect(() => {
+        const failsafe = setTimeout(() => {
+            setState(prev => prev.loading ? { ...prev, loading: false, timedOut: true } : prev);
+        }, 12000);
+        loadSession().finally(() => clearTimeout(failsafe));
+        return () => clearTimeout(failsafe);
+    }, [loadSession]);
 
     const handleLogout = async () => {
         await AdminAuth.logout();
         router.push("/church/login/");
     };
+
+    if (state.timedOut) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-background gap-4">
+                <p className="text-sm font-semibold text-destructive">Pastor HQ failed to load — session timed out</p>
+                <button
+                    onClick={() => { AdminAuth.clearCache(); window.location.href = '/church/login/'; }}
+                    className="px-4 py-2 text-xs font-bold uppercase tracking-widest bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
+                >
+                    Return to Login
+                </button>
+            </div>
+        );
+    }
 
     if (state.loading) {
         return (

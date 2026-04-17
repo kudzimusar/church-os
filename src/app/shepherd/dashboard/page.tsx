@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { ShepherdView } from "@/components/dashboard/shepherd-view";
 import { useAdminCtx } from "./Context";
 import { supabase } from "@/lib/supabase";
-import { withRoleGuard } from "@/components/auth/withRoleGuard";
+
 
 function ShepherdDashboardPage() {
     const { userName } = useAdminCtx();
@@ -45,4 +45,4 @@ function ShepherdDashboardPage() {
     );
 }
 
-export default withRoleGuard(ShepherdDashboardPage, ['admin', 'shepherd', 'super_admin', 'owner', 'pastor']);
+export default ShepherdDashboardPage;

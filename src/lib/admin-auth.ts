@@ -64,16 +64,22 @@ export const AdminAuth = {
             }
         }
 
-        // Fetch/Resolve session from view
+        // Fetch/Resolve session from view — with 8s timeout to prevent UI freeze
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+
         try {
             const { data: { session: sbSession } } = await supabase.auth.getSession();
-            if (!sbSession?.user) return null;
+            if (!sbSession?.user) { clearTimeout(timeout); return null; }
 
             // Fetch contexts for this identity
             const { data: contexts, error } = await supabase
                 .from('v_user_auth_contexts')
                 .select('*')
-                .eq('identity_id', sbSession.user.id);
+                .eq('identity_id', sbSession.user.id)
+                .abortSignal(controller.signal);
+
+            clearTimeout(timeout);
 
             if (error) {
                 console.error('[AdminAuth] Context fetch error:', error);
@@ -82,8 +88,6 @@ export const AdminAuth = {
 
             if (!contexts || contexts.length === 0) {
                 console.warn('[AdminAuth] No auth contexts found for user:', sbSession.user.id);
-                // Don't immediately return null - this could be a transient state
-                // Return a minimal session to allow access to login pages
                 return null;
             }
 
@@ -91,7 +95,7 @@ export const AdminAuth = {
             let activeContext = contexts[0];
             const cachedDomain = sessionStorage.getItem(DOMAIN_CACHE_KEY);
             const cachedSurface = sessionStorage.getItem(SURFACE_CACHE_KEY);
-            
+
             if (requiredDomain) {
                 activeContext = contexts.find(c => c.auth_domain === requiredDomain && (!cachedSurface || c.auth_surface === cachedSurface)) || contexts.find(c => c.auth_domain === requiredDomain) || contexts[0];
                 if (activeContext.auth_domain !== requiredDomain) return null;
@@ -121,10 +125,15 @@ export const AdminAuth = {
             sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(domainSession));
             sessionStorage.setItem(DOMAIN_CACHE_KEY, domainSession.auth_domain);
             sessionStorage.setItem(SURFACE_CACHE_KEY, domainSession.auth_surface);
-            
+
             return domainSession;
-        } catch (err) {
-            console.error('[AdminAuth] Session resolution error:', err);
+        } catch (err: any) {
+            clearTimeout(timeout);
+            if (err?.name === 'AbortError') {
+                console.error('[AdminAuth] Session resolution timed out after 8s');
+            } else {
+                console.error('[AdminAuth] Session resolution error:', err);
+            }
             return null;
         }
     },

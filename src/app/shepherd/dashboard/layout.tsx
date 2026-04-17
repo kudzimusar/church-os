@@ -16,9 +16,10 @@ import { AdminCtx, AdminContext, useAdminCtx } from "./Context";
 export default function ShepherdDashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
-    const [state, setState] = useState<{ loading: boolean; authed: boolean; ctx: AdminCtx }>({
+    const [state, setState] = useState<{ loading: boolean; authed: boolean; timedOut: boolean; ctx: AdminCtx }>({
         loading: true,
         authed: false,
+        timedOut: false,
         ctx: { role: 'admin', userName: 'Admin', userId: '', orgId: '', alertCount: 0, refreshDashboard: () => { } }
     });
 
@@ -39,6 +40,7 @@ export default function ShepherdDashboardLayout({ children }: { children: React.
         setState({
             loading: false,
             authed: true,
+            timedOut: false,
             ctx: {
                 role: session.role as AdminRole,
                 userName: session.name,
@@ -50,13 +52,33 @@ export default function ShepherdDashboardLayout({ children }: { children: React.
         });
     }, [router]);
 
-    useEffect(() => { loadSession(); }, [loadSession]);
+    useEffect(() => {
+        const failsafe = setTimeout(() => {
+            setState(prev => prev.loading ? { ...prev, loading: false, timedOut: true } : prev);
+        }, 12000);
+        loadSession().finally(() => clearTimeout(failsafe));
+        return () => clearTimeout(failsafe);
+    }, [loadSession]);
 
     const handleRefresh = () => {
         AdminAuth.clearCache();
         loadSession();
         toast.success("Dashboard refreshed");
     };
+
+    if (state.timedOut) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-background gap-4">
+                <p className="text-sm font-semibold text-destructive">Mission Control failed to load — session timed out</p>
+                <button
+                    onClick={() => { AdminAuth.clearCache(); window.location.href = `${BP}/ministry/login/`; }}
+                    className="px-4 py-2 text-xs font-bold uppercase tracking-widest bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
+                >
+                    Return to Login
+                </button>
+            </div>
+        );
+    }
 
     if (state.loading) {
         return (

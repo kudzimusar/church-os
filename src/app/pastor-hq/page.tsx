@@ -15,7 +15,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPastorDashboardData } from "@/lib/pastor-hq-actions";
-import { withRoleGuard } from "@/components/auth/withRoleGuard";
+
 import { PendingActionsCard } from "./components/PendingActionsCard";
 import { EmailComposer } from "./components/EmailComposer";
 
@@ -412,4 +412,4 @@ function Globe(props: any) {
 }
 
 
-export default withRoleGuard(PastorHQDashboard, ['pastor', 'super_admin', 'owner']);
+export default PastorHQDashboard;
