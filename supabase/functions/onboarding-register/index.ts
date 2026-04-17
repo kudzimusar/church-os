@@ -28,6 +28,7 @@ serve(async (req) => {
         churchName,
         contactEmail,
         domain,
+        churchSlug,
         logoUrl,
         theologicalTradition,
         ministryEmphasis,
@@ -38,7 +39,7 @@ serve(async (req) => {
         selectedMinistries,
     } = await req.json()
 
-    if (!churchName || !contactEmail || !domain || !tier) {
+    if (!churchName || !contactEmail || !domain || !churchSlug || !tier) {
         return new Response(JSON.stringify({ error: 'Missing required fields' }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 400,
@@ -53,6 +54,7 @@ serve(async (req) => {
         .insert({ 
             name: churchName, 
             domain, 
+            church_slug: churchSlug,
             subscription_status: tier,
             logo_url: logoUrl
         })
@@ -176,7 +178,7 @@ serve(async (req) => {
         .eq('email', contactEmail)
         .eq('status', 'pending');
 
-    return new Response(JSON.stringify({ success: true, apiKey }), {
+    return new Response(JSON.stringify({ success: true, org_id: org.id, apiKey }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
     })

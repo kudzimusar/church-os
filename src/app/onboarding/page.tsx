@@ -93,6 +93,26 @@ export default function OnboardingPage() {
     const [showRestore, setShowRestore] = useState(false);
     const [savedData, setSavedData] = useState<any>(null);
 
+    // Initial server check for drafts
+    useEffect(() => {
+        const tryResumeFromServer = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user?.id) return;
+            
+            const { data: draft } = await supabase
+                .from('onboarding_drafts')
+                .select('*')
+                .eq('identity_id', session.user.id)
+                .single();
+            
+            if (draft && draft.form_data) {
+                setSavedData(draft.form_data);
+                setShowRestore(true);
+            }
+        };
+        tryResumeFromServer();
+    }, []);
+
     const formData = useMemo(() => ({
         churchName, contactEmail, subdomain, logoPreview,
         theologicalTradition, ministryEmphasis, worshipStyle,
@@ -106,8 +126,20 @@ export default function OnboardingPage() {
     const { clearSaved } = useAutoSave({
         formType: 'onboarding_wizard',
         data: formData,
+        onSave: async () => {
+            if (!formData.contactEmail) return;
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user?.id) return;
+            await supabase.from('onboarding_drafts').upsert({
+                email: formData.contactEmail,
+                identity_id: session.user.id,
+                form_data: formData,
+                current_step: formData.currentStep,
+                updated_at: new Date().toISOString(),
+            }, { onConflict: 'email' });
+        },
         onRestore: (data) => {
-            setSavedData(data);
+            setSavedData((prev: any) => prev || data);
             setShowRestore(true);
         }
     });
@@ -287,6 +319,7 @@ export default function OnboardingPage() {
                     churchName,
                     contactEmail,
                     domain: `${subdomain}.churchos.ai`,
+                    churchSlug: subdomain,
                     logoUrl,
                     theologicalTradition,
                     ministryEmphasis,
@@ -301,6 +334,11 @@ export default function OnboardingPage() {
             const result = await res.json();
             if (res.ok) {
                 clearSaved();
+                try {
+                    await supabase.from('onboarding_drafts').delete().eq('email', contactEmail);
+                } catch(e) {
+                    // Ignore clear failure
+                }
                 const newOrgId = result.org_id || result.id || null;
                 setProvisionedOrgId(newOrgId);
                 // Let animation finish (step 5 at 6000ms), then go to billing at 6500ms
