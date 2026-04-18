@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { basePath as BP } from '@/lib/utils';
 import Link from 'next/link';
 import { usePublicTheme } from './PublicThemeWrapper';
+import { useChurch } from '@/lib/church-context';
 
 type Ministry = {
   id?: string;
@@ -23,32 +24,33 @@ const fallbacks: Ministry[] = [
 ];
 
 const MINISTRY_IMAGES: Record<string, string> = {
-  'worship-ministry': '/jkc/images/ministry_worship_card.png',
-  'worship': '/jkc/images/ministry_worship_card.png',
-  'ushers': '/jkc/images/ministry_ushers_card.png',
-  'ushers-ministry': '/jkc/images/ministry_ushers_card.png',
-  'evangelism': '/jkc/images/outreach_street_evangelism.png',
-  'prayer': '/jkc/images/ministry_prayer_card.png',
-  'kids-ministry': '/jkc/images/ministry_kids_card.png',
-  'childrens': '/jkc/images/ministry_kids_card.png',
-  'youth-ministry': '/jkc/images/outreach_toyoko.png',
-  'youth': '/jkc/images/outreach_toyoko.png',
-  'finance': '/jkc/images/ministry_finance_card.png',
-  'finance-ministry': '/jkc/images/ministry_finance_card.png',
-  'hospitality': '/jkc/images/ministry_hospitality_card.png',
-  'hospitality-ministry': '/jkc/images/ministry_hospitality_card.png',
-  'fellowship': '/jkc/images/ministry_fellowship_card.png',
-  'fellowship-circles': '/jkc/images/ministry_fellowship_card.png',
-  'bible-study': '/jkc/images/ministry_fellowship_card.png',
-  'bible-study-groups': '/jkc/images/ministry_fellowship_card.png',
-  'akiramenai': '/jkc/images/outreach_akiramenai.png',
-  'food-pantry': '/jkc/images/ministry_foodpantry_card.png',
-  'media': '/jkc/images/hero-background.jpg',
-  'missions': '/jkc/images/church/building-banner.png',
+  'worship-ministry': '/images/ministry_worship_card.png',
+  'worship': '/images/ministry_worship_card.png',
+  'ushers': '/images/ministry_ushers_card.png',
+  'ushers-ministry': '/images/ministry_ushers_card.png',
+  'evangelism': '/images/outreach_street_evangelism.png',
+  'prayer': '/images/ministry_prayer_card.png',
+  'kids-ministry': '/images/ministry_kids_card.png',
+  'childrens': '/images/ministry_kids_card.png',
+  'youth-ministry': '/images/outreach_toyoko.png',
+  'youth': '/images/outreach_toyoko.png',
+  'finance': '/images/ministry_finance_card.png',
+  'finance-ministry': '/images/ministry_finance_card.png',
+  'hospitality': '/images/ministry_hospitality_card.png',
+  'hospitality-ministry': '/images/ministry_hospitality_card.png',
+  'fellowship': '/images/ministry_fellowship_card.png',
+  'fellowship-circles': '/images/ministry_fellowship_card.png',
+  'bible-study': '/images/ministry_fellowship_card.png',
+  'bible-study-groups': '/images/ministry_fellowship_card.png',
+  'akiramenai': '/images/outreach_akiramenai.png',
+  'food-pantry': '/images/ministry_foodpantry_card.png',
+  'media': '/images/hero-background.jpg',
+  'missions': '/images/church/building-banner.png',
 };
 
 export default function MinistriesSection() {
   const { isDark } = usePublicTheme();
+  const { org, slug } = useChurch();
   const [ministries, setMinistries] = useState<Ministry[]>(fallbacks);
   const [skillGaps, setSkillGaps] = useState<any[]>([]);
 
@@ -95,11 +97,12 @@ export default function MinistriesSection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {ministries.map((m, idx) => {
             const isOutreach = ['toyoko-youth-outreach', 'akiramenai', 'food-pantry', 'street-evangelism'].includes(m.slug);
-            const rootPath = isOutreach ? '/welcome/outreach' : '/welcome/ministries';
+            const prefix = slug ? `/${slug}` : '';
+            const rootPath = isOutreach ? `${prefix}/welcome/outreach` : `${prefix}/welcome/ministries`;
             
             const slugMatch = MINISTRY_IMAGES[m.slug];
             const nameMatch = Object.entries(MINISTRY_IMAGES).find(([k]) => m.name.toLowerCase().includes(k))?.[1];
-            const imageUrl = (m as any).image_url || slugMatch || nameMatch || '/jkc/images/hero-background.jpg';
+            const imageUrl = (m as any).image_url || slugMatch || nameMatch || '/images/hero-background.jpg';
             
             return (
               <Link
@@ -156,7 +159,7 @@ export default function MinistriesSection() {
         </div>
 
         <div className="mt-16 text-center">
-           <Link href="/welcome/ministries" className="text-[10px] font-black tracking-widest uppercase py-4 px-10 rounded-full border border-[var(--jkc-navy)] text-[var(--jkc-navy)] hover:bg-[var(--jkc-navy)] hover:text-white transition-all">
+           <Link href={slug ? `/${slug}/welcome/ministries` : '/welcome/ministries'} className="text-[10px] font-black tracking-widest uppercase py-4 px-10 rounded-full border border-[var(--jkc-navy)] text-[var(--jkc-navy)] hover:bg-[var(--jkc-navy)] hover:text-white transition-all">
              VIEW ALL DEPARTMENTS
            </Link>
         </div>

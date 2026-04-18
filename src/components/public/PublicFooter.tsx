@@ -52,11 +52,11 @@ export default function PublicFooter() {
 
           {/* Column 1: Brand */}
           <div className="flex flex-col gap-6">
-            <Link href="/">
+            <Link href={slug ? `/${slug}` : '/'}>
               {org?.logo_url ? (
                 <img src={org.logo_url} alt={churchName} className="h-8 w-auto block" />
               ) : isExplicitJKC ? (
-                <img src="/jkc/images/logo-horizontal.png" alt="Japan Kingdom Church" className="h-8 w-auto block" />
+                <img src="/images/logo-horizontal.png" alt="Japan Kingdom Church" className="h-8 w-auto block" />
               ) : (
                 <span className="text-xl font-black uppercase tracking-widest" style={{ color: textColor }}>{churchName}</span>
               )}
@@ -150,7 +150,7 @@ export default function PublicFooter() {
                 { label: 'Academy', href: '/welcome/ministries/language-school' },
                 { label: 'Staff', href: '/welcome/staff' },
               ].map(link => (
-                <Link key={link.label} href={link.href}
+                <Link key={link.label} href={slug ? `/${slug}${link.href}` : link.href}
                   className="text-sm font-bold hover:text-[var(--jkc-gold)] transition-colors"
                   style={{ color: mutedText }}>
                   {link.label}
@@ -163,14 +163,26 @@ export default function PublicFooter() {
                 <p className="text-[10px] font-black uppercase tracking-widest m-0" style={{ color: dimText }}>
                   Partners & Links
                 </p>
-                <Link href="/" className="text-sm font-bold flex items-center gap-2 hover:text-[var(--jkc-gold)] transition-colors"
-                  style={{ color: mutedText }}>
-                  <Globe className="w-4 h-4" />
-                  {isExplicitJKC ? 'JKC Home' : 'Church Home'}
-                </Link>
-                <Link href="/welcome/devotion" className="text-sm font-bold hover:text-[var(--jkc-gold)] transition-colors" style={{ color: mutedText }}>
+                {isExplicitJKC ? (
+                  <a href="https://www.churchos-ai.website/platform/church/japan-kingdom-church-tokyo/" 
+                     target="_blank" rel="noopener noreferrer"
+                     className="text-sm font-bold flex items-center gap-2 hover:text-[var(--jkc-gold)] transition-colors"
+                     style={{ color: mutedText }}>
+                    <Globe className="w-4 h-4" />
+                    JKC Home
+                  </a>
+                ) : (
+                  <Link href="https://www.churchos-ai.website/platform/" className="text-sm font-bold flex items-center gap-2 hover:text-[var(--jkc-gold)] transition-colors"
+                    style={{ color: mutedText }}>
+                    <Globe className="w-4 h-4" />
+                    Church Home
+                  </Link>
+                )}
+                <a href="https://admin.churchos-ai.website/church/login/" 
+                   className="text-sm font-bold hover:text-[var(--jkc-gold)] transition-colors" 
+                   style={{ color: mutedText }}>
                   Internal Login
-                </Link>
+                </a>
               </div>
             </div>
           </div>

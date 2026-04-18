@@ -2,23 +2,24 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { MapPin, Calendar } from 'lucide-react';
+import { MapPin, Calendar, Clock } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { usePublicTheme } from './PublicThemeWrapper';
+import { useChurch } from '@/lib/church-context';
 
 /* Static fallback so the section is never blank */
 const FALLBACK_EVENTS = [
   {
     id: 'f1',
-    title: 'Sunday Morning Service',
-    date: new Date().toISOString().split('T')[0],
+    name: 'Sunday Morning Service',
+    event_date: new Date().toISOString().split('T')[0],
     description: 'Join us every Sunday for worship, prayer and the Word of God.',
     location: 'TE Bldg. 3F — Akishima, Tokyo',
   },
   {
     id: 'f2',
-    title: 'Prayer Meeting',
-    date: new Date().toISOString().split('T')[0],
+    name: 'Prayer Meeting',
+    event_date: new Date().toISOString().split('T')[0],
     description: 'Corporate prayer from 9:30 AM before the main service.',
     location: 'TE Bldg. 3F — Akishima, Tokyo',
   },
@@ -26,43 +27,42 @@ const FALLBACK_EVENTS = [
 
 export default function EventsSection() {
   const { isDark } = usePublicTheme();
+  const { org, isLoading: orgLoading } = useChurch();
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchEvents() {
+      if (orgLoading) return;
+      if (!org?.id) {
+        setEvents(FALLBACK_EVENTS);
+        setLoading(false);
+        return;
+      }
       try {
         const { data, error } = await supabase
           .from('events')
-          .select('id, name, event_date, description, location')
+          .select('id, name, event_date, start_time, description, location')
+          .eq('org_id', org.id)
           .gte('event_date', new Date().toISOString().split('T')[0])
           .order('event_date', { ascending: true })
           .limit(3);
 
         if (error) {
-          // Silently fall back — events table may not exist yet
+          console.error("Failed to fetch events", error);
           setEvents(FALLBACK_EVENTS);
           return;
         }
 
-        const mappedData = (data || []).map(e => ({
-          id: e.id,
-          title: e.name,
-          date: e.event_date,
-          description: e.description,
-          location: e.location
-        }));
-
-        setEvents(mappedData.length > 0 ? mappedData : FALLBACK_EVENTS);
-      } catch {
-        // Silently serve fallbacks
+        setEvents(data && data.length > 0 ? data : FALLBACK_EVENTS);
+      } catch (err) {
         setEvents(FALLBACK_EVENTS);
       } finally {
         setLoading(false);
       }
     }
     fetchEvents();
-  }, []);
+  }, [org?.id, orgLoading]);
 
   if (loading) return null;
 
@@ -99,21 +99,29 @@ export default function EventsSection() {
               }}
             >
               <div className="space-y-5">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                       style={{ background: 'var(--jkc-navy)' }}>
-                    <Calendar className="w-5 h-5 text-white" />
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                         style={{ background: 'var(--jkc-navy)' }}>
+                      <Calendar className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="text-[10px] font-black tracking-[0.2em] uppercase"
+                         style={{ color: 'var(--jkc-gold)' }}>
+                      {format(parseISO(event.event_date), 'MMM dd, yyyy')}
+                    </div>
                   </div>
-                  <div className="text-[10px] font-black tracking-[0.2em] uppercase"
-                       style={{ color: 'var(--jkc-gold)' }}>
-                    {format(parseISO(event.date), 'MMM dd, yyyy')}
-                  </div>
+                  {event.start_time && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--border)] text-[9px] font-black tracking-widest text-[var(--muted-foreground)]">
+                       <Clock className="w-3 h-3 text-[var(--jkc-gold)]" />
+                       {event.start_time}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <h3 className="text-xl font-black leading-tight"
                       style={{ color: 'var(--foreground)' }}>
-                    {event.title}
+                    {event.name}
                   </h3>
 
                   {event.location && (
