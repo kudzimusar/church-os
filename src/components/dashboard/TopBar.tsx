@@ -2,8 +2,9 @@
 import { useState, useRef, useEffect } from "react";
 import {
     BookOpen, Calendar, Heart, Users, FileText, Sun, Moon, MessageSquare,
-    Search as SearchIcon, RefreshCw, Bell, Plus, ChevronDown, User, LogOut
+    Search as SearchIcon, RefreshCw, Bell, Plus, ChevronDown, User, LogOut, Mail, Inbox
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -36,6 +37,8 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
 
     const quickRef = useRef<HTMLDivElement>(null);
     const profileRef = useRef<HTMLDivElement>(null);
+    const [commsUnread, setCommsUnread] = useState(0);
+    const [recentEvents, setRecentEvents] = useState<any[]>([]);
 
     const ROLE_LABELS: Record<string, string> = {
         super_admin: "System Master",
@@ -69,6 +72,26 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
         };
         document.addEventListener("mousedown", handler);
         return () => document.removeEventListener("mousedown", handler);
+    }, []);
+
+    // Fetch unread inbound communications count
+    useEffect(() => {
+        const fetchCommsUnread = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) return;
+            const { data: events } = await supabase
+                .from('communication_events')
+                .select('id, preview, occurred_at, ai_tone, direction, ai_summary')
+                .eq('direction', 'inbound')
+                .eq('read_at', null)
+                .order('occurred_at', { ascending: false })
+                .limit(5);
+            setRecentEvents(events ?? []);
+            setCommsUnread(events?.length ?? 0);
+        };
+        fetchCommsUnread();
+        const interval = setInterval(fetchCommsUnread, 60000);
+        return () => clearInterval(interval);
     }, []);
 
     return (
@@ -119,7 +142,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                     </Button>
                 )}
 
-                {/* Notifications */}
+                {/* Notifications — AI Alerts + Comms Inbox */}
                 <div className="relative">
                     <Button
                         variant="ghost"
@@ -129,7 +152,7 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                         onClick={() => setNotifOpen(o => !o)}
                     >
                         <Bell className="w-4 h-4" />
-                        {alertCount > 0 && (
+                        {(alertCount > 0 || commsUnread > 0) && (
                             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-background" />
                         )}
                     </Button>
@@ -142,24 +165,46 @@ export function TopBar({ alertCount = 0, userName = "Admin", onRefresh }: TopBar
                                 className="absolute right-0 top-12 w-80 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden z-50"
                             >
                                 <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-                                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">AI Alerts</p>
-                                    {alertCount > 0 && <Badge className="bg-red-500/20 text-red-400 border-0 text-[9px]">{alertCount} URGENT</Badge>}
+                                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Notifications</p>
+                                    <div className="flex items-center gap-1.5">
+                                        {alertCount > 0 && <Badge className="bg-red-500/20 text-red-400 border-0 text-[9px]">{alertCount} ALERT</Badge>}
+                                        {commsUnread > 0 && <Badge className="bg-violet-500/20 text-violet-400 border-0 text-[9px]">{commsUnread} MSG</Badge>}
+                                    </div>
                                 </div>
-                                <div className="p-3 space-y-2 max-h-64 overflow-y-auto">
-                                    {[
-                                        { text: "12 members haven't engaged in 7+ days", level: "critical" },
-                                        { text: "Financial stress prayers up 40%", level: "warning" },
-                                        { text: "Youth attendance grew 24% this month", level: "info" },
-                                    ].map((n, i) => (
-                                        <div key={i} className={cn(
-                                            "p-3 rounded-xl text-xs font-semibold space-x-2 transition-colors",
-                                            n.level === 'critical' ? 'bg-red-500/10 text-red-600 dark:text-red-400' : 
-                                            n.level === 'warning' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 
-                                            'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                                        )}>
-                                            {n.text}
-                                        </div>
-                                    ))}
+
+                                {/* Recent inbound comms */}
+                                {recentEvents.length > 0 && (
+                                    <div className="p-3 space-y-1.5 border-b border-border">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-1 mb-2">
+                                            <Mail className="w-3 h-3 inline mr-1" />Inbox
+                                        </p>
+                                        {recentEvents.map(ev => (
+                                            <div key={ev.id} className="p-2.5 rounded-xl bg-violet-500/8 border border-violet-500/10 text-xs">
+                                                <p className="text-foreground/80 line-clamp-2 leading-tight">{ev.ai_summary ?? ev.preview ?? 'Inbound message'}</p>
+                                                <p className="text-[10px] text-muted-foreground mt-1">
+                                                    {ev.occurred_at ? new Date(ev.occurred_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                                </p>
+                                            </div>
+                                        ))}
+                                        <Link
+                                            href="/shepherd/dashboard/communications"
+                                            className="block text-center text-[10px] font-black uppercase tracking-widest text-violet-400 hover:text-violet-300 py-1"
+                                            onClick={() => setNotifOpen(false)}
+                                        >
+                                            Go to Inbox →
+                                        </Link>
+                                    </div>
+                                )}
+
+                                {/* AI system alerts */}
+                                <div className="p-3 space-y-2 max-h-40 overflow-y-auto">
+                                    {alertCount === 0 && commsUnread === 0 && recentEvents.length === 0 ? (
+                                        <p className="text-xs text-muted-foreground text-center py-4">All clear</p>
+                                    ) : (
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-1">
+                                            System Alerts
+                                        </p>
+                                    )}
                                 </div>
                             </motion.div>
                         )}

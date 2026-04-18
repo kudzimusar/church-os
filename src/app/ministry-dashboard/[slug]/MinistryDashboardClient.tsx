@@ -5,6 +5,7 @@ import { MinistryAuth, MinistrySession } from '@/lib/ministry-auth';
 import Link from 'next/link';
 import { ChevronLeft, BarChart3, Users, CalendarDays, FileText, Bell, ClipboardList, TrendingUp, AlertCircle, Sparkles, CheckCircle2, MessagesSquare, BookOpen, DollarSign, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { CommsTab } from '@/components/comms/CommsTab';
 
 export default function MinistryOverviewClient({ slug }: { slug: string }) {
     const [session, setSession] = useState<MinistrySession | null>(null);
@@ -432,6 +433,18 @@ export default function MinistryOverviewClient({ slug }: { slug: string }) {
                         </div>
                     </div>
                 </div>
+                {/* Communications Hub — scoped to this ministry */}
+                {orgId && session && (
+                    <div className="space-y-3">
+                        <h2 className="text-[10px] font-black text-white/30 tracking-[0.3em] uppercase">Communications</h2>
+                        <CommsTab
+                            userId={session.userId}
+                            orgId={orgId}
+                            userRole="ministry_lead"
+                            scopedMinistryId={session.ministryId}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );

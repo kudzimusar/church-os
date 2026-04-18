@@ -44,6 +44,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 import { sendConnectEmail } from './actions';
+import { DevotionSubscribeWidget } from '@/components/devotion/DevotionSubscribeWidget';
 
 
 export default function KingdomConnectPage() {
@@ -407,6 +408,13 @@ export default function KingdomConnectPage() {
         </SectionShell>
 
       </div>
+
+      {/* Daily Devotion Subscribe */}
+      {resolvedOrgId && (
+        <div className="max-w-2xl mx-auto px-6 pb-8">
+          <DevotionSubscribeWidget orgId={resolvedOrgId} />
+        </div>
+      )}
 
       {/* Footer Support */}
       <div className="text-center py-12 px-6">

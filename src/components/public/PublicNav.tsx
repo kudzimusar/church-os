@@ -28,7 +28,7 @@ export default function PublicNav() {
 
   // Branding — use org data when available, fall back to JKC defaults
   const isJKC = !slug || slug === 'jkc';
-  const logoSrc = org?.logo_url ?? '/jkc/images/logo-horizontal.png';
+  const logoSrc = org?.logo_url ?? '/images/logo-horizontal.png';
   const churchName = org?.name ?? 'Japan Kingdom Church';
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -207,7 +207,7 @@ export default function PublicNav() {
         <div className="max-w-screen-xl mx-auto px-6 h-full flex
                         items-center justify-between">
 
-          <Link href="/" className="hover:opacity-80 transition-opacity flex items-center gap-2">
+          <Link href={slug ? `/${slug}` : '/'} className="hover:opacity-80 transition-opacity flex items-center gap-2">
             {org?.logo_url ? (
               <img
                 src={org.logo_url}
@@ -216,7 +216,7 @@ export default function PublicNav() {
               />
             ) : isJKC ? (
               <img
-                src="/jkc/images/logo-horizontal.png"
+                src="/images/logo-horizontal.png"
                 alt="Japan Kingdom Church"
                 className="h-8 w-auto"
                 style={{ filter: (isDark || !scrolled) ? 'brightness(1.5)' : 'none' }}
@@ -439,7 +439,7 @@ export default function PublicNav() {
           </button>
 
               <img
-                src="/jkc/images/logo-horizontal.png"
+                src="/images/logo-horizontal.png"
                 alt="Japan Kingdom Church"
                 className="h-8 w-auto block brightness-110"
               />

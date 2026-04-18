@@ -3,13 +3,15 @@ import { useState, useEffect } from "react";
 import { ShepherdView } from "@/components/dashboard/shepherd-view";
 import { useAdminCtx } from "./Context";
 import { supabase } from "@/lib/supabase";
+import { MorningBriefing } from "@/components/dashboard/MorningBriefing";
+import { CommsTab } from "@/components/comms/CommsTab";
 
 
 function ShepherdDashboardPage() {
-    const { userName } = useAdminCtx();
+    const { userName, orgId, userId, role } = useAdminCtx();
     const [dashLang, setDashLang] = useState<"EN" | "JP">("EN");
-    const [userRole, setUserRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [commsSection, setCommsSection] = useState<string | null>(null);
 
     useEffect(() => {
         setLoading(false);
@@ -40,7 +42,31 @@ function ShepherdDashboardPage() {
                         className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${dashLang === 'JP' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>日本語</button>
                 </div>
             </div>
+            {/* Morning Briefing */}
+            {orgId && (
+                <div className="mb-6">
+                    <MorningBriefing
+                        orgId={orgId}
+                        onOpenDrafts={() => setCommsSection('drafts')}
+                        onOpenInbox={() => setCommsSection('inbox')}
+                    />
+                </div>
+            )}
+
             <ShepherdView lang={dashLang} />
+
+            {/* Communications Hub */}
+            {orgId && userId && (
+                <div className="mt-8 space-y-3">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Communications</h3>
+                    <CommsTab
+                        userId={userId}
+                        orgId={orgId}
+                        userRole={(role as any) ?? 'shepherd'}
+                        defaultTab={commsSection === 'drafts' ? 'drafts' : 'inbox'}
+                    />
+                </div>
+            )}
         </div>
     );
 }

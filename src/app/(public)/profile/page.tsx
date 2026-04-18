@@ -27,6 +27,7 @@ import { mapProfileFromDB, mapProfileToDB } from "@/lib/profileFieldMap";
 import { useStickyForm } from "@/hooks/useStickyForm";
 import { useStickyState } from "@/hooks/useStickyState";
 import { joinBibleStudyGroupAction, leaveGroupAction } from "@/app/actions/bible-study";
+import { CommsTab } from "@/components/comms/CommsTab";
 
 const identitySchema = z.object({
     name: z.string().min(2, "Name is required"),
@@ -67,7 +68,8 @@ const SIDEBAR_NAV = [
     { id: 'skills', label: 'Skills & Talents', icon: Briefcase },
     { id: 'community', label: 'Bible Study Groups', icon: Globe },
     { id: 'giving', label: 'Giving & Tithe', icon: Coins },
-    { id: 'orders', label: 'Merchandise Orders', icon: ShoppingBag }
+    { id: 'orders', label: 'Merchandise Orders', icon: ShoppingBag },
+    { id: 'messages', label: 'Messages', icon: MessageCircle }
 ];
 
 // Options now imported from @/lib/constants
@@ -1739,6 +1741,18 @@ export default function ProfileHub() {
                                                     </div>
                                                 )}
                                             </div>
+                                        </div>
+                                    )}
+
+                                    {/* MESSAGES TAB */}
+                                    {activeTab === 'messages' && user && (
+                                        <div className="space-y-4 animate-in fade-in duration-300">
+                                            <CommsTab
+                                                userId={user.id}
+                                                orgId={profile?.org_id ?? ''}
+                                                userRole="member"
+                                                defaultTab="inbox"
+                                            />
                                         </div>
                                     )}
 

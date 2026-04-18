@@ -1,13 +1,13 @@
 'use client';
 
 // ARCHITECTURE NOTE: Uses supabase.functions.invoke() directly
-// (Static export constraint prevents API routes)
-// JWT passed automatically by Supabase SDK
-// FLOW: coce-compose (create draft) → PATCH campaign (subject/body) → coce-dispatch (send)
+// FLOW: coce-ai-brain (create draft) → DraftReviewModal (review/edit) → approveDraft (send)
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { X, Send, Loader2, Search } from 'lucide-react';
+import { DraftReviewModal } from '@/components/comms/DraftReviewModal';
+import { approveDraft, saveDraftEdits } from '@/app/actions/comms-draft-actions';
+import { X, Send, Loader2, Search, Zap, Save } from 'lucide-react';
 
 interface EmailTemplate {
   id: string;
@@ -55,8 +55,14 @@ export function EmailComposer({
     recipientEmail ? { id: '', name: recipientName || '', email: recipientEmail } : null
   );
   const [sending, setSending] = useState(false);
+  const [drafting, setDrafting] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  // AI brain draft state
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [showDraftReview, setShowDraftReview] = useState(false);
+  const [aiConfidence, setAiConfidence] = useState<number | null>(null);
+  const [aiReasoning, setAiReasoning] = useState<string | null>(null);
 
   // Load templates
   useEffect(() => {
@@ -125,6 +131,60 @@ export function EmailComposer({
     };
   }
 
+  /** Draft with AI brain (preferred path) */
+  async function handleDraftWithAI() {
+    if (!body.trim()) { setError('Please write your message intent first.'); return; }
+    const audiencePayload = getAudiencePayload();
+    setDrafting(true);
+    setError('');
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/coce-ai-brain`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            org_id: orgId,
+            trigger_source: 'manual',
+            campaign_type: 'broadcast',
+            audience_scope: audiencePayload.audience_scope,
+            audience_filter: audiencePayload.audience_filter || null,
+            recipient_id: selectedMember?.id || null,
+            human_requested_by: userId,
+            context_data: { intent: body, subject_hint: subject },
+          }),
+        }
+      );
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      setDraftId(data.draft_id);
+      setAiConfidence(data.confidence);
+      setAiReasoning(data.reasoning);
+      // Pre-fill subject/body from AI if empty
+      if (!subject && data.subject_en) setSubject(data.subject_en);
+      if (data.body_en) setBody(data.body_en);
+      setShowDraftReview(true);
+    } catch (e: any) {
+      setError(e?.message || 'AI draft failed. Try again or send directly.');
+    } finally {
+      setDrafting(false);
+    }
+  }
+
+  /** Save current form as a draft without sending */
+  async function handleSaveAsDraft() {
+    if (!draftId) {
+      // Create a draft first
+      await handleDraftWithAI();
+      return;
+    }
+    setSending(true);
+    await saveDraftEdits(draftId, { subject_en: subject, body_en: body });
+    setSending(false);
+    setSent(true);
+    setTimeout(onClose, 1500);
+  }
+
   async function handleSend() {
     if (!subject.trim() || !body.trim()) {
       setError('Subject and message are required.');
@@ -135,14 +195,29 @@ export function EmailComposer({
       return;
     }
 
+    // If we have a draft from AI, approve it
+    if (draftId) {
+      setSending(true);
+      setError('');
+      try {
+        await saveDraftEdits(draftId, { subject_en: subject, body_en: body });
+        const result = await approveDraft(draftId);
+        if (!result.success) throw new Error(result.error);
+        setSent(true);
+        setTimeout(onClose, 1500);
+      } catch (e: any) {
+        setError(e?.message || 'Failed to send.');
+      } finally {
+        setSending(false);
+      }
+      return;
+    }
+
+    // Legacy path: direct coce-compose → coce-dispatch
     setSending(true);
     setError('');
-
     try {
       const audiencePayload = getAudiencePayload();
-
-      // Step 1: Create campaign via coce-compose
-      // Pass subject as intent so it saves directly — no PATCH needed
       const { data: composeData, error: composeError } = await supabase.functions.invoke('coce-compose', {
         body: {
           org_id: orgId,
@@ -156,18 +231,13 @@ export function EmailComposer({
           created_by: userId,
         },
       });
-
       if (composeError) throw composeError;
       const campaignId = composeData?.campaign_id;
       if (!campaignId) throw new Error('No campaign ID returned from compose');
-
-      // Step 2: Dispatch immediately
       const { error: dispatchError } = await supabase.functions.invoke('coce-dispatch', {
         body: { campaign_id: campaignId },
       });
-
       if (dispatchError) throw dispatchError;
-
       setSent(true);
       setTimeout(onClose, 1500);
     } catch (e: any) {
@@ -361,27 +431,72 @@ export function EmailComposer({
           </div>
         </div>
 
+        {/* AI confidence panel (shown after AI draft) */}
+        {aiConfidence !== null && (
+          <div className="px-6 pb-2">
+            <div className="p-3 rounded-xl bg-violet-500/10 border border-violet-500/20 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-violet-400">AI Confidence</span>
+                <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-violet-500 to-emerald-400" style={{ width: `${Math.round(aiConfidence * 100)}%` }} />
+                </div>
+                <span className="text-[10px] font-bold text-violet-300">{Math.round(aiConfidence * 100)}%</span>
+              </div>
+              {aiReasoning && <p className="text-xs text-muted-foreground italic">{aiReasoning}</p>}
+            </div>
+          </div>
+        )}
+
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-border">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSend}
-            disabled={sending || !subject.trim() || !body.trim()}
-            className="flex items-center gap-2 px-6 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-black uppercase tracking-wider transition-all shadow-lg shadow-violet-500/25"
-          >
-            {sending ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</>
-            ) : (
-              <><Send className="w-4 h-4" /> Send Email</>
-            )}
-          </button>
+        <div className="flex items-center justify-between gap-3 p-6 border-t border-border flex-wrap">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="px-5 py-2 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveAsDraft}
+              disabled={sending || drafting}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
+            >
+              <Save className="w-3.5 h-3.5" /> Save Draft
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDraftWithAI}
+              disabled={drafting || sending || !body.trim()}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 text-sm font-black uppercase tracking-wider hover:bg-amber-500/25 disabled:opacity-50 transition-all"
+            >
+              {drafting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+              Draft with AI
+            </button>
+            <button
+              onClick={handleSend}
+              disabled={sending || drafting || !subject.trim() || !body.trim()}
+              className="flex items-center gap-2 px-6 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-black uppercase tracking-wider transition-all shadow-lg shadow-violet-500/25"
+            >
+              {sending ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</>
+              ) : (
+                <><Send className="w-4 h-4" /> Send Now</>
+              )}
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Draft Review Modal */}
+      {draftId && (
+        <DraftReviewModal
+          draftId={draftId}
+          open={showDraftReview}
+          onClose={() => { setShowDraftReview(false); }}
+          onApproved={() => { setSent(true); setTimeout(onClose, 1500); }}
+        />
+      )}
     </div>
   );
 }

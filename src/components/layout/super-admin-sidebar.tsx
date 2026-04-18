@@ -40,6 +40,11 @@ const menuItems = [
     icon: BarChart3,
   },
   {
+    title: "Comms Analytics",
+    href: "/super-admin/analytics/communications",
+    icon: BarChart3,
+  },
+  {
     title: "AI Ops",
     href: "/super-admin/ai-ops",
     icon: Bot,

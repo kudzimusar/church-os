@@ -18,6 +18,8 @@ import { getPastorDashboardData } from "@/lib/pastor-hq-actions";
 
 import { PendingActionsCard } from "./components/PendingActionsCard";
 import { EmailComposer } from "./components/EmailComposer";
+import { MorningBriefing } from "@/components/dashboard/MorningBriefing";
+import { CommsTab } from "@/components/comms/CommsTab";
 
 const container = {
     hidden: { opacity: 0 },
@@ -39,6 +41,7 @@ function PastorHQDashboard() {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [showComposer, setShowComposer] = useState(false);
+    const [activeSection, setActiveSection] = useState<string | null>(null);
 
     useEffect(() => {
         async function loadData() {
@@ -84,6 +87,15 @@ function PastorHQDashboard() {
                     </span>
                 </div>
             </header>
+
+            {/* Morning Briefing — above fold */}
+            {orgId && (
+                <MorningBriefing
+                    orgId={orgId}
+                    onOpenDrafts={() => setActiveSection('comms-drafts')}
+                    onOpenInbox={() => setActiveSection('comms-inbox')}
+                />
+            )}
 
             {/* Compose Broadcast */}
             <div className="flex justify-end">
@@ -318,6 +330,19 @@ function PastorHQDashboard() {
             </div>
             {showComposer && orgId && (
                 <EmailComposer orgId={orgId} userId={userId || ''} onClose={() => setShowComposer(false)} />
+            )}
+
+            {/* Communications Hub */}
+            {orgId && userId && (
+                <section className="space-y-4">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Communications</h3>
+                    <CommsTab
+                        userId={userId}
+                        orgId={orgId}
+                        userRole="pastor"
+                        defaultTab={activeSection === 'comms-drafts' ? 'drafts' : activeSection === 'comms-inbox' ? 'inbox' : 'inbox'}
+                    />
+                </section>
             )}
         </motion.div>
     );

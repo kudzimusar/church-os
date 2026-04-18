@@ -16,6 +16,8 @@
 
 import { supabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
+import { NewsletterTypeSelector } from "@/components/comms/NewsletterTypeSelector";
+import { DraftReviewModal } from "@/components/comms/DraftReviewModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -155,6 +157,8 @@ export default function COCEHub() {
   const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
   const [loadingNewsletters, setLoadingNewsletters] = useState(false);
   const [isCreatingNewsletter, setIsCreatingNewsletter] = useState(false);
+  const [showNewsletterSelector, setShowNewsletterSelector] = useState(false);
+  const [reviewDraftId, setReviewDraftId] = useState<string | null>(null);
   const [newsletterForm, setNewsletterForm] = useState({
     title: "", message: "", salvations: 0, growth: 0, mission_progress: 0,
   });
@@ -1055,12 +1059,20 @@ export default function COCEHub() {
       {/* ===== NEWSLETTERS TAB ===== */}
       {activeTab === "newsletters" && (
         <div className="space-y-6">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            {/* AI-powered newsletter selector (preferred) */}
             <Button
-              onClick={() => setIsCreatingNewsletter(true)}
+              onClick={() => setShowNewsletterSelector(true)}
               className="bg-primary text-white font-black rounded-2xl h-11 px-6"
             >
-              <Plus className="w-4 h-4 mr-2" /> Create Weekly Update
+              <Zap className="w-4 h-4 mr-2" /> Create Newsletter (AI)
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreatingNewsletter(true)}
+              className="font-black rounded-2xl h-11 px-4"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Legacy Create
             </Button>
           </div>
 
@@ -1174,6 +1186,23 @@ export default function COCEHub() {
             </div>
           )}
         </div>
+      )}
+
+      {/* AI Newsletter Selector Modal */}
+      <NewsletterTypeSelector
+        open={showNewsletterSelector}
+        onClose={() => setShowNewsletterSelector(false)}
+        orgId={orgId}
+      />
+
+      {/* Draft Review Modal (opened by NewsletterTypeSelector on success) */}
+      {reviewDraftId && (
+        <DraftReviewModal
+          draftId={reviewDraftId}
+          open={!!reviewDraftId}
+          onClose={() => setReviewDraftId(null)}
+          onApproved={() => { setReviewDraftId(null); fetchNewsletters(); }}
+        />
       )}
     </div>
   );
