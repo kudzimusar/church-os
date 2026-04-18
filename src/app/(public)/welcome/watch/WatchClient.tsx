@@ -31,6 +31,12 @@ interface Sermon {
   assets?: any[];
 }
 
+const getYouTubeID = (url?: string | null) => {
+  if (!url) return '';
+  if (url.includes('v=')) return url.split('v=')[1].split('&')[0];
+  return url.split('/').pop() || '';
+};
+
 export default function WatchClient() {
   const [sermons, setSermons] = useState<Sermon[]>([]);
   const [filter, setFilter] = useState<string>('all');
@@ -237,7 +243,7 @@ export default function WatchClient() {
   // Re-init player when activeSermon changes
   useEffect(() => {
     if (activeSermon && !loading && !liveStream) {
-        const vidId = activeSermon.youtube_url.split('v=')[1] || activeSermon.youtube_url.split('/').pop();
+        const vidId = getYouTubeID(activeSermon.youtube_url);
         if (vidId) {
             // Give API time to load
             const sermonId = activeSermon.id;
@@ -418,7 +424,7 @@ export default function WatchClient() {
                     "@type": "VideoObject",
                     "name": currentSermon.title,
                     "description": currentSermon.transcript_text?.slice(0, 160) || `Sermon by ${currentSermon.speaker}`,
-                    "thumbnailUrl": [`https://img.youtube.com/vi/${currentSermon.youtube_url.split('v=')[1] || currentSermon.youtube_url.split('/').pop()}/maxresdefault.jpg`],
+                    "thumbnailUrl": [`https://img.youtube.com/vi/${getYouTubeID(currentSermon.youtube_url)}/maxresdefault.jpg`],
                     "uploadDate": currentSermon.date,
                     "author": {
                       "@type": "Person",
@@ -559,7 +565,7 @@ export default function WatchClient() {
                             <PlayCircle className="text-white" size={32} />
                          </div>
                          <img 
-                           src={`https://img.youtube.com/vi/${s.youtube_url.split('v=')[1] || s.youtube_url.split('/').pop()}/mqdefault.jpg`} 
+                           src={`https://img.youtube.com/vi/${getYouTubeID(s.youtube_url)}/mqdefault.jpg`} 
                            alt={s.title}
                            className="w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity"
                          />

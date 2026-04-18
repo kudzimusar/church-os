@@ -41,16 +41,22 @@ export function ChurchProvider({ children }: { children: React.ReactNode }) {
   // URL slug is primary source of truth
   const urlSlug = params?.church_slug as string | undefined;
 
-  // sessionStorage is fallback when navigating outside slug routes (e.g. /welcome/devotion)
-  const slug: string | null = urlSlug ??
-    (typeof window !== 'undefined'
-      ? sessionStorage.getItem('church_os_church_slug')
-      : null);
+  // Track the effective slug (URL > SessionStorage)
+  const [slug, setSlug] = useState<string | null>(urlSlug ?? null);
 
   useEffect(() => {
-    // Persist slug to sessionStorage whenever URL carries it
+    // 1. Sync slug from sessionStorage if not in URL
+    if (!urlSlug && typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('church_os_church_slug');
+      if (stored) setSlug(stored);
+    }
+  }, [urlSlug]);
+
+  useEffect(() => {
+    // 2. Persist slug to sessionStorage whenever URL carries it
     if (urlSlug && typeof window !== 'undefined') {
       sessionStorage.setItem('church_os_church_slug', urlSlug);
+      setSlug(urlSlug);
     }
 
     const resolveContext = async () => {
