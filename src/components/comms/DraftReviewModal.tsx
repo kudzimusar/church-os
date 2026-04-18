@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import { approveDraft, saveDraftEdits, rejectDraft } from '@/app/actions/comms-draft-actions';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -108,7 +109,7 @@ export function DraftReviewModal({ draftId, open, onClose, onApproved }: DraftRe
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -123,6 +124,7 @@ export function DraftReviewModal({ draftId, open, onClose, onApproved }: DraftRe
             initial={{ opacity: 0, scale: 0.95, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 16 }}
+            onClick={(e) => e.stopPropagation()}
             className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl"
           >
             {loading ? (
@@ -300,6 +302,7 @@ export function DraftReviewModal({ draftId, open, onClose, onApproved }: DraftRe
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
