@@ -140,7 +140,7 @@ export async function saveDraftEdits(
 ): Promise<{ success: boolean; error?: string }> {
   const { data: draft } = await supabaseAdmin
     .from('communication_drafts')
-    .select('original_ai_subject_en, original_ai_body_en')
+    .select('original_ai_subject_en, original_ai_body_en, edit_count')
     .eq('id', draftId)
     .single();
 
@@ -156,6 +156,7 @@ export async function saveDraftEdits(
       review_status: 'in_review',
       edit_distance: distance,
       last_edited_at: new Date().toISOString(),
+      edit_count: (draft?.edit_count ?? 0) + 1,
     })
     .eq('id', draftId);
 

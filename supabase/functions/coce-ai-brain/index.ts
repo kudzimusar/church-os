@@ -106,6 +106,7 @@ serve(async (req) => {
 
       const toneGuidance = templateData?.ai_tone ?? "warm, pastoral, encouraging";
       const lengthGuidance = templateData?.ai_target_length ?? 400;
+      const maxWords = templateData?.ai_target_length ?? 150;
 
       const prompt = `You are the Church OS Pastoral Communications Intelligence for ${churchName}.
 
@@ -119,6 +120,8 @@ Guidelines:
 - Church name: ${churchName}
 - Pastor: ${pastorName}
 - Audience: ${audience_scope.replace(/_/g, " ")}
+
+CRITICAL LENGTH RULE: Maximum ${maxWords} words total for the email body. Be specific and direct. No filler phrases like 'In the gentle rhythm of life' or 'As your Church OS'. Reference actual church context. Write like a pastor who knows their congregation, not a marketing team.
 
 Return ONLY valid JSON (no markdown, no code blocks) with exactly these keys:
 {

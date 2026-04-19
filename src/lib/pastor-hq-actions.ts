@@ -81,6 +81,13 @@ export async function getPastorDashboardData(orgId?: string) {
     .order('week_start', { ascending: false })
     .limit(2);
 
+  // Canonical member count from v_org_member_count (same source as Mission Control)
+  const { data: memberCountRow } = await supabase
+    .from('v_org_member_count')
+    .select('total_org_members')
+    .eq('org_id', effectiveOrgId)
+    .single();
+
   const { count: totalMembers } = await supabase
     .from('profiles')
     .select('*', { count: 'exact', head: true })
@@ -276,7 +283,7 @@ export async function getPastorDashboardData(orgId?: string) {
 
   return {
     pulse: {
-      totalMembers: totalMembers || 0,
+      totalMembers: memberCountRow?.total_org_members ?? totalMembers ?? 0,
       newSeekers: newSeekers || 0,
       pendingMembers: pendingMembersCount || 0,
       volunteerApplications: volunteerAppsCount || 0,

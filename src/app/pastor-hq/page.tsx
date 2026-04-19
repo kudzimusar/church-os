@@ -1,7 +1,8 @@
 "use client";
 
 import { usePastorCtx } from "./pastor-context";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { basePath as BP } from "@/lib/utils";
 import {
@@ -36,8 +37,11 @@ const item = {
     show: { opacity: 1, y: 0 }
 };
 
-function PastorHQDashboard() {
+function PastorHQDashboardInner() {
     const { userName, orgId, userId } = usePastorCtx();
+    const searchParams = useSearchParams();
+    const commsTab = searchParams.get("comms");
+
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [showComposer, setShowComposer] = useState(false);
@@ -56,6 +60,26 @@ function PastorHQDashboard() {
         }
         if (orgId) loadData();
     }, [orgId]);
+
+    // ── Communications section (from sidebar nav) ──────────────────────────
+    if (commsTab && orgId && userId) {
+        return (
+            <div className="space-y-4">
+                <div>
+                    <h2 className="text-xl font-black uppercase tracking-tight">Communications</h2>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                        {commsTab.charAt(0).toUpperCase() + commsTab.slice(1)}
+                    </p>
+                </div>
+                <CommsTab
+                    userId={userId}
+                    orgId={orgId}
+                    userRole="pastor"
+                    defaultTab={commsTab}
+                />
+            </div>
+        );
+    }
 
     if (loading) {
         return (
@@ -331,19 +355,6 @@ function PastorHQDashboard() {
             {showComposer && orgId && (
                 <EmailComposer orgId={orgId} userId={userId || ''} onClose={() => setShowComposer(false)} />
             )}
-
-            {/* Communications Hub */}
-            {orgId && userId && (
-                <section className="space-y-4">
-                    <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Communications</h3>
-                    <CommsTab
-                        userId={userId}
-                        orgId={orgId}
-                        userRole="pastor"
-                        defaultTab={activeSection === 'comms-drafts' ? 'drafts' : activeSection === 'comms-inbox' ? 'inbox' : 'inbox'}
-                    />
-                </section>
-            )}
         </motion.div>
     );
 }
@@ -436,5 +447,17 @@ function Globe(props: any) {
     )
 }
 
+
+function PastorHQDashboard() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <Loader2 className="w-6 h-6 text-violet-500 animate-spin" />
+            </div>
+        }>
+            <PastorHQDashboardInner />
+        </Suspense>
+    );
+}
 
 export default PastorHQDashboard;
