@@ -128,13 +128,13 @@ NOTES: ${formData.message}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-slate-800 shadow-2xl hover:scale-[1.02] transition-transform duration-500">
-               <img src="/images/language-school/img1.jpg" alt="Classroom environment" className="w-full h-full object-cover" />
+               <img src="/images/language-school/hero.jpg" alt="Classroom environment" className="w-full h-full object-cover" />
             </div>
             <div className="aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-slate-800 shadow-2xl hover:scale-[1.02] transition-transform duration-500">
                <img src="/images/language-school/class1.jpg" alt="Students learning" className="w-full h-full object-cover" />
             </div>
             <div className="aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 bg-slate-800 hidden lg:block shadow-2xl hover:scale-[1.02] transition-transform duration-500">
-               <img src="/images/language-school/class2.jpg" alt="Community gathering" className="w-full h-full object-cover" />
+               <img src="/images/pastor/pastor-event.jpg" alt="Community gathering" className="w-full h-full object-cover" />
             </div>
           </div>
         </div>
