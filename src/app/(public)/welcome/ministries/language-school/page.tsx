@@ -37,18 +37,18 @@ NOTES: ${formData.message}
     const orgId = JKC_ORG_ID;
 
     const { error } = await supabase
-      .from('public_inquiries')
+      .from('kingdom_class_applications')
       .insert([{
         org_id: orgId,
-        first_name: formData.name,
-        last_name: '',
+        full_name: formData.name,
         email: formData.email,
         phone: formData.phone,
-        message: fullMessage,
-        visitor_intent: 'language_class',
-        how_heard: formData.heardAbout.toLowerCase(),
-        preferred_language: 'EN',
-        status: 'new'
+        track: formData.track,
+        learning_level: formData.level,
+        heard_via: formData.heardAbout,
+        wants_online: formData.onlineAccess === 'Yes',
+        notes: formData.message,
+        status: 'pending'
       }]);
 
     if (error) {
