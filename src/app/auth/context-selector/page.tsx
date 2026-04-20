@@ -62,7 +62,8 @@ function ContextSelectorContent() {
     'corporate': Shield,
     'tenant': Church,
     'member': Users,
-    'onboarding': Flame
+    'onboarding': Flame,
+    'kingdom-class': BookOpen
   };
 
   return (

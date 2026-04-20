@@ -8,12 +8,18 @@ import {
   Search, Filter, ChevronRight, 
   CheckCircle2, AlertCircle, Phone, Mail
 } from 'lucide-react';
-import { useAdminCtx } from '../Context';
+import { AdminAuth } from "@/lib/admin-auth";
 
 export default function KingdomClassDashboard() {
   const [applications, setApplications] = useState<any[]>([]);
+  const [orgId, setOrgId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const { orgId } = useAdminCtx();
+
+  useEffect(() => {
+    AdminAuth.getAdminSession().then(session => {
+       if (session) setOrgId(session.orgId);
+    });
+  }, []);
 
   useEffect(() => {
     async function fetchApplications() {

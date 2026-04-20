@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 
 export type AuthDomain = 'corporate' | 'tenant' | 'onboarding' | 'member';
-export type AuthSurface = 'console' | 'pastor-hq' | 'mission-control' | 'ministry' | 'profile' | 'onboarding';
+export type AuthSurface = 'console' | 'pastor-hq' | 'mission-control' | 'ministry' | 'profile' | 'onboarding' | 'kingdom-class';
 
 export interface AuthContext {
   identity_id: string;
@@ -62,7 +62,8 @@ export const DomainAuth = {
       'mission-control': '/shepherd/dashboard',
       'ministry': '/shepherd/dashboard',
       'profile': '/member/profile',
-      'onboarding': '/onboarding'
+      'onboarding': '/onboarding',
+      'kingdom-class': '/kingdom-class-control'
     };
     return routes[surface];
   }
