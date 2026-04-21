@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { DomainAuth, AuthContext } from "@/lib/domain-auth";
-import { Flame, Shield, Church, Users, ArrowRight, Loader2 } from "lucide-react";
+import { Flame, Shield, Church, Users, ArrowRight, Loader2, BookOpen } from "lucide-react";
 
 export const dynamic = 'force-static';
 
@@ -58,12 +58,24 @@ function ContextSelectorContent() {
     router.push(DomainAuth.getSurfaceRoute(context.auth_surface));
   };
 
-  const icons: Record<string, any> = {
-    'corporate': Shield,
-    'tenant': Church,
-    'member': Users,
+  const surfaceIcons: Record<string, any> = {
+    'console': Shield,
+    'pastor-hq': Flame,
+    'mission-control': Church,
+    'ministry': Users,
+    'kingdom-class': BookOpen,
+    'profile': Users,
     'onboarding': Flame,
-    'kingdom-class': BookOpen
+  };
+
+  const surfaceLabels: Record<string, string> = {
+    'console': 'Super Admin Console',
+    'pastor-hq': "Pastor's HQ",
+    'mission-control': 'Mission Control',
+    'ministry': 'Ministry Dashboard',
+    'kingdom-class': 'Kingdom Class',
+    'profile': 'Member Profile',
+    'onboarding': 'Onboarding',
   };
 
   return (
@@ -76,7 +88,8 @@ function ContextSelectorContent() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {contexts.map((ctx, idx) => {
-            const Icon = icons[ctx.auth_domain] || Shield;
+            const Icon = surfaceIcons[ctx.auth_surface] || Shield;
+            const label = surfaceLabels[ctx.auth_surface] || ctx.auth_surface.replace(/-/g, ' ');
             return (
               <motion.button
                 key={idx}
@@ -90,8 +103,8 @@ function ContextSelectorContent() {
                   <Icon className="w-6 h-6 text-white" />
                 </div>
 
-                <h3 className="text-lg font-black text-white uppercase tracking-tight mb-1">{ctx.auth_domain}</h3>
-                <p className="text-sm text-white/40 font-medium capitalize mb-4">{ctx.auth_surface.replace('-', ' ')} • {ctx.role}</p>
+                <h3 className="text-lg font-black text-white uppercase tracking-tight mb-1">{label}</h3>
+                <p className="text-sm text-white/40 font-medium capitalize mb-4">{ctx.auth_domain} • {ctx.role}</p>
 
                 <div className="flex items-center gap-2 text-violet-400 group-hover:text-violet-300 transition-colors">
                   <span className="text-xs font-black uppercase tracking-widest">Enter Domain</span>

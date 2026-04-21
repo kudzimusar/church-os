@@ -8,7 +8,7 @@ import { basePath as BP } from './utils';
 import { clearOrgCache } from './org-resolver';
 
 export type AuthDomain = 'corporate' | 'tenant' | 'onboarding' | 'member';
-export type AuthSurface = 'console' | 'pastor-hq' | 'mission-control' | 'ministry' | 'profile' | 'onboarding';
+export type AuthSurface = 'console' | 'pastor-hq' | 'mission-control' | 'ministry' | 'profile' | 'onboarding' | 'kingdom-class';
 
 // ── Legacy compatibility exports ──
 export type AdminRole = 'super_admin' | 'pastor' | 'owner' | 'shepherd' | 'admin' | 'ministry_lead' | 'ministry_leader' | 'elder' | 'deacon' | 'member';
