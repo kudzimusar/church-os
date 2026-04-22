@@ -1,12 +1,8 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { MinistryAuth, MinistrySession } from '@/lib/ministry-auth';
-import Link from 'next/link';
-import { ChevronLeft, BarChart3, Users, CalendarDays, FileText, Bell, ClipboardList, TrendingUp, AlertCircle, Sparkles, CheckCircle2, MessagesSquare, BookOpen, DollarSign, AlertTriangle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import { CommsTab } from '@/components/comms/CommsTab';
-
 import { MinistryIntelligenceSilo } from '@/components/dashboard/ministries/MinistryIntelligenceSilo';
 import { LeaderProfileExtension } from '@/components/dashboard/ministries/LeaderProfileExtension';
 
