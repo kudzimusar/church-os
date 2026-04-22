@@ -19,15 +19,34 @@ export function MinistryHubGrid({ onSelect, userId }: MinistryHubGridProps) {
       let query = supabase.from('vw_ministry_intelligence').select('*');
       
       if (userId) {
-        // Fetch only ministries where I am a member
-        const { data: mems } = await supabase
-          .from('ministry_members')
-          .select('ministry_id')
+        // 1. Check if user is a Global Admin (Skeleton Key)
+        const { data: globalRoles } = await supabase
+          .from('org_members')
+          .select('role')
           .eq('user_id', userId)
-          .eq('is_active', true);
-        
-        const ids = mems?.map(m => m.ministry_id) || [];
-        query = query.in('ministry_id', ids);
+          .in('role', ['admin', 'owner', 'shepherd', 'pastor', 'super_admin', 'super-admin']);
+
+        const isGlobalAdmin = globalRoles && globalRoles.length > 0;
+
+        if (!isGlobalAdmin) {
+          // 2. Not an admin? Fetch only ministries where I am a member
+          const { data: mems } = await supabase
+            .from('ministry_members')
+            .select('ministry_id')
+            .eq('user_id', userId)
+            .eq('is_active', true);
+          
+          const ids = mems?.map(m => m.ministry_id) || [];
+          
+          if (ids.length > 0) {
+            query = query.in('ministry_id', ids);
+          } else {
+            // Return empty if no memberships found for non-admin
+            setMinistries([]);
+            setLoading(false);
+            return;
+          }
+        }
       }
 
       const { data } = await query;
