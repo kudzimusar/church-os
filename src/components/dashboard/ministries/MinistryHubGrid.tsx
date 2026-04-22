@@ -6,21 +6,36 @@ import { Badge } from "@/components/ui/badge";
 
 interface MinistryHubGridProps {
   onSelect: (ministry: any) => void;
+  userId?: string;
 }
 
-export function MinistryHubGrid({ onSelect }: MinistryHubGridProps) {
+export function MinistryHubGrid({ onSelect, userId }: MinistryHubGridProps) {
   const [ministries, setMinistries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [hov, setHov] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadHub() {
-      const { data } = await supabase.from('vw_ministry_intelligence').select('*');
+      let query = supabase.from('vw_ministry_intelligence').select('*');
+      
+      if (userId) {
+        // Fetch only ministries where I am a member
+        const { data: mems } = await supabase
+          .from('ministry_members')
+          .select('ministry_id')
+          .eq('user_id', userId)
+          .eq('is_active', true);
+        
+        const ids = mems?.map(m => m.ministry_id) || [];
+        query = query.in('ministry_id', ids);
+      }
+
+      const { data } = await query;
       setMinistries(data || []);
       setLoading(false);
     }
     loadHub();
-  }, []);
+  }, [userId]);
 
   if (loading) {
     return (

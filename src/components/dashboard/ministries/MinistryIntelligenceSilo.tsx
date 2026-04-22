@@ -26,11 +26,24 @@ interface MinistryIntelligenceSiloProps {
   ministrySlug: string;
   onBack: () => void;
   onOpenProfile: () => void;
+  forcedRole?: string;
 }
 
-export function MinistryIntelligenceSilo({ ministryId, ministrySlug, onBack, onOpenProfile }: MinistryIntelligenceSiloProps) {
-  const { role } = useAdminCtx(); // Get the current user's global role
-  const isLeader = role === 'admin' || role === 'pastor' || role === 'shepherd' || role === 'ministry_leader';
+export function MinistryIntelligenceSilo({ 
+  ministryId, 
+  ministrySlug, 
+  onBack, 
+  onOpenProfile,
+  forcedRole 
+}: MinistryIntelligenceSiloProps) {
+  const adminCtx = useAdminCtx(); // This might be null in member portal
+  const activeRole = forcedRole || adminCtx?.role;
+  
+  const isLeader = activeRole === 'admin' || 
+                   activeRole === 'pastor' || 
+                   activeRole === 'shepherd' || 
+                   activeRole === 'ministry_leader' ||
+                   activeRole === 'leader'; // Account for ministry-specific leader role
 
   const [intelligence, setIntelligence] = useState<any>(null);
   const [metrics, setMetrics] = useState<any[]>([]);

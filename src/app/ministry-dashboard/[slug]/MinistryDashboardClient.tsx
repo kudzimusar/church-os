@@ -7,446 +7,53 @@ import { ChevronLeft, BarChart3, Users, CalendarDays, FileText, Bell, ClipboardL
 import { supabase } from '@/lib/supabase';
 import { CommsTab } from '@/components/comms/CommsTab';
 
+import { MinistryIntelligenceSilo } from '@/components/dashboard/ministries/MinistryIntelligenceSilo';
+import { LeaderProfileExtension } from '@/components/dashboard/ministries/LeaderProfileExtension';
+
 export default function MinistryOverviewClient({ slug }: { slug: string }) {
+    const router = useRouter();
     const [session, setSession] = useState<MinistrySession | null>(null);
     const [loading, setLoading] = useState(true);
-    const [analytics, setAnalytics] = useState<any>(null);
-    const [insights, setInsights] = useState<any[]>([]);
-    const [recentActivity, setRecentActivity] = useState<any>(null);
-    const [orgId, setOrgId] = useState<string | null>(null);
-    const [financeHealth, setFinanceHealth] = useState<any>(null);
-    const [atRiskGivers, setAtRiskGivers] = useState<any[]>([]);
-    const [ministryROI, setMinistryROI] = useState<any[]>([]);
-    const [recurringHealth, setRecurringHealth] = useState<any>(null);
-    const [financeLoading, setFinanceLoading] = useState(false);
-
-    const loadData = async (sess: MinistrySession) => {
-        // 1. Fetch Analytics
-        const { data: analyticsData } = await supabase
-            .from('ministry_analytics')
-            .select('*')
-            .eq('ministry_id', sess.ministryId)
-            .maybeSingle();
-        setAnalytics(analyticsData);
-
-        // 2. Fetch AI Insights
-        const { data: insightData } = await supabase
-            .from('ai_ministry_insights')
-            .select('*')
-            .eq('ministry_id', sess.ministryId)
-            .eq('is_approved', true)
-            .eq('visible_to_ministry_leaders', true)
-            .order('created_at', { ascending: false });
-        setInsights(insightData || []);
-
-        // 3. Fetch Last Report
-        const { data: lastReport } = await supabase
-            .from('ministry_reports')
-            .select('created_at, service_date')
-            .eq('ministry_id', sess.ministryId)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-        
-        if (lastReport) {
-            const daysSince = Math.floor((new Date().getTime() - new Date(lastReport.created_at).getTime()) / (1000 * 3600 * 24));
-            setRecentActivity({
-                daysSince,
-                lastDate: lastReport.service_date
-            });
-        }
-
-        // Fetch org_id for finance intelligence queries
-        const { data: ministryOrg } = await supabase
-            .from('ministries')
-            .select('org_id')
-            .eq('id', sess.ministryId)
-            .single();
-        setOrgId(ministryOrg?.org_id ?? null);
-    };
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
 
     useEffect(() => {
         MinistryAuth.requireAccess(slug).then(sess => {
             setSession(sess);
-            loadData(sess);
             setLoading(false);
         }).catch(err => {
             console.error(err);
+            router.replace('/ministry-dashboard/');
         });
     }, [slug]);
 
-    useEffect(() => {
-        if (slug !== 'finance' || !orgId) return;
-        const loadFinance = async () => {
-            setFinanceLoading(true);
-            const [healthRes, riskRes, roiRes, recurringRes] = await Promise.all([
-                supabase.from('vw_church_giving_health')
-                    .select('*').eq('org_id', orgId).maybeSingle(),
-                supabase.from('vw_giving_at_risk')
-                    .select('*').eq('org_id', orgId)
-                    .order('estimated_annual_loss', { ascending: false })
-                    .limit(5),
-                supabase.from('vw_ministry_financial_roi')
-                    .select('*').eq('org_id', orgId)
-                    .order('reports_submitted', { ascending: false })
-                    .limit(6),
-                supabase.from('vw_recurring_giving_health')
-                    .select('*').eq('org_id', orgId).maybeSingle(),
-            ]);
-            setFinanceHealth(healthRes.data);
-            setAtRiskGivers(riskRes.data || []);
-            setMinistryROI(roiRes.data || []);
-            setRecurringHealth(recurringRes.data);
-            setFinanceLoading(false);
-        };
-        loadFinance();
-    }, [slug, orgId]);
-
     if (loading || !session) {
-        return <div className="min-h-screen bg-[#080c14] flex items-center justify-center text-white"><p className="text-white/40 font-medium">Loading ministry profile...</p></div>;
+        return (
+            <div className="min-h-screen bg-[#080c14] flex flex-col items-center justify-center text-white gap-4">
+                <div className="w-10 h-10 border-4 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Syncing Intelligence Pipeline...</p>
+            </div>
+        );
     }
 
     return (
-        <div className="min-h-screen bg-[#080c14] text-white relative overflow-hidden">
-            {/* Background elements */}
-            <div className="absolute top-0 right-0 w-full h-96 bg-gradient-to-b from-indigo-900/10 to-transparent pointer-events-none" />
-            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full bg-violet-600/5 blur-3xl pointer-events-none" />
-
-            {/* Top Navigation Bar */}
-            <div className="sticky top-0 z-50 bg-[#080c14]/80 backdrop-blur-xl border-b border-white/10">
-                <div className="max-w-5xl mx-auto px-6 py-4 flex items-center gap-4">
-                    <Link 
-                        href="/ministry-dashboard" 
-                        className="flex items-center gap-2 text-white/50 hover:text-white transition-colors group"
-                    >
-                        <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-violet-500/50 group-hover:bg-violet-500/10 transition-all">
-                            <ChevronLeft className="w-4 h-4" />
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-widest hidden sm:block">My Ministries</span>
-                    </Link>
-                    <div className="flex-1 flex items-center gap-2">
-                        <div className="w-1 h-4 rounded-full bg-white/20" />
-                        <span className="text-sm font-black text-white tracking-wide">{session.ministryName}</span>
-                    </div>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1.5 rounded-full">
-                        {session.ministryRole}
-                    </span>
-                    {slug === 'media' && (
-                        <Link 
-                            href="/manual/media-ministry" 
-                            className="text-[9px] font-black uppercase tracking-widest text-white/50 hover:text-white bg-white/5 border border-white/10 px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5"
-                        >
-                            <BookOpen size={10} />
-                            Operations Manual
-                        </Link>
-                    )}
-                </div>
+        <div className="min-h-screen bg-[#080c14] text-white transition-all">
+            <div className="p-6 xl:p-12 max-w-[1600px] mx-auto">
+                <MinistryIntelligenceSilo 
+                    ministryId={session.ministryId}
+                    ministrySlug={session.slug}
+                    onBack={() => router.push('/ministry-dashboard/')}
+                    onOpenProfile={() => setIsProfileOpen(true)}
+                    forcedRole={session.ministryRole}
+                />
             </div>
 
-            <div className="max-w-5xl mx-auto px-6 py-8 space-y-8 relative z-10">
-                {/* Header Card */}
-                <div 
-                  className="rounded-[2rem] p-8 md:p-12 shadow-2xl relative overflow-hidden border border-white/10"
-                  style={{ backgroundColor: session.color || '#6366F1' }}
-                >
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                    <div className="relative z-10">
-                        <h1 className="text-3xl md:text-5xl font-black mb-3 tracking-tight">{session.ministryName}</h1>
-                        <p className="text-white/90 max-w-lg leading-relaxed font-medium">{session.description}</p>
-                    </div>
-                </div>
-
-                {/* Dashboard Actions */}
-                <div>
-                    <h2 className="text-[10px] font-black text-white/30 mb-4 tracking-[0.3em] uppercase">Operations</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {MinistryAuth.can(session.ministryRole, 'assistant') && (
-                            <>
-                                <Link href={`/ministry-dashboard/${slug}/reports`} className="bg-[#0d1421] border border-white/10 p-6 rounded-3xl hover:border-violet-500/50 hover:bg-violet-500/5 transition-all shadow-xl group">
-                                    <div className="w-10 h-10 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-4 group-hover:bg-violet-500/20 transition-colors">
-                                        <FileText className="w-5 h-5 text-violet-400" />
-                                    </div>
-                                    <h3 className="font-bold text-white group-hover:text-violet-400 transition-colors">Submit Report</h3>
-                                    <p className="text-white/40 text-xs mt-1.5 font-medium">Log attendance, events, resources</p>
-                                </Link>
-                                <Link href={`/ministry-dashboard/${slug}/attendance`} className="bg-[#0d1421] border border-white/10 p-6 rounded-3xl hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all shadow-xl group">
-                                    <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 group-hover:bg-emerald-500/20 transition-colors">
-                                        <ClipboardList className="w-5 h-5 text-emerald-400" />
-                                    </div>
-                                    <h3 className="font-bold text-white group-hover:text-emerald-400 transition-colors">Quick Attendance</h3>
-                                    <p className="text-white/40 text-xs mt-1.5 font-medium">Log service headcounts</p>
-                                </Link>
-                                <Link href={`/ministry-dashboard/${slug}/events`} className="bg-[#0d1421] border border-white/10 p-6 rounded-3xl hover:border-blue-500/50 hover:bg-blue-500/5 transition-all shadow-xl group">
-                                    <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-4 group-hover:bg-blue-500/20 transition-colors">
-                                        <CalendarDays className="w-5 h-5 text-blue-400" />
-                                    </div>
-                                    <h3 className="font-bold text-white group-hover:text-blue-400 transition-colors">Ministry Events</h3>
-                                    <p className="text-white/40 text-xs mt-1.5 font-medium">Manage retreats & outreach</p>
-                                </Link>
-                            </>
-                        )}
-                        {MinistryAuth.can(session.ministryRole, 'leader') && (
-                            <>
-                                <Link href={`/ministry-dashboard/${slug}/team`} className="bg-[#0d1421] border border-white/10 p-6 rounded-3xl hover:border-amber-500/50 hover:bg-amber-500/5 transition-all shadow-xl group">
-                                    <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4 group-hover:bg-amber-500/20 transition-colors">
-                                        <Users className="w-5 h-5 text-amber-400" />
-                                    </div>
-                                    <h3 className="font-bold text-white group-hover:text-amber-400 transition-colors">Manage Team</h3>
-                                    <p className="text-white/40 text-xs mt-1.5 font-medium">Assign roles to volunteers</p>
-                                </Link>
-                                <Link href={`/ministry-dashboard/${slug}/analytics`} className="bg-[#0d1421] border border-white/10 p-6 rounded-3xl hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all shadow-xl group">
-                                    <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-4 group-hover:bg-indigo-500/20 transition-colors">
-                                        <BarChart3 className="w-5 h-5 text-indigo-400" />
-                                    </div>
-                                    <h3 className="font-bold text-white group-hover:text-indigo-400 transition-colors">Analytics</h3>
-                                    <p className="text-white/40 text-xs mt-1.5 font-medium">View performance metrics</p>
-                                </Link>
-                            </>
-                        )}
-                        {slug === 'bible-study' && (
-                            <Link href={`/ministry-dashboard/${slug}/groups`} className="bg-[#0d1421] border border-white/10 p-6 rounded-3xl hover:border-amber-500/50 hover:bg-amber-500/5 transition-all shadow-xl group">
-                                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-4 group-hover:bg-amber-500/20 transition-colors">
-                                    <MessagesSquare className="w-5 h-5 text-amber-400" />
-                                </div>
-                                <h3 className="font-bold text-white group-hover:text-amber-400 transition-colors">Manage Groups</h3>
-                                <p className="text-white/40 text-xs mt-1.5 font-medium">Coordinate your Bible Study groups</p>
-                            </Link>
-                        )}
-                        {slug === 'media' && (
-                            <Link href="/shepherd/dashboard/sermons" className="bg-[#0d1421] border border-white/10 p-6 rounded-3xl hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all shadow-xl group">
-                                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 group-hover:bg-emerald-500/20 transition-colors">
-                                    <Sparkles className="w-5 h-5 text-emerald-400" />
-                                </div>
-                                <h3 className="font-bold text-white group-hover:text-emerald-400 transition-colors">Sermon Hub</h3>
-                                <p className="text-white/40 text-xs mt-1.5 font-medium">Manage uploads, AI automations & library</p>
-                            </Link>
-                        )}
-                        <Link href={`/ministry-dashboard/${slug}/announcements`} className="bg-[#0d1421] border border-white/10 p-6 rounded-3xl hover:border-pink-500/50 hover:bg-pink-500/5 transition-all shadow-xl group">
-                            <div className="w-10 h-10 rounded-2xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center mb-4 group-hover:bg-pink-500/20 transition-colors">
-                                <Bell className="w-5 h-5 text-pink-400" />
-                            </div>
-                            <h3 className="font-bold text-white group-hover:text-pink-400 transition-colors">Announcements</h3>
-                            <p className="text-white/40 text-xs mt-1.5 font-medium">Messages from leadership</p>
-                        </Link>
-                    </div>
-                </div>
-                {/* Ministry Intelligence Summary */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* KPI Column */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <div>
-                            <h2 className="text-[10px] font-black text-white/30 mb-4 tracking-[0.3em] uppercase">Ministry Health Intelligence</h2>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                <KPICard 
-                                    label="Health Score" 
-                                    value={analytics?.health_score ?? '—'} 
-                                    color={analytics?.health_score >= 70 ? 'emerald' : analytics?.health_score >= 40 ? 'amber' : 'red'}
-                                    suffix="/100"
-                                />
-                                <KPICard 
-                                    label="Avg Attendance" 
-                                    value={analytics?.avg_attendance ?? 0} 
-                                    color="indigo" 
-                                />
-                                <KPICard 
-                                    label="Total Reports" 
-                                    value={analytics?.total_reports ?? 0} 
-                                    color="violet" 
-                                />
-                                <KPICard 
-                                    label="Salvations" 
-                                    value={analytics?.salvations ?? 0} 
-                                    color="pink" 
-                                />
-                                <KPICard 
-                                    label="Visitors" 
-                                    value={analytics?.visitors ?? 0} 
-                                    color="blue" 
-                                />
-                                <div className={`bg-[#0d1421] border border-white/10 rounded-3xl p-5 shadow-xl transition-all ${recentActivity?.daysSince > 7 ? 'ring-1 ring-red-500/50 bg-red-500/5' : ''}`}>
-                                    <div className="flex justify-between items-start mb-2">
-                                        <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Reports Status</p>
-                                        {recentActivity?.daysSince > 7 && <AlertCircle className="w-3.5 h-3.5 text-red-400" />}
-                                    </div>
-                                    <p className={`text-2xl font-black ${recentActivity?.daysSince > 7 ? 'text-red-400' : 'text-white'}`}>
-                                        {recentActivity ? `${recentActivity.daysSince}d ago` : 'No reports'}
-                                    </p>
-                                    <p className="text-[9px] text-white/20 mt-1 uppercase font-bold">Days since last report</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Automation Status */}
-                        <div className="bg-white/5 border border-white/10 rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                                    <CheckCircle2 className="w-5 h-5 text-indigo-400" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-white">Automation Active</p>
-                                    <p className="text-xs text-white/40">Real-time health score & Mission Control sync enabled</p>
-                                </div>
-                            </div>
-                            <div className="text-xs font-medium text-white/60 bg-white/5 px-4 py-2 rounded-xl border border-white/10">
-                                {recentActivity 
-                                    ? `Last sync: ${new Date(recentActivity.lastDate).toLocaleDateString()}` 
-                                    : 'Awaiting first report...'}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Finance Intelligence — only for finance ministry */}
-                    {slug === 'finance' && (
-                        <div className="space-y-6 mt-6">
-                            <div className="flex items-center gap-3">
-                                <DollarSign className="w-5 h-5 text-emerald-500" />
-                                <h3 className="text-sm font-black uppercase tracking-widest text-white">
-                                    Finance Intelligence
-                                </h3>
-                            </div>
-                            {financeLoading ? (
-                                <div className="text-xs text-white/40">Loading financial data...</div>
-                            ) : (
-                                <>
-                                    {/* Giving Health Summary */}
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                        {[
-                                            { label: 'This Month', value: financeHealth ? '¥' + Number(financeHealth.given_this_month).toLocaleString() : '¥0' },
-                                            { label: 'This Year', value: financeHealth ? '¥' + Number(financeHealth.given_this_year).toLocaleString() : '¥0' },
-                                            { label: 'Participation', value: financeHealth ? financeHealth.giving_participation_pct + '%' : '0%' },
-                                            { label: 'Avg Gift', value: financeHealth ? '¥' + Math.round(Number(financeHealth.avg_gift_size)).toLocaleString() : '¥0' },
-                                        ].map(stat => (
-                                            <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-1">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-white/40">{stat.label}</p>
-                                                <p className="text-xl font-black text-white">{stat.value}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Fund Breakdown */}
-                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Fund Breakdown</p>
-                                        {financeHealth && [
-                                            { label: 'Tithe', value: Number(financeHealth.tithe_total), color: 'bg-violet-500' },
-                                            { label: 'Offering', value: Number(financeHealth.offering_total), color: 'bg-emerald-500' },
-                                            { label: 'Missions', value: Number(financeHealth.missions_total), color: 'bg-blue-500' },
-                                            { label: 'Building', value: Number(financeHealth.building_fund_total), color: 'bg-amber-500' },
-                                        ].map(fund => {
-                                            const total = Number(financeHealth.total_given_all_time);
-                                            const pct = total > 0 ? Math.round((fund.value / total) * 100) : 0;
-                                            return (
-                                                <div key={fund.label} className="space-y-1">
-                                                    <div className="flex justify-between text-xs">
-                                                        <span className="font-bold text-white">{fund.label}</span>
-                                                        <span className="text-white/40">¥{fund.value.toLocaleString()} ({pct}%)</span>
-                                                    </div>
-                                                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                                                        <div className={`h-full ${fund.color} rounded-full transition-all`} style={{ width: pct + '%' }} />
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-
-                                    {/* At-Risk Givers */}
-                                    {atRiskGivers.length > 0 && (
-                                        <div className="bg-white/5 border border-red-500/20 rounded-2xl p-5 space-y-3">
-                                            <div className="flex items-center gap-2">
-                                                <AlertTriangle className="w-4 h-4 text-red-500" />
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-red-400">Giving at Risk</p>
-                                            </div>
-                                            {atRiskGivers.map((giver: any) => (
-                                                <div key={giver.user_id} className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
-                                                    <div>
-                                                        <p className="text-xs font-bold text-white">{giver.member_name}</p>
-                                                        <p className="text-[10px] text-white/40">Last gave {giver.days_since_last_gift} days ago</p>
-                                                    </div>
-                                                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${
-                                                        giver.risk_level === 'critical' ? 'bg-red-500/10 text-red-400'
-                                                        : giver.risk_level === 'high' ? 'bg-orange-500/10 text-orange-400'
-                                                        : 'bg-yellow-500/10 text-yellow-500'
-                                                    }`}>
-                                                        {giver.risk_level}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {/* Ministry ROI Table */}
-                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Ministry Activity</p>
-                                        {ministryROI.map((m: any) => (
-                                            <div key={m.ministry_id} className="flex items-center justify-between py-2 border-b border-white/10 last:border-0">
-                                                <div>
-                                                    <p className="text-xs font-bold text-white">{m.ministry_name}</p>
-                                                    <p className="text-[10px] text-white/40">{m.team_size} members · {m.reports_submitted} reports</p>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className="text-xs font-bold text-emerald-400">
-                                                        {m.total_salvations > 0 ? m.total_salvations + ' salvations' : 'No reports'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Recurring Pledges Summary */}
-                                    {recurringHealth && (
-                                        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Recurring Pledges</p>
-                                            <div className="grid grid-cols-3 gap-3">
-                                                {[
-                                                    { label: 'Active', value: recurringHealth.active_pledges || 0, color: 'text-emerald-400' },
-                                                    { label: 'Monthly Total', value: '¥' + Math.round(recurringHealth.monthly_recurring_total || 0).toLocaleString(), color: 'text-white' },
-                                                    { label: 'Avg Pledge', value: '¥' + Math.round(recurringHealth.avg_pledge_amount || 0).toLocaleString(), color: 'text-blue-400' },
-                                                ].map(s => (
-                                                    <div key={s.label} className="space-y-1">
-                                                        <p className="text-[9px] uppercase tracking-widest text-white/30 font-black">{s.label}</p>
-                                                        <p className={`text-lg font-black ${s.color}`}>{s.value}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    )}
-
-                    {/* AI Insights Column */}
-                    <div className="space-y-4">
-                        <h2 className="text-[10px] font-black text-white/30 tracking-[0.3em] uppercase flex items-center gap-2">
-                             <Sparkles className="w-3.5 h-3.5 text-violet-400" /> AI Insights
-                        </h2>
-                        <div className="space-y-3">
-                            {insights.length === 0 ? (
-                                <div className="bg-[#0d1421]/50 border border-dashed border-white/10 rounded-3xl p-8 text-center">
-                                    <p className="text-xs text-white/20 font-bold uppercase tracking-widest">Searching for patterns...</p>
-                                    <p className="text-[10px] text-white/10 mt-1">Approved insights will appear here</p>
-                                </div>
-                            ) : (
-                                insights.map(insight => (
-                                    <InsightCard key={insight.id} insight={insight} />
-                                ))
-                            )}
-                        </div>
-                    </div>
-                </div>
-                {/* Communications Hub — scoped to this ministry */}
-                {orgId && session && (
-                    <div className="space-y-3">
-                        <h2 className="text-[10px] font-black text-white/30 tracking-[0.3em] uppercase">Communications</h2>
-                        <CommsTab
-                            userId={session.userId}
-                            orgId={orgId}
-                            userRole="ministry_lead"
-                            scopedMinistryId={session.ministryId}
-                        />
-                    </div>
-                )}
-            </div>
+            <LeaderProfileExtension 
+                isOpen={isProfileOpen}
+                onClose={() => setIsProfileOpen(false)}
+            />
         </div>
+    );
+}
     );
 }
 
