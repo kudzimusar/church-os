@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MinistryReportModal } from "./MinistryReportModal";
 import { MinistryBroadcastModal } from "./MinistryBroadcastModal";
-import { useAdminCtx } from "../../Context";
+import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
 
 interface MinistryIntelligenceSiloProps {
   ministryId: string;
