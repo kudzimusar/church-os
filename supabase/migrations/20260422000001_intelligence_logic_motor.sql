@@ -83,6 +83,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS update_health_on_metric_log ON public.ministry_metric_logs;
 CREATE TRIGGER update_health_on_metric_log
 AFTER INSERT ON public.ministry_metric_logs
 FOR EACH ROW EXECUTE FUNCTION public.tr_update_ministry_health();
@@ -101,6 +102,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS report_heartbeat ON public.ministry_metric_logs;
 CREATE TRIGGER report_heartbeat
 AFTER INSERT ON public.ministry_metric_logs
 FOR EACH ROW

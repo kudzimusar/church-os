@@ -376,12 +376,12 @@ LEFT JOIN LATERAL (
 ) ml ON true;
 
 CREATE OR REPLACE VIEW public.vw_leader_profile_summary AS
-SELECT 
+SELECT
     p.id as user_id,
-    p.full_name,
+    p.name as full_name,
     p.avatar_url,
     p.years_in_japan,
-    p.language_proficiency,
+    p.preferred_language as language_proficiency,
     om.role,
     om.ministry_id,
     m.name as ministry_name,
