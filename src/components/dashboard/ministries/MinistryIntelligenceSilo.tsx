@@ -214,10 +214,16 @@ export function MinistryIntelligenceSilo({
       </section>
 
       {/* ② HERO SECTION */}
-      <section className="relative rounded-[32px] p-8 overflow-hidden bg-muted/30 border border-border">
+      <section 
+        className="relative rounded-[32px] p-8 overflow-hidden border"
+        style={{
+          background: `linear-gradient(135deg, ${color}33 0%, ${color}1A 45%, transparent 100%)`,
+          borderColor: `${color}40`
+        }}
+      >
         <div 
-           className="absolute inset-0 opacity-[0.08]" 
-           style={{ background: `linear-gradient(135deg, ${color} 0%, transparent 100%)` }} 
+           className="absolute -top-12 -right-8 w-72 h-72 rounded-full pointer-events-none" 
+           style={{ background: `radial-gradient(circle, ${color}26, transparent 70%)` }} 
         />
         <div className="relative flex flex-col lg:flex-row items-end justify-between gap-8">
            <div className="max-w-xl">
