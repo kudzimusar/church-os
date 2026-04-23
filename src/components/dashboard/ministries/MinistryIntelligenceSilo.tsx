@@ -51,6 +51,7 @@ export function MinistryIntelligenceSilo({
   const [commsTab, setCommsTab] = useState("ALL");
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
+  const [isAttendanceOpen, setIsAttendanceOpen] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
 
   const getMinistryOps = (slug: string) => {
@@ -59,7 +60,8 @@ export function MinistryIntelligenceSilo({
       { id: 'attendance', icon: <Plus size={14} />, label: 'Quick Attendance', sub: 'Log service headcounts' },
       { id: 'events', icon: <Calendar size={14} />, label: 'Ministry Events', sub: 'Manage retreats' },
       { id: 'team', icon: <Users size={14} />, label: 'Manage Team', sub: 'Assign roles' },
-      { id: 'analytics', icon: <Activity size={14} />, label: 'Analytics', sub: 'Performance metrics' }
+      { id: 'analytics', icon: <Activity size={14} />, label: 'Analytics', sub: 'Performance metrics' },
+      { id: 'announcements', icon: <Mail size={14} />, label: 'Announcements', sub: 'Messages from leadership' }
     ];
 
     const specific: Record<string, any[]> = {
@@ -234,13 +236,12 @@ export function MinistryIntelligenceSilo({
                {intelligence.name}
              </h2>
              <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-               Leading the congregation into God&apos;s presence through music and arts. 
-               Saturday evening rehearsals. Assign roles and volunteers below.
+                {intelligence.description || `Intelligence silo for the ${intelligence.name}. Track health, team engagement, and AI-driven growth metrics.`}
              </p>
              <div className="flex gap-2 flex-wrap">
-               <HeroStat label="NEXT REHEARSAL" value="Sat, Apr 26" />
-               <HeroStat label="TEAM" value="18 members" />
-               <HeroStat label="LAST REPORT" value={metrics.length > 0 ? "Active" : "Pending"} />
+               <HeroStat label="TEAM" value={intelligence.team_count != null ? `${intelligence.team_count} members` : 'No data'} />
+               <HeroStat label="REPORTS THIS MONTH" value={intelligence.reports_this_month != null ? String(intelligence.reports_this_month) : '0'} />
+               <HeroStat label="STATUS" value={intelligence.health_score >= 60 ? "Active" : intelligence.health_score > 0 ? "At Risk" : "Pending"} />
              </div>
            </div>
            
@@ -263,8 +264,15 @@ export function MinistryIntelligenceSilo({
                <OpItem 
                  key={op.id}
                  onClick={() => {
-                   if (op.id === 'report') setIsReportOpen(true);
-                   // Handle other clicks if needed
+                   if (op.id === 'report')      { setIsReportOpen(true); }
+                   else if (op.id === 'attendance') { setIsAttendanceOpen(true); }
+                   else if (op.id === 'events')  { window.open(`/shepherd/dashboard/events`, '_self'); }
+                   else if (op.id === 'team')    { window.open(`/shepherd/dashboard/members`, '_self'); }
+                   else if (op.id === 'analytics') { window.open(`/shepherd/dashboard/analytics`, '_self'); }
+                   else if (op.id === 'announcements') { setCommsTab('announcement'); }
+                   else if (op.id === 'manual' || op.id === 'runsheet' || op.id === 'pipeline' || op.id === 'roster' || op.id === 'sermon_hub' || op.id === 'setlists') {
+                     window.open(`/shepherd/dashboard`, '_self');
+                   }
                  }} 
                  icon={op.icon} 
                  label={op.label} 
@@ -292,15 +300,21 @@ export function MinistryIntelligenceSilo({
            
            <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm">
              <div className="px-6 py-4 flex gap-2 border-bottom border-border overflow-x-auto no-scrollbar">
-                {["ALL", "all_volunteers", "emergency", "announcement"].map(t => (
+                {[
+                   { key: "ALL",           label: "All" },
+                   { key: "broadcast",     label: "Broadcast" },
+                   { key: "all_volunteers",label: "Team" },
+                   { key: "emergency",     label: "Crisis" },
+                   { key: "announcement",  label: "Announcements" }
+                 ].map(({ key, label }) => (
                   <button 
-                    key={t}
-                    onClick={() => setCommsTab(t)}
-                    className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all uppercase tracking-widest ${
-                      commsTab === t ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                    key={key}
+                    onClick={() => setCommsTab(key)}
+                    className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all uppercase tracking-widest whitespace-nowrap ${
+                      commsTab === key ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                     }`}
                   >
-                    {t === "all_volunteers" ? "Team" : t === "emergency" ? "Crisis" : t}
+                    {label}
                   </button>
                 ))}
              </div>
@@ -360,6 +374,30 @@ export function MinistryIntelligenceSilo({
          ministryId={ministryId}
          ministryName={intelligence.name}
       />
+
+      {/* QUICK ATTENDANCE MODAL */}
+       {isAttendanceOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setIsAttendanceOpen(false)} />
+          <div className="relative w-full max-w-md bg-card border border-border rounded-[32px] shadow-2xl p-8 space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-[10px] font-black text-primary uppercase tracking-widest">{intelligence.name}</p>
+                <h2 className="text-xl font-black text-foreground">Quick Attendance</h2>
+              </div>
+              <button onClick={() => setIsAttendanceOpen(false)} className="p-2 hover:bg-muted rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <QuickAttendanceForm 
+              ministryId={ministryId} 
+              ministryName={intelligence.name} 
+              color={intelligence.primary_color || '#8B5CF6'}
+              onClose={() => { setIsAttendanceOpen(false); loadSilo(); }} 
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -430,5 +468,76 @@ function OpItem({ icon, label, sub, onClick }: any) {
        </div>
        <ChevronRight className="w-3 h-3 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-all translate-x--2 group-hover:translate-x-0" />
     </button>
+  );
+}
+
+function QuickAttendanceForm({ ministryId, ministryName, color, onClose }: any) {
+  const [count, setCount] = useState<number | ''>('');
+  const [note, setNote] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!count || Number(count) < 0) return;
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase.from('ministry_metric_logs').insert({
+        ministry_id: ministryId,
+        metric_key: 'attendance',
+        value: Number(count),
+        recorded_by: user?.id,
+      });
+      if (error) throw error;
+      setSuccess(true);
+      setTimeout(() => { setSuccess(false); onClose(); }, 1800);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to log attendance.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) return (
+    <div className="py-10 flex flex-col items-center gap-3 text-center">
+      <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl" style={{ background: color }}>✓</div>
+      <p className="text-sm font-black text-foreground">Attendance Logged!</p>
+      <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Health score will update shortly</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      <div className="space-y-2">
+        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Headcount</label>
+        <input
+          type="number"
+          min="0"
+          value={count}
+          onChange={e => setCount(e.target.value === '' ? '' : Number(e.target.value))}
+          placeholder="e.g. 45"
+          className="w-full bg-muted/20 border border-border rounded-2xl py-3 px-4 text-2xl font-black text-foreground outline-none focus:border-primary/50 text-center"
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Note (optional)</label>
+        <input
+          type="text"
+          value={note}
+          onChange={e => setNote(e.target.value)}
+          placeholder="e.g. Special service, rainy day..."
+          className="w-full bg-muted/20 border border-border rounded-2xl py-3 px-4 text-xs font-bold text-foreground outline-none focus:border-primary/50"
+        />
+      </div>
+      <button
+        onClick={handleSubmit}
+        disabled={loading || count === ''}
+        className="w-full h-14 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase text-white transition-all active:scale-95 disabled:opacity-40"
+        style={{ background: color }}
+      >
+        {loading ? 'LOGGING...' : 'LOG ATTENDANCE'}
+      </button>
+    </div>
   );
 }

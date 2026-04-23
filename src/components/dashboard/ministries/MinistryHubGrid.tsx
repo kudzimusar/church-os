@@ -92,10 +92,10 @@ export function MinistryHubGrid({ onSelect, userId }: MinistryHubGridProps) {
               pointerEvents: 'auto'
             }}
           >
-            {/* Top accent line */}
+            {/* Top accent line - Fix #8: use m.secondary_color from DB */}
             <div 
               className="absolute top-0 left-0 right-0 h-1" 
-              style={{ background: `linear-gradient(90deg, ${color}, #6D28D9)` }} 
+              style={{ background: `linear-gradient(90deg, ${color}, ${m.secondary_color || '#6D28D9'})` }} 
             />
             
             <div className="flex justify-between items-start mb-4">
@@ -103,19 +103,22 @@ export function MinistryHubGrid({ onSelect, userId }: MinistryHubGridProps) {
                 <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color }}>{m.intelligence_tag || 'DECENTRALIZED'}</p>
                 <h3 className="text-lg font-black text-foreground leading-tight">{m.name}</h3>
               </div>
+              {/* Fix #9: dynamic role badge */}
               <Badge className="bg-primary/20 text-primary border-0 text-[8px] font-black tracking-widest uppercase">
-                LEADER
+                {userId && m.leader_id === userId ? 'LEADER' : 'MEMBER'}
               </Badge>
             </div>
 
+            {/* Fix #5: dynamic description from DB */}
             <p className="text-xs text-muted-foreground/70 leading-relaxed mb-6 line-clamp-2">
-              Management and intelligence silo for the {m.name}. Track health, team engagement, and AI-driven growth metrics.
+              {m.description || `Intelligence silo for the ${m.name}.`}
             </p>
 
             <div className="grid grid-cols-3 gap-2">
-               <HubStat label="HEALTH" value={m.health_score || "72"} color={color} />
-               <HubStat label="TREND" value={m.trend_direction?.toUpperCase() || "STABLE"} />
-               <HubStat label="LOGS" value={m.slug === 'worship' ? '4' : '—'} />
+               <HubStat label="HEALTH" value={m.health_score || "—"} color={color} />
+               <HubStat label="TREND" value={m.trend_direction?.toUpperCase() || "—"} />
+               {/* Fix #6: dynamic reports count from DB */}
+               <HubStat label="REPORTS" value={m.reports_this_month != null ? String(m.reports_this_month) : '—'} />
             </div>
 
             <div className="mt-4 flex justify-end">

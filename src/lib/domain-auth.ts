@@ -60,7 +60,7 @@ export const DomainAuth = {
       'console': '/super-admin',
       'pastor-hq': '/pastor-hq',
       'mission-control': '/shepherd/dashboard',
-      'ministry': '/shepherd/dashboard',
+      'ministry': '/ministry-dashboard',
       'profile': '/member/profile',
       'onboarding': '/onboarding',
       'kingdom-class': '/kingdom-class-control'
