@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { DomainAuth, AuthContext } from "@/lib/domain-auth";
 import { Flame, Shield, Church, Users, ArrowRight, Loader2, BookOpen } from "lucide-react";
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 function ContextSelectorContent() {
   const router = useRouter();

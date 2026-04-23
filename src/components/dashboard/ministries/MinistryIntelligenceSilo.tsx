@@ -53,6 +53,38 @@ export function MinistryIntelligenceSilo({
   const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
 
+  const getMinistryOps = (slug: string) => {
+    const defaults = [
+      { id: 'report', icon: <CheckCircle2 size={14} />, label: 'Submit Report', sub: 'Ministry performance' },
+      { id: 'attendance', icon: <Plus size={14} />, label: 'Quick Attendance', sub: 'Log service headcounts' },
+      { id: 'events', icon: <Calendar size={14} />, label: 'Ministry Events', sub: 'Manage retreats' },
+      { id: 'team', icon: <Users size={14} />, label: 'Manage Team', sub: 'Assign roles' },
+      { id: 'analytics', icon: <Activity size={14} />, label: 'Analytics', sub: 'Performance metrics' }
+    ];
+
+    const specific: Record<string, any[]> = {
+      media: [
+        { id: 'report', icon: <CheckCircle2 size={14} />, label: 'Submit Ministry Report', sub: 'Submit media report' },
+        { id: 'manual', icon: <Activity size={14} />, label: 'Media Operations Manual', sub: 'SOPs and guides' },
+        { id: 'runsheet', icon: <Calendar size={14} />, label: 'Service Media Run Sheet', sub: 'Weekend planning' },
+        { id: 'pipeline', icon: <Sparkles size={14} />, label: 'Content Pipeline', sub: 'Socials & broadcast' },
+        { id: 'roster', icon: <Users size={14} />, label: 'Tech Team Roster', sub: 'Volunteer schedule' },
+        { id: 'sermon_hub', icon: <Activity size={14} />, label: 'Sermon Hub', sub: 'Asset management' }
+      ],
+      worship: [
+        { id: 'report', icon: <CheckCircle2 size={14} />, label: 'Submit Report', sub: 'Rehearsal attendance' },
+        { id: 'attendance', icon: <Plus size={14} />, label: 'Quick Attendance', sub: 'Log service headcounts' },
+        { id: 'events', icon: <Calendar size={14} />, label: 'Ministry Events', sub: 'Manage retreats' },
+        { id: 'team', icon: <Users size={14} />, label: 'Manage Team', sub: 'Assign roles' },
+        { id: 'analytics', icon: <Activity size={14} />, label: 'Analytics', sub: 'Performance metrics' },
+        { id: 'setlists', icon: <Sparkles size={14} />, label: 'Setlists', sub: 'Weekend planning' }
+      ]
+    };
+
+    return specific[slug] || defaults;
+  };
+
+
   const loadSilo = async () => {
     const [intelRes, metricsRes, commsRes] = await Promise.all([
       supabase.from('vw_ministry_intelligence').select('*').eq('ministry_id', ministryId).single(),
@@ -220,12 +252,19 @@ export function MinistryIntelligenceSilo({
         {/* Left Sidebar Ops */}
         <div className="bg-card border border-border rounded-3xl p-4 h-fit">
            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4 px-2">Silo Operations</p>
-           <div className="space-y-1">
-             {isLeader && <OpItem onClick={() => setIsReportOpen(true)} icon={<CheckCircle2 />} label="Submit Report" sub="Rehearsal attendance" />}
-             <OpItem icon={<Plus />} label="Quick Attendance" sub="Log service headcounts" />
-             <OpItem icon={<Calendar />} label="Ministry Events" sub="Manage retreats" />
-             {isLeader && <OpItem icon={<Users />} label="Manage Team" sub="Assign roles" />}
-             <OpItem icon={<Activity />} label="Analytics" sub="Performance metrics" />
+                      <div className="space-y-1">
+             {getMinistryOps(ministrySlug).map(op => (
+               <OpItem 
+                 key={op.id}
+                 onClick={() => {
+                   if (op.id === 'report') setIsReportOpen(true);
+                   // Handle other clicks if needed
+                 }} 
+                 icon={op.icon} 
+                 label={op.label} 
+                 sub={op.sub} 
+               />
+             ))}
            </div>
         </div>
 
