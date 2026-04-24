@@ -155,7 +155,7 @@ export default function GiveClient() {
   };
 
   return (
-    <div className="min-h-screen selection:bg-[var(--primary)] selection:text-white">
+    <div className="min-h-screen selection:bg-[var(--primary)] selection:text-white bg-gradient-to-b from-muted/60 via-background to-background">
       {/* Hero Section */}
       <section data-section="give-hero" className="relative h-[70vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
@@ -387,7 +387,7 @@ export default function GiveClient() {
                     { usd: '$100.00', jpy: '¥10,000' },
                     { usd: '$1,000.00', jpy: '¥100,000' }
                   ].map((pair, idx) => (
-                    <div key={idx} className="bg-white/40 p-4 rounded-2xl border border-[var(--primary)]/5 text-center">
+                    <div key={idx} className="bg-card/60 p-4 rounded-2xl border border-[var(--primary)]/10 text-center">
                       <p className="text-xs font-black text-muted-foreground uppercase mb-1">{pair.usd}</p>
                       <p className="text-lg font-black text-[var(--primary)]">{pair.jpy}</p>
                     </div>
@@ -403,7 +403,7 @@ export default function GiveClient() {
 
           <div className="relative group">
             <div className="absolute inset-0 bg-[var(--primary)] blur-3xl opacity-10 group-hover:opacity-20 transition-opacity" />
-            <div className="relative glass rounded-[3rem] p-12 border border-[var(--primary)]/10 bg-white shadow-2xl overflow-hidden">
+            <div className="relative glass rounded-[3rem] p-12 border border-[var(--primary)]/10 bg-card shadow-2xl overflow-hidden">
                <div className="w-20 h-20 rounded-full bg-[var(--primary)]/10 flex items-center justify-center mx-auto text-[var(--primary)]">
                   <DollarSign className="w-10 h-10" />
                </div>
@@ -431,7 +431,7 @@ export default function GiveClient() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Cash App */}
-            <div className="glass rounded-[2rem] p-10 border border-[var(--primary)]/10 bg-white/50 space-y-6 hover:border-emerald-500/30 transition-all group">
+            <div className="glass rounded-[2rem] p-10 border border-[var(--primary)]/10 bg-card/80 space-y-6 hover:border-emerald-500/30 transition-all group">
               <div className="w-12 h-12 text-emerald-600">
                 <CashAppIcon />
               </div>
@@ -461,7 +461,7 @@ export default function GiveClient() {
             </div>
 
             {/* Zelle */}
-            <div className="glass rounded-[2rem] p-10 border border-[var(--primary)]/10 bg-white/50 space-y-6 hover:border-violet-500/30 transition-all group">
+            <div className="glass rounded-[2rem] p-10 border border-[var(--primary)]/10 bg-card/80 space-y-6 hover:border-violet-500/30 transition-all group">
               <div className="w-12 h-12 text-violet-600">
                 <ZelleIcon />
               </div>
@@ -496,7 +496,7 @@ export default function GiveClient() {
             </div>
 
             {/* Wells Fargo */}
-            <div className="glass rounded-[2rem] p-10 border border-[var(--primary)]/10 bg-white/50 space-y-6 hover:border-amber-600/30 transition-all group">
+            <div className="glass rounded-[2rem] p-10 border border-[var(--primary)]/10 bg-card/80 space-y-6 hover:border-amber-600/30 transition-all group">
               <Landmark className="w-10 h-10 text-amber-600" />
               <div className="space-y-1">
                 <h3 className="text-xl font-black text-foreground">Wells Fargo</h3>
@@ -566,7 +566,7 @@ export default function GiveClient() {
         </section>
 
         {/* Method 7: MUFG Japan */}
-        <section data-section="give-domestic" className="relative overflow-hidden glass rounded-[4rem] border border-[var(--primary)]/10 bg-white">
+        <section data-section="give-domestic" className="relative overflow-hidden glass rounded-[4rem] border border-[var(--primary)]/10 bg-card">
            <div className="absolute top-0 right-0 w-96 h-96 bg-red-600/5 blur-[120px] rounded-full -mr-48 -mt-48" />
            <div className="p-12 md:p-20 relative z-10 grid lg:grid-cols-5 gap-16 items-center">
               <div className="lg:col-span-2 space-y-8">
@@ -623,7 +623,7 @@ export default function GiveClient() {
               <div 
                 key={i} 
                 id={card.title.toLowerCase()}
-                className="glass rounded-3xl p-8 border border-[var(--primary)]/10 bg-white/50 space-y-4 hover:border-[var(--primary)]/30 transition-all group shadow-sm hover:shadow-md"
+                className="glass rounded-3xl p-8 border border-[var(--primary)]/10 bg-card/80 space-y-4 hover:border-[var(--primary)]/30 transition-all group shadow-sm hover:shadow-md"
               >
                 <div className="w-12 h-12 rounded-2xl bg-[var(--primary)]/5 flex items-center justify-center text-[var(--primary)]/40 group-hover:text-[var(--primary)] group-hover:bg-[var(--primary)]/10 transition-all">
                    <card.icon className="w-6 h-6" />
@@ -640,7 +640,7 @@ export default function GiveClient() {
         {/* Monthly Partner */}
         <section data-section="give-partner" className="relative">
            <div className="absolute inset-0 bg-gradient-to-r from-[var(--primary)] to-indigo-600 rounded-[4rem] blur-[100px] opacity-10" />
-           <div className="relative glass rounded-[4rem] border border-[var(--primary)]/10 bg-white p-12 md:p-24 text-center space-y-10 overflow-hidden shadow-2xl">
+           <div className="relative glass rounded-[4rem] border border-[var(--primary)]/10 bg-card p-12 md:p-24 text-center space-y-10 overflow-hidden shadow-2xl">
               <div className="space-y-4 relative z-10">
                 <p className="text-[10px] font-black tracking-[0.5em] text-[var(--primary)] uppercase">Legacy Building</p>
                 <h2 className="text-4xl md:text-7xl font-black text-foreground">Become a <span className="font-serif italic font-medium text-[var(--secondary)]">Monthly Partner</span></h2>

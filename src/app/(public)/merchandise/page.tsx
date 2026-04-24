@@ -232,7 +232,7 @@ export default function MerchandisePage() {
                                 animate={{ opacity: 1, x: 0 }}
                                 className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white"
                             >
-                                <Sparkles size={16} className="text-primary" />
+                                <Sparkles size={16} className="text-secondary" />
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] mt-0.5 whitespace-nowrap">Kingdom Exclusive Collection</span>
                             </motion.div>
                             
@@ -241,17 +241,18 @@ export default function MerchandisePage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="space-y-4"
                             >
-                                <h2 className="text-primary font-black uppercase tracking-[0.3em] text-[8px]">{featuredProduct?.category?.name || "Prophetic Essentials"}</h2>
+                                <h2 className="text-secondary font-black uppercase tracking-[0.3em] text-[8px]">{featuredProduct?.category?.name || "Prophetic Essentials"}</h2>
                                 <h1 className="text-3xl md:text-5xl lg:text-5xl font-black tracking-tight uppercase leading-[0.95]">
                                     {featuredProduct ? (
                                         <>
                                             {featuredProduct.name.split(' ').slice(0, 2).join(' ')} <br />
-                                            <span className="text-primary italic text-2xl md:text-4xl lg:text-4xl">
+                                            <span className="text-secondary italic text-2xl md:text-4xl lg:text-4xl">
                                                 {featuredProduct.name.split(' ').slice(2).join(' ')}
                                             </span>
                                         </>
                                     ) : (
-                                        <>EQUIP THE <br /><span className="text-primary italic text-2xl md:text-4xl lg:text-4xl">VISION</span></>
+                                        <>EQUIP THE <br /><span className="text-secondary italic text-2xl md:text-4xl lg:text-4xl">VISION</span></>
+
                                     )}
                                 </h1>
                             </motion.div>
@@ -311,7 +312,7 @@ export default function MerchandisePage() {
                                          />
                                          {featuredProduct && (
                                              <div className="absolute bottom-8 left-8 right-8 z-10 bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/10 transform -rotate-1">
-                                                 <p className="text-[8px] font-black uppercase tracking-[0.3em] mb-1 text-primary/80">Featured {featuredProduct.category?.name || "Resource"}</p>
+                                                 <p className="text-[8px] font-black uppercase tracking-[0.3em] mb-1 text-secondary/80">Featured {featuredProduct.category?.name || "Resource"}</p>
                                                  <h3 className="text-xl font-black uppercase tracking-tight leading-none text-white">{featuredProduct.name}</h3>
                                              </div>
                                          )}
@@ -328,7 +329,7 @@ export default function MerchandisePage() {
                 <div className="container mx-auto max-w-7xl px-4 flex justify-center">
                     <div className="relative w-full max-w-2xl group">
                         <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity" />
-                        <div className="relative flex items-center bg-white border-2 border-border/50 rounded-full px-6 h-14 shadow-lg group-focus-within:border-primary/50 transition-all">
+                        <div className="relative flex items-center bg-card border-2 border-border/50 rounded-full px-6 h-14 shadow-lg group-focus-within:border-primary/50 transition-all">
                             <Search size={20} className="text-muted-foreground group-focus-within:text-primary transition-colors" />
                             <input 
                                 type="text" 
@@ -362,7 +363,7 @@ export default function MerchandisePage() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <div className="flex items-center bg-white border-2 border-border/50 rounded-xl p-1">
+                        <div className="flex items-center bg-card border-2 border-border/50 rounded-xl p-1">
                             <Button 
                                 variant={viewMode === "grid" ? "default" : "ghost"} 
                                 size="icon" 
@@ -392,7 +393,7 @@ export default function MerchandisePage() {
                         <p className="font-black text-[10px] uppercase tracking-[0.4em] text-muted-foreground animate-pulse">Gathering Global Harvest...</p>
                     </div>
                 ) : filteredProducts.length === 0 ? (
-                    <div className="text-center py-40 border-4 border-dashed border-border rounded-[4rem] bg-white">
+                    <div className="text-center py-40 border-4 border-dashed border-border rounded-[4rem] bg-card">
                         <Package size={80} className="mx-auto mb-8 text-muted-foreground opacity-20" />
                         <h3 className="text-4xl font-black uppercase tracking-tight mb-4">Stock In Transit</h3>
                         <p className="text-muted-foreground max-w-sm mx-auto font-medium">Our collection is currently being restocked for the new season. Check back soon for the Kingdom exclusive drop.</p>
@@ -410,7 +411,7 @@ export default function MerchandisePage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.4, delay: idx * 0.03 }}
                             >
-                                <Card className={`group relative overflow-hidden bg-white border border-border/50 hover:border-primary/30 transition-all duration-300 rounded-xl md:rounded-2xl shadow-sm hover:shadow-md ${viewMode === "list" ? "flex flex-row h-32 md:h-40" : "flex flex-col"}`}>
+                                <Card className={`group relative overflow-hidden bg-card border border-border/50 hover:border-primary/30 transition-all duration-300 rounded-xl md:rounded-2xl shadow-sm hover:shadow-md ${viewMode === "list" ? "flex flex-row h-32 md:h-40" : "flex flex-col"}`}>
                                     {/* Link covers the image and title area but not the CTA button */}
                                     <div className="relative h-full flex flex-col flex-1">
                                         <Link href={`/merchandise/${product.slug}`} className="block relative overflow-hidden flex-1">
@@ -468,7 +469,7 @@ export default function MerchandisePage() {
                                                     <Button 
                                                         onClick={() => addToCart(product)}
                                                         disabled={product.stock_quantity === 0}
-                                                        className="w-full h-8 rounded-lg bg-foreground hover:bg-black text-background font-black text-[8px] uppercase tracking-widest active:scale-95 transition-all"
+                                                        className="w-full h-8 rounded-lg bg-foreground hover:bg-foreground/80 text-background font-black text-[8px] uppercase tracking-widest active:scale-95 transition-all"
                                                     >
                                                         <ShoppingCart className="mr-1.5" size={10} />
                                                         Add to Cart
@@ -485,7 +486,7 @@ export default function MerchandisePage() {
             </main>
 
             {/* 4. VALUE PROPS / TRUST */}
-            <section className="py-32 border-t border-border/50 bg-white">
+            <section className="py-32 border-t border-border/50 bg-muted/30">
                 <div className="container mx-auto max-w-7xl px-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-16 text-center">
                         <div className="space-y-6">
