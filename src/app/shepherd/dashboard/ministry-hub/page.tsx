@@ -222,9 +222,15 @@ export default function MinistryHub() {
                                         <Sparkles className="w-3 h-3 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </div>
                                     <div className="flex flex-wrap gap-1 mt-2">
-                                        {talent.skills?.slice(0, 3).map((s: string) => (
-                                            <span key={s} className="text-[8px] font-black bg-muted text-muted-foreground px-1.5 py-0.5 rounded uppercase tracking-tighter">{s}</span>
-                                        ))}
+                                        {talent.skills?.slice(0, 3).map((s: any, idx: number) => {
+                                            const skillName = typeof s === 'string' ? s : s?.skill;
+                                            if (!skillName) return null;
+                                            return (
+                                                <span key={idx} className="text-[8px] font-black bg-muted text-muted-foreground px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                                                    {skillName}
+                                                </span>
+                                            );
+                                        })}
                                     </div>
                                     <p className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold mt-2 uppercase tracking-widest">Match: {talent.current_ministries?.length ? 'Cross-Ministry Potential' : 'Unassigned Talent'}</p>
                                 </div>
