@@ -150,7 +150,7 @@ export default function PublicFooter() {
                 { label: 'Academy', href: '/welcome/ministries/language-school' },
                 { label: 'Staff', href: '/welcome/staff' },
               ].map(link => (
-                <Link key={link.label} href={slug ? `/${slug}${link.href}` : link.href}
+                <Link key={link.label} href={link.href}
                   className="text-sm font-bold hover:text-[var(--jkc-gold)] transition-colors"
                   style={{ color: mutedText }}>
                   {link.label}
