@@ -27,7 +27,7 @@ export default function VisitPage() {
       <section className="relative py-32 px-6 flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="/jkc/images/church/building-exterior.webp" 
+            src="/images/church/building-exterior.webp" 
             alt="Church Exterior" 
             className="w-full h-full object-cover opacity-20"
           />
@@ -71,7 +71,7 @@ export default function VisitPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="rounded-[2.5rem] overflow-hidden aspect-video border border-[var(--foreground)]/10 card-surface">
                 <img
-                  src="/jkc/images/church/building-exterior.webp"
+                  src="/images/church/building-exterior.webp"
                   alt="Japan Kingdom Church building exterior"
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -79,7 +79,7 @@ export default function VisitPage() {
               </div>
               <div className="rounded-[2.5rem] overflow-hidden aspect-video border border-[var(--foreground)]/10 card-surface">
                 <img
-                  src="/jkc/images/church/building-banner.png"
+                  src="/images/church/building-banner.png"
                   alt="Japan Kingdom Church banner"
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -90,7 +90,7 @@ export default function VisitPage() {
             <div className="grid grid-cols-2 gap-6 mt-6">
               <div className="rounded-3xl overflow-hidden aspect-video border border-[var(--foreground)]/10 card-surface">
                 <img
-                  src="/jkc/images/church/parking-1.webp"
+                  src="/images/church/parking-1.webp"
                   alt="Church parking area"
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -98,7 +98,7 @@ export default function VisitPage() {
               </div>
               <div className="rounded-3xl overflow-hidden aspect-video border border-[var(--foreground)]/10 card-surface">
                 <img
-                  src="/jkc/images/church/parking-2.webp"
+                  src="/images/church/parking-2.webp"
                   alt="Church parking area 2"
                   className="w-full h-full object-cover"
                   loading="lazy"

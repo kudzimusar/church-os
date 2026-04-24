@@ -248,7 +248,7 @@ export default function HeroSection({ user }: { user?: any }) {
         loop
         playsInline
         className="absolute inset-0 w-full h-full object-cover z-0"
-        poster="/jkc/images/hero-background.jpg"
+        poster="/images/hero-background.jpg"
       >
         <source 
           src="https://video.wixstatic.com/video/b25f99_e2700740cf4c4191b1d0a25f23ec0917/1080p/mp4/file.mp4" 

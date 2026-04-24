@@ -301,7 +301,7 @@ export default function MerchandisePage() {
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full p-12">
                                      <div className="w-full h-full bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] transform rotate-2 border-2 border-white/10 overflow-hidden group relative">
                                          <img 
-                                            src={featuredProduct?.images?.[0] || "/jkc/images/books/book-power-of-purpose.png"} 
+                                            src={featuredProduct?.images?.[0] || "/images/books/book-power-of-purpose.png"} 
                                             alt={featuredProduct?.name || "Featured Product"} 
                                             className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-700"
                                             onError={(e) => {

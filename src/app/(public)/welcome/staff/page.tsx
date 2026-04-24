@@ -7,49 +7,49 @@ export default function StaffPage() {
     {
       name: 'Pastor Marcel Jonte Gadsden',
       role: 'Senior Pastor',
-      photo: '/jkc/images/staff/pastor-marcel.jpg',
+      photo: '/images/staff/pastor-marcel.jpg',
       link: '/welcome/our-pastor'
     },
     {
       name: 'Elder Sanna Patterson',
       role: 'Assistant Pastor / Discipleship Director',
-      photo: '/jkc/images/staff/sanna-patterson.jpg',
+      photo: '/images/staff/sanna-patterson.jpg',
       link: '/welcome/ministries/discipleship'
     },
     {
       name: 'Min. Yutaka Nakamura',
       role: 'Teacher / Fellowship Director',
-      photo: '/jkc/images/staff/yutaka-nakamura.jpg',
+      photo: '/images/staff/yutaka-nakamura.jpg',
       link: '/welcome/ministries/fellowship'
     },
     {
       name: 'Eri Kudo',
       role: 'Worship Director',
-      photo: '/jkc/images/staff/eri-kudo.jpg',
+      photo: '/images/staff/eri-kudo.jpg',
       link: '/welcome/ministries/worship'
     },
     {
       name: 'Eiko Kuboyama',
       role: 'Evangelism Director / Finance Leader',
-      photo: '/jkc/images/staff/eiko-kuboyama.jpg',
+      photo: '/images/staff/eiko-kuboyama.jpg',
       link: '/welcome/ministries/evangelism'
     },
     {
       name: 'Yurie Suzuki',
       role: 'Welcome Director',
-      photo: '/jkc/images/staff/yurie-suzuki.jpg',
+      photo: '/images/staff/yurie-suzuki.jpg',
       link: '/welcome/ministries/hospitality'
     },
     {
       name: 'Naomi Yamamoto',
       role: 'Youth Director',
-      photo: '/jkc/images/staff/naomi-yamamoto.jpg',
+      photo: '/images/staff/naomi-yamamoto.jpg',
       link: '/welcome/ministries/youth'
     },
     {
       name: 'Itsuki Kuboyama',
       role: 'Language Class Director',
-      photo: '/jkc/images/staff/itsuki-kuboyama.jpg',
+      photo: '/images/staff/itsuki-kuboyama.jpg',
       link: '/welcome/ministries/language-school'
     },
   ];
@@ -60,7 +60,7 @@ export default function StaffPage() {
       <section className="relative py-32 px-6 flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="/jkc/images/hero-background.jpg" 
+            src="/images/hero-background.jpg" 
             alt="Staff Background" 
             className="w-full h-full object-cover opacity-20"
           />

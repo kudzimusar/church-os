@@ -35,7 +35,7 @@ export default function AboutClient() {
             <div className="relative w-full max-w-[280px] md:max-w-none mx-auto md:mx-0">
               <div className="relative z-10 transform -rotate-1 hover:rotate-0 transition-transform duration-700">
                 <img 
-                  src="/jkc/images/pastor/pastor-and-chiaki.png" 
+                  src="/images/pastor/pastor-and-chiaki.png" 
                   alt="Pastor Marcel & Chiaki" 
                   className="w-full h-auto drop-shadow-[0_10px_30px_rgba(0,0,0,0.3)] md:drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
                 />
@@ -99,10 +99,10 @@ export default function AboutClient() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 pb-8">
-            <img src="/jkc/images/history/beginning-1.png" className="w-full aspect-square object-cover rounded-3xl grayscale hover:grayscale-0 transition-all duration-500 hover:scale-105 shadow-xl" alt="History" />
-            <img src="/jkc/images/history/beginning-2.png" className="w-full aspect-square object-cover rounded-3xl grayscale hover:grayscale-0 transition-all duration-500 hover:scale-105 shadow-xl" alt="History" />
-            <img src="/jkc/images/history/beginning-3.png" className="w-full aspect-square object-cover rounded-3xl grayscale hover:grayscale-0 transition-all duration-500 hover:scale-105 shadow-xl" alt="History" />
-            <img src="/jkc/images/church/building-banner.png" className="w-full aspect-square object-cover rounded-3xl grayscale hover:grayscale-0 transition-all duration-500 hover:scale-105 shadow-xl" alt="History" />
+            <img src="/images/history/beginning-1.png" className="w-full aspect-square object-cover rounded-3xl grayscale hover:grayscale-0 transition-all duration-500 hover:scale-105 shadow-xl" alt="History" />
+            <img src="/images/history/beginning-2.png" className="w-full aspect-square object-cover rounded-3xl grayscale hover:grayscale-0 transition-all duration-500 hover:scale-105 shadow-xl" alt="History" />
+            <img src="/images/history/beginning-3.png" className="w-full aspect-square object-cover rounded-3xl grayscale hover:grayscale-0 transition-all duration-500 hover:scale-105 shadow-xl" alt="History" />
+            <img src="/images/church/building-banner.png" className="w-full aspect-square object-cover rounded-3xl grayscale hover:grayscale-0 transition-all duration-500 hover:scale-105 shadow-xl" alt="History" />
           </div>
 
           <p className="text-xl text-white/70 max-w-2xl mx-auto pt-8">

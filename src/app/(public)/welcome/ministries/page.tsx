@@ -101,7 +101,7 @@ export default function MinistriesListPage() {
                 
                 const slugMatch = MINISTRY_IMAGES[m.slug];
                 const nameMatch = Object.entries(MINISTRY_IMAGES).find(([k]) => m.name.toLowerCase().includes(k))?.[1];
-                const imageUrl = slugMatch || nameMatch || '/jkc/images/hero-background.jpg';
+                const imageUrl = slugMatch || nameMatch || '/images/hero-background.jpg';
 
                 return (
                   <Link
