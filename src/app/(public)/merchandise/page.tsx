@@ -214,28 +214,28 @@ export default function MerchandisePage() {
         <div className="min-h-screen bg-background text-foreground pt-16 md:pt-20">
             
             {/* 1. HERO / CAMPAIGN */}
-            <section className="py-10 md:py-16 px-4 overflow-hidden relative text-white" style={{ backgroundColor: '#020617', '--primary': '#f5a623', '--secondary': '#f5a623' } as React.CSSProperties}>
+            <section className="bg-foreground text-background py-10 md:py-16 px-4 overflow-hidden relative">
                 <div className="absolute inset-0 opacity-10">
                     {/* Abstract kingdom pattern background */}
                     <div className="grid grid-cols-12 h-full opacity-20">
                         {Array.from({ length: 144 }).map((_, i) => (
-                            <div key={i} className="border border-white/20" />
+                            <div key={i} className="border border-background/20" />
                         ))}
                     </div>
                 </div>
-                
+
                 <div className="container mx-auto max-w-7xl relative z-10 text-center md:text-left">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                         <div className="space-y-8">
                             <motion.div
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white"
+                                className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-background/10 backdrop-blur-md border border-background/20 text-background"
                             >
                                 <Sparkles size={16} className="text-secondary" />
                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] mt-0.5 whitespace-nowrap">Kingdom Exclusive Collection</span>
                             </motion.div>
-                            
+
                             <motion.div
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -256,12 +256,12 @@ export default function MerchandisePage() {
                                     )}
                                 </h1>
                             </motion.div>
-                            
-                            <motion.p 
+
+                            <motion.p
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 0.3 }}
-                                className="text-base text-white/60 font-medium max-w-sm line-clamp-2"
+                                className="text-base text-background/60 font-medium max-w-sm line-clamp-2"
                             >
                                 {featuredProduct?.description || "Premium gear designed to fuel your spirit and manifest your Kingdom identity."}
                             </motion.p>
@@ -270,12 +270,12 @@ export default function MerchandisePage() {
                                 {featuredProduct ? (
                                     <>
                                         <Link href={`/merchandise/${featuredProduct.slug}`}>
-                                            <Button className="h-12 px-8 rounded-full bg-white text-black font-black text-[10px] uppercase tracking-widest hover:bg-white/90 shadow-2xl w-full sm:w-auto">
+                                            <Button className="h-12 px-8 rounded-full bg-background text-foreground font-black text-[10px] uppercase tracking-widest hover:bg-background/90 shadow-2xl w-full sm:w-auto">
                                                 Order Now - {getCurrencySymbol(orgId)}{featuredProduct.price.toLocaleString()}
                                             </Button>
                                         </Link>
                                         <Link href={`/merchandise/${featuredProduct.slug}`}>
-                                            <Button variant="outline" className="h-12 px-8 rounded-full border-2 border-white/20 text-white font-black text-[10px] uppercase tracking-widest bg-transparent hover:bg-white/10 w-full sm:w-auto">
+                                            <Button variant="outline" className="h-12 px-8 rounded-full border-2 border-background/20 text-background font-black text-[10px] uppercase tracking-widest bg-transparent hover:bg-background/10 w-full sm:w-auto">
                                                 SEE MORE
                                             </Button>
                                         </Link>
@@ -284,7 +284,7 @@ export default function MerchandisePage() {
                                     <Button variant="outline" onClick={() => {
                                         const el = document.getElementById('collection');
                                         el?.scrollIntoView({ behavior: 'smooth' });
-                                    }} className="h-12 px-8 rounded-full border-2 border-white/20 text-white font-black text-[10px] uppercase tracking-widest bg-transparent hover:bg-white/10 w-full sm:w-auto">
+                                    }} className="h-12 px-8 rounded-full border-2 border-background/20 text-background font-black text-[10px] uppercase tracking-widest bg-transparent hover:bg-background/10 w-full sm:w-auto">
                                         Explore Full Collection
                                     </Button>
                                 )}
@@ -292,18 +292,18 @@ export default function MerchandisePage() {
                         </div>
 
                         {/* Visual element (Featured Product) */}
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, scale: 0.8, rotate: 5 }}
                             animate={{ opacity: 1, scale: 1, rotate: 0 }}
                             className="hidden md:block relative aspect-square"
                         >
                             <div className="absolute inset-0 bg-primary/20 blur-[100px] rounded-full animate-pulse" />
-                            <div className="relative w-full h-full bg-white/5 backdrop-blur-xl rounded-[4rem] border border-white/10 flex items-center justify-center p-8">
+                            <div className="relative w-full h-full bg-background/5 backdrop-blur-xl rounded-[4rem] border border-background/10 flex items-center justify-center p-8">
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full p-12">
-                                     <div className="w-full h-full bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] transform rotate-2 border-2 border-white/10 overflow-hidden group relative">
-                                         <img 
-                                            src={featuredProduct?.images?.[0] || "/images/books/book-power-of-purpose.png"} 
-                                            alt={featuredProduct?.name || "Featured Product"} 
+                                     <div className="w-full h-full bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 rounded-[3rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] transform rotate-2 border-2 border-background/10 overflow-hidden group relative">
+                                         <img
+                                            src={featuredProduct?.images?.[0] || "/images/books/book-power-of-purpose.png"}
+                                            alt={featuredProduct?.name || "Featured Product"}
                                             className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-700"
                                             onError={(e) => {
                                                 const target = e.target as HTMLImageElement;
@@ -311,9 +311,9 @@ export default function MerchandisePage() {
                                             }}
                                          />
                                          {featuredProduct && (
-                                             <div className="absolute bottom-8 left-8 right-8 z-10 bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/10 transform -rotate-1">
+                                             <div className="absolute bottom-8 left-8 right-8 z-10 bg-foreground/40 backdrop-blur-md p-4 rounded-2xl border border-background/10 transform -rotate-1">
                                                  <p className="text-[8px] font-black uppercase tracking-[0.3em] mb-1 text-secondary/80">Featured {featuredProduct.category?.name || "Resource"}</p>
-                                                 <h3 className="text-xl font-black uppercase tracking-tight leading-none text-white">{featuredProduct.name}</h3>
+                                                 <h3 className="text-xl font-black uppercase tracking-tight leading-none text-background">{featuredProduct.name}</h3>
                                              </div>
                                          )}
                                      </div>
@@ -514,19 +514,19 @@ export default function MerchandisePage() {
                 </div>
             </section>
 
-            <section className="py-20 text-white" style={{ backgroundColor: '#020617' }}>
+            <section className="py-20 bg-foreground text-background">
                 <div className="container mx-auto max-w-5xl px-4 text-center">
                     <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-8">Fuel the Harvest</h2>
-                    <p className="text-lg font-medium text-white/60 mb-12 max-w-2xl mx-auto italic">
+                    <p className="text-lg font-medium text-background/60 mb-12 max-w-2xl mx-auto italic">
                         Every purchase directly funds our Japan and Global mission outreaches. Join the movement.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                        <input 
-                            type="email" 
-                            placeholder="JOIN THE KINGDOM LIST" 
-                            className="h-16 rounded-full bg-white/10 border border-white/20 px-8 text-[10px] font-black uppercase tracking-widest outline-none placeholder:text-white/30 flex-1"
+                        <input
+                            type="email"
+                            placeholder="JOIN THE KINGDOM LIST"
+                            className="h-16 rounded-full bg-background/10 border border-background/20 px-8 text-[10px] font-black uppercase tracking-widest outline-none placeholder:text-background/30 flex-1"
                         />
-                        <Button className="h-16 px-10 rounded-full bg-white text-black font-black text-[10px] uppercase tracking-widest hover:bg-white/90">SUBSCRIBE</Button>
+                        <Button className="h-16 px-10 rounded-full bg-background text-foreground font-black text-[10px] uppercase tracking-widest hover:bg-background/90">SUBSCRIBE</Button>
                     </div>
                 </div>
             </section>
