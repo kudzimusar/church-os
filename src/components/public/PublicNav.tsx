@@ -207,18 +207,18 @@ export default function PublicNav() {
         <div className="max-w-screen-xl mx-auto px-6 h-full flex
                         items-center justify-between">
 
-          <Link href={slug ? `/${slug}` : '/'} className="hover:opacity-80 transition-opacity flex items-center gap-2">
+          <Link href={slug ? `/${slug}` : '/'} className="hover:opacity-80 transition-opacity flex items-center gap-2 flex-shrink-0">
             {org?.logo_url ? (
               <img
                 src={org.logo_url}
                 alt={churchName}
-                className="h-8 w-auto"
+                className="h-8 w-auto max-h-8 object-contain"
               />
             ) : isJKC ? (
               <img
                 src="/images/logo-horizontal.png"
                 alt="Japan Kingdom Church"
-                className="h-8 w-auto"
+                className="h-8 w-auto max-h-8 object-contain"
                 style={{ filter: (isDark || !scrolled) ? 'brightness(1.5)' : 'none' }}
               />
             ) : (

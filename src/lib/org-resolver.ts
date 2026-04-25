@@ -58,7 +58,7 @@ export async function resolvePublicOrgId(): Promise<string | null> {
   ];
 
   if (hostname && CHURCHOS_SUBDOMAINS.includes(hostname)) {
-    // CRITICAL: On admin subdomains, check if we have a tenant slug in the path or session first
+    // Priority 1: session slug (set from previous navigation within this tab)
     const slugFromSession = typeof window !== 'undefined' ? sessionStorage.getItem('church_os_church_slug') : null;
     if (slugFromSession && slugFromSession !== 'tenant' && slugFromSession !== 'onboarding') {
       const { data: tenantData } = await supabase
@@ -67,14 +67,43 @@ export async function resolvePublicOrgId(): Promise<string | null> {
         .eq('church_slug', slugFromSession)
         .eq('status', 'active')
         .single();
-      
+
       if (tenantData) {
         memoizedPublicOrgId = tenantData.id;
         return tenantData.id;
       }
     }
 
-    // Otherwise, fall back to Church OS Company identity
+    // Priority 2: path-based resolution for public (JKC) pages.
+    // All routes in the (public) layout group (/welcome/, /merchandise/, /connect,
+    // /groups/, /invite/, /profile/) belong to the JKC tenant on www.churchos-ai.website.
+    // A fresh tab paste has no session slug — detect by URL path to avoid fallback to
+    // Church OS Company identity, which bleeds incorrectly into the JKC site.
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      const JKC_PUBLIC_PREFIXES = ['/welcome/', '/merchandise/', '/connect', '/groups/', '/invite/', '/profile/'];
+      const isJKCPublicPage = JKC_PUBLIC_PREFIXES.some(p => pathname.startsWith(p));
+
+      if (isJKCPublicPage) {
+        const { data: jkcData } = await supabase
+          .from('organizations')
+          .select('id')
+          .eq('church_slug', 'jkc')
+          .eq('status', 'active')
+          .single();
+
+        if (jkcData?.id) {
+          // Seed session so subsequent in-tab navigations also resolve correctly
+          sessionStorage.setItem('church_os_church_slug', 'jkc');
+          memoizedPublicOrgId = jkcData.id;
+          const toCache: CachedOrg = { orgId: jkcData.id, cachedAt: Date.now() };
+          sessionStorage.setItem(ORG_CACHE_KEY, JSON.stringify(toCache));
+          return jkcData.id;
+        }
+      }
+    }
+
+    // Priority 3: fall back to Church OS Company identity (admin / landing routes)
     const { data } = await supabase
       .from('organizations')
       .select('id')
