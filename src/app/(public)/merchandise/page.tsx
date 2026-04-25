@@ -214,12 +214,12 @@ export default function MerchandisePage() {
         <div className="min-h-screen bg-background text-foreground pt-16 md:pt-20">
             
             {/* 1. HERO / CAMPAIGN */}
-            <section className="bg-foreground text-background py-10 md:py-16 px-4 overflow-hidden relative">
+            <section className="py-10 md:py-16 px-4 overflow-hidden relative text-white" style={{ backgroundColor: '#020617', '--primary': '#f5a623', '--secondary': '#f5a623' } as React.CSSProperties}>
                 <div className="absolute inset-0 opacity-10">
                     {/* Abstract kingdom pattern background */}
                     <div className="grid grid-cols-12 h-full opacity-20">
                         {Array.from({ length: 144 }).map((_, i) => (
-                            <div key={i} className="border border-background/20" />
+                            <div key={i} className="border border-white/20" />
                         ))}
                     </div>
                 </div>
@@ -514,7 +514,7 @@ export default function MerchandisePage() {
                 </div>
             </section>
 
-            <section className="py-20 bg-foreground text-background">
+            <section className="py-20 text-white" style={{ backgroundColor: '#020617' }}>
                 <div className="container mx-auto max-w-5xl px-4 text-center">
                     <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-8">Fuel the Harvest</h2>
                     <p className="text-lg font-medium text-white/60 mb-12 max-w-2xl mx-auto italic">

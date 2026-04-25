@@ -280,7 +280,7 @@ export default function WatchClient() {
 
    if (!orgLoading && !currentOrgId) {
      return (
-       <div className="pt-32 min-h-screen flex items-center justify-center text-center px-6 dark bg-[#080c14]">
+       <div className="pt-32 min-h-screen flex items-center justify-center text-center px-6 text-white" style={{ backgroundColor: '#080c14', '--primary': '#f5a623', '--primary-foreground': '#080c14' } as React.CSSProperties}>
          <div className="space-y-6">
            {/* Fallback branding if org resolution fails completely */}
            <h1 className="text-4xl font-black uppercase text-white/20 italic tracking-tighter">No Organization Found</h1>
@@ -300,7 +300,7 @@ export default function WatchClient() {
 
    if (orgLoading) {
       return (
-        <div className="pt-32 min-h-screen flex flex-col items-center justify-center text-center px-6 gap-6 dark bg-[#080c14]">
+        <div className="pt-32 min-h-screen flex flex-col items-center justify-center text-center px-6 gap-6 text-white" style={{ backgroundColor: '#080c14' }}>
           <div className="w-12 h-12 rounded-full border-4 border-white/5 border-t-primary animate-spin" />
           <p className="text-[10px] font-black tracking-[0.4em] text-white/40 uppercase">Resolving Church Context...</p>
         </div>
@@ -308,8 +308,8 @@ export default function WatchClient() {
    }
 
    return (
-    <div className="pt-16 min-h-screen dark bg-background text-foreground">
-      <section className="relative py-32 px-6 flex items-center justify-center overflow-hidden bg-black/40">
+    <div className="pt-16 min-h-screen text-white" style={{ backgroundColor: '#080c14', '--primary': '#f5a623', '--primary-foreground': '#080c14', '--border': '#1e293b', '--muted-foreground': '#94a3b8', '--card': '#0d1421' } as React.CSSProperties}>
+      <section className="relative py-32 px-6 flex items-center justify-center overflow-hidden bg-[#05080f]">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[var(--primary)] blur-[120px] rounded-full opacity-10" />
         </div>
