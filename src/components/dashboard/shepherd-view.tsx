@@ -23,6 +23,12 @@ import { MinistryOnboarding } from "./MinistryOnboarding";
 import { LeadershipForecastsCard } from "./LeadershipForecastsCard";
 import { AIOnboardingStatus } from "./AIOnboardingStatus";
 import { MemberImportWizard } from "./import/MemberImportWizard";
+import { 
+    Dialog, 
+    DialogContent, 
+    DialogHeader, 
+    DialogTitle 
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { CRITICAL_MINISTRIES, MINISTRY_OPTIONS } from "@/lib/constants";
 import { useAdminCtx } from "@/app/shepherd/dashboard/Context";
@@ -598,10 +604,14 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                     </div>
                 </div>
 
-                <MemberImportWizard 
-                    isOpen={showImportWizard} 
-                    onClose={() => setShowImportWizard(false)} 
-                />
+                <Dialog open={showImportWizard} onOpenChange={setShowImportWizard}>
+                    <DialogContent className="max-w-2xl p-0 overflow-hidden bg-card border-border rounded-3xl shadow-2xl">
+                        <MemberImportWizard 
+                            orgId={orgId} 
+                            onClose={() => setShowImportWizard(false)} 
+                        />
+                    </DialogContent>
+                </Dialog>
 
                 <div className="flex flex-col xl:flex-row gap-4 mb-10">
                     {(membershipRequests.length > 0 || data.pendingApplications.length > 0) && (
