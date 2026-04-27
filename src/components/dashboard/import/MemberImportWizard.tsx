@@ -26,17 +26,18 @@ export interface ParsedMember {
   email: string | null;
   phone_number: string | null;
   gender: string | null;
-  date_of_birth: string | null;
+  birthdate: string | null;
   address: string | null;
   city: string | null;
   country: string | null;
   membership_status: string | null;
   growth_stage: string | null;
-  date_joined_church: string | null;
-  baptism_status: string | null;
+  joined_at: string | null;
   baptism_date: string | null;
   salvation_date: string | null;
   marital_status: string | null;
+  nationality: string | null;
+  occupation: string | null;
   ministry_name: string | null;
   ministry_role: string | null;
   cell_group_name: string | null;
@@ -94,16 +95,10 @@ type WizardStep = typeof WIZARD_STEPS[number]["id"];
 
 const ACCEPTED_TYPES: Record<string, string> = {
   "text/csv": "csv",
-  "application/vnd.ms-excel": "xls",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
-  "application/vnd.oasis.opendocument.spreadsheet": "ods",
   "application/pdf": "pdf",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
-  "application/msword": "doc",
-  "text/plain": "txt",
-  "image/jpeg": "image/jpeg",
-  "image/png": "image/png",
-  "image/webp": "image/webp",
+  "image/jpeg": "jpg",
+  "image/png": "png",
 };
 
 const CONFIDENCE_COLOR = (v: number) =>
@@ -193,9 +188,11 @@ async function executeImport(
         org_id: orgId,
         prospect_name: m.name ?? `${m.first_name ?? ""} ${m.last_name ?? ""}`.trim(),
         stage: "first_service",
+        stage_date: m.joined_at ?? new Date().toISOString(),
         notes: [m.phone_number, m.email, m.notes].filter(Boolean).join(" | ") || null,
       }));
-      await supabase.from("evangelism_pipeline").insert(pipelineRows);
+      const { error: visErr } = await supabase.from("evangelism_pipeline").insert(pipelineRows);
+      if (visErr) console.error("Visitor insert error:", visErr);
     }
 
     // ── Members / leaders → profiles + org_members ────────────────────
@@ -214,14 +211,18 @@ async function executeImport(
         email: m.email ?? `import_${id.slice(0, 8)}@placeholder.church`,
         phone_number: m.phone_number ?? null,
         gender: m.gender ?? null,
+        birthdate: m.birthdate ?? null,
+        address: m.address ?? null,
         city: m.city ?? null,
         country: m.country ?? null,
         membership_status: m.membership_status ?? "member",
         growth_stage: m.growth_stage ?? "member",
-        date_joined_church: m.date_joined_church ?? null,
-        baptism_status: m.baptism_status ?? "not_baptized",
+        joined_at: m.joined_at ?? null,
         baptism_date: m.baptism_date ?? null,
         salvation_date: m.salvation_date ?? null,
+        marital_status: m.marital_status ?? null,
+        nationality: m.nationality ?? null,
+        occupation: m.occupation ?? null,
         referral_source: "Bulk Import",
         church_background: m.notes ?? null,
       };
@@ -256,13 +257,15 @@ async function executeImport(
     // ── member_milestones ─────────────────────────────────────────────
     const milestoneRows = nonVisitors.map((m, idx) => ({
       user_id: ids[idx],
-      first_visit_date: m.date_joined_church ?? null,
+      org_id: orgId,
+      first_visit_date: m.joined_at ?? null,
       salvation_date: m.salvation_date ?? null,
       baptism_date: m.baptism_date ?? null,
-      membership_date: importMode === "direct" ? (m.date_joined_church ?? new Date().toISOString().slice(0, 10)) : null,
+      membership_date: importMode === "direct" ? (m.joined_at ?? new Date().toISOString().slice(0, 10)) : null,
     })).filter((r: any) => r.salvation_date || r.baptism_date || r.first_visit_date);
     if (milestoneRows.length) {
-      await supabase.from("member_milestones").upsert(milestoneRows, { onConflict: "user_id" });
+      const { error: msErr } = await supabase.from("member_milestones").upsert(milestoneRows, { onConflict: "user_id" });
+      if (msErr) console.error("Milestone insert error:", msErr);
     }
 
     // ── ministry_members ──────────────────────────────────────────────
@@ -686,6 +689,11 @@ export function MemberImportWizard({
 
   // ── File selected → create job row ─────────────────────────────────────
   const handleFileSelected = async (f: File) => {
+    // 10MB check
+    if (f.size > 10 * 1024 * 1024) {
+      toast.warning("File is larger than 10MB. Processing may take longer.");
+    }
+
     setFile(f);
     const type = ACCEPTED_TYPES[f.type] ?? f.name.split(".").pop() ?? "unknown";
     const { data: job, error } = await supabase.from("migration_jobs").insert({
@@ -1011,15 +1019,14 @@ function StepUpload({
         <div className="flex flex-wrap gap-2 justify-center mt-1">
           {[
             { label: "CSV", icon: "📊" }, { label: "Excel", icon: "📗" },
-            { label: "PDF", icon: "📄" }, { label: "Word", icon: "📝" },
-            { label: "Image", icon: "🖼️" }, { label: "TXT", icon: "📃" },
+            { label: "PDF", icon: "📄" }, { label: "Image", icon: "🖼️" },
           ].map((t) => <FileTypeChip key={t.label} {...t} />)}
         </div>
         <input
           ref={inputRef}
           type="file"
           className="hidden"
-          accept=".csv,.xlsx,.xls,.ods,.pdf,.docx,.doc,.txt,.jpg,.jpeg,.png,.webp"
+          accept=".csv,.xlsx,.pdf,.jpg,.jpeg,.png"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) onFileSelected(f); }}
         />
       </div>
