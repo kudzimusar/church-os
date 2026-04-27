@@ -194,6 +194,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [showImportWizard, setShowImportWizard] = useState(false);
     const [membershipRequests, setMembershipRequests] = useState<any[]>([]);
+    const [recentImports, setRecentImports] = useState<any[]>([]);
     const { orgId } = useAdminCtx();
 
     const runIntelligence = async () => {
@@ -298,7 +299,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 pendingAppsRes,
                 aiBriefingRes,
                 decCountRes,
-                ministryInsightsRes
+                ministryInsightsRes,
+                memberImportInsightsRes
             ] = await Promise.all([
                 db.from('profiles').select('*').eq('org_id', orgId),
                 db.from('member_stats').select('*').eq('org_id', orgId),
@@ -318,7 +320,8 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                 db.from('ministry_members').select('*, profiles(name, avatar_url, org_id), ministries(name)').eq('org_id', orgId).eq('status', 'pending'),
                 db.from('prophetic_insights').select('*').eq('org_id', orgId).eq('is_acknowledged', false).order('generated_at', { ascending: false }).limit(3),
                 db.from('user_declarations').select('*', { count: 'exact', head: true }).eq('org_id', orgId).gte('confirmed_at', startOfToday.toISOString()),
-                db.from('ai_ministry_insights').select('*, ministries(name)').eq('org_id', orgId).eq('is_approved', false).order('created_at', { ascending: false }).limit(20)
+                db.from('ai_ministry_insights').select('*, ministries(name)').eq('org_id', orgId).eq('is_approved', false).order('created_at', { ascending: false }).limit(20),
+                db.from('admin_ai_insights').select('*').eq('org_id', orgId).eq('insight_type', 'member_import').order('created_at', { ascending: false }).limit(5)
             ]);
 
             const profiles = profilesRes.data || [];
@@ -335,6 +338,7 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
             const ministryAnalyticsData = ministryAnalyticsRes.data || [];
             const pendingApplications = pendingAppsRes.data || [];
             const pendingMinistryInsights = ministryInsightsRes.data || [];
+            setRecentImports(memberImportInsightsRes.data || []);
             // aiBriefing is now mapped below to include real prophetic insights schema
 
             // 2. Calculations
@@ -548,6 +552,24 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
         loadData();
     }, [orgId, loadData]);
 
+    // Live member count — re-fetch whenever a new profile is inserted for this org
+    useEffect(() => {
+        if (!orgId) return;
+        const channel = supabase
+            .channel(`profiles-realtime-${orgId}`)
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles', filter: `org_id=eq.${orgId}` }, () => {
+                loadData();
+            })
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'admin_ai_insights', filter: `org_id=eq.${orgId}` }, (payload) => {
+                if (payload.new?.insight_type === 'member_import') {
+                    setRecentImports(prev => [payload.new, ...prev].slice(0, 5));
+                    toast.success(`Import complete — ${payload.new?.message ?? 'members imported'}`, { duration: 6000 });
+                }
+            })
+            .subscribe();
+        return () => { supabase.removeChannel(channel); };
+    }, [orgId, loadData]);
+
     const engagementRing = 2 * Math.PI * 40;
 
     return (
@@ -606,9 +628,10 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
 
                 <Dialog open={showImportWizard} onOpenChange={setShowImportWizard}>
                     <DialogContent className="max-w-2xl p-0 overflow-hidden bg-card border-border rounded-3xl shadow-2xl">
-                        <MemberImportWizard 
-                            orgId={orgId} 
-                            onClose={() => setShowImportWizard(false)} 
+                        <MemberImportWizard
+                            orgId={orgId}
+                            onClose={() => setShowImportWizard(false)}
+                            onComplete={() => { loadData(); setShowImportWizard(false); }}
                         />
                     </DialogContent>
                 </Dialog>
@@ -669,6 +692,35 @@ export function ShepherdView({ lang = 'EN' }: { lang: 'EN' | 'JP' }) {
                         </div>
                     )}
                 </div>
+                {recentImports.length > 0 && (
+                    <div className="mb-4 rounded-2xl border border-violet-500/30 bg-violet-500/5 p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <FilePlus className="w-4 h-4 text-violet-400" />
+                            <p className="text-xs font-black text-violet-400 uppercase tracking-widest">Recent Imports</p>
+                        </div>
+                        <div className="space-y-2">
+                            {recentImports.map((imp: any) => (
+                                <div key={imp.id} className="flex items-start justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-foreground truncate">{imp.message}</p>
+                                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                                            {imp.metadata?.file_name ?? 'File'} &middot; {imp.metadata?.families_linked ?? 0} families linked &middot; {format(new Date(imp.created_at), 'MMM d, h:mm a')}
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2 shrink-0">
+                                        {imp.metadata?.imported > 0 && (
+                                            <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">{imp.metadata.imported} members</span>
+                                        )}
+                                        {imp.metadata?.visitors > 0 && (
+                                            <span className="text-[10px] font-black bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full">{imp.metadata.visitors} visitors</span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
                     <MetricCard title="Total Members" value={data.totalMembers}
                         sub={`+${data.newMembersThisMonth} this month`} trend="up" trendVal={`+${data.memberGrowthPct}%`}
