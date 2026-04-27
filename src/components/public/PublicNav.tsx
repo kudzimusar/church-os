@@ -39,6 +39,22 @@ export default function PublicNav() {
   const [isLive, setIsLive] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
+  // Auto-close menu and reset scroll when route changes
+  useEffect(() => {
+    setIsMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [pathname]);
+
+  // Lock body scroll while mobile menu is open (prevents iOS scroll bleed)
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isMenuOpen]);
+
   // Poll for live events every 60 seconds
   useEffect(() => {
     const checkLive = async () => {
@@ -428,7 +444,7 @@ export default function PublicNav() {
 
       {/* Mobile Drawer */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-start overflow-y-auto py-12 px-6 space-y-4 animate-in fade-in zoom-in duration-300 hide-scrollbar"
+        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-start overflow-y-auto py-12 px-6 space-y-4 animate-in fade-in zoom-in duration-300 no-scrollbar"
              style={{ background: 'var(--footer-bg)' }}>
           <button className="absolute top-6 right-6"
             style={{ color: 'var(--footer-muted)' }}

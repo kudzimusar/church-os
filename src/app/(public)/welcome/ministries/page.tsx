@@ -93,6 +93,10 @@ export default function MinistriesListPage() {
             <Loader2 className="w-10 h-10 animate-spin text-[var(--jkc-navy)]" />
             <p className="text-[10px] uppercase font-black tracking-widest text-[var(--jkc-navy)]">Loading Ministries...</p>
           </div>
+        ) : ministries.length === 0 ? (
+          <div className="flex justify-center flex-col items-center gap-4 py-20">
+            <p className="text-[10px] uppercase font-black tracking-widest opacity-40" style={{ color: 'var(--foreground)' }}>No ministries found</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {ministries.map(m => {
