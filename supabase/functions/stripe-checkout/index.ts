@@ -57,17 +57,22 @@ serve(async (req) => {
 
     // ChurchGPT SaaS subscription flow
     if (body.type === 'churchgpt_subscription') {
-      const { plan_name, org_id: subOrgId, user_email, return_url } = body;
+      const { plan_name, billing_interval = 'monthly', org_id: subOrgId, user_email } = body;
       if (!plan_name || !subOrgId) throw new Error("plan_name and org_id are required");
 
-      const priceMap: Record<string, string> = {
-        lite:       body.stripe_price_id_lite       ?? Deno.env.get("STRIPE_PRICE_LITE")       ?? "",
-        pro:        body.stripe_price_id_pro        ?? Deno.env.get("STRIPE_PRICE_PRO")        ?? "",
-        enterprise: body.stripe_price_id_enterprise ?? Deno.env.get("STRIPE_PRICE_ENTERPRISE") ?? "",
+      const isYearly = billing_interval === 'yearly';
+
+      const PRICE_MAP: Record<string, string> = {
+        'lite':              Deno.env.get('STRIPE_PRICE_LITE')          ?? 'price_1TR4iBAqp8pYwqz4xOj7p3n1',
+        'lite_yearly':       Deno.env.get('STRIPE_PRICE_LITE_YEARLY')   ?? 'price_1TR4iIAqp8pYwqz4CE8JE7zG',
+        'pro':               Deno.env.get('STRIPE_PRICE_PRO')           ?? 'price_1TR4ikAqp8pYwqz4Q5yqUDma',
+        'pro_yearly':        Deno.env.get('STRIPE_PRICE_PRO_YEARLY')    ?? 'price_1TR4itAqp8pYwqz4CHY77VpT',
+        'enterprise':        Deno.env.get('STRIPE_PRICE_ENTERPRISE')    ?? 'price_1TR4izAqp8pYwqz4hUDa3jOL',
       };
 
-      const stripePriceId = priceMap[plan_name];
-      if (!stripePriceId) throw new Error(`No Stripe price ID configured for plan: ${plan_name}`);
+      const priceKey = isYearly ? `${plan_name}_yearly` : plan_name;
+      const stripePriceId = PRICE_MAP[priceKey];
+      if (!stripePriceId) throw new Error(`No Stripe price ID configured for plan: ${priceKey}`);
 
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
