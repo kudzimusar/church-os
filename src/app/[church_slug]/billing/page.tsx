@@ -43,15 +43,15 @@ export default function OrgBillingPage() {
   useEffect(() => {
     const load = async () => {
       const { data: { session: s } } = await supabase.auth.getSession()
-      if (!s) { router.push('/churchgpt/login'); return }
+      if (!s) { router.push(`/churchgpt/login?redirect=/${churchSlug}/billing`); return }
       setSession(s)
 
-      // Resolve org from slug
+      // Resolve org from slug — try both 'slug' and 'church_slug' columns
       const { data: org } = await supabase
         .from('organizations')
         .select('id')
-        .eq('slug', churchSlug)
-        .single()
+        .or(`slug.eq.${churchSlug},church_slug.eq.${churchSlug}`)
+        .maybeSingle()
 
       if (!org) { setLoading(false); return }
       setOrgId(org.id)
