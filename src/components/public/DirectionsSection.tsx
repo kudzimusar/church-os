@@ -1,13 +1,14 @@
 'use client';
 
 import { MapPin, Train, Car, ArrowRight } from 'lucide-react';
-import { usePublicTheme } from './PublicThemeWrapper';
 import { useChurch } from '@/lib/church-context';
+import { useLanguage } from '@/lib/language-context';
+import { t } from '@/lib/translations';
 
 export default function DirectionsSection() {
   const { org, slug } = useChurch();
-  const { isDark } = usePublicTheme();
-  
+  const { lang } = useLanguage();
+
   const isJKC = slug === 'jkc' || slug === 'jkc';
 
   const address = org?.address ?? (isJKC ? '〒196-0015 東京都昭島市昭和町2-1-6' : 'Address Not Set');
@@ -19,13 +20,13 @@ export default function DirectionsSection() {
   const directions = [
     {
       icon: <Train className="w-5 h-5" />,
-      title: "By Train",
-      desc: org?.directions_train ?? (isJKC ? "2 min walk from Akishima Station (West Gate exit)" : "Check local transit")
+      title: t(lang, 'directions_train'),
+      desc: org?.directions_train ?? (isJKC ? (lang === 'ja' ? '昭島駅（西口）から徒歩2分' : '2 min walk from Akishima Station (West Gate exit)') : 'Check local transit')
     },
     {
       icon: <Car className="w-5 h-5" />,
-      title: "By Car",
-      desc: org?.directions_car ?? (isJKC ? "Free parking directly beside the church (<1 min walk)" : "Parking available nearby")
+      title: t(lang, 'directions_car'),
+      desc: org?.directions_car ?? (isJKC ? (lang === 'ja' ? '教会横に無料駐車場あり（徒歩1分未満）' : 'Free parking directly beside the church (<1 min walk)') : 'Parking available nearby')
     }
   ];
 
@@ -57,11 +58,11 @@ export default function DirectionsSection() {
           <div className="space-y-4">
             <p className="text-[10px] font-black tracking-[0.4em] uppercase"
                style={{ color: 'var(--jkc-navy)' }}>
-              DIRECTIONS & PARKING
+              {t(lang, 'directions_eyebrow')}
             </p>
             <div className="space-y-2">
-              <h2 className="text-4xl md:text-5xl font-black" 
-                  style={{ color: 'var(--foreground)' }}>Find Your Way</h2>
+              <h2 className="text-4xl md:text-5xl font-black"
+                  style={{ color: 'var(--foreground)' }}>{t(lang, 'directions_heading')}</h2>
               <div className="flex items-start gap-4 pt-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border"
                      style={{ 
@@ -112,7 +113,7 @@ export default function DirectionsSection() {
                 boxShadow: 'var(--shadow-md)'
               }}
             >
-              GET DIRECTIONS <ArrowRight className="w-4 h-4" />
+              {lang === 'ja' ? '経路を見る' : 'GET DIRECTIONS'} <ArrowRight className="w-4 h-4" />
             </a>
             
             {calendlyUrl && (
@@ -125,7 +126,7 @@ export default function DirectionsSection() {
                   color: 'var(--jkc-navy)',
                 }}
               >
-                PLAN A VISIT
+                {t(lang, 'directions_plan_visit')}
               </a>
             )}
           </div>

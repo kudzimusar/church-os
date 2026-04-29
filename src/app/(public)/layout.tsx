@@ -3,6 +3,7 @@ import PublicFooter from '@/components/public/PublicFooter';
 import { PublicThemeWrapper } from '@/components/public/PublicThemeWrapper';
 import { ConnectModalProvider } from '@/components/public/ConnectModalProvider';
 import { ChurchProvider } from '@/lib/church-context';
+import { LanguageProvider } from '@/lib/language-context';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Japan Kingdom Church',
     description: 'A Christian community in Tokyo, Japan.',
-    url: 'https://kudzimusar.github.io/jkc/',
+    url: 'https://www.churchos-ai.website/jkc/',
     siteName: 'Japan Kingdom Church',
   },
 };
@@ -23,13 +24,15 @@ export default function PublicLayout({
 }) {
   return (
     <ChurchProvider>
-      <PublicThemeWrapper>
-        <ConnectModalProvider>
-          <PublicNav />
-          <main className="flex-1">{children}</main>
-          <PublicFooter />
-        </ConnectModalProvider>
-      </PublicThemeWrapper>
+      <LanguageProvider>
+        <PublicThemeWrapper>
+          <ConnectModalProvider>
+            <PublicNav />
+            <main className="flex-1">{children}</main>
+            <PublicFooter />
+          </ConnectModalProvider>
+        </PublicThemeWrapper>
+      </LanguageProvider>
     </ChurchProvider>
   );
 }

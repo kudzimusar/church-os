@@ -4,27 +4,29 @@ import { useEffect, useState } from "react";
 import { Auth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import {
-    Settings, LayoutDashboard, User as UserIcon, Palette, Globe, Shield, Lock, Bell, LogOut
+    Settings, LayoutDashboard, User as UserIcon, Palette, Globe, Shield, Lock, LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Link from "next/link";
 import { basePath as BP } from "@/lib/utils";
-
-const SIDEBAR_NAV = [
-    { id: 'display', label: 'Display Settings', icon: Palette },
-    { id: 'localization', label: 'Localization', icon: Globe },
-    { id: 'privacy', label: 'Privacy & Data', icon: Shield },
-    { id: 'security', label: 'Account Security', icon: Lock },
-];
+import { useLanguage } from "@/lib/language-context";
+import { t } from "@/lib/translations";
 
 export default function SettingsHub() {
+    const { lang, setLang } = useLanguage();
     const [user, setUser] = useState<any>(null);
     const [activeTab, setActiveTab] = useState('display');
     const [theme, setTheme] = useState('system');
     const [fontSize, setFontSize] = useState('medium');
-    const [language, setLanguage] = useState('en');
     const [groupsVisibility, setGroupsVisibility] = useState(true);
+
+    const SIDEBAR_NAV = [
+        { id: 'display', label: t(lang, 'settings_display'), icon: Palette },
+        { id: 'localization', label: t(lang, 'settings_localization'), icon: Globe },
+        { id: 'privacy', label: t(lang, 'settings_privacy'), icon: Shield },
+        { id: 'security', label: t(lang, 'settings_security'), icon: Lock },
+    ];
 
     useEffect(() => {
         const init = async () => {
@@ -83,14 +85,14 @@ export default function SettingsHub() {
                 <aside className="w-64 bg-transparent flex-col hidden md:flex shrink-0 pt-8 pr-8">
                     <nav className="flex-1 space-y-1">
                         <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 font-semibold text-sm transition-all">
-                            <LayoutDashboard className="w-4 h-4" /> Home
+                            <LayoutDashboard className="w-4 h-4" /> {t(lang, 'settings_home')}
                         </Link>
                         <Link href="/profile" className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground/60 hover:text-foreground hover:bg-foreground/5 font-semibold text-sm transition-all mb-4">
-                            <UserIcon className="w-4 h-4" /> Profile Hub
+                            <UserIcon className="w-4 h-4" /> {t(lang, 'settings_profile')}
                         </Link>
 
                         <div className="pt-4 pb-2 px-4 text-xs font-black uppercase tracking-widest text-foreground/40">
-                            App Settings
+                            {t(lang, 'settings_app_settings')}
                         </div>
                         {SIDEBAR_NAV.map(nav => (
                             <button
@@ -110,7 +112,7 @@ export default function SettingsHub() {
                                 onClick={handleLogout}
                                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-red-500 hover:bg-red-500/10 transition-all"
                             >
-                                <LogOut className="w-4 h-4" /> Sign Out
+                                <LogOut className="w-4 h-4" /> {t(lang, 'settings_sign_out')}
                             </button>
                         </div>
                     </nav>
@@ -120,7 +122,7 @@ export default function SettingsHub() {
                 <main className="flex-1 overflow-y-auto px-4 sm:px-6 pt-4 md:pt-12">
                     <h1 className="text-3xl font-black mb-8 flex items-center gap-3">
                         <Settings className="w-8 h-8 text-[var(--primary)]" />
-                        Settings
+                        {t(lang, 'settings_title')}
                     </h1>
 
                     <div className="bg-white dark:bg-[#111] rounded-[2rem] shadow-xl border border-foreground/10 overflow-hidden lg:max-w-4xl">
@@ -147,7 +149,7 @@ export default function SettingsHub() {
                             {activeTab === 'display' && (
                                 <div className="space-y-10 animate-in fade-in duration-300">
                                     <div className="space-y-4">
-                                        <h3 className="text-xl font-black">Theme Mode</h3>
+                                        <h3 className="text-xl font-black">{t(lang, 'settings_theme_heading')}</h3>
                                         <div className="flex flex-wrap gap-4">
                                             {['light', 'dark', 'system'].map(t => (
                                                 <button
@@ -172,7 +174,7 @@ export default function SettingsHub() {
                                         </div>
                                     </div>
                                     <div className="space-y-4">
-                                        <h3 className="text-xl font-black">Font Size (Accessibility)</h3>
+                                        <h3 className="text-xl font-black">{t(lang, 'settings_font_heading')}</h3>
                                         <div className="flex flex-wrap gap-4">
                                             {['small', 'medium', 'large', 'x-large'].map(fs => (
                                                 <button
@@ -193,12 +195,12 @@ export default function SettingsHub() {
                             {activeTab === 'localization' && (
                                 <div className="space-y-10 animate-in fade-in duration-300">
                                     <div className="space-y-4">
-                                        <h3 className="text-xl font-black">Display Language</h3>
+                                        <h3 className="text-xl font-black">{t(lang, 'settings_language_heading')}</h3>
                                         <div className="flex flex-col gap-3 max-w-sm">
-                                            <button onClick={() => { setLanguage('en'); toast.success('Language changed'); }} className={`flex items-center gap-4 p-4 border rounded-xl font-bold ${language === 'en' ? 'border-[var(--primary)] bg-[var(--primary)]/5 text-[var(--primary)]' : 'border-foreground/10'}`}>
+                                            <button onClick={() => { setLang('en'); toast.success('Language changed'); }} className={`flex items-center gap-4 p-4 border rounded-xl font-bold ${lang === 'en' ? 'border-[var(--primary)] bg-[var(--primary)]/5 text-[var(--primary)]' : 'border-foreground/10'}`}>
                                                 🇺🇸 English (US)
                                             </button>
-                                            <button onClick={() => { setLanguage('jp'); toast.success('言語が変更されました'); }} className={`flex items-center gap-4 p-4 border rounded-xl font-bold ${language === 'jp' ? 'border-[var(--primary)] bg-[var(--primary)]/5 text-[var(--primary)]' : 'border-foreground/10'}`}>
+                                            <button onClick={() => { setLang('ja'); toast.success('言語が変更されました'); }} className={`flex items-center gap-4 p-4 border rounded-xl font-bold ${lang === 'ja' ? 'border-[var(--primary)] bg-[var(--primary)]/5 text-[var(--primary)]' : 'border-foreground/10'}`}>
                                                 🇯🇵 日本語 (Japanese)
                                             </button>
                                         </div>

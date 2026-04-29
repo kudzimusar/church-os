@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase';
 import { resolvePublicOrgId } from '@/lib/org-resolver';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { useLanguage } from '@/lib/language-context';
+import { t } from '@/lib/translations';
 
 /* ──────────────────────────────────────────────────────────────
    Compact hero-embedded check-in widget
@@ -14,6 +16,7 @@ import { toast } from 'sonner';
    3 states: guest → 3-option picker → confirmed
 ────────────────────────────────────────────────────────────── */
 function HeroCheckIn({ user }: { user: any }) {
+  const { lang } = useLanguage();
   const [loading, setLoading]     = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const [selected, setSelected]   = useState<string | null>(null);
@@ -166,9 +169,9 @@ function HeroCheckIn({ user }: { user: any }) {
 
   /* ── 3-option picker ── */
   const options = [
-    { key: 'in-person', label: 'IN PERSON',  Icon: MapPin,   desc: 'At Church'   },
-    { key: 'online',    label: 'ONLINE',      Icon: Globe,    desc: 'Zoom/Stream' },
-    { key: 'absent',    label: 'NOT COMING',  Icon: XCircle,  desc: 'Absent'      },
+    { key: 'in-person', label: t(lang, 'checkin_inperson'),  Icon: MapPin,   desc: t(lang, 'checkin_inperson_desc') },
+    { key: 'online',    label: t(lang, 'checkin_online'),     Icon: Globe,    desc: t(lang, 'checkin_online_desc')   },
+    { key: 'absent',    label: t(lang, 'checkin_absent'),     Icon: XCircle,  desc: t(lang, 'checkin_absent_desc')  },
   ];
 
   return (
@@ -222,7 +225,7 @@ function HeroCheckIn({ user }: { user: any }) {
    Main HeroSection
 ═══════════════════════════════════════════════════════════════ */
 export default function HeroSection({ user }: { user?: any }) {
-  // Use user from props or local state if not provided
+  const { lang } = useLanguage();
   const [localUser, setLocalUser] = useState<any>(null);
   const activeUser = user || localUser;
 
@@ -270,7 +273,7 @@ export default function HeroSection({ user }: { user?: any }) {
           <div className="space-y-2">
             <p className="text-[10px] md:text-xs font-black tracking-[0.5em] uppercase"
                style={{ color: 'var(--footer-muted)' }}>
-              Japan Kingdom Church · Tokyo, Japan
+              {t(lang, 'hero_eyebrow')}
             </p>
             <div className="w-12 h-px mx-auto mt-2" style={{ background: 'var(--jkc-gold)' }} />
           </div>
@@ -279,7 +282,7 @@ export default function HeroSection({ user }: { user?: any }) {
           <h1 className="flex flex-col gap-2">
             <span className="text-4xl md:text-7xl font-serif italic leading-tight"
                   style={{ color: 'var(--footer-fg)' }}>
-              Welcome to
+              {t(lang, 'hero_welcome')}
             </span>
             <span className="text-6xl md:text-[10rem] font-black uppercase tracking-tighter leading-[0.85] drop-shadow-2xl"
                   style={{ color: 'var(--jkc-gold)' }}>
@@ -290,7 +293,7 @@ export default function HeroSection({ user }: { user?: any }) {
           {/* Tagline */}
           <p className="text-sm md:text-xl font-medium tracking-[0.1em] max-w-3xl mx-auto leading-relaxed"
              style={{ color: 'var(--footer-fg)' }}>
-            BUILDING A STRONG CHRISTIAN COMMUNITY REPRESENTING CHRIST TO JAPANESE SOCIETY
+            {t(lang, 'hero_tagline')}
           </p>
 
           {/* Service time badge */}
@@ -300,7 +303,7 @@ export default function HeroSection({ user }: { user?: any }) {
                  border: '1px solid var(--jkc-gold)',
                  color: 'var(--jkc-gold)',
                }}>
-            SUNDAYS · 9:30AM PRAYER · 10:30AM SERVICE
+            {t(lang, 'hero_service_times')}
           </div>
 
           {/* ── CTA Buttons — inline styles guarantee visibility on dark overlay ── */}
@@ -314,7 +317,7 @@ export default function HeroSection({ user }: { user?: any }) {
                 boxShadow: '0 4px 20px rgba(245,166,35,0.4)',
               }}
             >
-              NEW HERE?
+              {t(lang, 'hero_cta_new')}
             </Link>
             <a
               href="https://youtube.com/japankingdomchurch"
@@ -327,7 +330,7 @@ export default function HeroSection({ user }: { user?: any }) {
                 color: 'var(--jkc-gold)',
               }}
             >
-              WATCH LIVE
+              {t(lang, 'hero_cta_watch')}
             </a>
           </div>
 
@@ -345,7 +348,7 @@ export default function HeroSection({ user }: { user?: any }) {
         transition={{ duration: 2, repeat: Infinity }}
       >
         <span className="text-[10px] font-black tracking-[0.4em] uppercase"
-              style={{ color: 'var(--footer-muted)' }}>SCROLL</span>
+              style={{ color: 'var(--footer-muted)' }}>{t(lang, 'hero_scroll')}</span>
         <div className="w-px h-12 bg-gradient-to-b from-[var(--jkc-gold)] to-transparent" />
       </motion.div>
     </section>

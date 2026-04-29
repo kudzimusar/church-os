@@ -19,9 +19,12 @@ import { toast } from 'sonner';
 import { usePublicTheme } from './PublicThemeWrapper';
 import { ShopService } from '@/lib/shop-service';
 import { useChurch } from '@/lib/church-context';
+import { useLanguage } from '@/lib/language-context';
+import { t } from '@/lib/translations';
 
 export default function PublicNav() {
   const { isDark } = usePublicTheme();
+  const { lang } = useLanguage();
   const { org, slug } = useChurch();
   const pathname = usePathname();
   const isHomePage = pathname === '/' || pathname === '/jkc/' || pathname === '/jkc';
@@ -162,48 +165,48 @@ export default function PublicNav() {
   };
 
   const navLinks = [
-    { label: 'WATCH', href: '/welcome/watch' },
-    { label: 'VISIT', href: '/welcome/visit' },
-    { 
-      label: 'ABOUT', 
+    { label: t(lang, 'nav_watch'), href: '/welcome/watch' },
+    { label: t(lang, 'nav_visit'), href: '/welcome/visit' },
+    {
+      label: t(lang, 'nav_about'),
       href: '/welcome/about',
       subLinks: [
-        { label: 'OUR PASTOR', href: '/welcome/our-pastor' },
-        { label: 'STATEMENT OF FAITH', href: '/welcome/about#faith' },
-        { label: 'CHURCH HISTORY', href: '/welcome/about#history' },
-        { label: 'CHURCH STAFF', href: '/welcome/staff' },
-        { label: 'CHRISTIANITY IN JAPAN', href: '/welcome/about#japan' },
-        { label: 'BAPTISM IN JAPAN', href: '/welcome/about#baptism' },
-        { label: 'DIRECTIONS AND PARKING', href: '/welcome/visit#directions' },
+        { label: t(lang, 'nav_our_pastor'), href: '/welcome/our-pastor' },
+        { label: t(lang, 'nav_faith'), href: '/welcome/about#faith' },
+        { label: t(lang, 'nav_history'), href: '/welcome/about#history' },
+        { label: t(lang, 'nav_staff'), href: '/welcome/staff' },
+        { label: t(lang, 'nav_christianity_japan'), href: '/welcome/about#japan' },
+        { label: t(lang, 'nav_baptism_japan'), href: '/welcome/about#baptism' },
+        { label: t(lang, 'nav_directions'), href: '/welcome/visit#directions' },
       ]
     },
-    { 
-      label: 'GIVE', 
+    {
+      label: t(lang, 'nav_give'),
       href: '/welcome/give',
       subLinks: [
-        { label: 'GIVING OPTIONS', href: '/welcome/give' },
-        { label: 'OUTREACH DONATIONS', href: '/welcome/give#outreach' },
-        { label: 'MISSIONARY SUPPORT', href: '/welcome/give#missionary' },
+        { label: t(lang, 'nav_giving_options'), href: '/welcome/give' },
+        { label: t(lang, 'nav_outreach'), href: '/welcome/give#outreach' },
+        { label: t(lang, 'nav_missionary'), href: '/welcome/give#missionary' },
       ]
     },
-    { label: 'SHOP', href: '/merchandise' },
-    { label: 'ACADEMY', href: '/welcome/ministries/language-school' },
-    { label: 'DEVOTION', href: '/welcome/devotion' },
+    { label: t(lang, 'nav_shop'), href: '/merchandise' },
+    { label: t(lang, 'nav_academy'), href: '/welcome/ministries/language-school' },
+    { label: t(lang, 'nav_devotion'), href: '/welcome/devotion' },
   ];
 
   const LIVE_URL = 'https://www.youtube.com/@JapanKingdomChurch/streams';
 
   const mobileNavLinks = [
-    { label: 'WATCH', href: '/welcome/watch' },
-    { label: 'VISIT', href: '/welcome/visit' },
-    { label: 'GIVE', href: '/welcome/give' },
-    { label: 'SHOP', href: '/merchandise' },
-    { label: 'ACADEMY', href: '/welcome/ministries/language-school' },
-    { label: 'DEVOTION', href: '/welcome/devotion' },
-    { label: 'ABOUT', href: '/welcome/about' },
-    { label: 'OUR PASTOR', href: '/welcome/our-pastor' },
-    { label: 'STAFF', href: '/welcome/staff' },
-    { label: 'MINISTRIES', href: '/welcome/ministries' },
+    { label: t(lang, 'nav_watch'), href: '/welcome/watch' },
+    { label: t(lang, 'nav_visit'), href: '/welcome/visit' },
+    { label: t(lang, 'nav_give'), href: '/welcome/give' },
+    { label: t(lang, 'nav_shop'), href: '/merchandise' },
+    { label: t(lang, 'nav_academy'), href: '/welcome/ministries/language-school' },
+    { label: t(lang, 'nav_devotion'), href: '/welcome/devotion' },
+    { label: t(lang, 'nav_about'), href: '/welcome/about' },
+    { label: t(lang, 'nav_our_pastor'), href: '/welcome/our-pastor' },
+    { label: t(lang, 'nav_staff'), href: '/welcome/staff' },
+    { label: t(lang, 'nav_ministries'), href: '/welcome/ministries' },
   ];
 
   return (

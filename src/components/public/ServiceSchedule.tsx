@@ -3,24 +3,27 @@
 import { motion } from 'framer-motion';
 import { usePublicTheme } from './PublicThemeWrapper';
 import { useChurch } from '@/lib/church-context';
+import { useLanguage } from '@/lib/language-context';
+import { t } from '@/lib/translations';
 
 export default function ServiceSchedule() {
   const { org, slug } = useChurch();
-  const { isDark } = usePublicTheme();
-  
+  usePublicTheme();
+  const { lang } = useLanguage();
+
   const isJKC = slug === 'jkc' || slug === 'jkc';
-  
+
   type ScheduleItem = { label: string; time: string; note: string };
   const schedules: ScheduleItem[] = (org?.service_schedule as ScheduleItem[] | undefined) ?? (isJKC ? [
     {
-      label: "PRAYER SERVICE",
+      label: t(lang, 'schedule_prayer'),
       time: "09:30 — 10:00",
-      note: "All welcome"
+      note: t(lang, 'schedule_note_prayer')
     },
     {
-      label: "MORNING SERVICE",
+      label: t(lang, 'schedule_service'),
       time: "10:30 — 12:30",
-      note: "IN-PERSON & ONLINE"
+      note: t(lang, 'schedule_note_service')
     }
   ] : []);
 
@@ -46,10 +49,10 @@ export default function ServiceSchedule() {
           <div className="space-y-4">
             <p className="text-[10px] font-black tracking-[0.4em] uppercase"
                style={{ color: 'var(--footer-muted)' }}>
-              CHURCH SCHEDULE
+              {t(lang, 'schedule_eyebrow')}
             </p>
             <h2 className="text-4xl md:text-6xl font-black" style={{ color: 'var(--footer-fg)' }}>
-              Join Us <span className="font-serif italic font-medium">Every Sunday</span>
+              {t(lang, 'schedule_heading_a')} <span className="font-serif italic font-medium">{t(lang, 'schedule_heading_b')}</span>
             </h2>
           </div>
 
@@ -89,7 +92,7 @@ export default function ServiceSchedule() {
                   boxShadow: 'var(--shadow-md)'
                 }}
               >
-                PLAN MY VISIT →
+                {t(lang, 'directions_plan_visit')} →
               </a>
             ) : (
               <p className="text-[10px] font-black tracking-widest uppercase opacity-30" style={{ color: 'var(--footer-muted)' }}>

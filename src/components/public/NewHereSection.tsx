@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { usePublicTheme } from './PublicThemeWrapper';
+import { useLanguage } from '@/lib/language-context';
+import { t } from '@/lib/translations';
 
 export default function NewHereSection() {
-  const { isDark } = usePublicTheme();
+  const { lang } = useLanguage();
 
   return (
     <section className="py-24 px-6"
@@ -13,10 +14,10 @@ export default function NewHereSection() {
         <div className="space-y-3 mb-12 text-center">
           <p className="text-[10px] font-black tracking-[0.4em] uppercase"
              style={{ color: 'var(--jkc-gold)' }}>
-            WELCOME
+            {lang === 'ja' ? 'ようこそ' : 'WELCOME'}
           </p>
           <h2 className="text-4xl md:text-5xl font-black" style={{ color: 'var(--foreground)' }}>
-            How Can We Help <span className="font-serif italic font-medium" style={{ color: 'var(--jkc-navy)' }}>You?</span>
+            {t(lang, 'new_here_how')} <span className="font-serif italic font-medium" style={{ color: 'var(--jkc-navy)' }}>{t(lang, 'new_here_you')}</span>
           </h2>
         </div>
 
@@ -37,10 +38,12 @@ export default function NewHereSection() {
                 👋
               </div>
               <h2 className="text-3xl font-black" style={{ color: 'var(--foreground)' }}>
-                First time here?
+                {lang === 'ja' ? '初めてのご参加ですか？' : 'First time here?'}
               </h2>
               <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-                We'd love to welcome you. Come as you are — no experience needed. Find out what to expect when you visit us.
+                {lang === 'ja'
+                  ? 'ありのままの姿でお越しください。来訪時の流れをご確認いただけます。'
+                  : "We'd love to welcome you. Come as you are — no experience needed. Find out what to expect when you visit us."}
               </p>
             </div>
             <div className="pt-8">
@@ -49,12 +52,12 @@ export default function NewHereSection() {
                 className="w-full text-center inline-block px-8 py-4 rounded-2xl text-[10px] font-black tracking-[0.2em] uppercase transition-all hover:scale-[1.02]"
                 style={{ background: 'var(--jkc-gold)', color: 'var(--jkc-navy)' }}
               >
-                PLAN MY VISIT
+                {lang === 'ja' ? '来訪を計画する' : 'PLAN MY VISIT'}
               </Link>
             </div>
           </div>
 
-          {/* Card 2 — Connect Card (DIGITALIZATION) */}
+          {/* Card 2 — Connect Card */}
           <div
             className="rounded-[2.5rem] p-10 flex flex-col justify-between transition-all duration-300 group relative overflow-hidden"
             style={{
@@ -70,10 +73,12 @@ export default function NewHereSection() {
                 📱
               </div>
               <h2 className="text-3xl font-black text-white">
-                New <span className="text-[var(--jkc-gold)] italic">Here?</span>
+                {lang === 'ja' ? '初めての方へ' : 'New'} {lang === 'en' && <span className="text-[var(--jkc-gold)] italic">Here?</span>}
               </h2>
               <p className="text-sm leading-relaxed text-white/60">
-                Scanning from your chair? Fill out our Digital Connect Card to stay updated on church news and events.
+                {lang === 'ja'
+                  ? '席からご記入できます。デジタル連絡カードを送信して、教会の最新情報を受け取りましょう。'
+                  : 'Scanning from your chair? Fill out our Digital Connect Card to stay updated on church news and events.'}
               </p>
             </div>
             <div className="pt-8">
@@ -81,7 +86,7 @@ export default function NewHereSection() {
                 onClick={() => document.getElementById('connect')?.scrollIntoView({ behavior: 'smooth' })}
                 className="w-full text-center inline-block px-8 py-4 rounded-2xl text-[10px] font-black tracking-[0.2em] uppercase transition-all bg-white/10 hover:bg-[var(--jkc-gold)] hover:text-[var(--jkc-navy)] text-white border border-white/10"
               >
-                DIGITAL CONNECT CARD
+                {lang === 'ja' ? 'デジタル連絡カード' : 'DIGITAL CONNECT CARD'}
               </button>
             </div>
           </div>
@@ -102,10 +107,12 @@ export default function NewHereSection() {
                 🏠
               </div>
               <h2 className="text-3xl font-black" style={{ color: 'var(--foreground)' }}>
-                Part of the family?
+                {lang === 'ja' ? 'メンバーの方へ' : 'Part of the family?'}
               </h2>
               <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-                Access sermons, devotionals, and your church community. Everything you need in one place.
+                {lang === 'ja'
+                  ? '説教・デボーション・コミュニティにアクセスできます。必要なものがすべてここに揃っています。'
+                  : 'Access sermons, devotionals, and your church community. Everything you need in one place.'}
               </p>
             </div>
             <div className="pt-8">
@@ -114,7 +121,7 @@ export default function NewHereSection() {
                 className="w-full text-center inline-block px-8 py-4 rounded-2xl text-[10px] font-black tracking-[0.2em] uppercase transition-all hover:scale-[1.02]"
                 style={{ background: '#1e293b', color: 'white' }}
               >
-                SIGN IN
+                {lang === 'ja' ? 'サインイン' : 'SIGN IN'}
               </Link>
             </div>
           </div>

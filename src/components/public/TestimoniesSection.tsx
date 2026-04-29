@@ -4,10 +4,13 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useChurch } from '@/lib/church-context';
 import { Loader2 } from 'lucide-react';
+import { useLanguage } from '@/lib/language-context';
+import { t } from '@/lib/translations';
 
 export default function TestimoniesSection() {
   const [testimonies, setTestimonies] = useState<any[]>([]);
   const { org, slug, isLoading: orgLoading } = useChurch();
+  const { lang } = useLanguage();
   const isJKC = !slug || slug === 'jkc';
   const [loading, setLoading] = useState(true);
 
@@ -62,13 +65,13 @@ export default function TestimoniesSection() {
         <div className="max-w-screen-xl mx-auto px-6 mb-16 space-y-4">
           <p className="text-[10px] font-black tracking-[0.4em] uppercase"
              style={{ color: 'var(--footer-muted)' }}>
-            CHECK OUT TESTIMONIES
+            {t(lang, 'testimonies_eyebrow')}
           </p>
           <h2 className="text-4xl md:text-5xl font-black" style={{ color: 'var(--footer-fg)' }}>
-            Hear what God is <span className="font-serif italic font-medium" style={{ color: 'var(--jkc-gold)' }}>Doing</span>
+            {t(lang, 'testimonies_heading_a')} <span className="font-serif italic font-medium" style={{ color: 'var(--jkc-gold)' }}>{t(lang, 'testimonies_heading_b')}</span>
           </h2>
           <p className="text-lg max-w-xl italic font-medium" style={{ color: 'var(--footer-muted)' }}>
-            Hear what God is doing in the lives of our members.
+            {t(lang, 'testimonies_subheading')}
           </p>
         </div>
 
@@ -111,7 +114,7 @@ export default function TestimoniesSection() {
                   className="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.2em] uppercase transition-all hover:gap-3"
                   style={{ color: 'var(--jkc-gold)' }}
                 >
-                  WATCH ON YOUTUBE →
+                  {t(lang, 'testimonies_watch')}
                 </a>
               </div>
             </div>
@@ -132,7 +135,7 @@ export default function TestimoniesSection() {
                 boxShadow: '0 8px 32px rgba(27,58,107,0.4)'
               }}
             >
-              WATCH MORE →
+              {t(lang, 'testimonies_more')}
             </a>
           </div>
         )}
