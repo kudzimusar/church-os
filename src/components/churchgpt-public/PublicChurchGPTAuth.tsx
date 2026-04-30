@@ -45,20 +45,32 @@ export function PublicChurchGPTAuth({ mode }: PublicChurchGPTAuthProps) {
         })
         if (error) throw error
 
-        // Merge guest session fingerprint → user account
-        const fingerprint = localStorage.getItem('cgpt_fp')
-        if (fingerprint && signUpData.user?.id) {
+        if (signUpData.user?.id) {
+          // Ensure churchgpt_users row exists (trigger handles this too,
+          // but upsert here guarantees it's visible in the same session)
           await supabase
-            .from('churchgpt_guest_sessions')
-            .update({
-              converted_user_id: signUpData.user.id,
-              converted_at: new Date().toISOString()
-            })
-            .eq('fingerprint', fingerprint)
-          // Clear guest state so the new account starts clean
-          localStorage.removeItem('cgpt_fp')
-          localStorage.removeItem('churchgpt_guest_messages')
-          localStorage.setItem('churchgpt_guest_count', '0')
+            .from('churchgpt_users')
+            .upsert({
+              user_id: signUpData.user.id,
+              email,
+              display_name: email.split('@')[0],
+              source: 'churchgpt_public',
+            }, { onConflict: 'user_id', ignoreDuplicates: true })
+
+          // Merge guest session fingerprint → user account
+          const fingerprint = localStorage.getItem('cgpt_fp')
+          if (fingerprint) {
+            await supabase
+              .from('churchgpt_guest_sessions')
+              .update({
+                converted_user_id: signUpData.user.id,
+                converted_at: new Date().toISOString()
+              })
+              .eq('fingerprint', fingerprint)
+            localStorage.removeItem('cgpt_fp')
+            localStorage.removeItem('churchgpt_guest_messages')
+            localStorage.setItem('churchgpt_guest_count', '0')
+          }
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({

@@ -89,35 +89,61 @@ serve(async (req) => {
       if (metadata.platform === "church_os") {
         const subscription = await stripe.subscriptions
           .retrieve(session.subscription as string);
-        const { data: plan } = await supabaseAdmin
-          .from("company_plans")
-          .select("id, price_monthly")
-          .eq("name", metadata.plan_name)
-          .single();
 
-        await supabaseAdmin
-          .from("organization_subscriptions")
-          .upsert({
-            org_id: metadata.org_id,
-            plan_id: plan?.id,
-            status: subscription.status,
-            stripe_customer_id: session.customer as string,
-            stripe_subscription_id: subscription.id,
-            billing_interval: metadata.billing_interval ?? "month",
-            amount: plan?.price_monthly ?? 0,
-            currency: "USD",
-            current_period_start: new Date(
-              subscription.current_period_start * 1000
-            ).toISOString(),
-            current_period_end: new Date(
-              subscription.current_period_end * 1000
-            ).toISOString(),
-          }, { onConflict: "org_id" });
+        if (metadata.subscriber_type === "individual" && metadata.user_id) {
+          // Individual ChurchGPT subscriber — update churchgpt_users
+          const QUOTA_MAP: Record<string, number> = {
+            lite: 500, pro: 3000, enterprise: -1,
+          };
+          const newQuota = QUOTA_MAP[metadata.plan_name] ?? 50;
 
-        await supabaseAdmin
-          .from("organizations")
-          .update({ subscription_status: "active" })
-          .eq("id", metadata.org_id);
+          await supabaseAdmin
+            .from("churchgpt_users")
+            .update({
+              subscription_tier:   metadata.plan_name,
+              subscription_status: subscription.status,
+              quota_limit:         newQuota,
+              stripe_customer_id:  session.customer as string,
+              stripe_subscription_id: subscription.id,
+              period_ends_at: new Date(
+                subscription.current_period_end * 1000
+              ).toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", metadata.user_id);
+
+        } else if (metadata.org_id) {
+          // Church org upgrade — update organization_subscriptions
+          const { data: plan } = await supabaseAdmin
+            .from("company_plans")
+            .select("id, price_monthly")
+            .eq("name", metadata.plan_name)
+            .single();
+
+          await supabaseAdmin
+            .from("organization_subscriptions")
+            .upsert({
+              org_id: metadata.org_id,
+              plan_id: plan?.id,
+              status: subscription.status,
+              stripe_customer_id: session.customer as string,
+              stripe_subscription_id: subscription.id,
+              billing_interval: metadata.billing_interval ?? "month",
+              amount: plan?.price_monthly ?? 0,
+              currency: "USD",
+              current_period_start: new Date(
+                subscription.current_period_start * 1000
+              ).toISOString(),
+              current_period_end: new Date(
+                subscription.current_period_end * 1000
+              ).toISOString(),
+            }, { onConflict: "org_id" });
+
+          await supabaseAdmin
+            .from("organizations")
+            .update({ subscription_status: "active" })
+            .eq("id", metadata.org_id);
+        }
       }
     }
 
@@ -183,20 +209,37 @@ serve(async (req) => {
     }
 
     // Handle SaaS subscription upgrades/downgrades
-    if (event.type === "customer.subscription.updated") {
+    if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
       const sub = event.data.object as any;
       if (sub.metadata?.platform === "church_os") {
-        await supabaseAdmin
-          .from("organization_subscriptions")
-          .update({
-            status: sub.status,
-            cancel_at_period_end: sub.cancel_at_period_end,
-            current_period_end: new Date(
-              sub.current_period_end * 1000
-            ).toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("stripe_subscription_id", sub.id);
+        const isCancelled = event.type === "customer.subscription.deleted";
+        const periodEnd = new Date(sub.current_period_end * 1000).toISOString();
+
+        if (sub.metadata?.subscriber_type === "individual" && sub.metadata?.user_id) {
+          const QUOTA_MAP: Record<string, number> = {
+            lite: 500, pro: 3000, enterprise: -1,
+          };
+          await supabaseAdmin
+            .from("churchgpt_users")
+            .update({
+              subscription_status: isCancelled ? "cancelled" : sub.status,
+              subscription_tier:   isCancelled ? "starter" : (sub.metadata.plan_name ?? "starter"),
+              quota_limit:         isCancelled ? 50 : (QUOTA_MAP[sub.metadata.plan_name] ?? 50),
+              period_ends_at:      periodEnd,
+              updated_at:          new Date().toISOString(),
+            })
+            .eq("stripe_subscription_id", sub.id);
+        } else {
+          await supabaseAdmin
+            .from("organization_subscriptions")
+            .update({
+              status: isCancelled ? "cancelled" : sub.status,
+              cancel_at_period_end: sub.cancel_at_period_end,
+              current_period_end: periodEnd,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("stripe_subscription_id", sub.id);
+        }
       }
     }
 

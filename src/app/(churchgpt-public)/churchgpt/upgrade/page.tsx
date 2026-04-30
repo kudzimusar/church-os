@@ -86,6 +86,7 @@ const PLANS = [
 export default function UpgradePage() {
   const router = useRouter()
   const [session, setSession] = useState<any>(null)
+  const [userId, setUserId] = useState<string | null>(null)
   const [orgId, setOrgId] = useState<string | null>(null)
   const [currentPlan, setCurrentPlan] = useState<string>('starter')
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
@@ -99,26 +100,42 @@ export default function UpgradePage() {
     const init = async () => {
       const { data: { session: s } } = await supabase.auth.getSession()
       setSession(s)
+      if (!s?.user) return
 
-      if (s?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('org_id')
-          .eq('id', s.user.id)
-          .single()
+      setUserId(s.user.id)
 
-        if (profile?.org_id) {
-          setOrgId(profile.org_id)
-          const { data: sub } = await supabase
-            .from('organization_subscriptions')
-            .select('company_plans(name)')
-            .eq('org_id', profile.org_id)
-            .eq('status', 'active')
-            .maybeSingle()
+      // Individual ChurchGPT subscriber — read plan from churchgpt_users
+      const { data: cgptUser } = await supabase
+        .from('churchgpt_users')
+        .select('subscription_tier, subscription_status')
+        .eq('user_id', s.user.id)
+        .maybeSingle()
 
-          const planName: string = (sub as any)?.company_plans?.name?.toLowerCase() ?? 'starter'
-          setCurrentPlan(planName)
-        }
+      if (cgptUser) {
+        const activeTier = cgptUser.subscription_status === 'active' || cgptUser.subscription_status === 'trialing'
+          ? cgptUser.subscription_tier
+          : 'starter'
+        setCurrentPlan(activeTier)
+        return
+      }
+
+      // Church org member — read plan from organization_subscriptions
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('org_id')
+        .eq('id', s.user.id)
+        .maybeSingle()
+
+      if (profile?.org_id) {
+        setOrgId(profile.org_id)
+        const { data: sub } = await supabase
+          .from('organization_subscriptions')
+          .select('company_plans(name)')
+          .eq('org_id', profile.org_id)
+          .eq('status', 'active')
+          .maybeSingle()
+        const planName: string = (sub as any)?.company_plans?.name?.toLowerCase() ?? 'starter'
+        setCurrentPlan(planName)
       }
     }
     init()
@@ -142,6 +159,19 @@ export default function UpgradePage() {
 
     setLoadingPlan(plan.key)
     try {
+      const body: Record<string, any> = {
+        type: 'churchgpt_subscription',
+        plan_name: (plan as any).planName,
+        user_email: session.user?.email,
+      }
+      // Individual subscriber (no org) — pass user_id
+      // Church org member — pass org_id
+      if (orgId) {
+        body.org_id = orgId
+      } else {
+        body.user_id = userId ?? session.user?.id
+      }
+
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/stripe-checkout`,
         {
@@ -150,12 +180,7 @@ export default function UpgradePage() {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({
-            type: 'churchgpt_subscription',
-            plan_name: (plan as any).planName,
-            org_id: orgId,
-            user_email: session.user?.email,
-          }),
+          body: JSON.stringify(body),
         }
       )
 

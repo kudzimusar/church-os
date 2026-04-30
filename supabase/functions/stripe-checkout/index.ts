@@ -56,9 +56,20 @@ serve(async (req) => {
     }
 
     // ChurchGPT SaaS subscription flow
+    // Supports two modes:
+    //   - individual subscriber: pass user_id (no org_id)
+    //   - church org upgrade:    pass org_id (no user_id)
     if (body.type === 'churchgpt_subscription') {
-      const { plan_name, billing_interval = 'monthly', org_id: subOrgId, user_email } = body;
-      if (!plan_name || !subOrgId) throw new Error("plan_name and org_id are required");
+      const {
+        plan_name,
+        billing_interval = 'monthly',
+        org_id: subOrgId,
+        user_id: subUserId,
+        user_email,
+      } = body;
+
+      if (!plan_name) throw new Error("plan_name is required");
+      if (!subOrgId && !subUserId) throw new Error("Either org_id or user_id is required");
 
       const isYearly = billing_interval === 'yearly';
 
@@ -74,6 +85,14 @@ serve(async (req) => {
       const stripePriceId = PRICE_MAP[priceKey];
       if (!stripePriceId) throw new Error(`No Stripe price ID configured for plan: ${priceKey}`);
 
+      const subMeta: Record<string, string> = {
+        plan_name,
+        platform: "church_os",
+        subscriber_type: subOrgId ? "org" : "individual",
+      };
+      if (subOrgId)  subMeta.org_id  = subOrgId;
+      if (subUserId) subMeta.user_id = subUserId;
+
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
         customer_email: user_email ?? undefined,
@@ -81,17 +100,10 @@ serve(async (req) => {
         success_url: `https://ai.churchos-ai.website/churchgpt/billing/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `https://ai.churchos-ai.website/churchgpt/upgrade/`,
         subscription_data: {
-          metadata: {
-            org_id:    subOrgId,
-            plan_name: plan_name,
-          },
+          metadata: subMeta,
           trial_period_days: plan_name === 'lite' ? 14 : 0,
         },
-        metadata: {
-          org_id:    subOrgId,
-          plan_name: plan_name,
-          platform:  "church_os",
-        },
+        metadata: subMeta,
       });
 
       return new Response(JSON.stringify({ url: session.url }), {

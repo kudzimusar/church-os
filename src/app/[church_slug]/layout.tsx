@@ -20,7 +20,9 @@ export async function generateStaticParams() {
 
   if (error) {
     console.error("[generateStaticParams] Failed to fetch org slugs:", error.message);
-    // Fallback: return known slugs so build never fails completely
+    // Fallback: return known church slugs so build never fails completely.
+    // NOTE: "corporate", "super-admin", "churchgpt" are reserved routes —
+    // never include them here or [church_slug] will shadow those pages.
     return [
       { church_slug: "jkc" },
       { church_slug: "grace-fellowship" },
@@ -28,7 +30,6 @@ export async function generateStaticParams() {
       { church_slug: "test-osaka" },
       { church_slug: "test-tokyo" },
       { church_slug: "test-church" },
-      { church_slug: "corporate" },
     ];
   }
 
