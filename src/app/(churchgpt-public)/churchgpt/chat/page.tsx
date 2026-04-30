@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { getChurchGPTSupabaseClient } from "@/lib/churchgpt/supabase-client"
 import { useChurchGPT } from "@/hooks/useChurchGPT"
@@ -48,7 +48,7 @@ const SUGGESTIONS = [
   { title: "Apologetics question",     body: "Get help defending the faith with clarity and grace" },
 ]
 
-export default function ChurchGPTAuthenticatedChat() {
+function ChurchGPTAuthenticatedChat() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [sessionType, setSessionType] = useState('general')
@@ -321,5 +321,13 @@ export default function ChurchGPTAuthenticatedChat() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function ChurchGPTChatPage() {
+  return (
+    <Suspense fallback={<div className="cgpt-loading-screen"><div className="cgpt-loader" /></div>}>
+      <ChurchGPTAuthenticatedChat />
+    </Suspense>
   )
 }
