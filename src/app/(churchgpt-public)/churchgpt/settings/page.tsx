@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createBrowserClient } from "@supabase/ssr"
+import { getChurchGPTSupabaseClient } from "@/lib/churchgpt/supabase-client"
 import { PublicChurchGPTSidebar } from "@/components/churchgpt-public/PublicChurchGPTSidebar"
 import { PanelLeft, Loader2, Sun, Moon } from "lucide-react"
 import { useCGPTTheme } from "@/hooks/useCGPTTheme"
@@ -26,10 +26,7 @@ export default function ChurchGPTSettingsPage() {
   const [prefs, setPrefs] = useState<Record<string, any>>({})
   const { theme, toggle: toggleTheme } = useCGPTTheme()
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = getChurchGPTSupabaseClient()
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {

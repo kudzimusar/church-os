@@ -5,7 +5,7 @@ import { Plus, Trash2, Settings, User, LogOut } from "lucide-react"
 import { ChurchGPTConversation } from "@/hooks/useChurchGPT"
 import { isToday, isYesterday, isThisWeek } from "date-fns"
 import { useRouter } from "next/navigation"
-import { createBrowserClient } from "@supabase/ssr"
+import { getChurchGPTSupabaseClient } from "@/lib/churchgpt/supabase-client"
 import Link from "next/link"
 
 interface PublicChurchGPTSidebarProps {
@@ -29,10 +29,7 @@ export function PublicChurchGPTSidebar({
 }: PublicChurchGPTSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const router = useRouter()
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = getChurchGPTSupabaseClient()
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()

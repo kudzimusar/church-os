@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createBrowserClient } from "@supabase/ssr"
+import { getChurchGPTSupabaseClient } from "@/lib/churchgpt/supabase-client"
 import { useChurchGPT } from "@/hooks/useChurchGPT"
 import { ChurchGPTMessage } from "@/components/churchgpt/ChurchGPTMessage"
 import { ChurchGPTInput } from "@/components/churchgpt/ChurchGPTInput"
@@ -63,10 +63,7 @@ export default function ChurchGPTAuthenticatedChat() {
   const sessionStartRef = useRef<number>(Date.now())
   const messagesSentRef = useRef<number>(0)
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = getChurchGPTSupabaseClient()
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {

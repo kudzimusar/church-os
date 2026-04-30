@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { getChurchGPTSupabaseClient } from '@/lib/churchgpt/supabase-client'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -21,10 +21,8 @@ export function PublicChurchGPTAuth({ mode }: PublicChurchGPTAuthProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  // Use the module-level singleton to avoid multiple GoTrueClient instances
+  const supabase = getChurchGPTSupabaseClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -114,6 +112,7 @@ export function PublicChurchGPTAuth({ mode }: PublicChurchGPTAuthProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
                 className="h-12 border-slate-200 focus:border-[#0f1f3d] focus:ring-[#0f1f3d]"
               />
             </div>
@@ -125,6 +124,7 @@ export function PublicChurchGPTAuth({ mode }: PublicChurchGPTAuthProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                 className="h-12 border-slate-200 focus:border-[#0f1f3d] focus:ring-[#0f1f3d]"
               />
             </div>

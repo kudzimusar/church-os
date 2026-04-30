@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createBrowserClient } from "@supabase/ssr"
+import { getChurchGPTSupabaseClient } from "@/lib/churchgpt/supabase-client"
 import { PublicChurchGPTSidebar } from "@/components/churchgpt-public/PublicChurchGPTSidebar"
 import { PanelLeft, Loader2, CheckCircle2, AlertCircle, Sun, Moon } from "lucide-react"
 import Link from "next/link"
@@ -31,10 +31,7 @@ export default function ChurchGPTAccountPage() {
   const [pwdMsg, setPwdMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const { theme, toggle: toggleTheme } = useCGPTTheme()
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = getChurchGPTSupabaseClient()
 
   useEffect(() => {
     const init = async () => {

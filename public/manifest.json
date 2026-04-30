@@ -1,22 +1,24 @@
 {
-    "name": "Japan Kingdom Church",
-    "short_name": "JKC",
-    "description": "Japan Kingdom Church — Tokyo",
-    "start_url": "/jkc-devotion-app/welcome/",
-    "scope": "/jkc-devotion-app/",
+    "name": "ChurchGPT",
+    "short_name": "ChurchGPT",
+    "description": "ChurchGPT — Your AI Christian Companion, powered by Church OS",
+    "start_url": "/churchgpt/",
+    "scope": "/churchgpt/",
     "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#2dd4bf",
+    "background_color": "#0f1f3d",
+    "theme_color": "#D4AF37",
     "icons": [
         {
-            "src": "/jkc-devotion-app/church-logo-v2.png",
+            "src": "/church-logo-v2.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         },
         {
-            "src": "/jkc-devotion-app/church-logo-v2.png",
+            "src": "/church-logo-v2.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         }
     ]
 }
