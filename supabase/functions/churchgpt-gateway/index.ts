@@ -408,17 +408,15 @@ serve(async (req) => {
         .select('org_id')
         .eq('id', userId)
         .single()
-      const resolvedOrgId = orgId ?? profile?.org_id
-
-      if (resolvedOrgId) {
-        const { data: sub } = await supabaseAdmin
-          .from('organization_subscriptions')
-          .select('plan_id, company_plans(name)')
-          .eq('org_id', resolvedOrgId)
-          .eq('status', 'active')
-          .maybeSingle()
-        const planName: string = (sub as any)?.company_plans?.name?.toLowerCase() ?? 'starter'
-        userTier = planName
+      // Query subscription_tier from churchgpt_users (keyed by user_id, not id)
+      const { data: userSub } = await supabaseAdmin
+        .from('churchgpt_users')
+        .select('subscription_tier')
+        .eq('user_id', userId)
+        .maybeSingle()
+        
+      if (userSub?.subscription_tier) {
+        userTier = userSub.subscription_tier.toLowerCase()
       }
     }
 
@@ -455,7 +453,7 @@ serve(async (req) => {
         p_org_id: resolvedOrgId,
         p_context: detectedContext,
         p_model_id: selectedModel.model_id,
-        p_tokens: tokens,
+        p_tokens_used: tokens,
         p_cost_usd: costUsd
       }).then(({ error }: any) => {
         if (error) console.error('[ChurchGPT] Usage increment error:', error)
@@ -465,14 +463,15 @@ serve(async (req) => {
     // ── 11. Log to ai_conversation_logs ──────────────────────────────────────
     if (orgId || userId) {
       supabaseAdmin.from('ai_conversation_logs').insert({
-        org_id: orgId,
+        organization_id: orgId,
         user_id: userId,
-        conversation_id: conversation_id ?? null,
+        session_id: conversation_id ?? null,
         model_used: selectedModel.model_id,
-        context: detectedContext,
-        session_type: sessionType ?? 'general',
+        path: detectedContext,
+        persona: sessionType ?? 'general',
         tokens_used: tokens,
-        cost_usd: costUsd,
+        user_query: userMessage,
+        ai_response: reply
       }).then(({ error }: any) => {
         if (error) console.error('[ChurchGPT] Log error:', error)
       })
